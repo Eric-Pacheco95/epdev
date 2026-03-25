@@ -1,0 +1,44 @@
+{
+  "env": {
+    "EPDEV_DIR": "/c/Users/ericp/OneDrive/Documents/Github/epdev",
+    "MEMORY_DIR": "/c/Users/ericp/OneDrive/Documents/Github/epdev/memory",
+    "HISTORY_DIR": "/c/Users/ericp/OneDrive/Documents/Github/epdev/history"
+  },
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.youtube.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "Bash(git *)",
+      "Bash(bun *)",
+      "Bash(npm *)",
+      "Bash(mkdir *)",
+      "Bash(touch *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(cat *)",
+      "Bash(where fabric:*)",
+      "Bash(where bun:*)",
+      "Bash(where go:*)",
+      "Bash(where node:*)",
+      "Bash(where python:*)",
+      "WebFetch(domain:danielmiessler.com)",
+      "WebFetch(domain:www.cognitiverevolution.ai)",
+      "Bash(mkdir -p .claude/skills)",
+      "Bash(mkdir -p .claude/hooks)",
+      "Bash(python tools/scripts/hook_session_start.py)",
+      "Bash(python tests/defensive/test_injection_detection.py)",
+      "Bash(python tests/defensive/test_secret_scanner.py)",
+      "Bash(python security/validators/validate_tool_use.py)",
+      "Bash(cp -r \"/c/Users/ericp/OneDrive/Documents/Github/epdev\" \"/c/Users/ericp/Github/epdev\")",
+      "Bash(cp -r \"/c/Users/ericp/OneDrive/Documents/Github/crypto-bot\" \"/c/Users/ericp/Github/crypto-bot\")"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(git push --force * main)",
+      "Bash(git push --force * master)"
+    ]
+  }
+}

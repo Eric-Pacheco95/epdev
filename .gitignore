@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Secrets & credentials
+.env
+.env.*
+*.pem
+*.key
+*credentials*
+*secret*
+!security/validators/secret_scanner.py
+!tests/defensive/test_secret_scanner.py
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node
+node_modules/
+bun.lock
+
+# Temp
+/tmp/
+*.tmp
+*.bak
+
+# Session memory (ephemeral, not committed)
+memory/session/*
+!memory/session/.gitkeep
+
+# Large reference repos (cloned locally, not committed)
+/refs/
