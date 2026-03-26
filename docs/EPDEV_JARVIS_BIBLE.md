@@ -2,7 +2,47 @@
 
 > Your living guide to building and using the Jarvis AI brain.
 > **Pin this to your desktop. It updates as the project evolves.**
-> Last updated: 2026-03-24 | Phase: 1 (Foundation)
+> Last updated: 2026-03-26 | Phase: 1 (Foundation)
+
+---
+
+## 📖 GLOSSARY — Terms You’ll See Everywhere
+
+### What is a **PRD**?
+**PRD** = **Product Requirements Document**. In this repo it is a **project brief**: goal, scope, deliverables, constraints, and (when using TheAlgorithm) **Ideal State Criteria** so you know when you’re done. Warm memory stores PRDs under `memory/work/{project-slug}/PRD.md`.
+
+### What are **hooks**?
+**Hooks** (in **Claude Code**) are **event scripts** the CLI runs at fixed points in a session—for example **before a tool runs** (PreToolUse) or **when a session starts/ends**. They are **not** “the model remembering”; they are **your code** (e.g. Python) that prints a briefing, validates a Bash command, or reminds you to capture learning. They only run when you use **Claude Code in the repo** with hooks configured—not in Claude Desktop by default.
+
+### Claude **Desktop** vs Claude **Code** (important)
+| Surface | What it is | Session / hooks / epdev scripts |
+|--------|------------|----------------------------------|
+| **Claude Desktop** (app) | General chat: voice, projects, attachments | **No** automatic link to `epdev/` hooks or `hook_learning_capture.py`. Each chat is just a chat unless **you** paste or save into the repo. |
+| **Claude Code** (CLI in `epdev/`) | Agent in your codebase | **Can** run hooks and use repo tools; this is where “session start” and “learning capture” **can** be wired. |
+| **Cursor** (IDE) | Code + Composer | **No** Claude Code hooks unless you run them yourself or use Claude Code separately. |
+
+**Bottom line:** Nothing “starts a Jarvis session” or “ends with learning” **unless you set up that habit** (or automate it in Claude Code). The bible’s daily habits are **intentional rituals**, not defaults in every Claude product.
+
+---
+
+## 🔄 LIVING BIBLE — Micro-learnings (how this file stays useful)
+
+**Goal:** This document should **accumulate tiny, actionable tips** about *how you actually use* Jarvis (workflows that worked, mistakes avoided, best prompts). Big synthesis still lives in `memory/learning/synthesis/`; **this section is the quick, personal operator’s manual.**
+
+### Rules (keep it lightweight)
+1. **Add one micro-learning when** something clicked: a prompt pattern, a tool combo, a failure mode, or a “I’ll always do X from now on.”
+2. **Format:** one bullet under **Micro-learnings log** using the template below (copy-paste).
+3. **Keep it short** — one to three sentences per entry. Link a file path if it helps.
+4. **Optional:** mirror the same idea into `memory/learning/signals/` if it’s worth compounding (rating + observation).
+5. **Monthly:** skim the log; merge duplicates; promote 2–3 items into **TIPS & TRICKS** if they’re timeless.
+
+### Template (copy when adding an entry)
+```text
+- **YYYY-MM-DD** — [tool: Claude Code | Cursor | Desktop | Fabric | other] — One sentence: what you learned. Optional: second sentence on when to use it.
+```
+
+### Micro-learnings log
+- **2026-03-26** — [meta] — The bible is the **running UI guide**; signals/synthesis are the **compounding memory**. Update this file when you learn *how to operate* the assistant, not for every raw observation.
 
 ---
 
@@ -243,7 +283,23 @@ Features from Daniel Miessler's Kai that we still need:
 
 ---
 
+## 💡 TIPS & TRICKS (Updated as discovered)
+
+1. **"Read the PRD and implement"** — this one sentence in Cursor does 80% of the work
+2. **Rate every session** — even a quick "7" builds the signal database that makes Jarvis smarter
+3. **TELOS is alive** — update it whenever your thinking shifts, even slightly
+4. **ISC before code** — writing "what done looks like" before writing code saves massive rework
+5. **Failures are gold** — a well-documented failure is worth more than a success you can't explain
+6. **Desktop vs Code** — use Desktop for open-ended thinking; use Claude Code in `epdev/` when you want hooks and repo-grounded behavior. Learning files are updated by **you or your scripts**, not by every chat automatically.
+
+---
+
 ## 📅 CHANGELOG
+
+### 2026-03-26 — Living bible + glossary
+- Added glossary (PRD, hooks, Desktop vs Code) and clarified that Desktop chats do not auto-run Jarvis hooks or learning
+- Added **Micro-learnings log** protocol for continuous small updates to this doc
+- Tip #6: explicit split Desktop vs Claude Code for learning
 
 ### 2026-03-24 — Project Initialized
 - Created full scaffold: 36 files across 10 directories
@@ -257,16 +313,6 @@ Features from Daniel Miessler's Kai that we still need:
 
 ---
 
-## 💡 TIPS & TRICKS (Updated as discovered)
-
-1. **"Read the PRD and implement"** — this one sentence in Cursor does 80% of the work
-2. **Rate every session** — even a quick "7" builds the signal database that makes Jarvis smarter
-3. **TELOS is alive** — update it whenever your thinking shifts, even slightly
-4. **ISC before code** — writing "what done looks like" before writing code saves massive rework
-5. **Failures are gold** — a well-documented failure is worth more than a success you can't explain
-
----
-
-*This bible lives at `C:\Users\ericp\OneDrive\Desktop\EPDEV_JARVIS_BIBLE.md`*
-*Also mirrored at `epdev/docs/EPDEV_JARVIS_BIBLE.md` in the repo*
+*Canonical copy in-repo: `docs/EPDEV_JARVIS_BIBLE.md` (commit this version).*
+*If you keep a desktop copy, sync from the repo so micro-learnings don’t diverge.*
 *Open in any markdown viewer for formatted reading (Cursor, VS Code, Obsidian, etc.)*
