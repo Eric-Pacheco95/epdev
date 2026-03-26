@@ -1,7 +1,7 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-03-26
+> Last updated: 2026-03-27
 
 ## Active Projects
 
@@ -43,8 +43,8 @@
 | 1 | ~~**`extract-wisdom` skill**~~ DONE | Cursor | Core extraction engine. Every other skill feeds from this |
 | 2 | ~~**`create-summary` skill**~~ DONE | Cursor | Needed for efficient memory writes |
 | 3 | ~~**`create-pattern` meta-skill**~~ DONE | Cursor | Once this works, you can prompt "create a new skill for X" and it self-assembles |
-| 4 | **`learning-capture` skill** — Automate LEARN phase, write signals every session | Claude Code | Hooks into Claude Code lifecycle, needs settings.json access |
-| 5 | **`telos-update` skill** — Scan session/inputs, propose updates to TELOS files | Claude Code | Needs to read session history + write to telos/ files |
+| 4 | ~~**`learning-capture` skill**~~ DONE | Claude Code | Hooks into Claude Code lifecycle, needs settings.json access. Also fixed stop hook to stop creating stub signals |
+| 5 | ~~**`telos-update` skill**~~ DONE | Claude Code | Needs to read session history + write to telos/ files |
 
 ### Phase 2B: Tier 2 Thinking & Analysis Skills
 
@@ -64,11 +64,11 @@
 
 | # | Task | Build In | Notes |
 |---|------|----------|-------|
-| 11 | **`create-prd` skill** — Generate product requirements documents | Cursor | Fabric pattern format |
-| 12 | **`review-code` skill** — Code review with security focus | Cursor | Fabric pattern format |
-| 13 | **`threat-model` skill** — STRIDE threat modeling | Cursor | Fabric pattern format |
-| 14 | **`self-heal` skill** — Auto-diagnose and fix when tests fail | Claude Code | Needs Claude Code lifecycle hooks |
-| 15 | **`security-audit` skill** — Scan system for vulnerabilities | Claude Code | Needs file system + security context |
+| 11 | ~~**`create-prd` skill**~~ DONE | Cursor | Fabric pattern format |
+| 12 | ~~**`review-code` skill**~~ DONE | Cursor | Fabric pattern format |
+| 13 | ~~**`threat-model` skill**~~ DONE | Cursor | Fabric pattern format |
+| 14 | ~~**`self-heal` skill**~~ DONE | Claude Code | Needs Claude Code lifecycle hooks |
+| 15 | ~~**`security-audit` skill**~~ DONE | Claude Code | Needs file system + security context |
 
 ### Phase 2D: Hooks & Infrastructure
 
@@ -76,19 +76,19 @@
 
 | # | Task | Build In | Notes |
 |---|------|----------|-------|
-| 16 | **Implicit sentiment analysis hook** — Detect satisfaction/frustration, log as rating signal | Claude Code | Hook into PostToolUse or session-end |
-| 17 | **Signal synthesis workflow** — Periodically distill signals into wisdom, update CLAUDE.md steering rules | Claude Code | Reads signals/, writes synthesis/, updates CLAUDE.md |
-| 18 | **AI Steering Rules auto-generation** — Failure analysis produces new steering rules | Claude Code | Reads failures/, proposes CLAUDE.md updates |
-| 19 | **Skill assembly pipeline** — Auto-build SKILL.md from Fabric pattern components | Claude Code | The meta-system: pattern template + identity + steps + output = skill |
-| 20 | **Session-start hook upgrade** — Load TELOS context + active project + recent learnings | Claude Code | The #1 lever for smarter sessions |
+| 16 | ~~**Implicit sentiment analysis**~~ DONE | Claude Code | Built into learning-capture skill (sentiment detection in session analysis) |
+| 17 | ~~**Signal synthesis workflow**~~ DONE | Claude Code | New `/synthesize-signals` skill — reads signals, writes synthesis, archives processed |
+| 18 | ~~**AI Steering Rules auto-generation**~~ DONE | Claude Code | New `/update-steering-rules` skill — analyzes failures/synthesis, proposes CLAUDE.md updates |
+| 19 | ~~**Skill assembly pipeline**~~ DONE | Claude Code | Updated `create-pattern` to auto-save to `.claude/skills/` and confirm registration |
+| 20 | ~~**Session-start hook upgrade**~~ DONE | Claude Code | Now loads TELOS status, active projects, learned entries, skill commands |
 
 ### Phase 2E: TELOS Continuous Update System
 
 | # | Task | Build In | Notes |
 |---|------|----------|-------|
-| 21 | **Voice transcript ingestion** — Process voice recordings into session history | TBD | Depends on voice capture method (ElevenLabs, Whisper, etc.) |
-| 22 | **Session transcript → TELOS extraction** — Run extract-wisdom on session transcripts, route to TELOS files | Claude Code | Combines extract-wisdom + telos-update |
-| 23 | **TELOS diff reporting** — "What has Jarvis learned about you this week?" summary | Claude Code | Reads LEARNED.md git history, generates report |
+| 21 | **Voice transcript ingestion** — Process voice recordings into session history | TBD | Depends on voice capture method (ElevenLabs, Whisper, etc.) — deferred to Phase 3 |
+| 22 | ~~**Session transcript → TELOS extraction**~~ DONE | Claude Code | Workflow: `/extract-wisdom` on input → `/telos-update` with output. No separate skill needed |
+| 23 | ~~**TELOS diff reporting**~~ DONE | Claude Code | New `/telos-report` skill — analyzes git history + TELOS changes + signal trends |
 
 ## Phase 3: Orchestration, Agents & UI (Future)
 
@@ -119,6 +119,22 @@
 - [ ] **Survey tooling** — Compare low-friction options (e.g. Obsidian vault on `docs/`, Mermaid diagrams in-repo, Canvas/mind-map) vs custom `ui/` dashboard; record pros/cons in `memory/work/` or `docs/`
 - [ ] **Current vs ideal workflow** — Define how observed state (tests, hooks, `STATE.md`, signal counts) maps to **gaps vs ISC** and how those gaps become **tasklist** items (manual ritual first; optional automation later)
 - [ ] **Claude Code analysis session** — One dedicated session: read spec + survey, recommend implementation order and Phase 3C/3D dependencies; optionally spawn follow-up PRDs
+
+### Phase 3E: ISC engine & scheduled heartbeat
+
+> **Intent:** A **time-driven VERIFY** loop—Miessler-style **current state** as measurable data points, compared to **PRD ISC**, with **gaps** flowing into **learning** (signals/failures), not only when you are in a chat session.
+>
+> **Example:** Every 30 minutes (configurable) a **heartbeat** job runs collectors (tests passing, defensive suite, file counts, hook self-check, optional health probes), scores each mapped **ISC** or “slowly improve” feature dimension, and **emits** structured notes when gaps or regressions cross thresholds.
+
+- [ ] **ISC engine PRD** — Spec in `memory/work/`: map each PRD ISC line (or feature dimension) to **metric keys**, **thresholds**, **severity**, and **when to write a learning signal** vs suppress noise
+- [ ] **Metric collectors** — Small, pluggable modules (stdlib-first): e.g. run `tests/defensive/`, parse results, repo counters, optional lint; output a single **snapshot JSON** per run
+- [ ] **`heartbeat` runner** — One CLI entrypoint (e.g. `tools/scripts/jarvis_heartbeat.py`) that loads config, runs collectors, diffs vs last snapshot, updates `memory/work/{project}/STATE.md` or a dedicated **heartbeat log** under `memory/work/` or `history/changes/`
+- [ ] **Scheduler** — **Windows Task Scheduler** (primary on your machine) or cron/WSL; document interval (e.g. 30 min), failure alerts, and log rotation in `docs/EPDEV_JARVIS_BIBLE.md`
+- [ ] **Gap → learning pipeline** — On regression or sustained gap: append **`memory/learning/signals/`** (and **`failures/`** if user-defined) with template: ISC ref, observed metrics, delta, suggested next action; optional link to `orchestration/tasklist.md` bullets
+- [ ] **Security & safety** — Heartbeat reads repo only; no secrets in logs; validate outputs against `security/constitutional-rules.md`; cap signal volume (dedupe, cooldown) to avoid spam
+- [ ] **Optional integrations** — Phase 3B: **ntfy** on regression; Phase 3C: dashboard reads last heartbeat JSON
+
+**Depends on:** Phase 2 maturity (signals/synthesis patterns), Phase 3D “current vs ideal” spec (shared vocabulary for gaps). **Build in:** mostly **Cursor/Python** + OS scheduler; Claude Code sessions **review** trends and promote steering rules.
 
 ---
 

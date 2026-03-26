@@ -16,7 +16,10 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Require “Only output Markdown.” and forbid meta-commentary, warnings, and repeated openings across bullets
 - End the generated skill with a final line that is only: INPUT: (the runtime placeholder; nothing after it)
 - Self-check: IDENTITY length fits 2–4 sentences; STEPS use strong verbs; no code blocks or executable snippets in the skill body
-- Output only the new skill markdown document, nothing else
+- Derive a kebab-case skill name from the purpose (e.g., "analyze-claims", "extract-wisdom")
+- Save the generated skill to `.claude/skills/{skill-name}/SKILL.md` using the Write tool — Claude Code auto-discovers skills in this location
+- After saving, confirm the skill is registered by noting its `/skill-name` invocation command
+- Output the new skill markdown document
 
 # OUTPUT INSTRUCTIONS
 

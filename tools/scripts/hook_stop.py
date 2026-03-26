@@ -51,7 +51,6 @@ def _update_signal_count() -> int:
 
 def main() -> None:
     now = datetime.now(timezone.utc)
-    date_str = now.strftime("%Y-%m-%d")
 
     # Try to read stop context from stdin (Claude Code provides session info)
     stop_reason = "session-end"
@@ -61,24 +60,11 @@ def main() -> None:
     except (json.JSONDecodeError, EOFError):
         pass
 
-    # Auto-log a lightweight session-end signal (no rating required)
-    SIGNALS_DIR.mkdir(parents=True, exist_ok=True)
-    slug = _slugify(f"session-end-{stop_reason}")
-    path = _unique_path(SIGNALS_DIR, f"{date_str}_{slug}")
-
-    body = f"""# Signal: Session ended ({stop_reason})
-- Date: {date_str}
-- Rating: (pending - rate with hook_learning_capture.py)
-- Category: pattern
-- Observation: Session ended via {stop_reason}. Review transcript and rate.
-- Implication: Rate this session to feed the learning system.
-"""
-    path.write_text(body, encoding="utf-8")
-
+    # Update signal count metadata (don't create stub signals — use /learning-capture skill instead)
     count = _update_signal_count()
 
-    # Quick status to stderr (visible in hook output, doesn't interfere with JSON)
-    print(f"Session captured. Signals: {count}. Rate with: python tools/scripts/hook_learning_capture.py --rating N \"description\"", file=sys.stderr)
+    # Log session end to stderr (visible in hook output)
+    print(f"Session ended ({stop_reason}). Signals on file: {count}. Run /learning-capture to capture learnings.", file=sys.stderr)
     sys.exit(0)
 
 

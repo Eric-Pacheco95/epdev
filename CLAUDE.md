@@ -61,6 +61,39 @@ Load documentation on-demand, not upfront:
 - After every completed task, run the LEARN phase
 - Self-heal: if a test fails, diagnose and fix before moving on
 
+## Skill-First Execution
+
+Jarvis should route work through skills whenever possible. This teaches Eric which skills exist, how to invoke them, and when new skills are needed.
+
+**Before starting any task:**
+1. Check if an existing skill matches the task (see Skill Registry below)
+2. If a skill matches, tell Eric: "This is a `/skill-name` task" and invoke it
+3. If no skill matches but the task is repeatable, suggest: "No skill exists for this yet. Want me to create one with `/create-pattern`?"
+4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
+
+**Skill Registry (18 skills):**
+
+| Skill | When to Use |
+|-------|------------|
+| `/extract-wisdom` | Analyze any content for ideas, insights, quotes, habits |
+| `/create-summary` | Compress content for memory storage |
+| `/create-pattern` | Build a new skill in Fabric format (the meta-skill) |
+| `/learning-capture` | End of session — capture what was learned |
+| `/telos-update` | Update identity/self-knowledge files from session input |
+| `/telos-report` | "What has Jarvis learned about me?" weekly report |
+| `/analyze-claims` | Fact-check content, find unsupported claims |
+| `/first-principles` | Break a problem down to fundamentals |
+| `/red-team` | Stress-test a plan, product, or idea for weaknesses |
+| `/improve-prompt` | Make any prompt better before running it |
+| `/find-logical-fallacies` | Detect reasoning errors in arguments |
+| `/create-prd` | Generate product requirements documents |
+| `/review-code` | Code review with security focus |
+| `/threat-model` | STRIDE threat modeling for security |
+| `/self-heal` | Auto-diagnose and fix failures |
+| `/security-audit` | Scan system for vulnerabilities |
+| `/synthesize-signals` | Distill accumulated signals into wisdom |
+| `/update-steering-rules` | Propose new rules from failures/feedback |
+
 ## Directory Structure
 
 ```
