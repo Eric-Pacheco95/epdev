@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python tools/scripts/hook_learning_capture.py"
+            "command": "python tools/scripts/hook_stop.py"
           }
         ]
       }

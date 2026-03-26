@@ -2,15 +2,48 @@
 __pycache__/
 *.py[cod]
 
+# ------------------------------------------------------------------------------
 # Secrets & credentials
+# Aligns with security/constitutional-rules.md — never commit key material.
+# ------------------------------------------------------------------------------
 .env
 .env.*
+!.env.example
+!.env.sample
 *.pem
 *.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+# SSH private keys (public keys like id_rsa.pub are not matched)
+id_rsa
+id_ed25519
+id_ecdsa
+# Broad filename patterns (exceptions below for repo-owned scanner/tests)
 *credentials*
 *secret*
 !security/validators/secret_scanner.py
 !tests/defensive/test_secret_scanner.py
+# Network / VCS credential stores
+.netrc
+.git-credentials
+# Cloud & IaC (common leak vectors)
+*-service-account*.json
+*-credentials.json
+credentials.json
+google-services.json
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+# App token drops
+.token
+.token.*
+
+# Local-only secret directories (some CLIs and backup tools)
+.secrets/
 
 # OS
 .DS_Store
@@ -23,12 +56,21 @@ desktop.ini
 *.swp
 *.swo
 
+# Cursor — MCP and other local-only config (often contains API keys)
+.cursor/mcp.json
+.cursor/mcp.json.local
+
+# Claude Code — machine-specific permissions; nested worktrees are not part of this repo
+.claude/**/settings.local.json
+.claude/worktrees/
+
 # Node
 node_modules/
 bun.lock
 
 # Temp
 /tmp/
+tmp/
 *.tmp
 *.bak
 
