@@ -107,7 +107,7 @@ def build_message(snap: dict, prev: dict | None) -> str:
 
     if snap["failures"] > 0:
         lines.append(f":warning: `{snap['failures']}` failure(s) logged — review `memory/learning/failures/`")
-    if snap["signals"] >= 10:
+    if snap["signals"] >= 15:
         lines.append(f":bulb: `{snap['signals']}` signals accumulated — consider running `/synthesize-signals`")
 
     return "\n".join(lines)

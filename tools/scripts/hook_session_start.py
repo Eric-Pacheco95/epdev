@@ -23,7 +23,7 @@ SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
 SECURITY_DIR = REPO_ROOT / "history" / "security"
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
-SYNTHESIS_TRIGGER = 10
+SYNTHESIS_TRIGGER = 15
 
 
 def _unchecked_tasks(text: str) -> list[str]:
@@ -68,11 +68,11 @@ def _load_telos_status() -> str:
         # Extract just the Current Focus and Active Mood sections
         in_section = False
         for line in text.splitlines():
-            if line.startswith("## Current Focus") or line.startswith("## Active Mood"):
+            if line.startswith("## Current Focus"):
                 in_section = True
                 lines.append(line)
             elif line.startswith("## ") and in_section:
-                in_section = False
+                in_section = False  # stop after Current Focus — skip mood/energy
             elif in_section and line.strip():
                 lines.append(line)
 
@@ -95,7 +95,21 @@ def _load_telos_status() -> str:
     return "\n".join(lines) if lines else "(no TELOS status loaded)"
 
 
+_PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
+
+
+def _stamp_prompt_ts() -> None:
+    """Write current UTC timestamp so hook_notification.py can gate on elapsed time."""
+    import time
+    try:
+        _PROMPT_TS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _PROMPT_TS_FILE.write_text(json.dumps({"ts": time.time()}), encoding="utf-8")
+    except OSError:
+        pass
+
+
 def main() -> None:
+    _stamp_prompt_ts()
     now = datetime.now().astimezone()
     print()
     print("=" * 60)
@@ -104,7 +118,7 @@ def main() -> None:
     print("=" * 60)
     print()
 
-    # TELOS context
+    # TELOS context (focus only — mood/energy omitted to save context)
     print("TELOS Status")
     print("-" * 40)
     print(_load_telos_status())
@@ -116,10 +130,10 @@ def main() -> None:
     if TASKLIST.is_file():
         tasks = _unchecked_tasks(TASKLIST.read_text(encoding="utf-8", errors="replace"))
         if tasks:
-            for t in tasks[:15]:  # Cap at 15 to avoid overwhelming
+            for t in tasks[:5]:  # Cap at 5 — top priorities only
                 print(f"  [ ] {t}")
-            if len(tasks) > 15:
-                print(f"  ... and {len(tasks) - 15} more")
+            if len(tasks) > 5:
+                print(f"  ... and {len(tasks) - 5} more")
         else:
             print("  (none)")
     else:
@@ -147,19 +161,6 @@ def main() -> None:
         print("  (none logged)")
     print()
 
-    # Skill registry grouped by use case
-    print("Available Skills")
-    print("-" * 40)
-    print("  Orchestrate: /delegation  /workflow-engine  /project-orchestrator  /spawn-agent")
-    print("  Thinking:    /first-principles  /red-team  /analyze-claims  /find-logical-fallacies")
-    print("  Creating:    /create-prd  /create-pattern  /create-summary  /improve-prompt")
-    print("  Learning:    /extract-wisdom  /learning-capture  /synthesize-signals  /telos-report")
-    print("  Identity:    /telos-update")
-    print("  Security:    /security-audit  /threat-model  /review-code")
-    print("  System:      /self-heal  /update-steering-rules")
-    print("  Mobile:      /voice-capture")
-    print()
-    print("  Tip: Just describe your task — /delegation will route it to the right skill")
     print("=" * 60)
     print()
 
