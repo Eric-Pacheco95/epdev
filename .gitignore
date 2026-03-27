@@ -78,5 +78,58 @@ tmp/
 memory/session/*
 !memory/session/.gitkeep
 
+# ------------------------------------------------------------------------------
+# Personal memory content — blank-slate template only; users populate their own
+# ------------------------------------------------------------------------------
+# TELOS identity files (user fills these in on first setup)
+memory/work/telos/*.md
+!memory/work/telos/README.md
+# Legacy flat TELOS files
+memory/work/TELOS.md
+memory/work/TELOS_CHALLENGES.md
+memory/work/TELOS_GOALS.md
+memory/work/TELOS_IDEAS.md
+# Personal work documents and project state
+memory/work/notion_brain.md
+memory/work/slack-routing.md
+memory/work/sources.md
+# Personal project subdirectories (user creates their own)
+memory/work/brain_map/
+memory/work/byd_canada_ev/
+memory/work/crypto_trading_bot/
+memory/work/jarvis/
+memory/work/jarvis_brain_map/
+memory/work/observability/
+memory/work/phase1-hooks-and-tests/
+memory/work/slack_mobile_hub/
+# Voice inbox content
+memory/work/inbox/voice/*.md
+memory/work/inbox/voice/processed/*.md
+# Learning content (accumulated per user, not part of template)
+memory/learning/signals/*.md
+memory/learning/signals/processed/
+memory/learning/failures/*.md
+memory/learning/synthesis/*.md
+memory/learning/_signal_meta.json
+
+# ------------------------------------------------------------------------------
+# Personal history content — blank-slate template only
+# ------------------------------------------------------------------------------
+history/decisions/*.md
+history/changes/*.md
+history/security/*.md
+history/events/
+
+# ------------------------------------------------------------------------------
+# Runtime artifacts
+# ------------------------------------------------------------------------------
+.claude/prompt_ts.json
+
+# ------------------------------------------------------------------------------
+# Fabric upstream patterns (large dependency, cloned locally — not part of repo)
+# ------------------------------------------------------------------------------
+tools/fabric-upstream/
+
 # Large reference repos (cloned locally, not committed)
 /refs/
+.mcp.json
