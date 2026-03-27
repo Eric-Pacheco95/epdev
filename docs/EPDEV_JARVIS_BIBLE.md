@@ -2,7 +2,7 @@
 
 > Your living guide to building and using the Jarvis AI brain.
 > **Pin this to your desktop. It updates as the project evolves.**
-> Last updated: 2026-03-26 | Phase: 1 (Foundation)
+> Last updated: 2026-03-27 | Phase: 2+ (skills & learning); Phase 3B ideal state captured
 
 ---
 
@@ -248,6 +248,17 @@ fabric --list
 
 ---
 
+## 🔌 Phase 3B — External integrations (ideal state)
+
+| Surface | Role |
+|---------|------|
+| **Notion (MCP)** | **Read-heavy:** context for TELOS and sessions. **Selective write** only when approved. **`memory/work/telos/*.md` in-repo stays canonical**; Jarvis merges Notion + chat/session into markdown updates. |
+| **Slack** | **Enforced:** `memory/work/slack-routing.md`. [**`#epdev`**](https://ericpdev.slack.com/archives/C0ANZKK12CD) (`C0ANZKK12CD`) = routine default; [**`#general`**](https://ericpdev.slack.com/archives/C0AKR43PDA4) (`C0AKR43PDA4`) = must-see only. ClaudeActivities + MCP route A. |
+| **ntfy** | Push to **iPhone** via ntfy iOS app; topic URL = secret; tie to heartbeat/regression (Phase 3E). |
+| **Observability** | **Miessler / PAI-shaped:** hooks + structured events; optional PAI observability pack patterns. **Langfuse** (or similar) optional if you want hosted LLM traces. |
+
+---
+
 ## 📊 GAP TRACKER: Kai vs Jarvis
 
 Features from Daniel Miessler's Kai that we still need:
@@ -274,7 +285,8 @@ Features from Daniel Miessler's Kai that we still need:
 | Meta-prompting templates | 65% token savings | ❌ Not yet | Medium |
 | UOCS (output capture) | Full history | ⚡ Partial (history/ exists) | Medium |
 | USER/SYSTEM separation | Upgrade-safe | ⚡ Partial (.cursorrules + CLAUDE.md) | Low |
-| MCP servers | 4+ servers | ❌ Not yet | Medium |
+| MCP servers | 4+ servers | ❌ Phase 3B — ideal state in tasklist + bible | Medium |
+| PAI-style observability (hooks / event capture) | pai-observability-server etc. | ❌ Prefer over raw Langfuse unless you choose SaaS traces | Medium |
 | Dashboard UI | Planned | ❌ Placeholder exists | Low |
 | GitHub-centric orchestration | Issues as tasks | ❌ Using tasklist.md instead | Low |
 | AI Steering Rules from failures | 84 failures analyzed | ❌ Need failures first | Auto |
@@ -295,6 +307,12 @@ Features from Daniel Miessler's Kai that we still need:
 ---
 
 ## 📅 CHANGELOG
+
+### 2026-03-27 — Phase 3B ideal state
+- Captured **Notion** (read-heavy, selective write; repo TELOS canonical), **Slack** (`#epdev` routine, `#general` critical-only), **ntfy** (iPhone), **PAI-aligned observability** vs optional Langfuse — see table above and `orchestration/tasklist.md`
+
+### 2026-03-27 — Slack channels locked + enforcement
+- **`memory/work/slack-routing.md`** — channel IDs, links, **enforced** rules; **ClaudeActivities** reuse; **MCP route A**. Decision: `history/decisions/2026-03-27_slack-epdev-routing.md`
 
 ### 2026-03-26 — Living bible + glossary
 - Added glossary (PRD, hooks, Desktop vs Code) and clarified that Desktop chats do not auto-run Jarvis hooks or learning

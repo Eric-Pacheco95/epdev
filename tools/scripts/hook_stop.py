@@ -12,6 +12,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Add repo root to path so slack_notify is importable
+_REPO_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_REPO_ROOT_FOR_IMPORT))
+from tools.scripts.slack_notify import notify, EPDEV  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 META_PATH = REPO_ROOT / "memory" / "learning" / "_signal_meta.json"
@@ -65,6 +70,17 @@ def main() -> None:
 
     # Log session end to stderr (visible in hook output)
     print(f"Session ended ({stop_reason}). Signals on file: {count}. Run /learning-capture to capture learnings.", file=sys.stderr)
+
+    # Post session digest to #epdev
+    ts = now.strftime("%Y-%m-%d %H:%M UTC")
+    msg = (
+        f":brain: *Jarvis session ended* — {ts}\n"
+        f"Stop reason: `{stop_reason}` | Learning signals on file: `{count}`"
+    )
+    if count > 0:
+        msg += "\n_Run `/learning-capture` to process signals._"
+    notify(msg, EPDEV)
+
     sys.exit(0)
 
 

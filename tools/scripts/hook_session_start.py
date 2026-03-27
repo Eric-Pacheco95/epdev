@@ -6,11 +6,16 @@ Loads rich context so Jarvis starts every session with full awareness.
 
 from __future__ import annotations
 
+import io
 import json
 import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+# Ensure stdout handles full Unicode regardless of Windows console code page
+if hasattr(sys.stdout, "buffer"):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
@@ -145,14 +150,16 @@ def main() -> None:
     # Skill registry grouped by use case
     print("Available Skills")
     print("-" * 40)
-    print("  Thinking:  /first-principles  /red-team  /analyze-claims  /find-logical-fallacies")
-    print("  Creating:  /create-prd  /create-pattern  /create-summary  /improve-prompt")
-    print("  Learning:  /extract-wisdom  /learning-capture  /synthesize-signals  /telos-report")
-    print("  Identity:  /telos-update")
-    print("  Security:  /security-audit  /threat-model  /review-code")
-    print("  System:    /self-heal  /update-steering-rules")
+    print("  Orchestrate: /delegation  /workflow-engine  /project-orchestrator  /spawn-agent")
+    print("  Thinking:    /first-principles  /red-team  /analyze-claims  /find-logical-fallacies")
+    print("  Creating:    /create-prd  /create-pattern  /create-summary  /improve-prompt")
+    print("  Learning:    /extract-wisdom  /learning-capture  /synthesize-signals  /telos-report")
+    print("  Identity:    /telos-update")
+    print("  Security:    /security-audit  /threat-model  /review-code")
+    print("  System:      /self-heal  /update-steering-rules")
+    print("  Mobile:      /voice-capture")
     print()
-    print("  No skill for your task? Say 'create a skill for X' -> /create-pattern")
+    print("  Tip: Just describe your task — /delegation will route it to the right skill")
     print("=" * 60)
     print()
 
