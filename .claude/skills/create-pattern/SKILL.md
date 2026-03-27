@@ -19,6 +19,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Derive a kebab-case skill name from the purpose (e.g., "analyze-claims", "extract-wisdom")
 - Save the generated skill to `.claude/skills/{skill-name}/SKILL.md` using the Write tool — Claude Code auto-discovers skills in this location
 - After saving, confirm the skill is registered by noting its `/skill-name` invocation command
+- Update the `/help` skill: open `.claude/skills/help/SKILL.md` and add the new skill's one-liner to the correct category group in the STEPS section so `/help` stays current
 - Output the new skill markdown document
 
 # OUTPUT INSTRUCTIONS

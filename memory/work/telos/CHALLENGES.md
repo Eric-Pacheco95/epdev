@@ -8,3 +8,5 @@
 | 4 | Work-life imbalance — over-index on productivity | Medium | TELOS as compass. Schedule discovery time. Guitar as meditation. | aware |
 | 5 | Financial runway — can't quit prematurely | Medium | Side hustles first. Build revenue before transitioning. | planning |
 | 6 | Government/privacy fears — surveillance concerns | Medium | Constitutional security rules. Encryption. Operational security habits. | active |
+| 7 | Attention/focus drift — ADHD-adjacent patterns | Medium | Ground with "what are my responsibilities at this instant?" Anchor to systems, not intent. | aware |
+| 8 | Experience deficit — building over living | Medium | Life is about experiences. Schedule novel activities, genuine connection, music alongside work. | aware |

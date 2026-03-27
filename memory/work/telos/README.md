@@ -1,11 +1,18 @@
 # TELOS System — Eric P (epdev)
 
 > Your identity, purpose, and self-knowledge — structured for Jarvis to load, reference, and update.
-> Last updated: 2026-03-25
+> Last updated: 2026-03-27
 
 ## How TELOS Works
 
 TELOS is your **living identity document**. Unlike static config, these files evolve based on your inputs — voice sessions, Claude Code sessions, Notion notes, and anything else Jarvis can capture.
+
+### Notion integration (ideal state)
+
+- **Jarvis reads Notion for context** when MCP (or a future workflow) is connected — useful for capture that never hit the repo.
+- **Writes to repo first for TELOS:** updates land in `memory/work/telos/*.md` from **merged** understanding (Notion + session + chat). Notion does not silently overwrite canonical markdown.
+- **Selective write back to Notion** only when a workflow explicitly allows it (e.g. approved mirror or summary page).
+- **Read-heavy, selective write** keeps git-markdown as the durable system of record while Notion stays a flexible capture surface.
 
 ### The Chain
 

@@ -40,6 +40,7 @@ Load documentation on-demand, not upfront:
 | Self-healing | `tests/self-heal/README.md` |
 | Defensive testing | `tests/defensive/README.md` |
 | Project status | `orchestration/tasklist.md` |
+| Phase 4 autonomous Jarvis | `memory/work/jarvis/PRD.md` |
 | Decision rationale | `history/decisions/` |
 
 ## Core Principles
@@ -49,6 +50,7 @@ Load documentation on-demand, not upfront:
 3. **History is sacred**: Every decision, change, and security event is logged with rationale
 4. **Learning compounds**: Signals from every session feed into synthesis documents
 5. **Orchestration is explicit**: All projects have defined inflows, outflows, and status tracking
+6. **Autonomous improvement**: Background jobs close gaps versus documented ideal state without requiring human chat sessions
 
 ## AI Steering Rules
 
@@ -60,6 +62,12 @@ Load documentation on-demand, not upfront:
 - Log all significant decisions to `history/decisions/`
 - After every completed task, run the LEARN phase
 - Self-heal: if a test fails, diagnose and fix before moving on
+- Run /learning-capture before session limits — do not rely solely on the Stop hook; hard session limit exits do not fire hooks
+- Update tasklist checkboxes immediately on completion — never let completed work sit unchecked; the tasklist is Eric's primary trust tool
+- Give minimum viable instruction first — Eric is a build-first learner; provide enough to start immediately, then refine as he acts
+- For mobile → desktop file write, always use iCloud Drive — OneDrive iOS Files provider is architecturally read-only; do not suggest permissions fixes
+- When Eric initiates Phase 3D, treat it as a protected design session — goal is a written brain spec document, do not dilute with other tasks
+- When smoke-testing Slack notify, "missing_scope" error = OAuth scope fix + reinstall, not a token or code issue
 
 ## Skill-First Execution
 
@@ -93,6 +101,11 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/security-audit` | Scan system for vulnerabilities |
 | `/synthesize-signals` | Distill accumulated signals into wisdom |
 | `/update-steering-rules` | Propose new rules from failures/feedback |
+| `/workflow-engine` | Chain skills into pipelines (Fabric "Stitches") |
+| `/delegation` | Route any task to the right skill/pipeline/handler |
+| `/project-orchestrator` | Manage projects, prioritize, track status |
+| `/spawn-agent` | Compose an AI agent from traits for a specific task |
+| `/voice-capture` | Process voice transcript from inbox → signals + TELOS queue |
 
 ## Directory Structure
 

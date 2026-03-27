@@ -4,8 +4,14 @@
 > Updated by: Eric (primarily)
 > Format: W# — Lesson
 
-(Populate this as you reflect. These are the things you'd tell your younger self.)
+W1 — "Live life like you have limited time." (Source: therapy reflection)
 
-> Examples of what goes here:
-> W1 — "The best system is one you actually use, not the most sophisticated one."
-> W2 — "Starting is harder than continuing. Build launch triggers, not motivation."
+W2 — "What can I do now that will make me better tomorrow?" (Source: therapy — use as daily grounding question)
+
+W3 — "People who act like they got life figured out are probably complacent and stagnant." (Source: therapy, Oct 2025)
+
+W4 — "Life is about experiences — I haven't been keeping that as a main focus." (Source: therapy — acknowledged gap)
+
+W5 — "The best system is one you actually use, not the most sophisticated one."
+
+W6 — "Starting is harder than continuing. Build launch triggers, not motivation."
