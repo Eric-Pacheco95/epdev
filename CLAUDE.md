@@ -68,6 +68,17 @@ Load documentation on-demand, not upfront:
 - For mobile → desktop file write, always use iCloud Drive — OneDrive iOS Files provider is architecturally read-only; do not suggest permissions fixes
 - When Eric initiates Phase 3D, treat it as a protected design session — goal is a written brain spec document, do not dilute with other tasks
 - When smoke-testing Slack notify, "missing_scope" error = OAuth scope fix + reinstall, not a token or code issue
+- For crypto-bot work: always read `C:\Users\ericp\Github\crypto-bot\crypto_alpha_trading_bot.plan.md` first to get current state before making any suggestions — never give advice based on stale assumptions
+- crypto-bot repo is at `C:\Users\ericp\Github\crypto-bot` (capital G in Github); all implementation work is done in Claude Code (Eric has Claude Max) — Cursor is no longer part of the workflow
+- Never suggest switching crypto-bot RUN_MODE to production without Eric's explicit approval in that session
+- MCP servers must use stdio transport (via npx/uvx) for tools to be discoverable — HTTP transport connects at the protocol level but does NOT register tools for in-session use; SSE must be explicitly supported by the provider before attempting
+- When debugging MCP issues, read `C:/Users/ericp/.claude.json` directly under `projects[path].mcpServers` — `claude mcp list` shows connection health only, not env vars, args, or transport details
+- After adding or reconfiguring an MCP server mid-session, always tell Eric to start a new session — MCP tool discovery is session-startup-only; ToolSearch will not find newly added tools in the current session
+- All hook commands in `settings.json` must use absolute paths — relative paths break silently when shell cwd drifts between Bash calls, blocking all subsequent Bash execution with no obvious error
+- For financial, geopolitical, or any current-events research, always use direct WebSearch — never spawn a sub-agent; sub-agents have an August 2025 knowledge cutoff and return no useful data for live topics
+- Fabric upstream patterns live at `tools/fabric-upstream/data/patterns/{name}/system.md` (moved from `patterns/`) — Fabric CLI requires interactive `fabric --setup` before any pattern execution; check before assuming it's operational
+- When walking Eric through credential/secret setup, never ask him to paste secrets in chat — instead confirm setup by offering a file-existence check (`dir path\to\file`) or a smoke-test command; session transcripts may be stored by Anthropic
+- Python CLI scripts that print to terminal must use ASCII-only output — Windows cp1252 encoding breaks Unicode box-drawing chars (─, —, ≥) with a hard UnicodeEncodeError; use -, --, >= instead
 
 ## Skill-First Execution
 
@@ -79,7 +90,9 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, suggest: "No skill exists for this yet. Want me to create one with `/create-pattern`?"
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (18 skills):**
+**Skill Registry (33 skills):**
+
+**Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/learning-capture`**
 
 | Skill | When to Use |
 |-------|------------|
@@ -94,8 +107,9 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/red-team` | Stress-test a plan, product, or idea for weaknesses |
 | `/improve-prompt` | Make any prompt better before running it |
 | `/find-logical-fallacies` | Detect reasoning errors in arguments |
-| `/create-prd` | Generate product requirements documents |
-| `/review-code` | Code review with security focus |
+| `/create-prd` | Generate product requirements documents — follow with `/implement-prd` |
+| `/implement-prd` | BUILD phase: read PRD → extract ISC → implement → /review-code → verify → mark complete |
+| `/review-code` | Code review with security focus — called by /implement-prd at VERIFY gate |
 | `/threat-model` | STRIDE threat modeling for security |
 | `/self-heal` | Auto-diagnose and fix failures |
 | `/security-audit` | Scan system for vulnerabilities |
@@ -105,7 +119,17 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/delegation` | Route any task to the right skill/pipeline/handler |
 | `/project-orchestrator` | Manage projects, prioritize, track status |
 | `/spawn-agent` | Compose an AI agent from traits for a specific task |
+| `/notion-sync` | Sync Notion Brain ↔ Jarvis: read Journal/Goals/Inbox, push Reports/TELOS Mirror |
 | `/voice-capture` | Process voice transcript from inbox → signals + TELOS queue |
+| `/project-init` | Full ISC pipeline for new projects: /research → /first-principles → /red-team → /create-prd |
+| `/research` | OBSERVE phase — Tavily-powered research brief for any topic or project |
+| `/teach` | Deep-dive lesson on any topic, contextualized to Jarvis + epdev system |
+| `/commit` | Create clean conventional commits with emoji, atomic split detection |
+| `/label-and-rate` | Classify and tier-rate content for curation decisions (S/A/B/C/D + JSON) |
+| `/rate-content` | Lightweight signal quality gate — use inside other skills before writing to disk |
+| `/visualize` | Generate Mermaid diagrams of brain structure, workflows, projects, investigations |
+| `/write-essay` | Write a clear, publish-ready essay on any topic (optional author style) |
+| `/create-keynote` | Build a TED-quality slide deck with speaker notes from any Jarvis output |
 
 ## Directory Structure
 
