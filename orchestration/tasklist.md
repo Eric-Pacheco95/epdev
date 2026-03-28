@@ -238,7 +238,7 @@
 
 - [x] **Source allow-list** — `memory/work/jarvis/sources.yaml` created with 6 Tier 1, 6 Tier 2, 12 Tier 3 sources. Companion rationale doc at `sources_rationale.md`. (2026-03-28)
 - [ ] **Human source review ritual** — After first research run, ask Eric: "What other sources should be added? (YouTube channels, blogs, GitHub repos, newsletters)" — capture answers in sources.yaml and `history/decisions/`
-- [x] **Research runner** — `tools/scripts/morning_feed.py` (Anthropic API direct, no claude -p) + `run_morning_feed.bat` wrapper. Task Scheduler `\Jarvis\JarvisMorningFeed` at 9am daily. Dry-run validated. BUILT -- awaiting first live run validation. (2026-03-28)
+- [ ] **Research runner** — `tools/scripts/morning_feed.py` (Anthropic API direct, no claude -p) + `run_morning_feed.bat` wrapper. Task Scheduler `\Jarvis\JarvisMorningFeed` at 9am daily. Dry-run validated. BUILT -- awaiting validation: first live 9am Slack post with rated proposals. (2026-03-28)
 - [x] **Cowork vs scheduler split** — Documented in PRD_autonomous_learning.md: overnight = Task Scheduler + claude -p (separate calls per dimension); morning feed = Task Scheduler + Python (Anthropic API direct); interactive = Claude Code session. (2026-03-28)
 - [ ] **Interleaved thinking for orchestration skills** — Enable interleaved thinking on `/delegation`, `/workflow-engine`, and `/spawn-agent`: think→tool→think→tool pattern dramatically improves multi-step research and agent composition. Configure via `interleaved-thinking-2025-05-14` header on Claude API calls inside these skills. Do alongside research runner — this is where it pays off most.
 - [ ] **Tool Search API** — When skill/tool count exceeds 50, implement Tool Search to prevent token explosion in orchestration loops. Evaluate as part of research runner architecture — autonomous research will eventually need to query 100+ tools by description without loading all schemas upfront.
@@ -280,6 +280,14 @@
 **Depends on:** Phase 4D (autoresearch is the primary producer). Can be built incrementally alongside 4B-4D — lineage index and event rotation are safe to ship immediately.
 
 ---
+
+## Open Validations (BUILT -- awaiting live confirmation)
+
+> **Purpose:** Items below are code-complete but need end-to-end confirmation in their target execution context (Task Scheduler, Slack, live session). Jarvis should surface these at session start until each is validated and moved to its parent `[x]` item.
+
+- [ ] **Morning feed live run** — Confirm Slack message posted to `#epdev` at 9am with vitals + proposals + overnight summary. Validate: check `#epdev` Slack after 9am tomorrow. Parent: Phase 4B Research runner.
+- [ ] **Overnight runner live run** — Confirm dimension execution, branch creation, Slack summary. Validate: check `data/logs/overnight_*.log` + `#epdev` Slack after 4am tonight. Parent: Phase 4D Runner.
+- [ ] **Autonomous value tracking hook** — Session-start hook detects morning-brief references and flips `acted_on` in `data/autonomous_value.jsonl`. Validate: reference a morning brief in session, then check JSONL. Parent: PRD FR-005.2.
 
 ## Phase 4 → Phase 5 Gate (verify before starting Phase 5)
 

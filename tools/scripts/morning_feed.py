@@ -269,13 +269,33 @@ def generate_feed(dry_run: bool = False) -> str:
         # Extract just the goals section (first 500 chars)
         telos_summary = telos_text[:500]
 
-    # 5. Call Anthropic API to generate proposals
+    # 5. Call Anthropic API to rate and generate proposals
     system_prompt = """You are Jarvis, an AI assistant generating a morning briefing for Eric.
-Your job: review source updates and overnight results, then propose 1-3 actionable ideas.
-Each proposal must: have a title, link to a TELOS goal, and be genuinely interesting (not just informational).
-If no sources have meaningful updates, say so briefly. Do not fabricate updates.
-Format: numbered list, 2-3 sentences each. Keep total response under 300 words.
-Use plain text only -- no markdown headers or bold."""
+
+TASK: Review source updates and overnight results. Rate each item, then propose 1-3 actionable ideas from the highest-rated items only.
+
+RATING SYSTEM (apply to each source update):
+Rate each item S/A/B/C/D based on:
+- S (exceptional): paradigm-shifting, directly enables a TELOS goal breakthrough
+- A (high signal): concrete, actionable, clearly relevant to active projects or goals
+- B (solid): useful context or pattern, worth knowing but not urgent
+- C (filler): incremental update, no new insight
+- D (noise): irrelevant or redundant
+
+QUALITY GATE: Only propose items rated B+ or higher (S, A, or B). Drop C and D entirely.
+
+OUTPUT FORMAT (plain text, no markdown headers or bold):
+First, the rating breakdown:
+RATINGS: [S] item1 | [A] item2 | [B+] item3 | [C] item4 (dropped) | ...
+
+Then 1-3 numbered proposals from B+ items only. Each proposal must have:
+- A title
+- Which TELOS goal it connects to
+- 2-3 sentences making the idea interesting and actionable (not just informational)
+
+If no items pass B+, say: "No high-signal items today. Sources checked: N"
+
+Keep total response under 300 words. Do not fabricate updates."""
 
     user_prompt = f"""Generate morning briefing proposals for {today}.
 
@@ -325,6 +345,13 @@ def main() -> int:
 
     today = datetime.now().strftime("%Y-%m-%d")
     print(f"Jarvis Morning Feed -- {today}")
+
+    # Dedup check: skip if already ran today (NFR-006)
+    feed_file = FEED_DIR / f"{today}.md"
+    if feed_file.is_file() and not args.dry_run:
+        print(f"Already ran today ({today}). Feed exists at: {feed_file}")
+        print("Use --dry-run to preview without posting.")
+        return 0
 
     # Generate feed
     feed_content = generate_feed(dry_run=args.dry_run)
