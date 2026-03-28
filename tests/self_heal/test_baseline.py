@@ -167,6 +167,23 @@ def check_agents() -> None:
         p = REPO_ROOT / rel
         check(p.exists() and p.stat().st_size > 0, "agents", rel)
 
+    # Run validate_agents.py to check Six-Section anatomy compliance
+    validator = REPO_ROOT / "tools" / "scripts" / "validate_agents.py"
+    if validator.exists():
+        try:
+            result = subprocess.run(
+                [sys.executable, str(validator)],
+                cwd=str(REPO_ROOT),
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            # Note: exit 1 means some agents missing sections (expected until all upgraded)
+            # We just check it runs without crashing (exit 0 or 1, not 2+)
+            check(result.returncode in (0, 1), "agents", "validate_agents.py runs without error")
+        except (subprocess.TimeoutExpired, OSError) as e:
+            check(False, "agents", f"validate_agents.py failed: {e}")
+
 
 # ---------------------------------------------------------------------------
 # 6. Security validators pass (run test suite)

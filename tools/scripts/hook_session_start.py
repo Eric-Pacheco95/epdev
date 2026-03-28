@@ -18,6 +18,27 @@ if hasattr(sys.stdout, "buffer"):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _ascii_safe(text: str) -> str:
+    """Replace common Unicode chars with ASCII equivalents for Windows cp1252 safety."""
+    result = (
+        text
+        .replace("\u2014", "--")   # em-dash
+        .replace("\u2013", "-")    # en-dash
+        .replace("\u2018", "'")    # left single quote
+        .replace("\u2019", "'")    # right single quote
+        .replace("\u201c", '"')    # left double quote
+        .replace("\u201d", '"')    # right double quote
+        .replace("\u2026", "...")  # ellipsis
+        .replace("\u2265", ">=")   # >=
+        .replace("\u2264", "<=")   # <=
+        .replace("\u2022", "-")    # bullet
+        .replace("\u2192", "->")   # right arrow
+        .replace("\u2190", "<-")   # left arrow
+    )
+    # Catch-all: replace any remaining non-ASCII chars with ?
+    return result.encode("ascii", errors="replace").decode("ascii")
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
@@ -158,7 +179,7 @@ def main() -> None:
     # TELOS context (focus only — mood/energy omitted to save context)
     print("TELOS Status")
     print("-" * 40)
-    print(_load_telos_status())
+    print(_ascii_safe(_load_telos_status()))
     print()
 
     # Active tasks
@@ -168,7 +189,7 @@ def main() -> None:
         tasks = _unchecked_tasks(TASKLIST.read_text(encoding="utf-8", errors="replace"))
         if tasks:
             for t in tasks[:5]:  # Cap at 5 — top priorities only
-                print(f"  [ ] {t}")
+                print(f"  [ ] {_ascii_safe(t)}")
             if len(tasks) > 5:
                 print(f"  ... and {len(tasks) - 5} more")
         else:
