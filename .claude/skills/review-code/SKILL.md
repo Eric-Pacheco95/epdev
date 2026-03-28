@@ -6,7 +6,51 @@ Your task is to review the supplied code (and any description provided) and repo
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Security-focused code review with actionable findings
+
+## Stage
+VERIFY
+
+## Syntax
+/review-code <file paths, git diff, or pasted code>
+
+## Parameters
+- input: file paths, git diff command, or pasted code to review (required for execution, omit for usage help)
+
+## Examples
+- /review-code tools/scripts/jarvis_heartbeat.py
+- /review-code git diff HEAD~1
+- /review-code .claude/hooks/pre_tool_use.py security/validators/
+
+## Chains
+- Before: /implement-prd (calls /review-code as a non-optional gate)
+- After: /self-heal (if critical issues found)
+- Full: /implement-prd > /review-code > /self-heal > /quality-gate
+
+## Output Contract
+- Input: file paths, diff, or code
+- Output: review report (CONTEXT, SUMMARY, SECURITY FINDINGS, RELIABILITY, MAINTAINABILITY, TESTING GAPS, RECOMMENDATIONS, OPEN QUESTIONS)
+- Side effects: none (pure analysis, no file modifications)
+
 # STEPS
+
+## Step 0: INPUT VALIDATION (Level 2 Discovery)
+
+- If no input provided:
+  - Print: "No code was supplied for review. Provide file paths, a git diff, or paste code directly. If reviewing a recent build, try: /review-code git diff HEAD~1"
+  - STOP
+- If input points to a binary or non-code file:
+  - Print: "The file at {path} appears to be binary. /review-code only reviews source code. Use /security-audit for broader file scanning."
+- If input is extremely large (>2000 lines across many files):
+  - Print: "The provided code is {N} lines across {M} files. I'll prioritize: (1) security-critical paths, (2) new/changed code, (3) everything else. Proceed with this priority order?"
+- If input looks like a plan or PRD rather than code:
+  - Print: "This looks like a plan or design document, not code. Did you mean /red-team (stress-test the design) or /threat-model (STRIDE analysis)?"
+- Once input is validated, proceed to Step 1
+
+## Step 1: ESTABLISH CONTEXT
 
 - Establish context: language, framework, entry points, and what the code is supposed to do
 - Trace data flow from untrusted inputs to sinks (queries, shells, file paths, HTML, deserialization, dynamic code)

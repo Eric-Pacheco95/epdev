@@ -6,13 +6,59 @@ You hold the full skill chain map. When any skill completes, you know what the n
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Route any task to the right skill, pipeline, or handler
+
+## Stage
+ORCHESTRATE
+
+## Syntax
+/delegation <task description or completed-skill output>
+
+## Parameters
+- task: free-text description of what needs to be done, or output from a completed skill to chain forward (required for execution, omit for usage help)
+
+## Examples
+- /delegation I want to build a Slack notification system
+- /delegation I just finished /research on MCP servers
+- /delegation Review the crypto-bot code for security issues
+- /delegation End my session
+
+## Chains
+- Before: anything (universal entry point)
+- After: any skill (routes to the right one)
+- Full: /delegation > [routed skill] > [next in chain] > /learning-capture
+
+## Output Contract
+- Input: task description or completed-skill output
+- Output: routing decision with rationale, next-in-chain suggestion
+- Side effects: may invoke routed skill immediately, may update orchestration/tasklist.md
+
 # STEPS
+
+## Step 0: INPUT VALIDATION (Level 2 Discovery)
+
+- If no input provided: print the DISCOVERY section as a usage block, then STOP
+- If input is too vague to classify (e.g. "help", "do something", single ambiguous word):
+  - Print: "I need more context to route this. What are you trying to accomplish? Examples: 'build X', 'research Y', 'review this code', 'end my session'"
+  - STOP
+- If multiple skills match equally:
+  - Print: "This could be routed to /skill-a (for X) or /skill-b (for Y). Which fits better? Or should I run both as a pipeline?"
+  - STOP and wait for user decision
+- If a routed skill fails during execution:
+  - Print: "The skill I routed to (/skill-name) failed: {error}. Running /self-heal to diagnose. If this recurs, the skill definition may need updating."
+- Once input is validated, proceed to Step 1
+
+## Step 1: RECEIVE
 
 - Receive the task or completed-skill output from the user
 - Classify the task by type:
   - **Skill task**: Maps directly to one existing skill → route to that skill
   - **Pipeline task**: Requires multiple skills chained → route to `/workflow-engine` with the chain defined
   - **Agent task**: Requires sustained, autonomous work → spawn a background agent via Claude Code Agent tool
+  - **Parallel dispatch**: Multiple independent tasks with no dependencies → spawn N agents in parallel using `run_in_background: true`, report via scoreboard table as each completes. Prompt template per agent: identity ("You are Jarvis") + mission + context files to read + output format + destination file. Use when 3+ tasks are independent and research/design-scoped (not mutations)
   - **Research task**: Needs external information gathering → route to `/research`
   - **Manual task**: Requires Eric's judgment, creativity, or personal input → flag for Eric with context
   - **New capability**: No skill exists → suggest `/create-pattern` with a description of the needed skill

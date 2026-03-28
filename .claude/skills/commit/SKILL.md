@@ -6,7 +6,52 @@ You exist because commit discipline compounds: good commit history makes self-he
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Create clean conventional commits with emoji, atomic split detection
+
+## Stage
+ORCHESTRATE
+
+## Syntax
+/commit [message or scope guidance]
+
+## Parameters
+- message: optional commit message or scope hint (default: auto-analyzes staged changes)
+
+## Examples
+- /commit
+- /commit phase 4A discovery system
+- /commit fix the heartbeat encoding bug
+
+## Chains
+- Before: any build or edit session
+- After: (leaf -- no required successor)
+- Full: [build work] > /review-code > /commit
+
+## Output Contract
+- Input: optional message guidance
+- Output: git commit with conventional format (emoji + type + scope + description)
+- Side effects: stages files, creates git commit, optionally logs to history/changes/
+
 # STEPS
+
+## Step 0: INPUT VALIDATION (Level 2 Discovery)
+
+- If no changes exist (nothing staged, nothing modified):
+  - Print: "Nothing to commit -- working tree is clean. Make some changes first."
+  - STOP
+- If only untracked files exist and none are staged:
+  - Print: "Only untracked files found. Review these before committing:" followed by the list
+  - Print: "Stage specific files with git add, or confirm which ones to include."
+  - STOP
+- If .env, *.key, or credential files appear in staged or modified files:
+  - Print: "WARNING: Potential secrets detected in staged files: {list}. These should NOT be committed. Remove them from staging with git reset HEAD {file}."
+  - STOP and wait for user confirmation
+- Once input is validated, proceed to Step 1
+
+## Step 1: STATUS
 
 1. Run `git status` to see what is staged and unstaged.
 

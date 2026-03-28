@@ -6,7 +6,53 @@ Your job is to ensure no session ends without its learnings being captured. You 
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+End-of-session knowledge capture -- extract signals, failures, skill gaps
+
+## Stage
+LEARN
+
+## Syntax
+/learning-capture [content]
+
+## Parameters
+- content: optional explicit text or transcript to analyze (default: reads current session context)
+
+## Examples
+- /learning-capture
+- /learning-capture "Voice transcript from mobile session about crypto-bot debugging"
+
+## Chains
+- Before: any build, research, or design session (this is always the final step)
+- After: /synthesize-signals (auto-invoked if signal count >= 15 or >= 8 with stale synthesis)
+- Full: [any session work] > /learning-capture > /synthesize-signals > /telos-update
+
+## Output Contract
+- Input: session context (auto) or explicit content
+- Output: signal summary (SIGNALS WRITTEN, FAILURES WRITTEN, SYNTHESIS STATUS, SKILL GAP CANDIDATES)
+- Side effects: writes signal files, writes failure files, updates _signal_meta.json, may invoke /synthesize-signals
+
 # STEPS
+
+## Step 0: INPUT VALIDATION (Level 2 Discovery)
+
+- If invoked in a fresh session with no prior work and no explicit content provided:
+  - Print: "I don't have enough session context to extract learnings. Either provide a specific topic/transcript, or this may be a fresh session with no prior work."
+  - STOP
+- If session was trivial (quick question, config tweak, no meaningful work):
+  - Print: "This session was too brief for meaningful signals. No signals written. (Quick questions and config tweaks don't need capture.)"
+  - STOP
+- If _signal_meta.json is missing or corrupt:
+  - Print: "_signal_meta.json not found or corrupt. Creating fresh metadata. Run /vitals to verify signal counts match actual files."
+  - Create fresh metadata and continue
+- If memory/learning/signals/ directory doesn't exist:
+  - Print: "Signals directory missing. Creating it now."
+  - Create directory and continue
+- Once validated, proceed to Step 1
+
+## Step 1: REVIEW
 
 - Review what happened in this session: what was discussed, built, decided, or discovered
 - Identify distinct learnings in these categories:
@@ -82,6 +128,35 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 # INPUT
 
 Analyze the current session and extract learnings. If invoked with specific context (e.g., a voice transcript or text), analyze that instead.
+
+# CONTRACT
+
+## Input
+- **required:** session context (auto-read from conversation) or explicit content
+  - type: text
+  - example: (no input needed when run at end of session -- reads conversation context)
+- **optional:** specific content to analyze (voice transcript, text block)
+  - type: text
+  - default: (analyzes current session)
+
+## Output
+- **produces:** learning signal summary
+  - format: structured-markdown
+  - sections: SIGNALS WRITTEN, FAILURES WRITTEN, SYNTHESIS STATUS, SKILL GAP CANDIDATES
+  - destination: stdout (summary) + files (signals)
+- **side-effects:**
+  - writes signal files to `memory/learning/signals/`
+  - writes failure files to `memory/learning/failures/` (if applicable)
+  - updates `memory/learning/_signal_meta.json`
+  - may invoke `/synthesize-signals` if threshold met (>= 15 signals or >= 8 + 24h old)
+
+## Errors
+- **trivial-session:** session had no meaningful work to capture
+  - recover: skill will say so and exit cleanly; no signals written; this is expected for quick Q&A sessions
+- **write-failure:** cannot write to memory/learning/ directory
+  - recover: check directory permissions and disk space; verify memory/learning/signals/ exists
+- **synthesis-failure:** auto-invoked /synthesize-signals fails
+  - recover: signals are already written safely; run /synthesize-signals manually in next session
 
 # SKILL CHAIN
 

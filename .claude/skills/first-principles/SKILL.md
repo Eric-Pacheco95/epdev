@@ -6,7 +6,50 @@ Your task is to deconstruct the situation described in the input and reason upwa
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Break a problem down to bedrock assumptions and rebuild from fundamentals
+
+## Stage
+THINK
+
+## Syntax
+/first-principles <problem or question>
+
+## Parameters
+- problem: free-text description of the problem, decision, or question to decompose (required for execution, omit for usage help)
+
+## Examples
+- /first-principles Should I build a custom trading bot or use an existing platform?
+- /first-principles Why is the Jarvis skill system hard to learn?
+- /first-principles Is MCP the right protocol for tool integration?
+
+## Chains
+- Before: /research (provides context to decompose)
+- After: /red-team (stress-test the conclusions)
+- Full: /research > /first-principles > /red-team > /create-prd
+
+## Output Contract
+- Input: problem or question text
+- Output: structured analysis (PROBLEM, KNOWN/UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION)
+- Side effects: none (pure analysis, no file output)
+
 # STEPS
+
+## Step 0: INPUT VALIDATION (Level 2 Discovery)
+
+- If no input provided: print the DISCOVERY section as a usage block, then STOP
+- If input is a single word or too vague to decompose:
+  - Print: "I need a specific problem, decision, or question to break down. Examples: 'Should I build X or buy Y?', 'Why does Z keep failing?', 'Is approach A better than B for this use case?'"
+  - STOP
+- If input looks like a code review or bug report:
+  - Print: "This looks like a code issue, not a first-principles question. Did you mean /review-code or /self-heal?"
+- If input looks like a research request:
+  - Print: "This looks like a research topic. Did you mean /research? First-principles works best when you already have context to decompose."
+- Once input is validated, proceed to Step 1
+
+## Step 1: RESTATE
 
 - Restate the user's goal or question in one precise sentence without jargon
 - List what is known versus unknown from the input; mark unknowns explicitly
