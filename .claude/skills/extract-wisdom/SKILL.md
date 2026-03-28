@@ -34,6 +34,35 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Do not start consecutive bullets with the same first three words.
 - When the input is substantial, aim for at least 10 IDEAS, 5 INSIGHTS, and 5 QUOTES.
 
+# CONTRACT
+
+## Input
+- **required:** content to analyze
+  - type: text
+  - example: `<article text, transcript, or pasted content>`
+- **optional:** content source URL or title
+  - type: text
+  - default: (unattributed)
+
+## Output
+- **produces:** structured wisdom extraction
+  - format: structured-markdown
+  - sections: IDEAS, INSIGHTS, QUOTES, HABITS, REFERENCES, RECOMMENDATIONS
+  - destination: stdout
+- **side-effects:** none (pure transform)
+
+## Errors
+- **empty-input:** no content provided or content is too short to extract from
+  - recover: provide at least 200 words of content; for URLs, use /research to fetch first
+- **no-substance:** content is fluff with no extractable ideas
+  - recover: output will contain "(none found in input)" in empty sections; consider /analyze-claims instead for fact-checking thin content
+
+# SKILL CHAIN
+
+- **Follows:** /research (brief as input) or direct content paste
+- **Precedes:** /create-summary, /telos-update, /learning-capture
+- **Composes:** (leaf -- pure extraction, no sub-skills)
+
 # INPUT
 
 INPUT:

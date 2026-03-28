@@ -1,7 +1,7 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-03-27 (Recalibrated: 3D complete via brain-map, 3E->4 gate 4/5 met, Cursor retired)
+> Last updated: 2026-03-28 (Fallacy audit: fixed stale gates, layer numbering, project status, STATE.md refresh)
 
 ## Active Projects
 
@@ -9,7 +9,7 @@
 |---------|--------|--------|-------|-------------|
 | epdev-jarvis-setup | active | green | epdev | Phase 3C Layer 2 + 3E ISC engine — see `orchestration/tasklist.md` Phase 3C/3E |
 | crypto-bot | active | yellow | epdev | Paper trading → production gate — see `memory/work/crypto_trading_bot/project_state.md` |
-| jarvis-brain-map | active | green | epdev | Phase 2: Canvas + Gap Visualization — see `memory/work/jarvis_brain_map/PRD.md` |
+| jarvis-brain-map | active | green | epdev | Phase 4: Drill-Down Panel — see `memory/work/jarvis_brain_map/PRD.md` |
 
 ## Phase 1: Foundation Tasks (COMPLETE)
 
@@ -213,7 +213,7 @@
 
 > **This gate protects Phase 4 from building on an empty foundation.** Phase 4 autoresearch iterates over accumulated signals and session history — if neither exists, the loop has nothing to improve on.
 
-- [x] **Heartbeat running** — ISC engine heartbeat fully operational: 19 collectors, diff engine, auto-signal writing, alert routing. 4+ snapshots produced. Scheduling (Task Scheduler wiring) still pending. Validated 2026-03-27.
+- [x] **Heartbeat running** — ISC engine heartbeat fully operational: 19 collectors, diff engine, auto-signal writing, alert routing. 4+ snapshots produced. Task Scheduler wired (Phase 4A). Validated 2026-03-27.
 - [x] **Learning loop active** — 97+ signals captured (10 raw + 87 processed), well past >=5 threshold. Validated 2026-03-27.
 - [x] **At least one synthesis run** — 5 synthesis docs in `memory/learning/synthesis/`. Last: `2026-03-27_synthesis.md`.
 - [x] **AI Steering Rules updated once** — Multiple steering rule updates merged into CLAUDE.md (MCP transport, hook paths, crypto-bot rules, etc.). Validated 2026-03-27.
@@ -268,8 +268,8 @@
 - [ ] **PAIMM AS2 verified** — Jarvis is proactive: heartbeat runs without human prompt, background research produces signals, Slack digests fire on cadence
 - [ ] **Autoresearch loop has run ≥3 cycles** — `memory/work/jarvis/autoresearch/` contains ≥3 dated run artifacts with metrics
 - [ ] **Steering rules updated from autonomous signals** — at least one CLAUDE.md change promoted from a `Source: autonomous` signal
-- [ ] **Voice capture Layer 1 live** — iOS Shortcut → iCloud → `voice_inbox_sync.py` → inbox pipeline confirmed working end-to-end; at least one real voice signal exists in `memory/learning/signals/` with `Source: voice`
-- [ ] **Remote terminal Layer 2 live** — Tailscale installed on desktop + iPhone; Blink Shell confirmed; full `claude` CLI session reachable from iPhone over Tailscale from outside home network
+- [ ] **Voice capture Layer 1 live** — Notion app / Slack `#jarvis-voice` → poller → signal pipeline confirmed working end-to-end; at least one real voice signal exists in `memory/learning/signals/` with `Source: voice`
+- [ ] **Remote terminal Layer 3 live** — Tailscale installed on desktop + iPhone; Blink Shell confirmed; full `claude` CLI session reachable from iPhone over Tailscale from outside home network
 - [ ] **Phase 5 scoped** — `memory/work/jarvis/PRD_phase5.md` stub exists with initial behavioral-change goals defined
 
 ---

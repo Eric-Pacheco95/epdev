@@ -23,7 +23,7 @@ All non-trivial tasks use TheAlgorithm's 7-phase loop:
 
 ## Ideal State Criteria (ISC) Rules
 
-- Each criterion: exactly 8 words, state-based, binary-testable
+- Each criterion: concise, state-based, binary-testable
 - Format: `- [ ] Criterion text here | Verify: method`
 - Tag confidence: `[E]`xplicit, `[I]`nferred, `[R]`everse-engineered
 - Tag verification type: `[M]`easurable (tested by collectors/metrics) or `[A]`rchitectural (enforced by code structure, verified by review) — prevents building unnecessary monitoring for invariants
@@ -64,6 +64,7 @@ Load documentation on-demand, not upfront:
 - After every completed task, run the LEARN phase
 - Self-heal: if a test fails, diagnose and fix before moving on
 - Run /learning-capture before session limits — do not rely solely on the Stop hook; hard session limit exits do not fire hooks
+- Sentiment signals in /learning-capture should only be written when the session deviates from the established baseline (positive, productive, fast decisions) — do not write rating-4 "session went well" signals; only capture: frustration, confusion, energy crash, new domain excitement, or behavioral pattern breaks; the baseline is proven across 8+ sessions and confirmations are noise
 - Update tasklist checkboxes immediately on completion — never let completed work sit unchecked; the tasklist is Eric's primary trust tool
 - Give minimum viable instruction first — Eric is a build-first learner; provide enough to start immediately, then refine as he acts
 - For mobile → desktop file write, always use iCloud Drive — OneDrive iOS Files provider is architecturally read-only; do not suggest permissions fixes
@@ -97,6 +98,8 @@ Load documentation on-demand, not upfront:
 - Phase gate criteria must include a verification command or file-existence check, not just self-reported status — example: "Heartbeat running" = `schtasks /query /tn "\Jarvis\JarvisHeartbeat"` returns Ready; unverifiable gates are decoration
 - When onboarding a pre-existing project under Jarvis governance: (1) `/deep-audit --onboard` for 5-axis parallel audit, (2) synthesize into tiered ISC tasklist, (3) create domain skills in project repo `.claude/skills/`, (4) register as `/project-orchestrator` external health source — this is the standard four-step pattern validated on crypto-bot
 - Claude Code Remote Triggers (cloud-scheduled agents) cannot invoke /skills, load CLAUDE.md, fire hooks, or access local files — prompts must be fully self-contained with inline instructions; for Jarvis-context work (security audit, steering, tasklist), use local Task Scheduler with `claude -p` instead
+- When facing 3+ viable implementation paths mid-build, run `/first-principles` before picking — ADHD build velocity defaults to the option with the most energy, not the best fit; `/first-principles` takes 5 minutes and prevents rework from wrong-fork commits
+- Before committing to any hard-to-reverse architecture decision (new integration, data model, infrastructure choice), run `/red-team` on the design — this catches failure modes, edge cases, and scope creep before they become sunk cost; especially important for Phase 4B+ autonomous systems where bad architecture compounds silently
 
 ## Skill-First Execution
 
@@ -108,9 +111,9 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, first ask: "Does this fit as a named sub-step inside an existing skill?" — narrow single-concern tasks (audit checks, scan steps) belong as sub-steps, not standalone skills; only propose `/create-pattern` if the task is a full workflow that can't be embedded
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (36 skills):**
+**Skill Registry (39 skills):**
 
-**Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/learning-capture`**
+**Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`**
 
 | Skill | When to Use |
 |-------|------------|
@@ -152,6 +155,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/create-keynote` | Build a TED-quality slide deck with speaker notes from any Jarvis output |
 | `/create-image` | Generate or edit images via Gemini (nanobanana MCP) — auto-selects model, ratio, and tool from prompt |
 | `/deep-audit` | Multi-axis codebase audit (architecture, security, error handling, domain logic, testing) — modes: --onboard, --evaluate, --cherry-pick |
+| `/vitals` | System health dashboard — ISC ratios, signal velocity, skill usage, heartbeat status |
 
 ## Directory Structure
 
