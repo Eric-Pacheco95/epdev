@@ -80,6 +80,7 @@ Load documentation on-demand, not upfront:
 - All hook commands in `settings.json` must use absolute paths — relative paths break silently when shell cwd drifts between Bash calls, blocking all subsequent Bash execution with no obvious error
 - Hooks fire on every message — never print content already in CLAUDE.md from a hook; hooks surface dynamic state only (current focus, top-N tasks, signal counts, security alerts); static docs and skill registries belong in CLAUDE.md where they load once
 - For financial, geopolitical, or any current-events research, always use direct WebSearch — never spawn a sub-agent; sub-agents have an August 2025 knowledge cutoff and return no useful data for live topics
+- /research auto-detects topic type (market/technical/live) and confirms with Eric before searching; use --market, --technical, --live flags to override; Live type always uses WebSearch per the current-events rule above
 - Fabric upstream patterns live at `tools/fabric-upstream/data/patterns/{name}/system.md` (moved from `patterns/`) — Fabric CLI requires interactive `fabric --setup` before any pattern execution; check before assuming it's operational
 - When walking Eric through credential/secret setup, never ask him to paste secrets in chat — instead confirm setup by offering a file-existence check (`dir path\to\file`) or a smoke-test command; session transcripts may be stored by Anthropic
 - When checking if a secret/credential exists in a file, always use `grep -c` (count only) — never `grep -n` or content-mode grep on .env files; line-content output exposes the key value in the terminal and session transcript
@@ -138,7 +139,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/notion-sync` | Sync Notion Brain ↔ Jarvis: read Journal/Goals/Inbox, push Reports/TELOS Mirror |
 | `/voice-capture` | Process voice transcript from inbox → signals + TELOS queue |
 | `/project-init` | Full ISC pipeline for new projects: /research → /first-principles → /red-team → /create-prd |
-| `/research` | OBSERVE phase — Tavily-powered research brief for any topic or project |
+| `/research` | Adaptive research: auto-detects --market / --technical / --live type, routes tools accordingly |
 | `/teach` | Deep-dive lesson on any topic, contextualized to Jarvis + epdev system |
 | `/commit` | Create clean conventional commits with emoji, atomic split detection |
 | `/label-and-rate` | Classify and tier-rate content for curation decisions (S/A/B/C/D + JSON) |

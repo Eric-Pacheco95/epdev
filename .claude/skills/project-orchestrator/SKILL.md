@@ -13,13 +13,18 @@ Take a step back and think step-by-step about how to achieve the best possible r
   - `memory/work/telos/PROJECTS.md` — project-level tracking
   - `memory/work/telos/GOALS.md` — goal alignment
   - `memory/work/telos/STATUS.md` — current life context
+- For external projects (repos outside epdev), also read their ISC health:
+  - Check the project's External Health Source (see registry below) for ISC pass/fail counts
+  - Read their CLAUDE.md "Current State" section for latest status
+  - Incorporate ISC health into the project's health color (red if Tier-1 blockers open, yellow if Tier-2 only, green if all clear)
 - Based on the request, perform one of these operations:
-  - **Status check**: Summarize all active projects, their health, and blockers
+  - **Status check**: Summarize all active projects, their health, and blockers. For external projects, include ISC tier summary.
   - **Add project**: Create a new project entry, trace it to a Problem/Goal, define initial tasks
   - **Update project**: Change status, add tasks, mark tasks complete, update health
   - **Prioritize**: Given current time/energy, recommend what to work on next
   - **Archive**: Move completed or abandoned projects to done status with rationale
   - **Decompose**: Break a project into phases and tasks with ordering
+  - **Deep health**: For a specific external project, read its full ISC tasklist and report per-tier status with blockers
 - For prioritization, consider:
   - Which goal does this serve? (higher-weighted goals = higher priority)
   - What's the current blocker? (unblocked work first)
@@ -46,13 +51,35 @@ Each project in PROJECTS.md should have:
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- For status checks: output a table of all projects with status, health, and next action
+- For status checks: output a table of all projects with status, health, ISC summary (if external), and next action
+- Example status check row for external project:
+  ```
+  | crypto-bot | BUILD | P1, G1 | RED [ISC 0/5 T1] | Fix webhook auth, ML samples, circuit breakers | 5 blockers before production |
+  ```
 - For prioritization: output a numbered list with rationale for the ordering
 - For new projects: show the project entry and initial task breakdown before writing
 - After writing changes, show a diff of what was updated
 - Always keep `tasklist.md` and `PROJECTS.md` in sync
 - If a project has been stuck (same status for 2+ weeks), flag it as yellow health
 - If a project can't trace to a Problem or Goal, question whether it belongs
+- For external projects, show ISC tier summary in the health column:
+  - `[ISC 0/5 T1 | 0/6 T2 | 0/10 T3]` — meaning 0 of 5 Tier-1 items done, etc.
+  - Health color derivation: T1 open = red, T1 clear + T2 open = yellow, all clear = green
+
+# EXTERNAL PROJECT HEALTH SOURCES
+
+External projects are repos outside epdev that Jarvis manages strategically. Each has an ISC tasklist that this skill reads for health assessment.
+
+| Project | Repo Path | ISC Tasklist | CLAUDE.md |
+|---------|-----------|--------------|-----------|
+| crypto-bot | `C:\Users\ericp\Github\crypto-bot` | `docs/ISC_HARDENING_TASKLIST.md` | `CLAUDE.md` "Current State" section |
+| brain-map (isce) | `C:\Users\ericp\Github\isce` | (not yet created) | `CLAUDE.md` |
+
+When reading an external ISC tasklist:
+1. Count checked `[x]` vs unchecked `[ ]` items per tier
+2. Report the tier breakdown in the status table
+3. List any Tier-1 blockers by name (these are the most actionable items)
+4. If the ISC tasklist doesn't exist yet for a project, flag it: "No ISC tasklist — consider running a deep audit"
 
 # INPUT
 

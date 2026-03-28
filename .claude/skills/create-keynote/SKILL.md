@@ -59,6 +59,13 @@ Default to **consumer** if unspecified and topic is general, **technical** if to
    ```
    Save the .pptx to `memory/work/{topic}/` alongside the markdown. Tell Eric the file path so he can open it or sync to phone.
 
+9. **Google Drive upload**: After PPTX generation, automatically upload the .pptx file(s) to Google Drive using the `mcp__google-drive__uploadFile` tool:
+   - **Folder**: `1Wsvq_GmMUMgm9griP4pFL3D3y3DSnyQw` (Jarvis Keynotes folder)
+   - **Name**: Use a descriptive name: `{Presentation Title} ({date}).pptx`
+   - Upload each .pptx (consumer and enterprise if paired decks)
+   - Report the Drive link to Eric so he can access from any device
+   - If the Drive MCP is not connected (tool not found), skip and tell Eric to upload manually
+
 # OUTPUT FORMAT
 
 ```markdown
@@ -115,7 +122,7 @@ After the presentation, append:
 ---
 **Source**: {what input this was built from}
 **PPTX**: {path to .pptx if generated, or "Run `python tools/scripts/keynote_to_pptx.py <file>` to generate"}
-**Phone access**: Push to Notion (`/notion-sync push report`) and export as PDF from Notion mobile, OR open the .pptx via OneDrive/iCloud on iPhone
+**Phone access**: Open from Google Drive (auto-uploaded), push to Notion (`/notion-sync push report`), or open .pptx via iCloud on iPhone
 **Save**: Save to `memory/work/{topic}/keynote_{date}.md` if approved
 ```
 
