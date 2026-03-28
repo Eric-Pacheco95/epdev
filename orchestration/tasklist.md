@@ -236,10 +236,10 @@
 
 ### Phase 4B — Autonomous research & pattern harvesting
 
-- [ ] **Source allow-list** — Create `memory/work/jarvis/sources.yaml`; seed with Miessler's own repos first: PAI GitHub, TheAlgorithm, Fabric patterns, PAIMM posts, Unsupervised Learning newsletter — these are the highest-signal sources for Jarvis's current development
+- [x] **Source allow-list** — `memory/work/jarvis/sources.yaml` created with 6 Tier 1, 6 Tier 2, 12 Tier 3 sources. Companion rationale doc at `sources_rationale.md`. (2026-03-28)
 - [ ] **Human source review ritual** — After first research run, ask Eric: "What other sources should be added? (YouTube channels, blogs, GitHub repos, newsletters)" — capture answers in sources.yaml and `history/decisions/`
-- [ ] **Research runner** — Scheduled job: fetch/summarize → draft digest → optional `memory/learning/signals/` with `Source: autonomous` or inbox folder for review
-- [ ] **Cowork vs scheduler split** — Document which steps run as OS jobs vs sandbox agent prompts (per PRD architecture table)
+- [x] **Research runner** — `tools/scripts/morning_feed.py` (Anthropic API direct, no claude -p) + `run_morning_feed.bat` wrapper. Task Scheduler `\Jarvis\JarvisMorningFeed` at 9am daily. Dry-run validated. BUILT -- awaiting first live run validation. (2026-03-28)
+- [x] **Cowork vs scheduler split** — Documented in PRD_autonomous_learning.md: overnight = Task Scheduler + claude -p (separate calls per dimension); morning feed = Task Scheduler + Python (Anthropic API direct); interactive = Claude Code session. (2026-03-28)
 - [ ] **Interleaved thinking for orchestration skills** — Enable interleaved thinking on `/delegation`, `/workflow-engine`, and `/spawn-agent`: think→tool→think→tool pattern dramatically improves multi-step research and agent composition. Configure via `interleaved-thinking-2025-05-14` header on Claude API calls inside these skills. Do alongside research runner — this is where it pays off most.
 - [ ] **Tool Search API** — When skill/tool count exceeds 50, implement Tool Search to prevent token explosion in orchestration loops. Evaluate as part of research runner architecture — autonomous research will eventually need to query 100+ tools by description without loading all schemas upfront.
 
@@ -252,13 +252,13 @@
 
 > Pattern from [karpathy/autoresearch](https://github.com/karpathy/autoresearch): human-steered **program**, bounded runs, **one writable surface** for the agent (here: review tree only — not live TELOS). Full spec: `memory/work/jarvis/PRD.md` §4D.
 
-- [ ] **`autoresearch_program.md`** — Create `memory/work/jarvis/autoresearch_program.md` (mission, metrics, step limits, what “better understanding” means)
-- [ ] **Review tree** — `memory/work/jarvis/autoresearch/` for runs, proposals, logs; canonical TELOS remains merge-only after human review
-- [ ] **Read scope** — Documented inputs: `memory/work/telos/`, `memory/learning/signals/` (+ synthesis/failures as needed), `memory/session/` (time-bounded)
-- [ ] **Runner** — `tools/scripts/jarvis_autoresearch.py` and/or documented Cowork/Claude Code batch prompt that enforces read/write boundaries
-- [ ] **Metrics per run** — Persist snapshot in run artifact (e.g. contradiction list, open questions, checklist score — per program file)
-- [ ] **Integration** — Optional signals with `Source: autonomous`; optional `#epdev` Slack when impact or delta crosses threshold
-- [ ] **Human merge path** — Document workflow: review queue → `/telos-update` or manual edit → delete or archive run
+- [x] **`autoresearch_program.md`** — Created at `memory/work/jarvis/autoresearch_program.md` with 6 dimensions (scaffolding, codebase_health, knowledge_synthesis, external_monitoring, prompt_quality, cross_project), each with metric/guard/scope/iterations. (2026-03-28)
+- [x] **Review tree** — `memory/work/jarvis/autoresearch/` created by runner; overnight reports at `overnight-YYYY-MM-DD/report.md`. TELOS remains merge-only. (2026-03-28)
+- [x] **Read scope** — Documented in PRD_autonomous_learning.md FR-004; cross_project reads TELOS + external repos read-only. (2026-03-28)
+- [x] **Runner** — `tools/scripts/overnight_runner.py` + `run_overnight_jarvis.bat` wrapper. Task Scheduler `\Jarvis\JarvisOvernight` at 4am daily, 2hr timeout. Dimension rotation, claude -p per dimension, Slack posting, state tracking. Self-test 9/9 passing. (2026-03-28)
+- [x] **Metrics per run** — TSV run log per iteration; run report includes baseline, final metric, kept/discarded counts. overnight_state.json tracks cumulative per-dimension stats. (2026-03-28)
+- [x] **Integration** — Post-loop `#epdev` Slack summary with dimension, metrics, branch, quality gate + security audit results. Morning feed includes overnight diff summary. (2026-03-28)
+- [x] **Human merge path** — All work on `jarvis/overnight-YYYY-MM-DD` branches. Eric merges in morning session. `/vitals` flags unmerged branches > 7 days. No auto-push. (2026-03-28)
 
 **Depends on:** Phase 4A–4C foundations; TELOS and learning layout stable enough to iterate; **Phase 3D "current vs ideal" spec must exist** before writing `autoresearch_program.md`. **Decision:** `history/decisions/2026-03-27_phase4-autonomous-self-improvement.md` (update with 4D)
 
