@@ -19,16 +19,47 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - For each theme, write a synthesis entry that:
   - Names the pattern or insight
   - Lists the supporting signals (by filename)
+  - Assigns a **maturity level** (see Confidence Model below)
   - States the implication for future behavior
   - Proposes a concrete action (steering rule, TELOS update, workflow change)
+- Apply the **harm multiplier**: failures and anti-patterns weigh 4x compared to positive signals. One failure outweighs four successes when determining theme priority.
 - Check if any synthesis findings warrant:
   - A new AI Steering Rule in CLAUDE.md (task #18)
   - A TELOS update (route to /telos-update)
   - A new skill or skill modification
   - A failure prevention rule
+- Review existing synthesis themes from prior runs for **confidence decay**: any theme not revalidated by new signals within 90 days should be downgraded one maturity level. Themes that decay below candidate become archived.
 - Write the synthesis document to `memory/learning/synthesis/`
 - Archive processed signals: move them to `memory/learning/signals/processed/` (create if needed)
 - Update `memory/learning/_signal_meta.json` with new counts
+
+# CONFIDENCE MODEL
+
+Each synthesized theme carries a maturity level and confidence score. Inspired by CASS Memory System patterns.
+
+## Maturity Ladder
+
+| Level | Criteria | Action threshold |
+|-------|----------|-----------------|
+| **candidate** | 2-3 supporting signals, no contradictions | Note in synthesis, no steering rule yet |
+| **established** | 4+ signals OR 2+ signals across different sessions/dates | Propose as steering rule or workflow change |
+| **proven** | Established + survived 1+ synthesis cycles without contradiction | Encode as permanent steering rule or TELOS update |
+
+## Confidence Decay
+
+- Themes have a **90-day half-life**. If no new supporting signal arrives within 90 days, downgrade one level.
+- proven -> established -> candidate -> archived
+- Decay prevents stale patterns from driving behavior indefinitely.
+
+## Harm Multiplier
+
+- Failures and anti-patterns count **4x** when scoring theme importance.
+- Rationale: one mistake is costlier than one success. The system should be more responsive to things going wrong than things going right.
+
+## Anti-Pattern Inversion
+
+- When a theme's proposed action is tried and fails, do NOT delete the theme. Instead, **invert it** into an anti-pattern: "Do NOT do X because Y happened."
+- Anti-patterns are stored alongside themes with an `anti-pattern: true` flag and carry their own maturity level.
 
 # SYNTHESIS FORMAT
 
@@ -43,7 +74,11 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 ## Themes
 
 ### Theme: {theme name}
+- Maturity: {candidate | established | proven}
+- Confidence: {0-100}% (decays 50% per 90 days without revalidation)
+- Anti-pattern: {false | true}
 - Supporting signals: {list of signal filenames}
+- Failure weight: {count of failure signals x4 multiplier}
 - Pattern: {what the signals collectively show}
 - Implication: {what should change}
 - Action: {specific next step}
@@ -55,6 +90,17 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 ## Proposed TELOS Updates
 
 (Any updates for memory/work/telos/ files, or "none proposed")
+
+## Confidence Decay Review
+
+(List any prior themes whose last supporting signal is >90 days old. Downgrade or archive.)
+
+| Theme | Previous maturity | New maturity | Last signal date | Reason |
+|-------|-------------------|-------------|------------------|--------|
+
+## Anti-Patterns
+
+(Themes that were tried and failed — inverted into "do NOT" rules.)
 
 ## Meta-Observations
 

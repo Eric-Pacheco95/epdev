@@ -2,7 +2,7 @@
 
 > Your living guide to building and using the Jarvis AI brain.
 > **Pin this to your desktop. It updates as the project evolves.**
-> Last updated: 2026-03-27 | Phase: 2+ (skills & learning); Phase 3B ideal state captured
+> Last updated: 2026-03-27 | Phase: 3E (ISC engine live); Phase 3B ideal state captured
 
 ---
 
@@ -306,7 +306,55 @@ Features from Daniel Miessler's Kai that we still need:
 
 ---
 
-## 📅 CHANGELOG
+## Scheduled Heartbeat (Windows Task Scheduler)
+
+The ISC engine heartbeat runs every 60 minutes via Windows Task Scheduler to monitor Jarvis health between sessions. It collects 19 metrics, diffs against the previous snapshot, auto-writes learning signals when thresholds are crossed, and routes alerts to Slack/ntfy.
+
+### How it works
+
+1. Task Scheduler calls `tools\scripts\run_heartbeat.bat` every 60 min
+2. The .bat wrapper sets working directory to repo root, logs to `data\logs\heartbeat_YYYY-MM-DD.log`
+3. Heartbeat runs all collectors, diffs vs previous snapshot, writes auto-signals on WARN/CRIT
+4. Env vars (`SLACK_BOT_TOKEN`, `NTFY_TOPIC`) inherit from user environment (confirmed via smoke test)
+
+### Task Scheduler commands
+
+```powershell
+# Create (already done — task name: JarvisHeartbeat)
+schtasks /create /tn "JarvisHeartbeat" /tr "C:\Users\ericp\Github\epdev\tools\scripts\run_heartbeat.bat" /sc minute /mo 60 /f
+
+# Verify
+schtasks /query /tn "JarvisHeartbeat" /v /fo list
+
+# Manual test run
+schtasks /run /tn "JarvisHeartbeat"
+
+# Remove if needed
+schtasks /delete /tn "JarvisHeartbeat" /f
+```
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `tools/scripts/run_heartbeat.bat` | Task Scheduler wrapper (sets cwd, logs output) |
+| `tools/scripts/jarvis_heartbeat.py` | Heartbeat engine (19 collectors, diff, signals, alerts) |
+| `heartbeat_config.json` | Thresholds, collectors, alert routing, cooldown |
+| `memory/work/isce/heartbeat_latest.json` | Latest snapshot |
+| `memory/work/isce/heartbeat_history.jsonl` | Append-only history |
+| `data/logs/heartbeat_YYYY-MM-DD.log` | Daily run logs |
+
+### Notes
+
+- The Stop hook also fires heartbeat with `--session-end` at the end of every Claude Code session
+- Auto-signals include `isc_ref` field linking to PRD ISC lines (Phase 4A addition)
+- Cooldown: 60 min per metric (configurable in `heartbeat_config.json`)
+- Daily alert caps: Slack 20, ntfy 5
+- Log rotation: use `tools/scripts/rotate_events.py` or manual cleanup of `data/logs/` and `heartbeat_history.jsonl`
+
+---
+
+## CHANGELOG
 
 ### 2026-03-27 — Phase 3B ideal state
 - Captured **Notion** (read-heavy, selective write; repo TELOS canonical), **Slack** (`#epdev` routine, `#general` critical-only), **ntfy** (iPhone), **PAI-aligned observability** vs optional Langfuse — see table above and `orchestration/tasklist.md`

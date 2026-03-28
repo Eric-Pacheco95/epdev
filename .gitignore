@@ -102,6 +102,8 @@ memory/work/jarvis_brain_map/
 memory/work/observability/
 memory/work/phase1-hooks-and-tests/
 memory/work/slack_mobile_hub/
+memory/work/emanuel_tools/
+memory/work/isce/
 # Voice inbox content
 memory/work/inbox/voice/*.md
 memory/work/inbox/voice/processed/*.md
@@ -124,6 +126,7 @@ history/events/
 # Runtime artifacts
 # ------------------------------------------------------------------------------
 .claude/prompt_ts.json
+data/
 
 # ------------------------------------------------------------------------------
 # Fabric upstream patterns (large dependency, cloned locally — not part of repo)

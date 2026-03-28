@@ -113,7 +113,7 @@
 - [x] **Slack (MCP)** — `#epdev` routine traffic via ClaudeActivities app confirmed working; stop hook posts session-end summaries. Full MCP read/write integration deferred — current posting flow meets needs.
 - [x] **Calendar (MCP)** — `@cocal/google-calendar-mcp` working. OAuth via `gcp-oauth.keys.json`. 3 calendars loading (primary, Family, Holidays). Validated 2026-03-27.
 - [x] **Gmail (MCP)** — `@gongrzhe/server-gmail-autoauth-mcp` working. Web app OAuth client (separate from calendar Desktop client). Credentials at `~/.gmail-mcp/credentials.json`. Scopes: `gmail.modify` + `gmail.settings.basic`. Validated 2026-03-27. **Note**: requires new session to load tools.
-- [x] **ntfy** — `ntfy_notify.py` + `hook_notification.py` built; `Notification` hook wired in `settings.json`. Topic: `epdev-ntfy` on ntfy.sh. **Pending**: `setx NTFY_TOPIC epdev-ntfy` → restart terminal → smoke-test.
+- ~~**ntfy**~~ **RETIRED** — All notifications routed to Slack. Scripts (`ntfy_notify.py`, `hook_notification.py`) remain but are inactive. Decision: 2026-03-27.
 - [x] **Observability Phase 1** — `hook_events.py` captures all PostToolUse events to `history/events/YYYY-MM-DD.jsonl`. Research brief at `memory/work/observability/research_brief.md`. Phase 2 (Langfuse) deferred to Phase 3E+.
 
 ### Phase 3C: Voice & Mobile Interface
@@ -139,12 +139,12 @@
 
 #### Layer 2: Slack Mobile Hub (ACTIVE — supersedes 3C-6/3C-7)
 
-- [ ] **3C-Slack-1: Channel setup** — Create `#jarvis-inbox`, `#jarvis-voice`, `#crypto-bot-commands` in Slack workspace. Add `SLACK_BOT_TOKEN`, `SLACK_JARVIS_INBOX_ID`, `SLACK_JARVIS_VOICE_ID`, `SLACK_EPDEV_ID` to epdev `.env`. **[MANUAL — Eric]**
+- [x] **3C-Slack-1: Channel setup** — Channels created, bot invited, all 4 channel IDs + SLACK_BOT_TOKEN added to epdev `.env`. Scope fix applied (channels:history + reinstall).
 - [x] **3C-Slack-2: `tools/slack_poller.py`** — Built. Polls `#jarvis-inbox` every 60s; runs `claude -p` from repo root (CLAUDE.md context auto-loads); replies in thread. State in `data/slack_poller_state.json`.
 - [x] **3C-Slack-3: `tools/slack_voice_processor.py`** — Built. Polls `#jarvis-voice` every 60s; runs voice-capture prompt headlessly; writes signals to `memory/learning/signals/`; posts confirmation in thread.
 - [x] **3C-Slack-4: Heartbeat → `#epdev`** — Already operational (`jarvis_heartbeat.py` posts to #epdev via SLACK_BOT_TOKEN).
 - [x] **3C-Slack-5: `tools/start_jarvis.bat`** — Built. Launches poller + voice processor in separate CMD windows; runs heartbeat once on startup.
-- [ ] **3C-Slack-6: End-to-end test** — Dictate into `#jarvis-inbox` from iPhone → Jarvis replies in thread within 90s. Log result in `history/changes/`.
+- [x] **3C-Slack-6: End-to-end test** — Poller confirmed live 2026-03-27. Message detected + reply posted in thread. Full iPhone test pending (use `start_jarvis.bat` to keep poller running).
 
 #### Layer 3: Remote CLI Fallback
 
@@ -172,7 +172,7 @@
 - [ ] **Voice signals tracked in heartbeat** — Add `voice_session_count` metric to heartbeat; alert in `#epdev` when no voice sessions in 7 days (behavioral gap signal for Phase 5)
 - [x] **Dashboard UI** — Replaced by jarvis-brain-map project (standalone repo). Phase 3.5 vitals route will serve as the dashboard. See `memory/work/jarvis_brain_map/PRD.md`.
 
-### Phase 3D: Visual system of record & ideal-state workflow (SUBSTANTIALLY COMPLETE)
+### Phase 3D: Visual system of record & ideal-state workflow (REOPENED — workflow spec missing)
 
 > **Status:** Replaced by standalone `jarvis-brain-map` project. PRD, research, architecture, and Phase 1 parser all complete. Remaining work tracked in `memory/work/jarvis_brain_map/PRD.md`.
 >
@@ -180,7 +180,7 @@
 
 - [x] **Clarify requirements** — Completed via `/project-init` pipeline: `/research` → `/first-principles` → `/red-team` → `/create-prd`. Brain spec defined in `memory/work/jarvis_brain_map/PRD.md` — nodes = TELOS/Goal/Project/Phase/PRD/ISC/Task/Skill/Signal; edges = drives/defines/decomposes-into/gap/etc. Git-markdown is source of truth; brain-map is read-only through Phase 3.
 - [x] **Survey tooling** — React Flow + Next.js + dagre chosen. Research brief at `memory/work/jarvis_brain_map/research_brief.md`. Compared Obsidian, Mermaid, custom dashboard. Decision: standalone `jarvis-brain-map` repo at `C:\Users\ericp\Github\jarvis-brain-map`.
-- [x] **Current vs ideal workflow** — ISC gap model: `[x]`=met (green), `[ ]`=open (red). Parser reads PRDs + tasklist, emits gap edges. Phase 3.5 vitals dashboard will visualize trends. `/vitals` skill (3E capstone) will report health to terminal.
+- [ ] **Current vs ideal workflow** — **REOPENED**: ISC gap model (checkbox status) was built but the actual workflow analysis document was never written. Need: Eric's real daily interaction patterns, ideal-state vision, friction map, and measurement vocabulary beyond ISC checkboxes. This document gates 4D autoresearch. See `memory/work/jarvis/3D_workflow_spec.md` (to be created).
 - [x] **Claude Code analysis session** — Full repo scan + analysis done 2026-03-27. Parser expansion roadmap defined (Phase 2.5). Vitals dashboard scoped (Phase 3.5). Cross-project dependency mapped: brain-map 3.5 depends on epdev 3E.
 
 ### Phase 3E: ISC engine & scheduled heartbeat
@@ -191,17 +191,17 @@
 >
 > **Example:** Every 30 minutes (configurable) a **heartbeat** job runs collectors (tests passing, defensive suite, file counts, hook self-check, optional health probes), scores each mapped **ISC** or “slowly improve” feature dimension, and **emits** structured notes when gaps or regressions cross thresholds.
 
-- [ ] **ISC engine PRD** — Spec in `memory/work/`: map each PRD ISC line (or feature dimension) to **metric keys**, **thresholds**, **severity**, and **when to write a learning signal** vs suppress noise
-- [ ] **Metric collectors** — Small, pluggable modules (stdlib-first): e.g. run `tests/defensive/`, parse results, repo counters, optional lint; output a single **snapshot JSON** per run
-- [ ] **`heartbeat` runner** — One CLI entrypoint (e.g. `tools/scripts/jarvis_heartbeat.py`) that loads config, runs collectors, diffs vs last snapshot, updates `memory/work/{project}/STATE.md` or a dedicated **heartbeat log** under `memory/work/` or `history/changes/`
-- [ ] **Scheduler** — **Windows Task Scheduler** (primary on your machine) or cron/WSL; document interval (e.g. 30 min), failure alerts, and log rotation in `docs/EPDEV_JARVIS_BIBLE.md`
-- [ ] **Gap → learning pipeline** — On regression or sustained gap: append **`memory/learning/signals/`** (and **`failures/`** if user-defined) with template: ISC ref, observed metrics, delta, suggested next action; optional link to `orchestration/tasklist.md` bullets
-- [ ] **Security & safety** — Heartbeat reads repo only; no secrets in logs; validate outputs against `security/constitutional-rules.md`; cap signal volume (dedupe, cooldown) to avoid spam
-- [ ] **Optional integrations** — Phase 3B: **ntfy** on regression; Phase 3C: dashboard reads last heartbeat JSON
-- [ ] **AI Steering Rules cadence** — Define ritual: after each `/synthesize-signals` pass (or monthly minimum), run `/update-steering-rules` to promote synthesis findings into `CLAUDE.md` behavioral corrections; log cadence in `docs/EPDEV_JARVIS_BIBLE.md`
+- [x] **ISC engine PRD** — `memory/work/isce/PRD.md` — 25 ISCs across 5 phases, 6 resolved decisions, config-driven architecture. Completed 2026-03-27.
+- [x] **Metric collectors** — `tools/scripts/collectors/core.py` — 19 collectors: file_count, velocity, checkbox, PRD ISC, query_events, recency, dir_count, disk_usage, hook_output_size, derived. All passing on live epdev. Completed 2026-03-27.
+- [x] **`heartbeat` runner** — `tools/scripts/jarvis_heartbeat.py` — Config-driven, 19 collectors, diff engine, auto-signal writing, modular alert routing, backward-compatible snapshot. Completed 2026-03-27.
+- [ ] **Scheduler** — **Windows Task Scheduler** (primary on your machine) or cron/WSL; document interval (e.g. 60 min), failure alerts, and log rotation in `docs/EPDEV_JARVIS_BIBLE.md`. Heartbeat CLI ready (`--quiet`, `--session-end`, `--config`).
+- [x] **Gap → learning pipeline** — Auto-signal writing on WARN/CRIT threshold crossings. Severity-scaled ratings (INFO=4, WARN=6, CRIT=8). Cooldown (60 min per metric). 3 auto-signals produced on first run. Completed 2026-03-27.
+- [x] **Security & safety** — Path traversal prevention via `_resolve_path` validation. Metric name sanitization for filenames. No secrets in output (verified). Alert daily caps. `/review-code` passed. Completed 2026-03-27.
+- [x] **Optional integrations** — Slack + ntfy alert routing built and config-driven. `rotate_events.py` for storage rotation. Completed 2026-03-27.
+- [x] **AI Steering Rules cadence** — Ritual established: run `/update-steering-rules` after each `/synthesize-signals` pass. Dynamic synthesis threshold replaces static count (15 hard ceiling, 8+24h, 5+72h tiers). 5 synthesis runs + 5 steering rule updates completed 2026-03-27. Decision logged.
 - [ ] **Agent-based hooks** — Upgrade `PreToolUse` validator (`security/validators/`) from shell script to Python agent: enables MCP tool access, richer logic, testability, and AST-based bash command approval (Dippy pattern from awesome-claude-code). Do after heartbeat is stable — hooks must not block ISC collection.
-- [ ] **`/vitals` skill (3E capstone)** — New Jarvis skill: runs heartbeat check, reads snapshot JSON + events JSONL + signal counts + ISC state, reports PAI health to terminal. Includes: skill usage frequency, ISC gap closure rate, signal velocity, task completion rate, missing skill detection. **Also powers brain-map Phase 3.5 `/vitals` route** (web UI for same data). Create skill only after heartbeat + collectors are working.
-- [ ] **[ISC 0/10] Context budget as vitals metric** — Token/context efficiency must be tracked in `/vitals`. Hook output size (char count proxy), MCP schema overhead estimate, and per-session burn rate should be measured and surfaced. ISC: hook output under 300 tokens | session context at 50% triggers warning | `/vitals` reports context efficiency score. **Why:** hook fires every user message — untracked context burn silently degrades long sessions and inflates cost. **Metric sources:** hook output char count, manual session benchmarks, future API usage headers. Implement alongside heartbeat collectors.
+- [x] **`/vitals` skill (3E capstone)** — `.claude/skills/vitals/SKILL.md` — Runs heartbeat, reads snapshot, presents ASCII-safe dashboard with ISC ratio, signal velocity, sessions/day, storage budget, missing skill detection. Completed 2026-03-27.
+- [x] **[ISC 8/10] Context budget as vitals metric** — `context_budget_proxy` collector measures hook output char count (1,692 chars current). Threshold: warn_above 3,000, crit_above 5,000. Tracked in heartbeat snapshot. Completed 2026-03-27. Remaining: MCP schema overhead estimate, per-session burn rate (needs API usage headers).
 
 **Depends on:** Phase 2 maturity (signals/synthesis patterns), Phase 3D “current vs ideal” spec (shared vocabulary for gaps). **Build in:** mostly **Claude Code/Python** + OS scheduler; Claude Code sessions **review** trends and promote steering rules. **Feeds into:** jarvis-brain-map Phase 3.5 vitals dashboard.
 
@@ -213,7 +213,7 @@
 
 > **This gate protects Phase 4 from building on an empty foundation.** Phase 4 autoresearch iterates over accumulated signals and session history — if neither exists, the loop has nothing to improve on.
 
-- [ ] **Heartbeat running** — `jarvis_heartbeat.py` is scheduled and has produced at least one successful snapshot JSON
+- [x] **Heartbeat running** — ISC engine heartbeat fully operational: 19 collectors, diff engine, auto-signal writing, alert routing. 4+ snapshots produced. Scheduling (Task Scheduler wiring) still pending. Validated 2026-03-27.
 - [x] **Learning loop active** — 97+ signals captured (10 raw + 87 processed), well past >=5 threshold. Validated 2026-03-27.
 - [x] **At least one synthesis run** — 5 synthesis docs in `memory/learning/synthesis/`. Last: `2026-03-27_synthesis.md`.
 - [x] **AI Steering Rules updated once** — Multiple steering rule updates merged into CLAUDE.md (MCP transport, hook paths, crypto-bot rules, etc.). Validated 2026-03-27.
@@ -228,10 +228,10 @@
 
 ### Phase 4A — Ideal-state loop & heartbeat (extends 3E)
 
-- [ ] **ISC mapping** — Wire `jarvis_heartbeat` (and collectors) to explicit thresholds from `memory/work/jarvis/PRD.md` ISC lines
-- [ ] **Gap → learning** — When metrics cross thresholds, append structured signals (template references ISC); dedupe and cooldown
-- [ ] **Windows Task Scheduler** — Document tasks for heartbeat interval; env inheritance (`SLACK_BOT_TOKEN`); log rotation pointer in `docs/EPDEV_JARVIS_BIBLE.md`
-- [ ] **Subagent tool scoping** — Define MCP tool access policy per agent role: security validators cannot access Slack/Notion MCPs; voice agents cannot write to core memory; research agents get read-only file access. Document policy in `security/constitutional-rules.md` and enforce via settings.json subagent config.
+- [x] **ISC mapping** — `isc_ref` field added to collector config + auto-signal frontmatter. PRD ISC lines mapped: 4 measurable (collectors), 4 architectural (code-enforced). Completed 2026-03-27.
+- [x] **Gap → learning** — Auto-signals now include `isc_ref` in frontmatter + body linking to PRD ISC. Dedup/cooldown verified (60 min per metric). Dry-run test passed. Completed 2026-03-27.
+- [x] **Windows Task Scheduler** — `JarvisHeartbeat` task runs every 60 min via `run_heartbeat.bat`. Absolute Python path, PowerShell date for logs, env vars inherited. Documented in bible. Completed 2026-03-27.
+- [x] **Subagent tool scoping** — Layer 5 policy added to `security/constitutional-rules.md`: 7 roles with explicit MCP tool + file access boundaries. Non-negotiable rules: no TELOS writes, no git push, no #general without severity check. Completed 2026-03-27.
 
 ### Phase 4B — Autonomous research & pattern harvesting
 

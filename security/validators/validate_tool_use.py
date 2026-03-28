@@ -51,6 +51,56 @@ DISK_DANGER = re.compile(
 )
 
 
+def _blocked_git_destructive(cmd: str) -> bool:
+    """Patterns from dcg: git commands that destroy uncommitted work."""
+    if not re.search(r"\bgit\b", cmd):
+        return False
+    # git reset --hard / --merge (destroys working tree)
+    if re.search(r"\bgit\s+reset\b.*(?:--hard|--merge)\b", cmd):
+        return True
+    # git checkout -- <file> or git checkout . (discards uncommitted changes)
+    if re.search(r"\bgit\s+checkout\b.*\s--\s", cmd):
+        return True
+    if re.search(r"\bgit\s+checkout\s+\.\s*$", cmd):
+        return True
+    # git clean -f (deletes untracked files)
+    if re.search(r"\bgit\s+clean\b.*-[a-z]*f", cmd):
+        return True
+    # git stash drop / git stash clear (destroys stashed work)
+    if re.search(r"\bgit\s+stash\s+(?:drop|clear)\b", cmd):
+        return True
+    # git branch -D (force-delete branch)
+    if re.search(r"\bgit\s+branch\s+-D\b", cmd):
+        return True
+    # git restore . (discard all working tree changes)
+    if re.search(r"\bgit\s+restore\s+\.\s*$", cmd):
+        return True
+    return False
+
+
+def _inline_script_destructive(cmd: str) -> bool:
+    """Patterns from dcg: destructive commands hidden in inline scripts."""
+    # python -c / python3 -c with dangerous calls
+    py_inline = re.search(r"\bpython[3]?\s+-c\s+[\"'](.+?)[\"']", cmd)
+    if py_inline:
+        body = py_inline.group(1)
+        if re.search(r"\b(?:os\.remove|os\.unlink|shutil\.rmtree|os\.system)\b", body):
+            return True
+    # node -e with dangerous calls
+    node_inline = re.search(r"\bnode\s+-e\s+[\"'](.+?)[\"']", cmd)
+    if node_inline:
+        body = node_inline.group(1)
+        if re.search(r"\b(?:unlinkSync|rmdirSync|rmSync|execSync)\b", body):
+            return True
+    # bash -c / sh -c wrapping destructive commands
+    sh_inline = re.search(r"\b(?:ba)?sh\s+-c\s+[\"'](.+?)[\"']", cmd)
+    if sh_inline:
+        body = sh_inline.group(1)
+        if re.search(r"\brm\s+-[a-z]*rf\b", body) or re.search(r"\bgit\s+reset\s+--hard\b", body):
+            return True
+    return False
+
+
 def _blocked_rm_rf(cmd: str) -> bool:
     if not re.search(r"\brm\b", cmd):
         return False
@@ -133,6 +183,12 @@ def validate_bash_command(command: str) -> dict[str, Any]:
 
     if _blocked_rm_rf(cmd):
         return _result("block", "Blocked recursive delete pattern (constitutional rules)")
+
+    if _blocked_git_destructive(cmd):
+        return _result("block", "Destructive git command blocked (dcg pattern)")
+
+    if _inline_script_destructive(cmd):
+        return _result("block", "Destructive command in inline script blocked (dcg pattern)")
 
     if _blocked_git_force_main(cmd):
         return _result("block", "git push --force to main/master is blocked")

@@ -23,7 +23,44 @@ SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
 SECURITY_DIR = REPO_ROOT / "history" / "security"
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
-SYNTHESIS_TRIGGER = 15
+SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
+
+# Dynamic synthesis threshold:
+#   >= 15 signals: always trigger (hard ceiling)
+#   >= 8 signals AND >= 24h since last synthesis: enough data + time
+#   >= 5 signals AND >= 72h since last synthesis: stale signals lose context
+SYNTHESIS_HARD_CEILING = 15
+SYNTHESIS_TIERS = [
+    (8, 24),   # (min_signals, min_hours_since_last_synthesis)
+    (5, 72),
+]
+
+
+def _hours_since_last_synthesis() -> float:
+    """Return hours since newest synthesis file was modified, or inf if none."""
+    if not SYNTHESIS_DIR.is_dir():
+        return float("inf")
+    newest = None
+    for p in SYNTHESIS_DIR.iterdir():
+        if p.is_file() and p.suffix == ".md" and not p.name.startswith("miessler"):
+            mtime = p.stat().st_mtime
+            if newest is None or mtime > newest:
+                newest = mtime
+    if newest is None:
+        return float("inf")
+    elapsed = (datetime.now(timezone.utc) - datetime.fromtimestamp(newest, tz=timezone.utc)).total_seconds()
+    return elapsed / 3600
+
+
+def _synthesis_due(n_signals: int) -> tuple[bool, str]:
+    """Check if synthesis should be triggered. Returns (due, reason)."""
+    if n_signals >= SYNTHESIS_HARD_CEILING:
+        return True, f"signal count ({n_signals}) >= hard ceiling ({SYNTHESIS_HARD_CEILING})"
+    hours = _hours_since_last_synthesis()
+    for min_signals, min_hours in SYNTHESIS_TIERS:
+        if n_signals >= min_signals and hours >= min_hours:
+            return True, f"{n_signals} signals + {hours:.0f}h since last synthesis (threshold: {min_signals} signals / {min_hours}h)"
+    return False, ""
 
 
 def _unchecked_tasks(text: str) -> list[str]:
@@ -144,11 +181,10 @@ def main() -> None:
     n_signals = _count_files(SIGNALS_DIR)
     n_failures = _count_files(FAILURES_DIR)
     print(f"Learning signals: {n_signals} | Failures logged: {n_failures}")
-    if n_signals > SYNTHESIS_TRIGGER:
-        print(
-            f"  >>> Signal count exceeds synthesis threshold ({SYNTHESIS_TRIGGER})."
-        )
-        print("      Run synthesis when ready (or /learning-capture to process).")
+    due, reason = _synthesis_due(n_signals)
+    if due:
+        print(f"  >>> Synthesis due: {reason}")
+        print("      Run /synthesize-signals when ready.")
     print()
 
     # Recent security events
