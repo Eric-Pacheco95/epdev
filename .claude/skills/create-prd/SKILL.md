@@ -6,7 +6,52 @@ Your task is to produce a PRD grounded in the input: scope, constraints, and exp
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Generate a product requirements document with ISC criteria
+
+## Stage
+PLAN
+
+## Syntax
+/create-prd <description or research-brief-path>
+
+## Parameters
+- description: free-text feature/product description (required for execution, omit for usage help)
+- research-brief-path: optional file path to a /research output for richer context
+
+## Examples
+- /create-prd Build an autonomous task runner for Jarvis that executes safe tasks on a schedule
+- /create-prd memory/work/jarvis/research_brief.md
+
+## Chains
+- Before: /research (brief as input), /red-team (stress-test findings as input)
+- After: /implement-prd (pass PRD file path as input)
+- Full: /research > /first-principles > /red-team > /create-prd > /implement-prd > /learning-capture
+
+## Output Contract
+- Input: text description or research brief file path
+- Output: PRD file at memory/work/<project-slug>/PRD.md + stdout
+- Side effects: creates PRD file in memory/work/
+
 # STEPS
+
+## Step 0: INPUT VALIDATION (Level 2 Discovery)
+
+- If no input provided: print the DISCOVERY section as a usage block, then STOP
+- If input is too vague (fewer than 5 words, no problem statement):
+  - Print: "The description '{input}' is too high-level for actionable requirements. I need at least: (1) what problem it solves, (2) who uses it, (3) one concrete example of desired behavior. Or run /research first."
+- If input looks like an implementation request (contains code, file paths, or "fix this"):
+  - Print: "This looks like an implementation request, not a requirements definition. If you have a PRD already, run /implement-prd <path>. If you need to build without a PRD, consider whether the scope warrants one."
+- If a PRD already exists at the target path:
+  - Print: "A PRD already exists at {path}. Overwrite it, or create a versioned copy?"
+  - STOP and wait for user decision
+- If no research context found and topic seems complex:
+  - Print: "No research brief found for this topic. The PRD will be based solely on your description. For a stronger foundation, run /research <topic> first. Proceed anyway?"
+- Once input is validated, proceed to Step 1
+
+## Step 1: EXTRACT
 
 - Extract the product or feature name, intended audience, and the problem being solved from the input
 - Separate stated goals from implied goals; list explicit non-goals when the input provides them or clearly implies boundaries
@@ -38,6 +83,32 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - OPEN QUESTIONS: bullet list of decisions or information still needed
 - Do not invent revenue figures, legal commitments, or named customers not present in the input.
 - Do not give meta-commentary about being an AI; only output the sections above.
+
+# CONTRACT
+
+## Input
+- **required:** project description or research brief
+  - type: text
+  - example: `Build an autonomous task runner for Jarvis that executes safe tasks on a schedule`
+- **optional:** research brief file path
+  - type: file-path
+  - example: `memory/work/jarvis/research_brief.md`
+  - default: (uses inline description if no file)
+
+## Output
+- **produces:** product requirements document
+  - format: structured-markdown
+  - sections: OVERVIEW, PROBLEM AND GOALS, NON-GOALS, USERS AND PERSONAS, USER JOURNEYS OR SCENARIOS, FUNCTIONAL REQUIREMENTS, NON-FUNCTIONAL REQUIREMENTS, ACCEPTANCE CRITERIA, SUCCESS METRICS, OUT OF SCOPE, DEPENDENCIES AND INTEGRATIONS, RISKS AND ASSUMPTIONS, OPEN QUESTIONS
+  - destination: file (`memory/work/<project-slug>/PRD.md`) + stdout
+- **side-effects:** creates PRD file in memory/work/
+
+## Errors
+- **scope-unclear:** input is too vague to derive requirements
+  - recover: provide more context about the problem, target users, and constraints; or run /research first to build a brief
+- **no-goals:** cannot identify measurable goals from input
+  - recover: explicitly state what success looks like; skill will flag "(to be defined)" metrics for stakeholder review
+- **duplicate-prd:** a PRD already exists at the target path
+  - recover: skill will ask whether to overwrite or create a versioned copy
 
 # SKILL CHAIN
 

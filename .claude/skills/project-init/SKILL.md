@@ -55,6 +55,10 @@ Take a step back and think step-by-step about how to achieve the best possible r
    - Create `memory/work/{slug}/project_state.md` with ISC checklist
    - Add CLAUDE.md to the project repo if it's a separate codebase
 
+## Phase 4.5: VISUALIZE (optional)
+
+9.5. After PRD is saved, offer: "Want a `/visualize project` diagram showing the project structure, dependencies, and phase map?" — invoke `/visualize` only if Eric accepts
+
 ## Phase 5: LEARN — Capture the init
 
 10. Write a learning signal summarizing:

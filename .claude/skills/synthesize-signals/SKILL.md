@@ -31,6 +31,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Review existing synthesis themes from prior runs for **confidence decay**: any theme not revalidated by new signals within 90 days should be downgraded one maturity level. Themes that decay below candidate become archived.
 - Write the synthesis document to `memory/learning/synthesis/`
 - Archive processed signals: move them to `memory/learning/signals/processed/` (create if needed)
+- Append lineage records to `memory/learning/signal_lineage.jsonl` — one JSON line per consumed signal: `{"signal": "filename.md", "synthesis": "YYYY-MM-DD_synthesis.md", "date": "YYYY-MM-DD", "themes": ["theme1", "theme2"]}`. This enables reverse-lookup (signal -> synthesis) without a separate manifest system.
 - Update `memory/learning/_signal_meta.json` with new counts
 
 # CONFIDENCE MODEL

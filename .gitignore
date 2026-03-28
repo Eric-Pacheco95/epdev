@@ -105,6 +105,10 @@ memory/work/slack_mobile_hub/
 memory/work/emanuel_tools/
 memory/work/isce/
 memory/work/evolution-big-bang/
+memory/work/agent-orchestration-research/
+memory/work/teach/
+memory/work/frontend-research/
+memory/work/poc-agent-loop/
 # Voice inbox content
 memory/work/inbox/voice/*.md
 memory/work/inbox/voice/processed/*.md
@@ -114,6 +118,7 @@ memory/learning/signals/processed/
 memory/learning/failures/*.md
 memory/learning/synthesis/*.md
 memory/learning/_signal_meta.json
+memory/learning/signal_lineage.jsonl
 
 # ------------------------------------------------------------------------------
 # Personal history content — blank-slate template only

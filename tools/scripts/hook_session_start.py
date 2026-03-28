@@ -18,21 +18,43 @@ if hasattr(sys.stdout, "buffer"):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _ascii_safe(text: str) -> str:
+    """Replace common Unicode chars with ASCII equivalents for Windows cp1252 safety."""
+    result = (
+        text
+        .replace("\u2014", "--")   # em-dash
+        .replace("\u2013", "-")    # en-dash
+        .replace("\u2018", "'")    # left single quote
+        .replace("\u2019", "'")    # right single quote
+        .replace("\u201c", '"')    # left double quote
+        .replace("\u201d", '"')    # right double quote
+        .replace("\u2026", "...")  # ellipsis
+        .replace("\u2265", ">=")   # >=
+        .replace("\u2264", "<=")   # <=
+        .replace("\u2022", "-")    # bullet
+        .replace("\u2192", "->")   # right arrow
+        .replace("\u2190", "<-")   # left arrow
+    )
+    # Catch-all: replace any remaining non-ASCII chars with ?
+    return result.encode("ascii", errors="replace").decode("ascii")
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
 SECURITY_DIR = REPO_ROOT / "history" / "security"
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
+VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
 
 # Dynamic synthesis threshold:
-#   >= 15 signals: always trigger (hard ceiling)
-#   >= 8 signals AND >= 24h since last synthesis: enough data + time
-#   >= 5 signals AND >= 72h since last synthesis: stale signals lose context
-SYNTHESIS_HARD_CEILING = 15
+#   >= 20 signals: always trigger (hard ceiling)
+#   >= 10 signals AND >= 48h since last synthesis: enough data + time
+#   >= 8 signals AND >= 72h since last synthesis: stale signals lose context
+SYNTHESIS_HARD_CEILING = 20
 SYNTHESIS_TIERS = [
-    (8, 24),   # (min_signals, min_hours_since_last_synthesis)
-    (5, 72),
+    (10, 48),  # (min_signals, min_hours_since_last_synthesis)
+    (8, 72),
 ]
 
 
@@ -132,6 +154,99 @@ def _load_telos_status() -> str:
     return "\n".join(lines) if lines else "(no TELOS status loaded)"
 
 
+# -- Autonomous value tracking -----------------------------------------------
+
+MORNING_BRIEF_PHRASES = [
+    "from today's morning slack brief",
+    "from the morning feed",
+    "from the morning brief",
+    "that idea from overnight",
+    "morning briefing",
+    "morning proposal",
+]
+
+
+def _check_morning_brief_reference(user_prompt: str) -> None:
+    """Check if user's prompt references a morning briefing proposal.
+
+    If a match is found, update the most recent unacted proposal in
+    autonomous_value.jsonl to acted_on=true.
+    """
+    if not user_prompt or not VALUE_FILE.is_file():
+        return
+
+    prompt_lower = user_prompt.lower()
+    matched = any(phrase in prompt_lower for phrase in MORNING_BRIEF_PHRASES)
+    if not matched:
+        return
+
+    # Find today's proposals and mark the first unacted one
+    today = datetime.now().strftime("%Y-%m-%d")
+    lines = VALUE_FILE.read_text(encoding="utf-8").strip().splitlines()
+    updated = False
+    new_lines = []
+
+    for line in lines:
+        if not updated:
+            try:
+                entry = json.loads(line)
+                if (entry.get("date") == today
+                        and not entry.get("acted_on", False)):
+                    entry["acted_on"] = True
+                    entry["reference_session"] = datetime.now().isoformat()
+                    line = json.dumps(entry)
+                    updated = True
+            except (json.JSONDecodeError, KeyError):
+                pass
+        new_lines.append(line)
+
+    if updated:
+        VALUE_FILE.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+
+
+# -- Open validations reminder -----------------------------------------------
+
+def _check_open_validations() -> list[str]:
+    """Check for BUILT items awaiting validation in the tasklist.
+
+    Scans both the "Validate What's Built" tier (Priority Backlog Tier 1)
+    and any remaining "Open Validations" section for unchecked items.
+    Also picks up any Phase 4D items marked BUILT -- awaiting validation.
+    """
+    if not TASKLIST.is_file():
+        return []
+
+    text = TASKLIST.read_text(encoding="utf-8", errors="replace")
+    validations = []
+
+    in_section = False
+    for line in text.splitlines():
+        # Match both the old section name and the new Tier 1 header
+        if "Open Validations" in line or "Validate What" in line:
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break  # end of section
+        # Also stop at the next tier header
+        if in_section and line.startswith("### Tier"):
+            break
+        if in_section and line.strip().startswith("- [ ]"):
+            m = re.match(r"^- \[ \] \*\*(.+?)\*\*", line.strip())
+            if m:
+                validations.append(m.group(1))
+
+    # Also scan for inline BUILT -- awaiting validation items anywhere
+    for line in text.splitlines():
+        if "BUILT -- awaiting validation" in line and "- [ ]" in line:
+            m = re.match(r"^-\s*\[ \]\s*\*\*(.+?)\*\*", line.strip())
+            if m:
+                title = m.group(1)
+                if title not in validations:
+                    validations.append(title)
+
+    return validations
+
+
 _PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
 
 
@@ -147,6 +262,25 @@ def _stamp_prompt_ts() -> None:
 
 def main() -> None:
     _stamp_prompt_ts()
+
+    # Read user prompt from stdin (hook receives JSON with prompt content)
+    user_prompt = ""
+    try:
+        if not sys.stdin.isatty():
+            hook_input = sys.stdin.read()
+            if hook_input.strip():
+                try:
+                    data = json.loads(hook_input)
+                    user_prompt = data.get("prompt", data.get("input", ""))
+                except json.JSONDecodeError:
+                    user_prompt = hook_input
+    except Exception:
+        pass
+
+    # Check for morning brief references (autonomous value tracking)
+    if user_prompt:
+        _check_morning_brief_reference(user_prompt)
+
     now = datetime.now().astimezone()
     print()
     print("=" * 60)
@@ -158,7 +292,7 @@ def main() -> None:
     # TELOS context (focus only — mood/energy omitted to save context)
     print("TELOS Status")
     print("-" * 40)
-    print(_load_telos_status())
+    print(_ascii_safe(_load_telos_status()))
     print()
 
     # Active tasks
@@ -168,7 +302,7 @@ def main() -> None:
         tasks = _unchecked_tasks(TASKLIST.read_text(encoding="utf-8", errors="replace"))
         if tasks:
             for t in tasks[:5]:  # Cap at 5 — top priorities only
-                print(f"  [ ] {t}")
+                print(f"  [ ] {_ascii_safe(t)}")
             if len(tasks) > 5:
                 print(f"  ... and {len(tasks) - 5} more")
         else:
@@ -186,6 +320,15 @@ def main() -> None:
         print(f"  >>> Synthesis due: {reason}")
         print("      Run /synthesize-signals when ready.")
     print()
+
+    # Open validations reminder
+    validations = _check_open_validations()
+    if validations:
+        print("Open validations (BUILT -- awaiting confirmation)")
+        print("-" * 40)
+        for v in validations:
+            print(f"  >>> {_ascii_safe(v)}")
+        print()
 
     # Recent security events
     print("Recent security events (last 7 days)")

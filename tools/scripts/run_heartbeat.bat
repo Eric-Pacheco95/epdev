@@ -20,3 +20,8 @@ REM Knowledge Index incremental update (keeps search index fresh)
 echo [%date% %time%] Knowledge index update starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\jarvis_index.py update >> "%LOGFILE%" 2>&1
 echo [%date% %time%] Knowledge index update complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
+
+REM Log rotation (gzip old events, enforce retention policy)
+echo [%date% %time%] Log rotation starting >> "%LOGFILE%" 2>&1
+"C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\rotate_events.py --execute >> "%LOGFILE%" 2>&1
+echo [%date% %time%] Log rotation complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1

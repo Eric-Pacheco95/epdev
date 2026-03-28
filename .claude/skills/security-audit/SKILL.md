@@ -23,6 +23,27 @@ Take a step back and think step-by-step about how to achieve the best possible r
   - **Exploitability**: How easy is this to exploit?
   - **Impact**: What's the worst case if exploited?
 - Propose specific remediation for each finding
+
+### REMEDIATION LOOP (max 2 cycles)
+
+For Critical and High findings that are safely auto-fixable (gitignore gaps, tracked personal content, exposed files):
+
+1. **Fix**: Apply the remediation (e.g., `git rm --cached`, add gitignore entries, fix permissions)
+2. **Rescan**: Re-run the specific scan step that found the issue to confirm the fix worked
+3. If FIXED: update finding status to "fixed" in the audit log
+4. If STILL PRESENT after cycle 2: mark as "open -- manual intervention required" and flag for Eric
+5. Scope constraint: only auto-fix safe, reversible operations (index removal, gitignore additions). Do NOT auto-fix code-level vulnerabilities -- those go through `/review-code` and `/implement-prd`
+
+Medium/Low/Info findings are reported but do NOT trigger the remediation loop.
+
+### POST-SCAN
+
+- Run the defensive test suite as a health check:
+  1. `python tests/defensive/test_injection_detection.py`
+  2. `python tests/defensive/test_secret_scanner.py`
+- If any defensive tests fail, invoke `/self-heal` on the failures
+- Report remediation loop metrics: N findings auto-fixed, M open, K defensive tests passed
+
 - Log the audit to `history/security/` with date and findings summary
 
 # AUDIT LOG FORMAT

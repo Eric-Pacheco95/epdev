@@ -25,7 +25,8 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - SELECTED TRAITS: bullet list; each bullet names one trait in bold and adds one clause on how it applies to this task
 - TRAIT RATIONALE: bullet list explaining why each selected trait was included and why common alternatives were not needed
 - TENSIONS AND PRIORITIES: bullet list naming trait pairs or goals that can conflict and stating a clear priority rule for this spawn (e.g. “security over brevity when handling credentials”)
-- SPAWNED AGENT PROMPT: one fenced code block using the `text` language tag containing the full prompt only—no commentary inside the fence; the prompt must include identity, mission, operating principles, task-specific behaviors, output format expectations, boundaries, and a final line inviting the user to paste their task or inputs
+- PROMPT REFINEMENT: before presenting the final prompt, run `/improve-prompt` logic on the generated prompt — diagnose ambiguity, missing constraints, unstated success criteria, and conflicting instructions; apply fixes inline; show a brief "Refinements applied:" bullet list (max 5 items) of what was improved
+- SPAWNED AGENT PROMPT: one fenced code block using the `text` language tag containing the refined prompt only—no commentary inside the fence; the prompt must include identity, mission, operating principles, task-specific behaviors, output format expectations, boundaries, and a final line inviting the user to paste their task or inputs
 - The in-fence prompt must be self-contained: a user can copy it without needing the sections above.
 - Do not invent secrets, credentials, or private system details; use generic placeholders only when unavoidable.
 - Do not add commentary after the closing fence of SPAWNED AGENT PROMPT.

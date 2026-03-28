@@ -6,6 +6,38 @@ You are what enables Jarvis to learn about anything without Eric having to Googl
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Research any topic (market, technical, live)
+
+## Stage
+OBSERVE
+
+## Syntax
+/research [depth] [--type] <topic>
+
+## Parameters
+- depth: quick | (default) | deep -- controls sub-question count and source coverage
+- --type: --market | --technical | --live -- controls framing, output template, tool routing
+- topic: free-text topic string (required for execution, omit for usage help)
+
+## Examples
+- /research crypto trading bot space
+- /research --technical how do MCP servers work
+- /research quick --live BYD pricing Canada 2026
+- /research deep --market personal AI assistant landscape
+
+## Chains
+- Before: (entry point -- no required predecessor)
+- After: /first-principles, /red-team, /create-prd
+- Full: /research > /create-prd > /implement-prd > /learning-capture
+
+## Output Contract
+- Input: topic string + optional depth and type flags
+- Output: Markdown brief (file for market/technical, inline for live/quick)
+- Side effects: signals to memory/learning/signals/, log to history/changes/research_log.md
+
 # SYNTAX
 
 ```
@@ -31,6 +63,19 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - `/research deep --market personal AI assistant landscape` — deep market scan
 
 # STEPS
+
+## Step 0: INPUT VALIDATION (Level 2 Discovery)
+
+- If no input provided: print the DISCOVERY section as a usage block, then STOP
+- If input contains unknown flags (e.g. `--deep` instead of positional `deep`):
+  - Print: "Unknown flag --deep. Did you mean depth 'deep'? Correct syntax: /research deep <topic>"
+- If topic is too broad (single generic word like "AI" or "crypto"):
+  - Print: "'{topic}' is very broad -- I'd produce a shallow brief. Narrow it: which aspect? Examples: '{topic} pricing', '{topic} Python SDK', '{topic} vs {alt}'"
+- If Tavily MCP is unavailable for market/technical: warn and fall back to WebSearch
+- If WebSearch is unavailable for live: "WebSearch not available. Cannot perform live research. Check tool availability."
+- If no results found after searching: "No useful results for '{topic}'. Options: (a) broaden the topic, (b) try different keywords, (c) switch to --technical or --market for different framing"
+- If intent doesn't match research (e.g. user pastes code): "This looks like code, not a research topic. Did you mean /review-code or /implement-prd?"
+- Once input is validated, proceed to Phase 0
 
 ## Phase 0: CLASSIFY — Determine research type
 
@@ -262,6 +307,35 @@ Write to `memory/work/{slug}/research_brief.md`:
 - End with type-appropriate next steps
 - For file-saving types: confirm the brief was saved
 - If Tavily MCP is unavailable for Market/Technical, fall back to WebSearch with a warning
+
+# CONTRACT
+
+## Input
+- **required:** topic to research
+  - type: text
+  - example: `crypto trading bot space` or `--technical how do MCP servers work`
+- **optional:** depth flag
+  - type: flag
+  - values: quick | (default) | deep
+- **optional:** type override
+  - type: flag
+  - values: --market | --technical | --live
+  - default: auto-detected from topic (confirmed with user before proceeding)
+
+## Output
+- **produces:** research brief
+  - format: structured-markdown
+  - sections: CLASSIFICATION, SUB-QUESTIONS, FINDINGS, LANDSCAPE (market), HOW-TO (technical), CURRENT-STATE (live), RECOMMENDATIONS, SOURCES
+  - destination: file (`memory/work/<topic-slug>/research_brief.md`) + stdout summary
+- **side-effects:** creates research brief file in memory/work/; appends to history/changes/research_log.md; writes 0-5 signals to memory/learning/signals/
+
+## Errors
+- **no-results:** search tools return empty or irrelevant results
+  - recover: try broader search terms; for niche topics use `deep` depth; for very current topics use `--live` flag
+- **type-ambiguous:** cannot auto-detect research type from topic
+  - recover: skill will ask user to confirm type; or pass --market / --technical / --live explicitly
+- **tool-unavailable:** WebSearch or Tavily MCP not responding
+  - recover: check MCP server status; for WebSearch issues restart the session; skill will note which sources were unreachable
 
 # SKILL CHAIN
 

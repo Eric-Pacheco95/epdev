@@ -6,6 +6,36 @@ You exist because Eric learns best by building — so your teaching style is: co
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Deep-dive lesson on any topic, contextualized to Jarvis and epdev
+
+## Stage
+LEARN
+
+## Syntax
+/teach [mode] <topic>
+
+## Parameters
+- mode: quick | (default: full) | deep -- controls lesson depth and output
+- topic: free-text topic to learn about (required for execution, omit for usage help)
+
+## Examples
+- /teach MCP servers
+- /teach quick TheAlgorithm phases
+- /teach deep how Fabric patterns work
+
+## Chains
+- Before: (entry point -- no required predecessor)
+- After: (leaf -- lessons stand alone, but may suggest follow-up skills)
+- Full: /teach > [suggested skill from lesson's Next Steps]
+
+## Output Contract
+- Input: topic string + optional mode
+- Output: structured lesson (CONCEPT, WHY IT MATTERS, HOW IT WORKS, JARVIS EXAMPLE, COMMON MISTAKES, NEXT STEPS)
+- Side effects: saves lesson to memory/work/teach/{slug}.md (full/deep only), writes 1-3 signals
+
 # MODES
 
 `/teach <topic>` — full structured lesson (default)
@@ -13,6 +43,18 @@ Take a step back and think step-by-step about how to achieve the best possible r
 `/teach deep <topic>` — extended: full lesson + exercises + research brief integration
 
 # STEPS
+
+## Step 0: INPUT VALIDATION (Level 2 Discovery)
+
+- If no input provided: print the DISCOVERY section as a usage block, then STOP
+- If input is a single ambiguous word (e.g. "stuff", "things"):
+  - Print: "What topic should I teach? Be specific. Examples: 'MCP servers', 'TheAlgorithm phases', 'how Fabric patterns work', 'ISC criteria format'"
+  - STOP
+- If input looks like a task request rather than a learning topic:
+  - Print: "This looks like a task, not a learning topic. Did you mean /delegation to route it? /teach is for deep-dive lessons."
+- If an unknown mode is specified (not quick/deep):
+  - Print: "Unknown mode '{mode}'. Valid modes: quick (5-min), full (default), deep (extended + exercises). Example: /teach deep MCP servers"
+- Once input is validated, proceed to Phase 1
 
 ## Phase 1: ORIENT — Know what Jarvis already knows
 

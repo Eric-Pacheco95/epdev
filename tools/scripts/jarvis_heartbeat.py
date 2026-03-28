@@ -513,7 +513,7 @@ def main() -> None:
     cooldown_state = _load_cooldown_state(snap_dir)
     signals_written = 0
     for change in changes:
-        if change["severity"] in ("WARN", "CRIT"):
+        if change["severity"] in ("WARN", "CRIT") and change.get("delta", 0) != 0:
             if write_auto_signal(change, cfg, root_dir, cooldown_state):
                 signals_written += 1
     if signals_written > 0:

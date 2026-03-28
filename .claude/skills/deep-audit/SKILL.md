@@ -65,7 +65,20 @@ Take a step back and think step-by-step about how to achieve the best possible r
   - List each extractable pattern with an implementation quality rating (S/A/B/C/D)
   - Note adaptation requirements for integrating each pattern into the Jarvis ecosystem
   - Highlight patterns that could become new Jarvis skills or enhance existing ones
+### TIER 1 REMEDIATION LOOP (max 2 cycles, --onboard and --cherry-pick modes only)
+
+For `--onboard` and `--cherry-pick` modes, Tier 1 (Blocker) findings that are safely auto-fixable trigger a remediation loop:
+
+1. **Fix**: Apply remediation for each auto-fixable Tier 1 finding (security exposures, critical config issues, broken imports)
+2. **Re-audit**: Re-run the specific axis that produced the finding to confirm the fix
+3. If FIXED: move finding from Tier 1 to "Resolved" section with fix description
+4. If STILL PRESENT after cycle 2: keep in Tier 1 as "open -- requires manual fix"
+5. Scope constraint: only auto-fix findings where the fix is safe and reversible. Code-level logic bugs, architecture issues, and domain logic problems are NEVER auto-fixed -- they go into the ISC tasklist for `/implement-prd`
+
+For `--evaluate` mode: NO remediation loop. Report only -- this mode is read-only by design.
+
 - Present the full audit report to Eric before any implementation actions
+- **Auto-offer visualization**: After presenting the audit report, offer: "Want a `/visualize system` diagram of the architecture findings? This maps components, trust boundaries, and dependency flows from the audit." — invoke `/visualize` only if Eric accepts
 
 # OUTPUT INSTRUCTIONS
 

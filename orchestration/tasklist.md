@@ -1,7 +1,66 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-03-27 (Recalibrated: 3D complete via brain-map, 3E->4 gate 4/5 met, Cursor retired)
+> Last updated: 2026-03-28 (First-principles reorg: priority backlog by value/effort, parked items with enthusiasm filter)
+
+## Priority Backlog (ordered by value/effort)
+
+> **Filter applied:** Each item has a demand signal, serves an active goal, and is the highest-value use of the next session. Items that fail the enthusiasm filter go to Parked.
+
+### Tier 1: Validate What's Built (Quick Wins — just confirm live runs)
+
+> These are BUILT and running. Just check that they work. Each takes minutes, not hours. Completing these unlocks the Phase 4->5 gate criteria.
+
+- [ ] **Validate morning feed** — Check `#epdev` Slack after 9am for vitals + proposals + overnight summary. If present, mark Phase 4B Research runner [x]. If absent, check `data/logs/` and `/self-heal`.
+- [ ] **Validate overnight runner** — Check `data/logs/overnight_*.log` + `#epdev` Slack after 4am. Confirm dimension execution, branch creation, Slack summary. If validated, 3 overnight cycles -> Phase 5 gate item checked.
+- [ ] **Validate TELOS introspection runner** — Check `data/logs/autoresearch_*.log` + `memory/work/jarvis/autoresearch/run-YYYY-MM-DD/` after 7am. Confirm metrics.json, report.md, proposals.md artifacts. Parent: Phase 4D TELOS introspection runner.
+- [ ] **Validate autonomous value tracking** — Reference a morning brief in session, then check `data/autonomous_value.jsonl` for `acted_on` flip.
+- [ ] **Human source review ritual** — After first validated morning feed: "What other sources? YouTube channels, blogs, GitHub repos, newsletters?" → update `sources.yaml`
+
+### Tier 2: Complete Autonomous Loop (Multiplicative — compounds daily)
+
+> Each item makes Jarvis smarter without you in a session. Phase 4C + 4E complete the autonomous foundation.
+
+- [ ] **4C: Notifier wrapper** — Map event types to `#epdev` vs `#general` per `slack-routing.md`; implement daily cap / dedupe
+- [ ] **4C: Heartbeat + research digests** — Routine summaries → `#epdev`; regressions and must-see criteria → `#general` only when rules match
+- [ ] **4E: Signal lineage index** — After `/synthesize-signals`, append to `signal_lineage.jsonl`. Solves signal→synthesis reverse-lookup
+- [ ] **4E: Event rotation scheduled** — Wire `rotate_events.py` into monthly Task Scheduler. Already built + tested
+- [ ] **4E: Autonomous signal volume monitoring** — `autonomous_signal_rate` collector. Prevents runaway research loops
+
+### Tier 3: Additive Improvements (Useful but don't compound)
+
+- [ ] **3C-5: Tailscale + SSH** — Mobile CLI access. Enables Phase 5 gate item (remote terminal Layer 3)
+- [ ] **Notion auto-write** — Auto-push Reports/TELOS Mirror. Nice-to-have, not blocking anything
+- [ ] **4B: Interleaved thinking** — Enable on `/delegation`, `/workflow-engine`, `/spawn-agent`. Improves multi-step orchestration
+- [ ] **4B: Tool Search API** — Implement when skill/tool count exceeds 50. Not yet at threshold
+- [ ] **4E: Signal retention policy** — Only needed after autonomous producers generate 2,000+ processed signals
+- [ ] **4E: FTS index validation** — Validate `jarvis_index.py` covers all signal sources
+- [ ] **4E: Reporting dashboard data contract** — Define `/vitals` + brain-map Phase 3.5 JSON contract
+- [ ] **Voice signals in heartbeat** — `voice_session_count` metric. Low priority until voice is daily habit
+
+### Parked (No demand signal within 60 days — research saved)
+
+> Items below failed the enthusiasm filter: no specific project, no specific user, no specific ship date. Research is preserved. Revisit when a real project creates demand.
+
+- **App development skills (iOS/Windows/.exe)** — Full research brief at `memory/work/frontend-research/research_brief.md` (35+ sources, framework comparison, deployment pipelines, UI/UX patterns). Lesson: ship first, extract skill second. Revisit when a concrete app needs App Store/Windows distribution.
+- **Slack Bot Socket Mode** — Slash commands + Block Kit. No active use case beyond what current poller handles.
+- **3C-8/9/10: Whisper STT, ElevenLabs TTS, voice loop** — Deferred to Phase 3F. Native iOS dictation sufficient.
+
+## Completion Summary
+
+| Phase | Status | Remaining |
+|-------|--------|-----------|
+| 1-2 | COMPLETE | 0 |
+| 3A | COMPLETE | 0 |
+| 3B | Near-complete | 1 (Notion auto-write) |
+| 3C | Layers 1-2 complete | Layer 3 (Tailscale), Layer 4 (deferred) |
+| 3D | COMPLETE | 0 |
+| 3E | COMPLETE | 0 |
+| 4A | COMPLETE | 0 |
+| 4B | Near-complete | 3 (source review, interleaved thinking, tool search) |
+| 4C | Not started | 2 |
+| 4D | **COMPLETE** | 0 |
+| 4E | Not started | 6 |
 
 ## Active Projects
 
@@ -9,7 +68,7 @@
 |---------|--------|--------|-------|-------------|
 | epdev-jarvis-setup | active | green | epdev | Phase 3C Layer 2 + 3E ISC engine — see `orchestration/tasklist.md` Phase 3C/3E |
 | crypto-bot | active | yellow | epdev | Paper trading → production gate — see `memory/work/crypto_trading_bot/project_state.md` |
-| jarvis-brain-map | active | green | epdev | Phase 2: Canvas + Gap Visualization — see `memory/work/jarvis_brain_map/PRD.md` |
+| jarvis-brain-map | active | green | epdev | Phase 4: Drill-Down Panel — see `memory/work/jarvis_brain_map/PRD.md` |
 
 ## Phase 1: Foundation Tasks (COMPLETE)
 
@@ -109,12 +168,13 @@
 >
 > **Miessler / PAI alignment:** Prefer **PAI-shaped** wiring: MCP for external tools, **hooks** as nervous system, **Fabric** patterns, **structured events** — see PAI’s observability direction (e.g. `pai-observability-server` / event capture in the PAI repo). Use **Langfuse or similar** only if you want hosted LLM tracing and it fits deployment better than PAI-style telemetry.
 
-- [x] **Notion (MCP)** — 🧠 Jarvis Brain structure created (Inbox, Journal, Goals & Growth, Ideas, Music, Jarvis Reports, TELOS Mirror). Page registry at `memory/work/notion_brain.md`. Session-start hook Notion read + auto-write to Reports/Mirror pending (Phase 3E era).
+- [x] **Notion (MCP)** — Jarvis Brain structure created (Inbox, Journal, Goals & Growth, Ideas, Music, Jarvis Reports, TELOS Mirror). Page registry at `memory/work/notion_brain.md`. Session-start hook reads Notion on load.
+- [ ] **Notion auto-write** — Auto-push Reports/TELOS Mirror to Notion (split from MCP setup; was "pending" inside checked item since Phase 3E)
 - [x] **Slack (MCP)** — `#epdev` routine traffic via ClaudeActivities app confirmed working; stop hook posts session-end summaries. Full MCP read/write integration deferred — current posting flow meets needs.
 - [x] **Calendar (MCP)** — `@cocal/google-calendar-mcp` working. OAuth via `gcp-oauth.keys.json`. 3 calendars loading (primary, Family, Holidays). Validated 2026-03-27.
 - [x] **Gmail (MCP)** — `@gongrzhe/server-gmail-autoauth-mcp` working. Web app OAuth client (separate from calendar Desktop client). Credentials at `~/.gmail-mcp/credentials.json`. Scopes: `gmail.modify` + `gmail.settings.basic`. Validated 2026-03-27. **Note**: requires new session to load tools.
 - ~~**ntfy**~~ **RETIRED** — All notifications routed to Slack. Scripts (`ntfy_notify.py`, `hook_notification.py`) remain but are inactive. Decision: 2026-03-27.
-- [x] **Observability Phase 1** — `hook_events.py` captures all PostToolUse events to `history/events/YYYY-MM-DD.jsonl`. Research brief at `memory/work/observability/research_brief.md`. Phase 2 (Langfuse) deferred to Phase 3E+.
+- [x] **Observability Phase 1** — `hook_events.py` captures all PostToolUse events to `history/events/YYYY-MM-DD.jsonl`. Research brief at `memory/work/observability/research_brief.md`. Phase 2 (Langfuse) deferred to Phase 4+.
 
 ### Phase 3C: Voice & Mobile Interface
 
@@ -194,12 +254,12 @@
 - [x] **ISC engine PRD** — `memory/work/isce/PRD.md` — 25 ISCs across 5 phases, 6 resolved decisions, config-driven architecture. Completed 2026-03-27.
 - [x] **Metric collectors** — `tools/scripts/collectors/core.py` — 19 collectors: file_count, velocity, checkbox, PRD ISC, query_events, recency, dir_count, disk_usage, hook_output_size, derived. All passing on live epdev. Completed 2026-03-27.
 - [x] **`heartbeat` runner** — `tools/scripts/jarvis_heartbeat.py` — Config-driven, 19 collectors, diff engine, auto-signal writing, modular alert routing, backward-compatible snapshot. Completed 2026-03-27.
-- [ ] **Scheduler** — **Windows Task Scheduler** (primary on your machine) or cron/WSL; document interval (e.g. 60 min), failure alerts, and log rotation in `docs/EPDEV_JARVIS_BIBLE.md`. Heartbeat CLI ready (`--quiet`, `--session-end`, `--config`).
+- [x] **Scheduler** — JarvisHeartbeat in Task Scheduler every 60 min. `rotate_events.py` wired into `run_heartbeat.bat`. Troubleshooting section added to BIBLE. Completed 2026-03-28.
 - [x] **Gap → learning pipeline** — Auto-signal writing on WARN/CRIT threshold crossings. Severity-scaled ratings (INFO=4, WARN=6, CRIT=8). Cooldown (60 min per metric). 3 auto-signals produced on first run. Completed 2026-03-27.
 - [x] **Security & safety** — Path traversal prevention via `_resolve_path` validation. Metric name sanitization for filenames. No secrets in output (verified). Alert daily caps. `/review-code` passed. Completed 2026-03-27.
 - [x] **Optional integrations** — Slack + ntfy alert routing built and config-driven. `rotate_events.py` for storage rotation. Completed 2026-03-27.
 - [x] **AI Steering Rules cadence** — Ritual established: run `/update-steering-rules` after each `/synthesize-signals` pass. Dynamic synthesis threshold replaces static count (15 hard ceiling, 8+24h, 5+72h tiers). 5 synthesis runs + 5 steering rule updates completed 2026-03-27. Decision logged.
-- [ ] **Agent-based hooks** — Upgrade `PreToolUse` validator (`security/validators/`) from shell script to Python agent: enables MCP tool access, richer logic, testability, and AST-based bash command approval (Dippy pattern from awesome-claude-code). Do after heartbeat is stable — hooks must not block ISC collection.
+- [x] **Agent-based hooks** — Validators already Python (`validate_tool_use.py` with 26 rules, `secret_scanner.py`). No shell scripts remain. Full coverage confirmed 2026-03-28.
 - [x] **`/vitals` skill (3E capstone)** — `.claude/skills/vitals/SKILL.md` — Runs heartbeat, reads snapshot, presents ASCII-safe dashboard with ISC ratio, signal velocity, sessions/day, storage budget, missing skill detection. Completed 2026-03-27.
 - [x] **[ISC 8/10] Context budget as vitals metric** — `context_budget_proxy` collector measures hook output char count (1,692 chars current). Threshold: warn_above 3,000, crit_above 5,000. Tracked in heartbeat snapshot. Completed 2026-03-27. Remaining: MCP schema overhead estimate, per-session burn rate (needs API usage headers).
 
@@ -213,7 +273,7 @@
 
 > **This gate protects Phase 4 from building on an empty foundation.** Phase 4 autoresearch iterates over accumulated signals and session history — if neither exists, the loop has nothing to improve on.
 
-- [x] **Heartbeat running** — ISC engine heartbeat fully operational: 19 collectors, diff engine, auto-signal writing, alert routing. 4+ snapshots produced. Scheduling (Task Scheduler wiring) still pending. Validated 2026-03-27.
+- [x] **Heartbeat running** — ISC engine heartbeat fully operational: 19 collectors, diff engine, auto-signal writing, alert routing. 4+ snapshots produced. Task Scheduler wired (Phase 4A). Validated 2026-03-27.
 - [x] **Learning loop active** — 97+ signals captured (10 raw + 87 processed), well past >=5 threshold. Validated 2026-03-27.
 - [x] **At least one synthesis run** — 5 synthesis docs in `memory/learning/synthesis/`. Last: `2026-03-27_synthesis.md`.
 - [x] **AI Steering Rules updated once** — Multiple steering rule updates merged into CLAUDE.md (MCP transport, hook paths, crypto-bot rules, etc.). Validated 2026-03-27.
@@ -235,10 +295,10 @@
 
 ### Phase 4B — Autonomous research & pattern harvesting
 
-- [ ] **Source allow-list** — Create `memory/work/jarvis/sources.yaml`; seed with Miessler's own repos first: PAI GitHub, TheAlgorithm, Fabric patterns, PAIMM posts, Unsupervised Learning newsletter — these are the highest-signal sources for Jarvis's current development
+- [x] **Source allow-list** — `memory/work/jarvis/sources.yaml` created with 6 Tier 1, 6 Tier 2, 12 Tier 3 sources. Companion rationale doc at `sources_rationale.md`. (2026-03-28)
 - [ ] **Human source review ritual** — After first research run, ask Eric: "What other sources should be added? (YouTube channels, blogs, GitHub repos, newsletters)" — capture answers in sources.yaml and `history/decisions/`
-- [ ] **Research runner** — Scheduled job: fetch/summarize → draft digest → optional `memory/learning/signals/` with `Source: autonomous` or inbox folder for review
-- [ ] **Cowork vs scheduler split** — Document which steps run as OS jobs vs sandbox agent prompts (per PRD architecture table)
+- [ ] **Research runner** — `tools/scripts/morning_feed.py` (Anthropic API direct, no claude -p) + `run_morning_feed.bat` wrapper. Task Scheduler `\Jarvis\JarvisMorningFeed` at 9am daily. Dry-run validated. BUILT -- awaiting validation: first live 9am Slack post with rated proposals. (2026-03-28)
+- [x] **Cowork vs scheduler split** — Documented in PRD_autonomous_learning.md: overnight = Task Scheduler + claude -p (separate calls per dimension); morning feed = Task Scheduler + Python (Anthropic API direct); interactive = Claude Code session. (2026-03-28)
 - [ ] **Interleaved thinking for orchestration skills** — Enable interleaved thinking on `/delegation`, `/workflow-engine`, and `/spawn-agent`: think→tool→think→tool pattern dramatically improves multi-step research and agent composition. Configure via `interleaved-thinking-2025-05-14` header on Claude API calls inside these skills. Do alongside research runner — this is where it pays off most.
 - [ ] **Tool Search API** — When skill/tool count exceeds 50, implement Tool Search to prevent token explosion in orchestration loops. Evaluate as part of research runner architecture — autonomous research will eventually need to query 100+ tools by description without loading all schemas upfront.
 
@@ -250,26 +310,58 @@
 ### Phase 4D — Capstone: internal autoresearch (Karpathy-inspired)
 
 > Pattern from [karpathy/autoresearch](https://github.com/karpathy/autoresearch): human-steered **program**, bounded runs, **one writable surface** for the agent (here: review tree only — not live TELOS). Full spec: `memory/work/jarvis/PRD.md` §4D.
+>
+> **Two runners:** `overnight_runner.py` iterates on code quality (6 dimensions). `jarvis_autoresearch.py` iterates on TELOS/signal alignment (the actual PRD 4D capstone).
 
-- [ ] **`autoresearch_program.md`** — Create `memory/work/jarvis/autoresearch_program.md` (mission, metrics, step limits, what “better understanding” means)
-- [ ] **Review tree** — `memory/work/jarvis/autoresearch/` for runs, proposals, logs; canonical TELOS remains merge-only after human review
-- [ ] **Read scope** — Documented inputs: `memory/work/telos/`, `memory/learning/signals/` (+ synthesis/failures as needed), `memory/session/` (time-bounded)
-- [ ] **Runner** — `tools/scripts/jarvis_autoresearch.py` and/or documented Cowork/Claude Code batch prompt that enforces read/write boundaries
-- [ ] **Metrics per run** — Persist snapshot in run artifact (e.g. contradiction list, open questions, checklist score — per program file)
-- [ ] **Integration** — Optional signals with `Source: autonomous`; optional `#epdev` Slack when impact or delta crosses threshold
-- [ ] **Human merge path** — Document workflow: review queue → `/telos-update` or manual edit → delete or archive run
+#### Code improvement runner (overnight_runner.py)
 
-**Depends on:** Phase 4A–4C foundations; TELOS and learning layout stable enough to iterate; **Phase 3D "current vs ideal" spec must exist** before writing `autoresearch_program.md`. **Decision:** `history/decisions/2026-03-27_phase4-autonomous-self-improvement.md` (update with 4D)
+- [x] **`autoresearch_program.md`** — 6 code-improvement dimensions (scaffolding, codebase_health, knowledge_synthesis, external_monitoring, prompt_quality, cross_project) with metric/guard/scope/iterations. (2026-03-28)
+- [x] **Overnight runner** — `tools/scripts/overnight_runner.py` + `run_overnight_jarvis.bat`. Task Scheduler `\Jarvis\JarvisOvernight` at 4am daily, 2hr timeout. claude -p per dimension, Slack posting, state tracking. Self-test 9/9. (2026-03-28)
+- [x] **Overnight merge path** — All work on `jarvis/overnight-YYYY-MM-DD` branches. Eric merges in morning session. `/vitals` flags unmerged branches > 7 days. (2026-03-28)
+
+#### TELOS introspection runner (jarvis_autoresearch.py) -- PRD 4D capstone
+
+- [x] **`autoresearch_program.md` TELOS section** — Updated with introspection mission, "better understanding" definition, read scope table, 6 metrics, constraints, human merge path. (2026-03-28)
+- [x] **Review tree** — `memory/work/jarvis/autoresearch/` with README documenting both runners' output formats (`overnight-*/` and `run-*/`). (2026-03-28)
+- [x] **Read scope** — Documented in program.md: TELOS (all 19), synthesis (5 recent), signals (14d), raw (7d), failures (14d), sessions (7d). All read-only, time-bounded. (2026-03-28)
+- [x] **TELOS introspection runner** — `tools/scripts/jarvis_autoresearch.py` (Anthropic API direct). Reads TELOS + signals + synthesis, produces metrics.json + report.md + proposals.md + contradictions.md + coverage.md. 19/19 self-tests + 27/27 defensive tests passing. `/review-code` passed. (2026-03-28)
+- [x] **Metrics per run** — JSON: contradiction_count, open_questions, coverage_score, staleness_flags, insight_count, proposal_count. Written to `run-YYYY-MM-DD/metrics.json`. (2026-03-28)
+- [x] **Integration** — Autonomous signals with `Source: autonomous, Category: introspection` when thresholds crossed (>=3 contradictions OR <50% coverage). Slack to `#epdev`. Dedup counter for signals. (2026-03-28)
+- [x] **Human merge path** — Proposals to `run-YYYY-MM-DD/proposals.md`. Eric reviews via `/telos-update` or manual edit. `/vitals` updated to track unreviewed runs > 7 days. (2026-03-28)
+- [x] **Scheduler** — `\Jarvis\JarvisAutoresearch` Task Scheduler at 7am daily via `run_autoresearch.bat`. Runs after overnight (4am), before morning feed (9am). (2026-03-28)
+- [ ] **TELOS introspection live run** — BUILT -- awaiting validation: confirm `run-YYYY-MM-DD/` artifacts appear after first 7am run. Check `data/logs/autoresearch_*.log` + run directory.
+
+**Depends on:** Phase 4A-4C foundations; TELOS and learning layout stable enough to iterate; **Phase 3D "current vs ideal" spec must exist** before writing `autoresearch_program.md`. **Decision:** `history/decisions/2026-03-27_phase4-autonomous-self-improvement.md` (update with 4D)
 
 ---
+
+### Phase 4E — Data management & reporting layer
+
+> **Why now:** Phases 4B-4D (auto-research, Slack digests, autoresearch) will produce 200-500+ signals/day, 10K+ event lines/day, and 3-5 synthesis runs/day. Without a data layer, autonomous producers create unbounded growth in directories that 6+ consumers read. This phase builds the plumbing that autonomous Jarvis produces into.
+>
+> **Corrected by first-principles + quality-gate audit (2026-03-28):** LSM-tree archival was rejected — synthesis aggregates, it doesn't merge-and-discard; moving files from processed/ breaks FTS indexer (absolute paths), heartbeat collectors (false velocity alerts), and brain-map parser. Approach: threshold-triggered retention + lineage indexing, not premature archival.
+
+- [ ] **Signal lineage index** — After each `/synthesize-signals` run, append to `memory/learning/signal_lineage.jsonl`: `{"signal": "filename.md", "synthesis": "YYYY-MM-DD_synthesis.md", "date": "..."}`. Solves reverse-lookup (signal -> synthesis) without moving files.
+- [ ] **Signal retention policy** — Add `processed_retention_days` to `heartbeat_config.json`. When processed/ exceeds threshold (2,000 files OR 30+ days since synthesis consumed a signal), delete consumed signals. FTS index retains content; synthesis docs retain references. Gate: only activate after FTS index is verified to contain all processed signal content.
+- [ ] **Event rotation scheduled** — Wire `rotate_events.py` into monthly Task Scheduler job. Already built + tested; monthly rollup -> `history/events/rollups/YYYY-MM_summary.json`, gzip after 180d, 90d raw retention.
+- [ ] **FTS index as canonical search layer** — Validate `jarvis_index.py` indexes all signal sources (signals/, processed/, synthesis/, failures/). Ensure `update` command runs on heartbeat cadence. This is the layer that survives retention — raw files can be deleted because FTS retains the content.
+- [ ] **Reporting dashboard data contract** — Define what `/vitals` and brain-map Phase 3.5 need: signal velocity, synthesis frequency, event volume, FTS index size, retention status. Emit as structured JSON from heartbeat for downstream consumers.
+- [ ] **Autonomous signal volume monitoring** — Add `autonomous_signal_rate` collector to heartbeat. Alert if `Source: autonomous` signals exceed daily cap (prevents runaway research loops from flooding the pipeline).
+
+**Depends on:** Phase 4D (autoresearch is the primary producer). Can be built incrementally alongside 4B-4D — lineage index and event rotation are safe to ship immediately.
+
+---
+
+> **Open Validations** moved to Priority Backlog Tier 1 (top of file).
 
 ## Phase 4 → Phase 5 Gate (verify before starting Phase 5)
 
 - [ ] **PAIMM AS2 verified** — Jarvis is proactive: heartbeat runs without human prompt, background research produces signals, Slack digests fire on cadence
-- [ ] **Autoresearch loop has run ≥3 cycles** — `memory/work/jarvis/autoresearch/` contains ≥3 dated run artifacts with metrics
+- [ ] **Autoresearch loop has run >=3 cycles** — `memory/work/jarvis/autoresearch/` contains >=3 `run-YYYY-MM-DD/` directories with `metrics.json`; overnight runner has >=3 `overnight-YYYY-MM-DD/` directories
 - [ ] **Steering rules updated from autonomous signals** — at least one CLAUDE.md change promoted from a `Source: autonomous` signal
-- [ ] **Voice capture Layer 1 live** — iOS Shortcut → iCloud → `voice_inbox_sync.py` → inbox pipeline confirmed working end-to-end; at least one real voice signal exists in `memory/learning/signals/` with `Source: voice`
-- [ ] **Remote terminal Layer 2 live** — Tailscale installed on desktop + iPhone; Blink Shell confirmed; full `claude` CLI session reachable from iPhone over Tailscale from outside home network
+- [ ] **Voice capture Layer 1 live** — Notion app / Slack `#jarvis-voice` → poller → signal pipeline confirmed working end-to-end; at least one real voice signal exists in `memory/learning/signals/` with `Source: voice`
+- [ ] **Remote terminal Layer 3 live** — Tailscale installed on desktop + iPhone; Blink Shell confirmed; full `claude` CLI session reachable from iPhone over Tailscale from outside home network
+- [ ] **Data layer operational** — Phase 4E signal lineage index appending after synthesis runs; event rotation scheduled; autonomous signal rate monitoring active
 - [ ] **Phase 5 scoped** — `memory/work/jarvis/PRD_phase5.md` stub exists with initial behavioral-change goals defined
 
 ---
