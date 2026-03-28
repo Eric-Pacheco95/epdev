@@ -34,6 +34,15 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+
+def _find_claude() -> str:
+    """Resolve absolute path to claude CLI for Task Scheduler compatibility."""
+    candidate = Path.home() / ".local" / "bin" / "claude.exe"
+    return str(candidate) if candidate.is_file() else "claude"
+
+
+CLAUDE_BIN = _find_claude()
+
 STATE_FILE = REPO_ROOT / "data" / "overnight_state.json"
 PROGRAM_FILE = REPO_ROOT / "memory" / "work" / "jarvis" / "autoresearch_program.md"
 DIMENSION_ORDER = [
@@ -325,7 +334,7 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
 
     try:
         proc = subprocess.run(
-            ["claude", "-p", "--verbose", prompt],
+            [CLAUDE_BIN, "-p", "--verbose", prompt],
             capture_output=True, text=True, encoding="utf-8", cwd=REPO_ROOT,
             timeout=7200,  # 2 hour hard kill
         )
@@ -386,7 +395,7 @@ Print a one-line result: QUALITY_GATE: PASS or QUALITY_GATE: FAIL: <reason>"""
 
     try:
         proc = subprocess.run(
-            ["claude", "-p", prompt],
+            [CLAUDE_BIN, "-p", prompt],
             capture_output=True, text=True, encoding="utf-8", cwd=REPO_ROOT,
             timeout=600,  # 10 min
         )
@@ -415,7 +424,7 @@ Print a one-line result: SECURITY_AUDIT: PASS or SECURITY_AUDIT: FAIL: <reason>"
 
     try:
         proc = subprocess.run(
-            ["claude", "-p", prompt],
+            [CLAUDE_BIN, "-p", prompt],
             capture_output=True, text=True, encoding="utf-8", cwd=REPO_ROOT,
             timeout=600,  # 10 min
         )

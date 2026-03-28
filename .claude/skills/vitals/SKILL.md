@@ -20,7 +20,12 @@ Take a step back and think step-by-step about how to achieve the best possible r
 10. Read `data/overnight_state.json` for overnight self-improvement status (last dimension, run count, cumulative metrics per dimension)
 11. Read `data/autonomous_value.jsonl` for autonomous value rate (proposals acted on / total proposals, trailing 30 days)
 12. Check for unmerged overnight branches: `git branch --list "jarvis/overnight-*"` -- flag branches older than 7 days
-13. **Skill Evolution audit**: Scan `.claude/skills/*/SKILL.md` and score each active (non-deprecated) skill on 4 maturity axes:
+13. **TELOS Introspection** status:
+    - Read `memory/work/jarvis/autoresearch/` for `run-YYYY-MM-DD/` directories
+    - Find the most recent `run-*/metrics.json` and parse it for latest metrics (contradiction_count, coverage_score, proposal_count)
+    - Flag unreviewed runs: any `run-*` directory older than 7 days that still contains a `proposals.md` (not yet merged)
+    - If no runs exist yet: show "No introspection runs yet"
+14. **Skill Evolution audit**: Scan `.claude/skills/*/SKILL.md` and score each active (non-deprecated) skill on 4 maturity axes:
     - **DISCOVERY section** present? (enables /jarvis-help Level 1, self-documenting)
     - **CONTRACT section** present? (enables input/output validation, composability)
     - **SKILL CHAIN section** present? (enables /delegation chain routing)
@@ -70,6 +75,11 @@ Overnight Self-Improvement
 Autonomous Value
   Proposals (30d): {acted_on}/{total} ({rate}%)
   Status: {OK | WARN (< 20% for 14d) | NO DATA}
+
+TELOS Introspection
+  Last run: {date}    Contradictions: {n}    Coverage: {n}%
+  Proposals pending review: {n}    Unreviewed runs > 7d: {n}
+  Status: {OK | WARN (unreviewed > 7d) | NO RUNS}
 
 Scheduled Tasks (\Jarvis\ folder)
   Unhealthy: {n}    Status: {OK | WARN | CRIT}

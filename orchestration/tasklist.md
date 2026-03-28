@@ -1,7 +1,66 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-03-28 (Fallacy audit: fixed stale gates, layer numbering, project status, STATE.md refresh)
+> Last updated: 2026-03-28 (First-principles reorg: priority backlog by value/effort, parked items with enthusiasm filter)
+
+## Priority Backlog (ordered by value/effort)
+
+> **Filter applied:** Each item has a demand signal, serves an active goal, and is the highest-value use of the next session. Items that fail the enthusiasm filter go to Parked.
+
+### Tier 1: Validate What's Built (Quick Wins — just confirm live runs)
+
+> These are BUILT and running. Just check that they work. Each takes minutes, not hours. Completing these unlocks the Phase 4->5 gate criteria.
+
+- [ ] **Validate morning feed** — Check `#epdev` Slack after 9am for vitals + proposals + overnight summary. If present, mark Phase 4B Research runner [x]. If absent, check `data/logs/` and `/self-heal`.
+- [ ] **Validate overnight runner** — Check `data/logs/overnight_*.log` + `#epdev` Slack after 4am. Confirm dimension execution, branch creation, Slack summary. If validated, 3 overnight cycles -> Phase 5 gate item checked.
+- [ ] **Validate TELOS introspection runner** — Check `data/logs/autoresearch_*.log` + `memory/work/jarvis/autoresearch/run-YYYY-MM-DD/` after 7am. Confirm metrics.json, report.md, proposals.md artifacts. Parent: Phase 4D TELOS introspection runner.
+- [ ] **Validate autonomous value tracking** — Reference a morning brief in session, then check `data/autonomous_value.jsonl` for `acted_on` flip.
+- [ ] **Human source review ritual** — After first validated morning feed: "What other sources? YouTube channels, blogs, GitHub repos, newsletters?" → update `sources.yaml`
+
+### Tier 2: Complete Autonomous Loop (Multiplicative — compounds daily)
+
+> Each item makes Jarvis smarter without you in a session. Phase 4C + 4E complete the autonomous foundation.
+
+- [ ] **4C: Notifier wrapper** — Map event types to `#epdev` vs `#general` per `slack-routing.md`; implement daily cap / dedupe
+- [ ] **4C: Heartbeat + research digests** — Routine summaries → `#epdev`; regressions and must-see criteria → `#general` only when rules match
+- [ ] **4E: Signal lineage index** — After `/synthesize-signals`, append to `signal_lineage.jsonl`. Solves signal→synthesis reverse-lookup
+- [ ] **4E: Event rotation scheduled** — Wire `rotate_events.py` into monthly Task Scheduler. Already built + tested
+- [ ] **4E: Autonomous signal volume monitoring** — `autonomous_signal_rate` collector. Prevents runaway research loops
+
+### Tier 3: Additive Improvements (Useful but don't compound)
+
+- [ ] **3C-5: Tailscale + SSH** — Mobile CLI access. Enables Phase 5 gate item (remote terminal Layer 3)
+- [ ] **Notion auto-write** — Auto-push Reports/TELOS Mirror. Nice-to-have, not blocking anything
+- [ ] **4B: Interleaved thinking** — Enable on `/delegation`, `/workflow-engine`, `/spawn-agent`. Improves multi-step orchestration
+- [ ] **4B: Tool Search API** — Implement when skill/tool count exceeds 50. Not yet at threshold
+- [ ] **4E: Signal retention policy** — Only needed after autonomous producers generate 2,000+ processed signals
+- [ ] **4E: FTS index validation** — Validate `jarvis_index.py` covers all signal sources
+- [ ] **4E: Reporting dashboard data contract** — Define `/vitals` + brain-map Phase 3.5 JSON contract
+- [ ] **Voice signals in heartbeat** — `voice_session_count` metric. Low priority until voice is daily habit
+
+### Parked (No demand signal within 60 days — research saved)
+
+> Items below failed the enthusiasm filter: no specific project, no specific user, no specific ship date. Research is preserved. Revisit when a real project creates demand.
+
+- **App development skills (iOS/Windows/.exe)** — Full research brief at `memory/work/frontend-research/research_brief.md` (35+ sources, framework comparison, deployment pipelines, UI/UX patterns). Lesson: ship first, extract skill second. Revisit when a concrete app needs App Store/Windows distribution.
+- **Slack Bot Socket Mode** — Slash commands + Block Kit. No active use case beyond what current poller handles.
+- **3C-8/9/10: Whisper STT, ElevenLabs TTS, voice loop** — Deferred to Phase 3F. Native iOS dictation sufficient.
+
+## Completion Summary
+
+| Phase | Status | Remaining |
+|-------|--------|-----------|
+| 1-2 | COMPLETE | 0 |
+| 3A | COMPLETE | 0 |
+| 3B | Near-complete | 1 (Notion auto-write) |
+| 3C | Layers 1-2 complete | Layer 3 (Tailscale), Layer 4 (deferred) |
+| 3D | COMPLETE | 0 |
+| 3E | COMPLETE | 0 |
+| 4A | COMPLETE | 0 |
+| 4B | Near-complete | 3 (source review, interleaved thinking, tool search) |
+| 4C | Not started | 2 |
+| 4D | **COMPLETE** | 0 |
+| 4E | Not started | 6 |
 
 ## Active Projects
 
@@ -251,16 +310,28 @@
 ### Phase 4D — Capstone: internal autoresearch (Karpathy-inspired)
 
 > Pattern from [karpathy/autoresearch](https://github.com/karpathy/autoresearch): human-steered **program**, bounded runs, **one writable surface** for the agent (here: review tree only — not live TELOS). Full spec: `memory/work/jarvis/PRD.md` §4D.
+>
+> **Two runners:** `overnight_runner.py` iterates on code quality (6 dimensions). `jarvis_autoresearch.py` iterates on TELOS/signal alignment (the actual PRD 4D capstone).
 
-- [x] **`autoresearch_program.md`** — Created at `memory/work/jarvis/autoresearch_program.md` with 6 dimensions (scaffolding, codebase_health, knowledge_synthesis, external_monitoring, prompt_quality, cross_project), each with metric/guard/scope/iterations. (2026-03-28)
-- [x] **Review tree** — `memory/work/jarvis/autoresearch/` created by runner; overnight reports at `overnight-YYYY-MM-DD/report.md`. TELOS remains merge-only. (2026-03-28)
-- [x] **Read scope** — Documented in PRD_autonomous_learning.md FR-004; cross_project reads TELOS + external repos read-only. (2026-03-28)
-- [x] **Runner** — `tools/scripts/overnight_runner.py` + `run_overnight_jarvis.bat` wrapper. Task Scheduler `\Jarvis\JarvisOvernight` at 4am daily, 2hr timeout. Dimension rotation, claude -p per dimension, Slack posting, state tracking. Self-test 9/9 passing. (2026-03-28)
-- [x] **Metrics per run** — TSV run log per iteration; run report includes baseline, final metric, kept/discarded counts. overnight_state.json tracks cumulative per-dimension stats. (2026-03-28)
-- [x] **Integration** — Post-loop `#epdev` Slack summary with dimension, metrics, branch, quality gate + security audit results. Morning feed includes overnight diff summary. (2026-03-28)
-- [x] **Human merge path** — All work on `jarvis/overnight-YYYY-MM-DD` branches. Eric merges in morning session. `/vitals` flags unmerged branches > 7 days. No auto-push. (2026-03-28)
+#### Code improvement runner (overnight_runner.py)
 
-**Depends on:** Phase 4A–4C foundations; TELOS and learning layout stable enough to iterate; **Phase 3D "current vs ideal" spec must exist** before writing `autoresearch_program.md`. **Decision:** `history/decisions/2026-03-27_phase4-autonomous-self-improvement.md` (update with 4D)
+- [x] **`autoresearch_program.md`** — 6 code-improvement dimensions (scaffolding, codebase_health, knowledge_synthesis, external_monitoring, prompt_quality, cross_project) with metric/guard/scope/iterations. (2026-03-28)
+- [x] **Overnight runner** — `tools/scripts/overnight_runner.py` + `run_overnight_jarvis.bat`. Task Scheduler `\Jarvis\JarvisOvernight` at 4am daily, 2hr timeout. claude -p per dimension, Slack posting, state tracking. Self-test 9/9. (2026-03-28)
+- [x] **Overnight merge path** — All work on `jarvis/overnight-YYYY-MM-DD` branches. Eric merges in morning session. `/vitals` flags unmerged branches > 7 days. (2026-03-28)
+
+#### TELOS introspection runner (jarvis_autoresearch.py) -- PRD 4D capstone
+
+- [x] **`autoresearch_program.md` TELOS section** — Updated with introspection mission, "better understanding" definition, read scope table, 6 metrics, constraints, human merge path. (2026-03-28)
+- [x] **Review tree** — `memory/work/jarvis/autoresearch/` with README documenting both runners' output formats (`overnight-*/` and `run-*/`). (2026-03-28)
+- [x] **Read scope** — Documented in program.md: TELOS (all 19), synthesis (5 recent), signals (14d), raw (7d), failures (14d), sessions (7d). All read-only, time-bounded. (2026-03-28)
+- [x] **TELOS introspection runner** — `tools/scripts/jarvis_autoresearch.py` (Anthropic API direct). Reads TELOS + signals + synthesis, produces metrics.json + report.md + proposals.md + contradictions.md + coverage.md. 19/19 self-tests + 27/27 defensive tests passing. `/review-code` passed. (2026-03-28)
+- [x] **Metrics per run** — JSON: contradiction_count, open_questions, coverage_score, staleness_flags, insight_count, proposal_count. Written to `run-YYYY-MM-DD/metrics.json`. (2026-03-28)
+- [x] **Integration** — Autonomous signals with `Source: autonomous, Category: introspection` when thresholds crossed (>=3 contradictions OR <50% coverage). Slack to `#epdev`. Dedup counter for signals. (2026-03-28)
+- [x] **Human merge path** — Proposals to `run-YYYY-MM-DD/proposals.md`. Eric reviews via `/telos-update` or manual edit. `/vitals` updated to track unreviewed runs > 7 days. (2026-03-28)
+- [x] **Scheduler** — `\Jarvis\JarvisAutoresearch` Task Scheduler at 7am daily via `run_autoresearch.bat`. Runs after overnight (4am), before morning feed (9am). (2026-03-28)
+- [ ] **TELOS introspection live run** — BUILT -- awaiting validation: confirm `run-YYYY-MM-DD/` artifacts appear after first 7am run. Check `data/logs/autoresearch_*.log` + run directory.
+
+**Depends on:** Phase 4A-4C foundations; TELOS and learning layout stable enough to iterate; **Phase 3D "current vs ideal" spec must exist** before writing `autoresearch_program.md`. **Decision:** `history/decisions/2026-03-27_phase4-autonomous-self-improvement.md` (update with 4D)
 
 ---
 
@@ -281,18 +352,12 @@
 
 ---
 
-## Open Validations (BUILT -- awaiting live confirmation)
-
-> **Purpose:** Items below are code-complete but need end-to-end confirmation in their target execution context (Task Scheduler, Slack, live session). Jarvis should surface these at session start until each is validated and moved to its parent `[x]` item.
-
-- [ ] **Morning feed live run** — Confirm Slack message posted to `#epdev` at 9am with vitals + proposals + overnight summary. Validate: check `#epdev` Slack after 9am tomorrow. Parent: Phase 4B Research runner.
-- [ ] **Overnight runner live run** — Confirm dimension execution, branch creation, Slack summary. Validate: check `data/logs/overnight_*.log` + `#epdev` Slack after 4am tonight. Parent: Phase 4D Runner.
-- [ ] **Autonomous value tracking hook** — Session-start hook detects morning-brief references and flips `acted_on` in `data/autonomous_value.jsonl`. Validate: reference a morning brief in session, then check JSONL. Parent: PRD FR-005.2.
+> **Open Validations** moved to Priority Backlog Tier 1 (top of file).
 
 ## Phase 4 → Phase 5 Gate (verify before starting Phase 5)
 
 - [ ] **PAIMM AS2 verified** — Jarvis is proactive: heartbeat runs without human prompt, background research produces signals, Slack digests fire on cadence
-- [ ] **Autoresearch loop has run ≥3 cycles** — `memory/work/jarvis/autoresearch/` contains ≥3 dated run artifacts with metrics
+- [ ] **Autoresearch loop has run >=3 cycles** — `memory/work/jarvis/autoresearch/` contains >=3 `run-YYYY-MM-DD/` directories with `metrics.json`; overnight runner has >=3 `overnight-YYYY-MM-DD/` directories
 - [ ] **Steering rules updated from autonomous signals** — at least one CLAUDE.md change promoted from a `Source: autonomous` signal
 - [ ] **Voice capture Layer 1 live** — Notion app / Slack `#jarvis-voice` → poller → signal pipeline confirmed working end-to-end; at least one real voice signal exists in `memory/learning/signals/` with `Source: voice`
 - [ ] **Remote terminal Layer 3 live** — Tailscale installed on desktop + iPhone; Blink Shell confirmed; full `claude` CLI session reachable from iPhone over Tailscale from outside home network

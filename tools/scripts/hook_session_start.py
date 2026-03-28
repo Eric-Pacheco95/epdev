@@ -207,26 +207,42 @@ def _check_morning_brief_reference(user_prompt: str) -> None:
 # -- Open validations reminder -----------------------------------------------
 
 def _check_open_validations() -> list[str]:
-    """Check for BUILT items awaiting validation in the tasklist."""
+    """Check for BUILT items awaiting validation in the tasklist.
+
+    Scans both the "Validate What's Built" tier (Priority Backlog Tier 1)
+    and any remaining "Open Validations" section for unchecked items.
+    Also picks up any Phase 4D items marked BUILT -- awaiting validation.
+    """
     if not TASKLIST.is_file():
         return []
 
     text = TASKLIST.read_text(encoding="utf-8", errors="replace")
     validations = []
 
-    # Look for the Open Validations section
     in_section = False
     for line in text.splitlines():
-        if "Open Validations" in line:
+        # Match both the old section name and the new Tier 1 header
+        if "Open Validations" in line or "Validate What" in line:
             in_section = True
             continue
         if in_section and line.startswith("## "):
             break  # end of section
+        # Also stop at the next tier header
+        if in_section and line.startswith("### Tier"):
+            break
         if in_section and line.strip().startswith("- [ ]"):
-            # Extract just the bold title
             m = re.match(r"^- \[ \] \*\*(.+?)\*\*", line.strip())
             if m:
                 validations.append(m.group(1))
+
+    # Also scan for inline BUILT -- awaiting validation items anywhere
+    for line in text.splitlines():
+        if "BUILT -- awaiting validation" in line and "- [ ]" in line:
+            m = re.match(r"^-\s*\[ \]\s*\*\*(.+?)\*\*", line.strip())
+            if m:
+                title = m.group(1)
+                if title not in validations:
+                    validations.append(title)
 
     return validations
 
