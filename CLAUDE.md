@@ -105,7 +105,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, first ask: "Does this fit as a named sub-step inside an existing skill?" — narrow single-concern tasks (audit checks, scan steps) belong as sub-steps, not standalone skills; only propose `/create-pattern` if the task is a full workflow that can't be embedded
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (33 skills):**
+**Skill Registry (34 skills):**
 
 **Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/learning-capture`**
 
@@ -128,6 +128,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/threat-model` | STRIDE threat modeling for security |
 | `/self-heal` | Auto-diagnose and fix failures |
 | `/security-audit` | Scan system for vulnerabilities |
+| `/quality-gate` | Audit completed phases for THINK-before-BUILD compliance, deliverable gaps, and downstream risk |
 | `/synthesize-signals` | Distill accumulated signals into wisdom |
 | `/update-steering-rules` | Propose new rules from failures/feedback |
 | `/workflow-engine` | Chain skills into pipelines (Fabric "Stitches") |

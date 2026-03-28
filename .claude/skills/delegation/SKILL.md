@@ -95,6 +95,7 @@ Project initialization (new project from scratch):
 | Check learning progress | `/telos-report` | (leaf — no chain) |
 | Create new skill | `/create-pattern` | scan + update affected skill chains |
 | Chain skills together | `/workflow-engine` | `/learning-capture` |
+| Audit completed work | `/quality-gate` | `/update-steering-rules` (if systemic gaps) → `/learning-capture` |
 | Unknown / novel | Flag for Eric + suggest `/create-pattern` | — |
 
 # OUTPUT INSTRUCTIONS

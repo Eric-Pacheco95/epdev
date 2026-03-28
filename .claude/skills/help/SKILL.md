@@ -8,7 +8,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 
 - Read `.claude/skills/` directory listing to get the canonical list of installed skills
 - Read `CLAUDE.md` Skill Registry table for one-line descriptions of each skill
-- Group skills into their established categories: Orchestrate, Thinking, Creating, Building, Learning, Identity, Security, System, Mobile
+- Group skills into their established categories: Orchestrate, Thinking, Creating, Building, Learning, Identity, Security, Quality, System, Mobile
 - List each skill as `/skill-name` — one-liner description
 - Under Building category list: `/implement-prd` — execute a PRD end-to-end: read ISC → build → /review-code → verify → mark complete → /learning-capture
 - After the skill list, print a section for built-in Claude Code slash commands with the most useful subset
