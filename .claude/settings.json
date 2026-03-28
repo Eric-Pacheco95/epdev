@@ -1,11 +1,46 @@
 {
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Agent(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Bash(*)",
+      "mcp__tavily__*",
+      "mcp__google-calendar__list-calendars",
+      "mcp__google-calendar__list-events",
+      "mcp__google-calendar__list-colors",
+      "mcp__google-calendar__get-event",
+      "mcp__google-calendar__get-current-time",
+      "mcp__google-calendar__get-freebusy",
+      "mcp__google-calendar__search-events",
+      "mcp__claude_ai_Notion__notion-fetch",
+      "mcp__claude_ai_Notion__notion-search",
+      "mcp__claude_ai_Notion__notion-get-comments",
+      "mcp__claude_ai_Notion__notion-get-teams",
+      "mcp__claude_ai_Notion__notion-get-users",
+      "mcp__claude_ai_Slack__slack_read_channel",
+      "mcp__claude_ai_Slack__slack_read_thread",
+      "mcp__claude_ai_Slack__slack_read_canvas",
+      "mcp__claude_ai_Slack__slack_read_user_profile",
+      "mcp__claude_ai_Slack__slack_search_channels",
+      "mcp__claude_ai_Slack__slack_search_public",
+      "mcp__claude_ai_Slack__slack_search_public_and_private",
+      "mcp__claude_ai_Slack__slack_search_users"
+    ]
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python tools/scripts/hook_session_start.py"
+            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_session_start.py"
           }
         ]
       }
@@ -16,7 +51,35 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python security/validators/validate_tool_use.py"
+            "command": "python C:/Users/ericp/github/epdev/security/validators/validate_tool_use.py"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_events.py"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_notification.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_events.py"
           }
         ]
       }
@@ -26,7 +89,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python tools/scripts/hook_stop.py"
+            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_stop.py"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_events.py"
           }
         ]
       }

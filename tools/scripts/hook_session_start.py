@@ -23,7 +23,44 @@ SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
 SECURITY_DIR = REPO_ROOT / "history" / "security"
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
-SYNTHESIS_TRIGGER = 10
+SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
+
+# Dynamic synthesis threshold:
+#   >= 15 signals: always trigger (hard ceiling)
+#   >= 8 signals AND >= 24h since last synthesis: enough data + time
+#   >= 5 signals AND >= 72h since last synthesis: stale signals lose context
+SYNTHESIS_HARD_CEILING = 15
+SYNTHESIS_TIERS = [
+    (8, 24),   # (min_signals, min_hours_since_last_synthesis)
+    (5, 72),
+]
+
+
+def _hours_since_last_synthesis() -> float:
+    """Return hours since newest synthesis file was modified, or inf if none."""
+    if not SYNTHESIS_DIR.is_dir():
+        return float("inf")
+    newest = None
+    for p in SYNTHESIS_DIR.iterdir():
+        if p.is_file() and p.suffix == ".md" and not p.name.startswith("miessler"):
+            mtime = p.stat().st_mtime
+            if newest is None or mtime > newest:
+                newest = mtime
+    if newest is None:
+        return float("inf")
+    elapsed = (datetime.now(timezone.utc) - datetime.fromtimestamp(newest, tz=timezone.utc)).total_seconds()
+    return elapsed / 3600
+
+
+def _synthesis_due(n_signals: int) -> tuple[bool, str]:
+    """Check if synthesis should be triggered. Returns (due, reason)."""
+    if n_signals >= SYNTHESIS_HARD_CEILING:
+        return True, f"signal count ({n_signals}) >= hard ceiling ({SYNTHESIS_HARD_CEILING})"
+    hours = _hours_since_last_synthesis()
+    for min_signals, min_hours in SYNTHESIS_TIERS:
+        if n_signals >= min_signals and hours >= min_hours:
+            return True, f"{n_signals} signals + {hours:.0f}h since last synthesis (threshold: {min_signals} signals / {min_hours}h)"
+    return False, ""
 
 
 def _unchecked_tasks(text: str) -> list[str]:
@@ -68,11 +105,11 @@ def _load_telos_status() -> str:
         # Extract just the Current Focus and Active Mood sections
         in_section = False
         for line in text.splitlines():
-            if line.startswith("## Current Focus") or line.startswith("## Active Mood"):
+            if line.startswith("## Current Focus"):
                 in_section = True
                 lines.append(line)
             elif line.startswith("## ") and in_section:
-                in_section = False
+                in_section = False  # stop after Current Focus — skip mood/energy
             elif in_section and line.strip():
                 lines.append(line)
 
@@ -95,7 +132,21 @@ def _load_telos_status() -> str:
     return "\n".join(lines) if lines else "(no TELOS status loaded)"
 
 
+_PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
+
+
+def _stamp_prompt_ts() -> None:
+    """Write current UTC timestamp so hook_notification.py can gate on elapsed time."""
+    import time
+    try:
+        _PROMPT_TS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _PROMPT_TS_FILE.write_text(json.dumps({"ts": time.time()}), encoding="utf-8")
+    except OSError:
+        pass
+
+
 def main() -> None:
+    _stamp_prompt_ts()
     now = datetime.now().astimezone()
     print()
     print("=" * 60)
@@ -104,7 +155,7 @@ def main() -> None:
     print("=" * 60)
     print()
 
-    # TELOS context
+    # TELOS context (focus only — mood/energy omitted to save context)
     print("TELOS Status")
     print("-" * 40)
     print(_load_telos_status())
@@ -116,10 +167,10 @@ def main() -> None:
     if TASKLIST.is_file():
         tasks = _unchecked_tasks(TASKLIST.read_text(encoding="utf-8", errors="replace"))
         if tasks:
-            for t in tasks[:15]:  # Cap at 15 to avoid overwhelming
+            for t in tasks[:5]:  # Cap at 5 — top priorities only
                 print(f"  [ ] {t}")
-            if len(tasks) > 15:
-                print(f"  ... and {len(tasks) - 15} more")
+            if len(tasks) > 5:
+                print(f"  ... and {len(tasks) - 5} more")
         else:
             print("  (none)")
     else:
@@ -130,11 +181,10 @@ def main() -> None:
     n_signals = _count_files(SIGNALS_DIR)
     n_failures = _count_files(FAILURES_DIR)
     print(f"Learning signals: {n_signals} | Failures logged: {n_failures}")
-    if n_signals > SYNTHESIS_TRIGGER:
-        print(
-            f"  >>> Signal count exceeds synthesis threshold ({SYNTHESIS_TRIGGER})."
-        )
-        print("      Run synthesis when ready (or /learning-capture to process).")
+    due, reason = _synthesis_due(n_signals)
+    if due:
+        print(f"  >>> Synthesis due: {reason}")
+        print("      Run /synthesize-signals when ready.")
     print()
 
     # Recent security events
@@ -147,19 +197,6 @@ def main() -> None:
         print("  (none logged)")
     print()
 
-    # Skill registry grouped by use case
-    print("Available Skills")
-    print("-" * 40)
-    print("  Orchestrate: /delegation  /workflow-engine  /project-orchestrator  /spawn-agent")
-    print("  Thinking:    /first-principles  /red-team  /analyze-claims  /find-logical-fallacies")
-    print("  Creating:    /create-prd  /create-pattern  /create-summary  /improve-prompt")
-    print("  Learning:    /extract-wisdom  /learning-capture  /synthesize-signals  /telos-report")
-    print("  Identity:    /telos-update")
-    print("  Security:    /security-audit  /threat-model  /review-code")
-    print("  System:      /self-heal  /update-steering-rules")
-    print("  Mobile:      /voice-capture")
-    print()
-    print("  Tip: Just describe your task — /delegation will route it to the right skill")
     print("=" * 60)
     print()
 

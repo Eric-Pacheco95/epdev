@@ -17,6 +17,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - List dependencies, integrations, and external systems the input names or reasonably implies
 - Record risks, assumptions, and open questions separately so they are visible to decision-makers
 - Structure the output using the prescribed sections below
+- After outputting the PRD, remind the user: "Next step: `/implement-prd` to execute this PRD through the full BUILD → VERIFY → LEARN loop"
 
 # OUTPUT INSTRUCTIONS
 
@@ -37,6 +38,14 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - OPEN QUESTIONS: bullet list of decisions or information still needed
 - Do not invent revenue figures, legal commitments, or named customers not present in the input.
 - Do not give meta-commentary about being an AI; only output the sections above.
+
+# SKILL CHAIN
+
+- **Follows:** `/research` (brief as input) or `/red-team` (stress-test findings as input)
+- **Precedes:** `/implement-prd` (pass PRD file path as input)
+- **Composes:** (leaf at this step — produces the PRD document)
+- **Full chain:** `/research` → `/first-principles` → `/red-team` → `/create-prd` → `/implement-prd` → `/learning-capture`
+- **Escalate to:** `/delegation` if requirements are unclear or scope needs redefinition
 
 # INPUT
 

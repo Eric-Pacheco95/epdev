@@ -27,7 +27,13 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Write each signal to `memory/learning/signals/` using the format below
 - Write any failures to `memory/learning/failures/` using the failure format below
 - Update `memory/learning/_signal_meta.json` with the new count
-- If signal count exceeds 10 unprocessed signals, note that synthesis is due
+- After writing signals, count unprocessed signals in `memory/learning/signals/` (excluding `processed/` subdirectory). If count >= 15 (hard ceiling) OR count >= 8 and last synthesis is 24h+ old: **auto-invoke `/synthesize-signals` immediately** — do not just note it. If synthesis produces proposed steering rules, present them to Eric for approval but do not auto-invoke `/update-steering-rules`
+- **Skill gap check**: After writing signals, scan the session for tasks or patterns that were handled ad-hoc but would benefit from a reusable skill. Evaluate each candidate against:
+  - **Recurrence**: Would this task plausibly come up again (weekly+)?
+  - **Repeatability**: Does it follow a consistent enough structure to script?
+  - **Value**: Would a skill save meaningful time or reduce errors?
+  - Score each candidate High/Medium/Low on all three. Only surface candidates that score High on at least 2 of 3.
+  - Output the shortlist as a `## Skill Gap Candidates` section — name, one-line description, recurrence signal. Do NOT auto-invoke `/create-pattern`; present candidates and let Eric decide.
 - Skip writing if the session was trivial (quick question, no meaningful work done) — say so and exit
 
 # SIGNAL FORMAT
@@ -68,12 +74,20 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 - Each signal gets its own file — do not combine multiple signals into one file
 - Be honest about ratings — most sessions produce 3-6 rated signals, not all 10s
 - Prioritize signals that affect future behavior (insights about the user, workflow improvements, system bugs)
-- After writing signals, output a brief summary: how many signals written, highest-rated one, whether synthesis is due
+- After writing signals, output a brief summary: how many signals written, highest-rated one, and any skill gap candidates
+- If synthesis threshold is met, invoke `/synthesize-signals` inline — do not ask permission. If synthesis proposes steering rules, present them for Eric's approval. If synthesis surfaces TELOS-relevant themes, note them for next `/telos-update` but do not auto-invoke
 - Do not write stub signals with "(pending)" — every signal must have real content or don't write it at all
 - If you detect patterns across multiple recent signals, note this as a meta-signal worth synthesis
 
 # INPUT
 
 Analyze the current session and extract learnings. If invoked with specific context (e.g., a voice transcript or text), analyze that instead.
+
+# SKILL CHAIN
+
+- **Follows:** any build, research, or design session — this is always the final step
+- **Precedes:** `/synthesize-signals` (invoke automatically if unprocessed signal count exceeds 10)
+- **Composes:** skill gap check (inline) → present candidates to Eric → Eric decides whether to invoke `/create-pattern`
+- **Escalate to:** `/synthesize-signals` immediately if signals > 10, then `/telos-update` if identity-level insights emerged
 
 INPUT:

@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "root_dir": ".",
+  "collectors": [
+    {
+      "name": "signal_count",
+      "type": "file_count",
+      "path": "memory/learning/signals",
+      "ext": ".md",
+      "thresholds": {}
+    },
+    {
+      "name": "signal_velocity",
+      "type": "file_count_velocity",
+      "path": "memory/learning/signals",
+      "ext": ".md",
+      "window_days": 7,
+      "thresholds": { "warn_below": 0.5, "crit_below": 0.0 }
+    },
+    {
+      "name": "failure_count",
+      "type": "file_count",
+      "path": "memory/learning/failures",
+      "ext": ".md",
+      "thresholds": { "warn_above": 10, "crit_above": 25 }
+    },
+    {
+      "name": "security_event_count",
+      "type": "file_count",
+      "path": "history/security",
+      "ext": ".md",
+      "thresholds": { "warn_above": 5, "crit_above": 15 }
+    },
+    {
+      "name": "open_task_count",
+      "type": "checkbox_count",
+      "path": "orchestration/tasklist.md",
+      "thresholds": { "warn_above": 100 }
+    },
+    {
+      "name": "task_completion_velocity",
+      "type": "checkbox_delta",
+      "path": "orchestration/tasklist.md",
+      "window_days": 7,
+      "thresholds": {}
+    },
+    {
+      "name": "isc_open",
+      "type": "prd_checkbox",
+      "prd_glob": "memory/work/*/PRD.md",
+      "checkbox_state": "open",
+      "thresholds": {}
+    },
+    {
+      "name": "isc_met",
+      "type": "prd_checkbox",
+      "prd_glob": "memory/work/*/PRD.md",
+      "checkbox_state": "met",
+      "thresholds": {}
+    },
+    {
+      "name": "isc_ratio",
+      "type": "derived",
+      "formula": "isc_met / (isc_met + isc_open)",
+      "thresholds": { "warn_below": 0.2, "crit_below": 0.05 }
+    },
+    {
+      "name": "sessions_per_day",
+      "type": "query_events",
+      "field": "sessions_per_day",
+      "thresholds": { "warn_below": 0.5 }
+    },
+    {
+      "name": "tool_failure_rate",
+      "type": "query_events",
+      "field": "failure_rate",
+      "thresholds": { "warn_above": 0.05, "crit_above": 0.15 }
+    },
+    {
+      "name": "top_tools",
+      "type": "query_events",
+      "field": "top_tools",
+      "thresholds": {}
+    },
+    {
+      "name": "learning_loop_health",
+      "type": "file_recency",
+      "path": "memory/learning/synthesis",
+      "ext": ".md",
+      "thresholds": { "warn_above": 14, "crit_above": 30 }
+    },
+    {
+      "name": "steering_rules_recency",
+      "type": "file_recency",
+      "path": "CLAUDE.md",
+      "thresholds": { "warn_above": 30, "crit_above": 60 }
+    },
+    {
+      "name": "skill_count",
+      "type": "dir_count",
+      "path": ".claude/skills",
+      "thresholds": {}
+    },
+    {
+      "name": "repo_size",
+      "type": "disk_usage",
+      "path": ".",
+      "thresholds": { "warn_above": 500, "crit_above": 1000 }
+    },
+    {
+      "name": "events_dir_size",
+      "type": "disk_usage",
+      "path": "history/events",
+      "thresholds": { "warn_above": 500, "crit_above": 1000 }
+    },
+    {
+      "name": "memory_dir_size",
+      "type": "disk_usage",
+      "path": "memory",
+      "thresholds": { "warn_above": 200, "crit_above": 500 }
+    },
+    {
+      "name": "context_budget_proxy",
+      "type": "hook_output_size",
+      "hook_script": "tools/scripts/hook_session_start.py",
+      "thresholds": { "warn_above": 3000, "crit_above": 5000 }
+    }
+  ],
+  "alert_routing": {
+    "stdout": { "min_severity": "INFO" }
+  },
+  "retention": {
+    "raw_days": 90,
+    "rollup_after_days": 30,
+    "gzip_after_days": 180
+  },
+  "snapshot_dir": "memory/work/isce",
+  "signal_output_dir": "memory/learning/signals",
+  "cooldown_minutes": 60,
+  "daily_alert_caps": {
+    "slack": 20,
+    "ntfy": 5
+  }
+}

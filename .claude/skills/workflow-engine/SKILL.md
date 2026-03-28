@@ -73,4 +73,16 @@ These are pre-defined pipelines for common tasks. Invoke by name.
 
 Describe the goal or name a built-in workflow. Provide the content or context to process.
 
+# SKILL CHAIN
+
+- **Follows:** `/delegation` (delegation routes pipeline tasks here) or direct invocation
+- **Precedes:** `/learning-capture` (all workflows end with capture)
+- **Composes:** any combination of the 33 registered skills
+- **Escalate to:** `/delegation` to identify which built-in workflow matches a task
+
+# BUILT-IN WORKFLOW: `build-feature`
+```
+/create-prd → /implement-prd → /learning-capture
+```
+
 INPUT:

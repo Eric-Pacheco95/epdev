@@ -11,6 +11,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Load `security/constitutional-rules.md` for the current policy baseline
 - Scan the following attack surfaces in order:
   1. **Secrets exposure**: Search all tracked files for API keys, tokens, passwords, credentials, private keys. Check `.gitignore` covers sensitive paths. Check git history for accidentally committed secrets
+     - **Personal content sub-check**: Run `git ls-files memory/ history/` and verify no personal content is tracked (signals, failures, synthesis, TELOS identity files, decisions, project PRDs). Any `.md` file under `memory/work/telos/` (except README.md), `memory/learning/signals/`, `memory/learning/failures/`, `memory/learning/synthesis/`, `history/decisions/`, `history/changes/`, `history/security/` should NOT be in the index. If found, run `git rm --cached -f <file>` and ensure `.gitignore` covers the pattern.
   2. **Injection vectors**: Review hooks, validators, and any code that processes external input for command injection, path traversal, or prompt injection risks
   3. **Configuration security**: Check `.claude/settings.json` permissions, hook commands, and MCP server configurations for overly permissive access
   4. **File permissions**: Check that sensitive files (security/, memory/, .claude/) have appropriate access controls

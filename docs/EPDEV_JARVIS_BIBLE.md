@@ -1,336 +1,332 @@
-# 📖 EPDEV JARVIS BIBLE
+# EPDEV JARVIS BIBLE
 
-> Your living guide to building and using the Jarvis AI brain.
-> **Pin this to your desktop. It updates as the project evolves.**
-> Last updated: 2026-03-27 | Phase: 2+ (skills & learning); Phase 3B ideal state captured
-
----
-
-## 📖 GLOSSARY — Terms You’ll See Everywhere
-
-### What is a **PRD**?
-**PRD** = **Product Requirements Document**. In this repo it is a **project brief**: goal, scope, deliverables, constraints, and (when using TheAlgorithm) **Ideal State Criteria** so you know when you’re done. Warm memory stores PRDs under `memory/work/{project-slug}/PRD.md`.
-
-### What are **hooks**?
-**Hooks** (in **Claude Code**) are **event scripts** the CLI runs at fixed points in a session—for example **before a tool runs** (PreToolUse) or **when a session starts/ends**. They are **not** “the model remembering”; they are **your code** (e.g. Python) that prints a briefing, validates a Bash command, or reminds you to capture learning. They only run when you use **Claude Code in the repo** with hooks configured—not in Claude Desktop by default.
-
-### Claude **Desktop** vs Claude **Code** (important)
-| Surface | What it is | Session / hooks / epdev scripts |
-|--------|------------|----------------------------------|
-| **Claude Desktop** (app) | General chat: voice, projects, attachments | **No** automatic link to `epdev/` hooks or `hook_learning_capture.py`. Each chat is just a chat unless **you** paste or save into the repo. |
-| **Claude Code** (CLI in `epdev/`) | Agent in your codebase | **Can** run hooks and use repo tools; this is where “session start” and “learning capture” **can** be wired. |
-| **Cursor** (IDE) | Code + Composer | **No** Claude Code hooks unless you run them yourself or use Claude Code separately. |
-
-**Bottom line:** Nothing “starts a Jarvis session” or “ends with learning” **unless you set up that habit** (or automate it in Claude Code). The bible’s daily habits are **intentional rituals**, not defaults in every Claude product.
+> Your operator's handbook for the Jarvis AI brain.
+> **Keep this on your desktop. Reference it when you're unsure what Jarvis can do.**
+> Last updated: 2026-03-27 | Phase: 4A (autonomous loop live) | Skills: 33
 
 ---
 
-## 🔄 LIVING BIBLE — Micro-learnings (how this file stays useful)
+## HOW TO START A SESSION
 
-**Goal:** This document should **accumulate tiny, actionable tips** about *how you actually use* Jarvis (workflows that worked, mistakes avoided, best prompts). Big synthesis still lives in `memory/learning/synthesis/`; **this section is the quick, personal operator’s manual.**
-
-### Rules (keep it lightweight)
-1. **Add one micro-learning when** something clicked: a prompt pattern, a tool combo, a failure mode, or a “I’ll always do X from now on.”
-2. **Format:** one bullet under **Micro-learnings log** using the template below (copy-paste).
-3. **Keep it short** — one to three sentences per entry. Link a file path if it helps.
-4. **Optional:** mirror the same idea into `memory/learning/signals/` if it’s worth compounding (rating + observation).
-5. **Monthly:** skim the log; merge duplicates; promote 2–3 items into **TIPS & TRICKS** if they’re timeless.
-
-### Template (copy when adding an entry)
-```text
-- **YYYY-MM-DD** — [tool: Claude Code | Cursor | Desktop | Fabric | other] — One sentence: what you learned. Optional: second sentence on when to use it.
-```
-
-### Micro-learnings log
-- **2026-03-26** — [meta] — The bible is the **running UI guide**; signals/synthesis are the **compounding memory**. Update this file when you learn *how to operate* the assistant, not for every raw observation.
-
----
-
-## 🔑 QUICK REFERENCE — What To Do Right Now
-
-### Daily Habits (5-10 min)
-1. **Open Claude Code** in `epdev/` → session start hook will brief you
-2. **Rate your last session** (1-10) → learning capture compounds over time
-3. **Check the tasklist** → `orchestration/tasklist.md` — what's active, what's blocked?
-4. **Log anything interesting** → even a one-liner to `memory/learning/signals/`
-
-### Weekly Habits (30 min)
-1. **Review signals** → read `memory/learning/signals/` from the week
-2. **Run synthesis** → cluster signals into themes in `memory/learning/synthesis/`
-3. **Update TELOS** → has anything changed? New goals? New challenges?
-4. **Review security log** → any events in `history/security/`?
-5. **Update this bible** → add anything you learned about the system
-
-### When Starting a New Project
-1. Create `memory/work/{project-slug}/PRD.md` using ISC format
-2. Add it to `orchestration/tasklist.md`
-3. Define inflows/outflows in the PRD
-4. Use TheAlgorithm loop: Observe → Think → Plan → Build → Execute → Verify → Learn
-
----
-
-## 🏗️ ARCHITECTURE AT A GLANCE
-
-```
-YOU (Eric/epdev)
- │
- ├── Claude Code (CLI) ──── brain, planning, orchestration, memory
- │     │
- │     ├── CLAUDE.md ────── identity, steering rules, context routing
- │     ├── Hooks ────────── lifecycle automation (session start, security, learning)
- │     ├── Skills ───────── modular capabilities (security audit, self-heal, etc.)
- │     └── Agents ───────── named workers (Architect, Engineer, SecurityAnalyst, QA)
- │
- ├── Cursor Pro (IDE) ──── implementation, fast code iteration
- │     └── .cursorrules ── reads project context automatically
- │
- ├── Fabric (CLI) ──────── 200+ AI prompt patterns (summarize, analyze, threat model)
- │
- └── Memory/History ────── persistent brain state across sessions
-       ├── Session (hot) ── current working memory
-       ├── Work (warm) ──── active project PRDs and state
-       ├── Learning (cold) ─ accumulated wisdom, failures, signals
-       └── History ──────── immutable audit trail
-```
-
----
-
-## 📚 THE LEARNING PATH
-
-### Level 1: Foundation (You Are Here)
-- [x] Understand what PAI is and why scaffolding > model
-- [x] Set up the repo scaffold (directories, CLAUDE.md, configs)
-- [x] Define your TELOS identity (mission, goals, beliefs)
-- [ ] Get hooks working (session start, security validator, learning capture)
-- [ ] Get defensive tests passing
-- [ ] Make your first git commit
-- [ ] Practice the daily habits for 1 week
-
-### Level 2: Fluency
-- [ ] Create your first custom skill (a repeatable workflow)
-- [ ] Build 3+ project PRDs and run them through TheAlgorithm
-- [ ] Accumulate 50+ learning signals and do your first synthesis
-- [ ] Install Fabric and use 10+ patterns regularly
-- [ ] Customize AI Steering Rules based on your own failure analysis
-- [ ] Create your first multi-agent workflow
-
-### Level 3: Mastery (Miessler-Level)
-- [ ] 67+ skills with dedicated workflows
-- [ ] Voice system (ElevenLabs TTS for agent announcements)
-- [ ] Notification system (ntfy mobile push)
-- [ ] Self-upgrading system (monitors for new AI capabilities)
-- [ ] Meta-prompting (template-based agent generation)
-- [ ] Full UOCS (Universal Output Capture System)
-- [ ] Dashboard UI for monitoring everything
-- [ ] Side hustles running through Jarvis orchestration
-
----
-
-## 🧠 KEY CONCEPTS TO INTERNALIZE
-
-### TheAlgorithm (The Brain's Operating System)
-**Every non-trivial task follows this loop:**
-```
-OBSERVE → THINK → PLAN → BUILD → EXECUTE → VERIFY → LEARN
-   │                                                    │
-   └────────────────────────────────────────────────────┘
-                    (loop until done)
-```
-
-**Ideal State Criteria (ISC)** — the secret weapon:
-- Write exactly what "done" looks like as binary checkboxes
-- 8 words, state-based, testable: `"All defensive tests pass without false negatives"`
-- Tag confidence: [E]xplicit, [I]nferred, [R]everse-engineered
-
-### Memory Tiers (How Jarvis Remembers)
-| Tier | What | Lifespan | Example |
-|------|------|----------|---------|
-| Session | Current conversation | Hours | "We're building the hook system" |
-| Work | Active project state | Weeks/months | PRD.md, ISC.json, artifacts |
-| Learning | Accumulated wisdom | Permanent | "Python subprocess needs shell=True on Windows" |
-
-### Signal Capture (How Jarvis Gets Smarter)
-After every session, capture:
-- **Rating** (1-10): How'd it go?
-- **Signals**: What did you notice? What surprised you?
-- **Failures**: What went wrong? Root cause? How to prevent?
-- Signals compound → synthesis → steering rule updates → system improves
-
-### Security Layers (Defense in Depth)
-```
-Layer 1: Input Validation ─── block injections, validate inputs
-Layer 2: Secret Protection ── never expose credentials
-Layer 3: Execution Safety ─── prefer reversible, sandbox untrusted
-Layer 4: Audit Trail ──────── log everything to history/
-```
-
----
-
-## 🔧 TOOL REFERENCE
-
-### Claude Code (CLI)
 ```bash
-# Start a session in the project
-cd epdev && claude
-
-# Ask Claude to do something
-"Read the tasklist and tell me what's next"
-"Create a PRD for my new side hustle idea"
-"Run the security audit on the codebase"
-"Capture this learning signal: rating 8, discovered that..."
+cd C:\Users\ericp\Github\epdev
+claude
 ```
 
-### Cursor Pro (IDE)
-```
-1. Open epdev/ folder in Cursor
-2. It auto-reads .cursorrules for project context
-3. Point it at PRDs: "Read memory/work/{project}/PRD.md and implement"
-4. Use for: code writing, debugging, fast iteration
-5. Come back to Claude Code for: review, integration, learning
-```
+That's it. The session-start hook auto-loads: TELOS status, active tasks, signal counts, security alerts.
 
-### Fabric (when installed)
+### What to say first
+
+| Your mood / goal | Say this |
+|-----------------|----------|
+| Continue yesterday's work | "What was I working on last session?" (or check open terminals) |
+| Build something | "Read the PRD at memory/work/{project}/PRD.md and implement" |
+| Research a topic | `/research <topic>` |
+| Learn something | `/teach <topic>` |
+| Check system health | `/vitals` |
+| Just vibing / exploring | Start talking -- Jarvis routes to the right skill |
+
+### Search past sessions
+
 ```bash
-# Summarize a YouTube video
-fabric -y https://youtube.com/watch?v=xxx | fabric --pattern extract_wisdom
-
-# Analyze a document
-cat document.txt | fabric --pattern analyze_claims
-
-# Threat model something
-echo "my app architecture" | fabric --pattern create_threat_model
-
-# List all available patterns
-fabric --list
+python tools/scripts/jarvis_index.py search "whatever you're looking for"
+python tools/scripts/jarvis_index.py search "slack oauth" --source failure
+python tools/scripts/jarvis_index.py stats
 ```
 
-### Key File Locations
-| File | Purpose | Edit Frequency |
-|------|---------|----------------|
-| `CLAUDE.md` | Root brain context | Rarely (stable) |
-| `memory/work/TELOS.md` | Your identity | Weekly |
-| `orchestration/tasklist.md` | Active work tracker | Daily |
-| `config/personality.yaml` | Jarvis personality | Occasionally |
-| `config/steering-rules.yaml` | Behavioral rules | After failures |
-| `security/constitutional-rules.md` | Security rules | Rarely (stable) |
+This searches across ALL your past sessions, signals, failures, decisions, and security events. 236+ documents indexed. Auto-updates every 60 minutes via heartbeat.
 
 ---
 
-## 🤖 WHAT'S AUTONOMOUS vs 👤 WHAT NEEDS YOU
+## SKILLS QUICK REFERENCE
 
-### Fully Autonomous (Jarvis handles it)
-- ✅ Session start context loading (hook)
-- ✅ Security validation on every command (hook)
-- ✅ Defensive testing (runs automatically)
-- ✅ Self-healing when tests fail (diagnose → fix → verify)
-- ✅ Memory/history file management (structured writes)
-- ✅ Code implementation from PRDs (Cursor executes)
-- ✅ Secret scanning before commits
-- ✅ Change logging to history/
-- ✅ Agent coordination for multi-step tasks
+This is the most important section. These are your tools -- use them by name.
+
+### The Build Chain (most common flow)
+
+```
+/research  -->  /create-prd  -->  /implement-prd  -->  /learning-capture
+```
+
+### By Situation
+
+| You want to... | Use this | Example |
+|----------------|----------|---------|
+| **Research** a topic before building | `/research <topic>` | `/research EV batteries Canada` |
+| **Plan** a new project from scratch | `/project-init <idea>` | `/project-init crypto alerts bot` |
+| **Write requirements** | `/create-prd` | After /research gives you context |
+| **Build from requirements** | `/implement-prd` | Reads PRD, extracts ISC, builds, verifies |
+| **Review code** for security | `/review-code` | Auto-called by /implement-prd at VERIFY gate |
+| **Break down** a hard problem | `/first-principles <problem>` | `/first-principles why Slack webhooks fail` |
+| **Stress-test** a plan | `/red-team <plan>` | `/red-team my crypto bot strategy` |
+| **Learn** something deeply | `/teach <topic>` | `/teach how MCP servers work` |
+| **Fact-check** content | `/analyze-claims <content>` | Paste an article, check its claims |
+| **Find logic errors** | `/find-logical-fallacies` | In arguments, plans, proposals |
+| **Improve a prompt** | `/improve-prompt` | Before running an important query |
+| **Write an essay** | `/write-essay <topic>` | Publish-ready, optional author style |
+| **Create a presentation** | `/create-keynote` | TED-quality slides with speaker notes |
+| **Summarize** content for memory | `/create-summary` | Compress before storing |
+| **Extract insights** from content | `/extract-wisdom` | Ideas, quotes, habits from any content |
+| **Rate/classify** content | `/label-and-rate` | S/A/B/C/D tier + JSON metadata |
+| **Visualize** system structure | `/visualize` | Mermaid diagrams of workflows, projects |
+
+### System & Meta Skills
+
+| You want to... | Use this |
+|----------------|----------|
+| **Check system health** | `/vitals` |
+| **Capture learning** at end of session | `/learning-capture` |
+| **Synthesize** accumulated signals | `/synthesize-signals` |
+| **Update identity** from session input | `/telos-update` |
+| **Weekly identity report** | `/telos-report` |
+| **Propose new steering rules** | `/update-steering-rules` |
+| **Run security scan** | `/security-audit` |
+| **Diagnose and fix** a failure | `/self-heal` |
+| **Model threats** | `/threat-model` |
+| **Route a task** to the right skill | `/delegation` |
+| **Chain skills** into pipelines | `/workflow-engine` |
+| **Manage projects** | `/project-orchestrator` |
+| **Compose an AI agent** | `/spawn-agent` |
+| **Sync with Notion** | `/notion-sync` |
+| **Process voice transcripts** | `/voice-capture` |
+| **Create a new skill** | `/create-pattern` |
+| **Commit changes** | `/commit` |
+
+### Key Rule
+
+**You don't need to remember all of these.** Just describe what you want and Jarvis will route to the right skill. But knowing the names helps you go faster.
+
+---
+
+## GLOSSARY
+
+| Term | What it means |
+|------|--------------|
+| **PRD** | Product Requirements Document -- project brief with ISC (what "done" looks like) |
+| **ISC** | Ideal State Criteria -- 8-word binary-testable checkboxes defining completion |
+| **TheAlgorithm** | 7-phase loop: OBSERVE > THINK > PLAN > BUILD > EXECUTE > VERIFY > LEARN |
+| **TELOS** | Your identity profile -- mission, goals, beliefs, challenges. Lives at `memory/work/telos/` |
+| **Signal** | A learning observation rated 1-10. Accumulates in `memory/learning/signals/` |
+| **Synthesis** | Periodic distillation of signals into themes and steering rules |
+| **Steering rule** | A behavioral directive in CLAUDE.md that shapes how Jarvis works |
+| **Hook** | A script that runs automatically at session events (start, tool use, stop) |
+| **MCP** | Model Context Protocol -- how Jarvis connects to Slack, Notion, Calendar, Gmail |
+| **Heartbeat** | Automated 60-min health check: 19 metrics, auto-signals on regressions |
+| **Knowledge Index** | SQLite search engine across all sessions, signals, decisions, failures |
+
+---
+
+## ARCHITECTURE (Current)
+
+```
+YOU (Eric)
+ |
+ |-- Claude Code CLI (epdev/) ---- brain, planning, orchestration, memory
+ |     |
+ |     |-- CLAUDE.md ------------- identity, 33 skills, steering rules
+ |     |-- Hooks ------------------ session start, security validator, events, learning
+ |     |-- Skills (.claude/skills/) - modular capabilities in Fabric format
+ |     |-- MCP Servers ------------ Slack, Notion, Calendar, Gmail, Tavily
+ |     +-- Knowledge Index -------- full-text search across all Jarvis data
+ |
+ |-- Heartbeat (Task Scheduler) --- 60-min autonomous health loop
+ |     |-- 19 metric collectors
+ |     |-- ISC gap detection
+ |     |-- Auto-signal writing
+ |     +-- Slack alerts on regressions
+ |
+ |-- Slack ----------------------- mobile hub + notifications
+ |     |-- #epdev (routine)
+ |     |-- #general (critical only)
+ |     |-- #jarvis-inbox (mobile prompts -> claude -p -> thread reply)
+ |     +-- #jarvis-voice (voice transcripts -> signals)
+ |
+ |-- brain-map (separate repo) --- visual system of record
+ |     +-- React Flow dashboard, ISC tracking, 23/25 passing
+ |
+ +-- Memory / History ------------ persistent brain state
+       |-- session/ (hot) --------- current session
+       |-- work/ (warm) ----------- active PRDs, TELOS, project state
+       |-- learning/ (cold) ------- signals, failures, synthesis
+       +-- history/ --------------- decisions, changes, security events
+```
+
+---
+
+## MEMORY TIERS
+
+| Tier | What | Where | Lifespan |
+|------|------|-------|----------|
+| **Session** | Current conversation | `memory/session/` | Hours |
+| **Work** | Active project PRDs, TELOS, state | `memory/work/` | Weeks-months |
+| **Learning** | Signals, failures, synthesis | `memory/learning/` | Permanent |
+| **History** | Decisions, changes, security | `history/` | Permanent (audit trail) |
+| **Knowledge Index** | Full-text search of everything | `data/jarvis_index.db` | Rebuilt on demand |
+
+---
+
+## DAILY HABITS (5 min)
+
+1. **Open Claude Code in epdev/** -- session hook briefs you automatically
+2. **Check the tasklist** -- `orchestration/tasklist.md` or ask "what's active?"
+3. **Build, research, or learn** -- follow your energy (this is by design)
+4. **Run `/learning-capture` before closing** -- don't rely on the stop hook alone
+
+## WEEKLY HABITS (30 min)
+
+1. **Run `/synthesize-signals`** -- cluster the week's signals into themes
+2. **Run `/telos-report`** -- "What has Jarvis learned about me?"
+3. **Review `history/security/`** -- any events this week?
+4. **Update this bible** -- add any micro-learning from the week
+5. **Check brain-map** -- node growth = brain growth
+
+---
+
+## WHAT'S AUTONOMOUS vs WHAT NEEDS YOU
+
+### Fully Autonomous (runs without you)
+
+- Heartbeat: 19 metrics every 60 min, auto-signals on regressions
+- Knowledge Index: re-indexes all data every 60 min
+- Security validator: blocks destructive commands on every tool use
+- Event capture: logs all tool use to `history/events/`
+- Slack poller: `#jarvis-inbox` messages get processed when `start_jarvis.bat` is running
 
 ### Semi-Autonomous (Jarvis does it, you review)
-- 🔄 Learning signal capture (Jarvis prompts, you rate)
-- 🔄 Steering rule updates (Jarvis proposes from failure analysis, you approve)
-- 🔄 Project prioritization (Jarvis suggests, you decide)
-- 🔄 Synthesis generation (Jarvis drafts, you validate insights)
-- 🔄 New skill creation (Jarvis scaffolds, you refine)
 
-### Requires You (Human-in-the-loop)
-- 👤 **TELOS updates** — only you know if your goals changed
-- 👤 **Session ratings** (1-10) — your subjective assessment drives learning
-- 👤 **New project ideas** — Jarvis can brainstorm but you decide what matters
-- 👤 **Side hustle validation** — market sense, customer conversations, real-world testing
-- 👤 **Guitar practice** — Jarvis can structure it, but your fingers do the work
-- 👤 **Gym/health execution** — Jarvis can build the system, you have to show up
-- 👤 **Security decisions** — what level of privacy/risk you're comfortable with
-- 👤 **Irreversible decisions** — Jarvis escalates these to you by design
+- Learning capture at session end (Jarvis prompts, you confirm)
+- Steering rule proposals from synthesis (Jarvis drafts, you approve in CLAUDE.md)
+- Signal synthesis (Jarvis clusters, you validate themes)
+- Skill suggestions ("This looks like a /research task")
 
----
+### Requires You
 
-## 🔌 Phase 3B — External integrations (ideal state)
-
-| Surface | Role |
-|---------|------|
-| **Notion (MCP)** | **Read-heavy:** context for TELOS and sessions. **Selective write** only when approved. **`memory/work/telos/*.md` in-repo stays canonical**; Jarvis merges Notion + chat/session into markdown updates. |
-| **Slack** | **Enforced:** `memory/work/slack-routing.md`. [**`#epdev`**](https://ericpdev.slack.com/archives/C0ANZKK12CD) (`C0ANZKK12CD`) = routine default; [**`#general`**](https://ericpdev.slack.com/archives/C0AKR43PDA4) (`C0AKR43PDA4`) = must-see only. ClaudeActivities + MCP route A. |
-| **ntfy** | Push to **iPhone** via ntfy iOS app; topic URL = secret; tie to heartbeat/regression (Phase 3E). |
-| **Observability** | **Miessler / PAI-shaped:** hooks + structured events; optional PAI observability pack patterns. **Langfuse** (or similar) optional if you want hosted LLM traces. |
+- **TELOS updates** -- only you know if your goals changed
+- **New project ideas** -- Jarvis can research but you decide what matters
+- **Session direction** -- Jarvis adapts to your energy/mood
+- **Irreversible decisions** -- Jarvis always escalates these
+- **Mobile voice capture** -- speak into Slack #jarvis-voice from iPhone
+- **Life priorities** -- family, work, gym, music -- Jarvis coaches but you execute
 
 ---
 
-## 📊 GAP TRACKER: Kai vs Jarvis
+## EXTERNAL INTEGRATIONS
 
-Features from Daniel Miessler's Kai that we still need:
-
-| Feature | Kai Has | Jarvis Status | Priority |
-|---------|---------|---------------|----------|
-| TheAlgorithm 7-phase loop | v1.6.0 | ✅ Embedded in CLAUDE.md | — |
-| TELOS 10-file identity | 10 files | ✅ Single TELOS.md (simpler) | — |
-| 3-tier memory | v7.0 | ✅ session/work/learning | — |
-| Signal capture (explicit ratings) | 3,540+ signals | 🔧 Hook in progress (Cursor) | High |
-| Implicit sentiment analysis | Automatic | ❌ Not yet | Medium |
-| 12 quantified personality traits | 0-100 scale | ✅ personality.yaml (1-10) | — |
-| 17 hooks across 7 events | <50ms each | 🔧 3 hooks in progress | High |
-| 4-layer security | Full | ✅ Constitutional rules written | — |
-| SecurityValidator PreToolUse | <50ms | 🔧 In progress (Cursor) | High |
-| 67 skills / 333 workflows | Massive | ❌ Skills dir exists, none built | Medium |
-| Skill assembly pipeline | Auto-rebuild | ❌ Not yet | Medium |
-| Named agents with voices | 15+ agents | ✅ 5 agents defined (no voice) | Low |
-| ElevenLabs voice system | Full TTS | ❌ Not yet | Low |
-| ntfy push notifications | Mobile | ❌ Not yet | Medium |
-| Discord integration | Team | ❌ Not yet | Low |
-| Fabric integration | 200+ patterns | ❌ Needs Go install | Medium |
-| Self-upgrade system | Monitors blogs/GitHub | ❌ Not yet | Medium |
-| Meta-prompting templates | 65% token savings | ❌ Not yet | Medium |
-| UOCS (output capture) | Full history | ⚡ Partial (history/ exists) | Medium |
-| USER/SYSTEM separation | Upgrade-safe | ⚡ Partial (.cursorrules + CLAUDE.md) | Low |
-| MCP servers | 4+ servers | ❌ Phase 3B — ideal state in tasklist + bible | Medium |
-| PAI-style observability (hooks / event capture) | pai-observability-server etc. | ❌ Prefer over raw Langfuse unless you choose SaaS traces | Medium |
-| Dashboard UI | Planned | ❌ Placeholder exists | Low |
-| GitHub-centric orchestration | Issues as tasks | ❌ Using tasklist.md instead | Low |
-| AI Steering Rules from failures | 84 failures analyzed | ❌ Need failures first | Auto |
-
-**Legend**: ✅ Done | 🔧 In Progress | ⚡ Partial | ❌ Not Yet
+| Service | How | Status |
+|---------|-----|--------|
+| **Slack** | MCP (claude.ai Slack) + bot token for posting | Live. 4 channels: #epdev, #general, #jarvis-inbox, #jarvis-voice |
+| **Notion** | MCP (claude.ai Notion) | Live. Jarvis Brain: Inbox, Journal, Goals, Ideas, Music, Reports, TELOS Mirror |
+| **Google Calendar** | MCP (@cocal/google-calendar-mcp) | Live. 3 calendars. |
+| **Gmail** | MCP (@gongrzhe/server-gmail-autoauth-mcp) | Live. Requires new session to load tools. |
+| **Tavily** | MCP (npx tavily-mcp, stdio) | Live. Powers `/research` skill. |
 
 ---
 
-## 💡 TIPS & TRICKS (Updated as discovered)
+## SCHEDULED HEARTBEAT
 
-1. **"Read the PRD and implement"** — this one sentence in Cursor does 80% of the work
-2. **Rate every session** — even a quick "7" builds the signal database that makes Jarvis smarter
-3. **TELOS is alive** — update it whenever your thinking shifts, even slightly
-4. **ISC before code** — writing "what done looks like" before writing code saves massive rework
-5. **Failures are gold** — a well-documented failure is worth more than a success you can't explain
-6. **Desktop vs Code** — use Desktop for open-ended thinking; use Claude Code in `epdev/` when you want hooks and repo-grounded behavior. Learning files are updated by **you or your scripts**, not by every chat automatically.
+Runs every 60 minutes via Windows Task Scheduler.
+
+### What it does
+
+1. Collects 19 metrics (file counts, signal velocity, ISC ratios, disk usage, etc.)
+2. Diffs against previous snapshot
+3. Writes auto-signals when WARN/CRIT thresholds crossed
+4. Updates Knowledge Index (incremental)
+5. Routes alerts to Slack
+
+### Key commands
+
+```powershell
+# Verify it's running
+schtasks /query /tn "JarvisHeartbeat" /v /fo list
+
+# Manual run
+schtasks /run /tn "JarvisHeartbeat"
+
+# Check today's log
+type data\logs\heartbeat_2026-03-27.log
+```
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `tools/scripts/run_heartbeat.bat` | Task Scheduler wrapper |
+| `tools/scripts/jarvis_heartbeat.py` | Heartbeat engine |
+| `tools/scripts/jarvis_index.py` | Knowledge Index (build/update/search/stats) |
+| `heartbeat_config.json` | Thresholds, collectors, alert routing |
+| `memory/work/isce/heartbeat_latest.json` | Latest snapshot |
 
 ---
 
-## 📅 CHANGELOG
+## SECURITY
 
-### 2026-03-27 — Phase 3B ideal state
-- Captured **Notion** (read-heavy, selective write; repo TELOS canonical), **Slack** (`#epdev` routine, `#general` critical-only), **ntfy** (iPhone), **PAI-aligned observability** vs optional Langfuse — see table above and `orchestration/tasklist.md`
+### What's enforced automatically
 
-### 2026-03-27 — Slack channels locked + enforcement
-- **`memory/work/slack-routing.md`** — channel IDs, links, **enforced** rules; **ClaudeActivities** reuse; **MCP route A**. Decision: `history/decisions/2026-03-27_slack-epdev-routing.md`
+- **PreToolUse hook** blocks: fork bombs, rm -rf, git push --force main, disk format, protected paths (.ssh, .aws, .env, .pem, .key), path traversal, prompt injection patterns, secret-like patterns in commands, git reset --hard, git checkout --, git clean -f, inline script destructive commands
+- **Constitutional rules** at `security/constitutional-rules.md` -- non-negotiable
+- **Secret scanning** before commits
+- **Layer 5 subagent scoping** -- background agents have restricted tool access
 
-### 2026-03-26 — Living bible + glossary
-- Added glossary (PRD, hooks, Desktop vs Code) and clarified that Desktop chats do not auto-run Jarvis hooks or learning
-- Added **Micro-learnings log** protocol for continuous small updates to this doc
-- Tip #6: explicit split Desktop vs Claude Code for learning
+### What you should watch for
 
-### 2026-03-24 — Project Initialized
-- Created full scaffold: 36 files across 10 directories
-- TELOS identity populated with mission, goals, beliefs, challenges
-- Constitutional security rules (4-layer defense)
-- 5 agents defined (Architect, Engineer, SecurityAnalyst, QATester, Orchestrator)
-- Personality configured: casual, verbose, autonomous, high security
-- Cursor integration (.cursorrules) for parallel development
-- Phase 1 PRD sent to Cursor for hook/test implementation
-- Decision logged: hybrid approach (PAI concepts, custom scaffold, Windows-compatible)
+- `history/security/` events (surfaced in session-start hook)
+- Heartbeat CRIT alerts in Slack #epdev
+- Any prompt injection attempts in external content (Jarvis flags these)
 
 ---
 
-*Canonical copy in-repo: `docs/EPDEV_JARVIS_BIBLE.md` (commit this version).*
-*If you keep a desktop copy, sync from the repo so micro-learnings don’t diverge.*
-*Open in any markdown viewer for formatted reading (Cursor, VS Code, Obsidian, etc.)*
+## MICRO-LEARNINGS LOG
+
+**Add one line when something clicks.** Monthly: merge duplicates, promote timeless tips.
+
+```
+- YYYY-MM-DD -- [tool] -- What you learned.
+```
+
+- **2026-03-26** -- [meta] -- The bible is the running UI guide; signals/synthesis are the compounding memory.
+- **2026-03-27** -- [knowledge-index] -- `python tools/scripts/jarvis_index.py search "topic"` finds answers from any past session, signal, failure, or decision. Use it before asking Jarvis to re-research something.
+- **2026-03-27** -- [workflow] -- Session direction is mood/energy-driven by design. Follow your interest -- Jarvis adapts. Don't force a task order.
+- **2026-03-27** -- [meta] -- If you don't know which skill to use, just describe what you want. Jarvis will suggest the right slash command.
+- **2026-03-27** -- [algorithm] -- Always check: did we THINK before we BUILD? The brain-map shipped without the workflow spec. Building feels productive but specs prevent rework.
+
+---
+
+## TIPS
+
+1. **"Read the PRD and implement"** -- this one sentence does 80% of the work
+2. **Rate every session** -- even a quick "7" builds the signal database
+3. **TELOS is alive** -- update when your thinking shifts, even slightly
+4. **ISC before code** -- writing "what done looks like" saves massive rework
+5. **Failures are gold** -- a documented failure is worth more than an unexplained success
+6. **Search before re-researching** -- `jarvis_index.py search` may already have the answer
+7. **Describe, don't memorize** -- tell Jarvis what you need, it routes to the right skill
+8. **THINK before BUILD** -- if there's no spec/document, write one before coding
+9. **Mobile capture** -- dictate to Slack #jarvis-voice from iPhone, Jarvis processes it
+10. **Trust the heartbeat** -- if something regresses, you'll get a Slack alert
+
+---
+
+## CHANGELOG
+
+### 2026-03-27 -- Major rewrite (Phase 4A)
+- Rewrote entire bible to reflect current state (Phase 4A, 33 skills, Knowledge Index)
+- Removed Cursor references (retired), ntfy (retired), stale gap tracker
+- Added Skills Quick Reference -- addresses #1 pain point (operator familiarity)
+- Added Knowledge Index usage
+- Updated architecture diagram, integrations, autonomous/human-in-loop
+- Added micro-learnings from 3D workflow spec session
+
+### 2026-03-27 -- Phase 3E heartbeat docs
+- Added Task Scheduler section, key files, commands
+
+### 2026-03-26 -- Living bible + glossary
+- Added glossary, micro-learnings protocol, Desktop vs Code distinction
+
+### 2026-03-24 -- Project initialized
+- Created full scaffold, TELOS identity, constitutional security rules
+
+---
+
+*Canonical copy: `docs/EPDEV_JARVIS_BIBLE.md` (in repo).*
+*Desktop shortcut should point here. If they diverge, repo wins.*

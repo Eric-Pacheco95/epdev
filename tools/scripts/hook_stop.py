@@ -8,6 +8,7 @@ Reads session context from stdin JSON provided by Claude Code.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -70,6 +71,18 @@ def main() -> None:
 
     # Log session end to stderr (visible in hook output)
     print(f"Session ended ({stop_reason}). Signals on file: {count}. Run /learning-capture to capture learnings.", file=sys.stderr)
+
+    # Run ISC engine heartbeat with --session-end flag
+    heartbeat_script = REPO_ROOT / "tools" / "scripts" / "jarvis_heartbeat.py"
+    if heartbeat_script.is_file():
+        try:
+            subprocess.run(
+                [sys.executable, str(heartbeat_script), "--session-end", "--quiet"],
+                timeout=15,
+                capture_output=True,
+            )
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            print(f"Heartbeat skipped: {exc}", file=sys.stderr)
 
     # Post session digest to #epdev
     ts = now.strftime("%Y-%m-%d %H:%M UTC")
