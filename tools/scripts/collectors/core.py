@@ -52,9 +52,11 @@ def collect_file_count(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
     name = cfg["name"]
     target = _resolve_path(cfg["path"], root_dir)
     ext = cfg.get("ext", ".md")
+    recursive = cfg.get("recursive", False)
     if not target.is_dir():
         return _result(name, None, "count", f"directory not found: {cfg['path']}")
-    count = sum(1 for p in target.iterdir() if p.is_file() and p.suffix == ext)
+    glob_pattern = f"**/*{ext}" if recursive else f"*{ext}"
+    count = sum(1 for p in target.glob(glob_pattern) if p.is_file())
     return _result(name, count, "count")
 
 
@@ -65,12 +67,14 @@ def collect_file_count_velocity(cfg: dict, root_dir: Path, _prev: dict = None) -
     target = _resolve_path(cfg["path"], root_dir)
     ext = cfg.get("ext", ".md")
     window = cfg.get("window_days", 7)
+    recursive = cfg.get("recursive", False)
     if not target.is_dir():
         return _result(name, None, "per_day", f"directory not found: {cfg['path']}")
     cutoff = datetime.now(timezone.utc) - timedelta(days=window)
+    glob_pattern = f"**/*{ext}" if recursive else f"*{ext}"
     count = 0
-    for p in target.iterdir():
-        if not p.is_file() or p.suffix != ext:
+    for p in target.glob(glob_pattern):
+        if not p.is_file():
             continue
         mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
         if mtime >= cutoff:

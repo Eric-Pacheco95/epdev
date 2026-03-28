@@ -19,7 +19,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Derive a kebab-case skill name from the purpose (e.g., "analyze-claims", "extract-wisdom")
 - Save the generated skill to `.claude/skills/{skill-name}/SKILL.md` using the Write tool — Claude Code auto-discovers skills in this location
 - After saving, confirm the skill is registered by noting its `/skill-name` invocation command
-- Update the `/help` skill: open `.claude/skills/help/SKILL.md` and add the new skill's one-liner to the correct category group in the STEPS section so `/help` stays current
+- Update the `/jarvis-help` skill: open `.claude/skills/jarvis-help/SKILL.md` and add the new skill's one-liner to the correct category group in the STEPS section so `/jarvis-help` stays current
 - Update `CLAUDE.md` skill registry: increment the skill count and add the new skill's one-liner row to the table
 - Scan existing chain-aware skills for chain relationships: read `/delegation`, `/workflow-engine`, `/project-init`, `/implement-prd`, `/research`, `/create-prd`, `/learning-capture` and determine if the new skill fits into any existing chain (as a precedes, follows, or composes step)
 - Update the SKILL CHAIN section of any affected skills to reference the new skill

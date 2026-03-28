@@ -95,6 +95,8 @@ Load documentation on-demand, not upfront:
 - When marking a tasklist item `[x]`, the deliverable must be validated in its target context, not just built — if code exists but end-to-end validation is pending, leave unchecked and add "BUILT — awaiting validation: [specific test]"; embedding "pending" notes inside a checked item creates false confidence in downstream gates
 - Slack channels (`#jarvis-inbox`, `#jarvis-voice`) are stateless capture endpoints — each message is processed as an independent atomic unit via `claude -p`; do not build multi-turn session logic into the Slack poller; for multi-turn mobile sessions, use Tailscale + SSH (Layer 3); `/learning-capture` does not apply to Slack-triggered work; signals are written inline by the processing skill
 - Phase gate criteria must include a verification command or file-existence check, not just self-reported status — example: "Heartbeat running" = `schtasks /query /tn "\Jarvis\JarvisHeartbeat"` returns Ready; unverifiable gates are decoration
+- When onboarding a pre-existing project under Jarvis governance: (1) `/deep-audit --onboard` for 5-axis parallel audit, (2) synthesize into tiered ISC tasklist, (3) create domain skills in project repo `.claude/skills/`, (4) register as `/project-orchestrator` external health source — this is the standard four-step pattern validated on crypto-bot
+- Claude Code Remote Triggers (cloud-scheduled agents) cannot invoke /skills, load CLAUDE.md, fire hooks, or access local files — prompts must be fully self-contained with inline instructions; for Jarvis-context work (security audit, steering, tasklist), use local Task Scheduler with `claude -p` instead
 
 ## Skill-First Execution
 
@@ -106,12 +108,13 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, first ask: "Does this fit as a named sub-step inside an existing skill?" — narrow single-concern tasks (audit checks, scan steps) belong as sub-steps, not standalone skills; only propose `/create-pattern` if the task is a full workflow that can't be embedded
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (34 skills):**
+**Skill Registry (36 skills):**
 
 **Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/learning-capture`**
 
 | Skill | When to Use |
 |-------|------------|
+| `/jarvis-help` | Print a clean reference of all available skills and key commands |
 | `/extract-wisdom` | Analyze any content for ideas, insights, quotes, habits |
 | `/create-summary` | Compress content for memory storage |
 | `/create-pattern` | Build a new skill in Fabric format (the meta-skill) |
@@ -147,6 +150,8 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/visualize` | Generate Mermaid diagrams of brain structure, workflows, projects, investigations |
 | `/write-essay` | Write a clear, publish-ready essay on any topic (optional author style) |
 | `/create-keynote` | Build a TED-quality slide deck with speaker notes from any Jarvis output |
+| `/create-image` | Generate or edit images via Gemini (nanobanana MCP) — auto-selects model, ratio, and tool from prompt |
+| `/deep-audit` | Multi-axis codebase audit (architecture, security, error handling, domain logic, testing) — modes: --onboard, --evaluate, --cherry-pick |
 
 ## Directory Structure
 

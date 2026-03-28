@@ -34,7 +34,14 @@
       "mcp__claude_ai_Slack__slack_search_users",
       "mcp__google-drive__search",
       "mcp__google-drive__listFolder",
-      "mcp__google-drive__listSharedDrives"
+      "mcp__google-drive__listSharedDrives",
+      "mcp__nanobanana__gemini_generate_image",
+      "mcp__nanobanana__gemini_edit_image",
+      "mcp__nanobanana__gemini_chat",
+      "mcp__nanobanana__set_model",
+      "mcp__nanobanana__set_aspect_ratio",
+      "mcp__nanobanana__get_image_history",
+      "mcp__nanobanana__clear_conversation"
     ]
   },
   "hooks": {
