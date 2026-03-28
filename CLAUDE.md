@@ -114,6 +114,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 
 | Skill | When to Use |
 |-------|------------|
+| `/jarvis-help` | Print a clean reference of all available skills and key commands |
 | `/extract-wisdom` | Analyze any content for ideas, insights, quotes, habits |
 | `/create-summary` | Compress content for memory storage |
 | `/create-pattern` | Build a new skill in Fabric format (the meta-skill) |
