@@ -15,6 +15,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Draft OUTPUT INSTRUCTIONS that fix the output format (headings, bullets, word limits, ordering rules, and exclusion rules)
 - Require “Only output Markdown.” and forbid meta-commentary, warnings, and repeated openings across bullets
 - End the generated skill with a final line that is only: INPUT: (the runtime placeholder; nothing after it)
+- **Prompt refinement pass**: Before finalizing, run `/improve-prompt` logic on the generated IDENTITY + STEPS + OUTPUT INSTRUCTIONS — diagnose ambiguity, missing constraints, weak verbs, unstated success criteria; apply fixes inline; note refinements in a brief "Refinements applied:" comment (max 5 items) in your output
 - Self-check: IDENTITY length fits 2–4 sentences; STEPS use strong verbs; no code blocks or executable snippets in the skill body
 - Derive a kebab-case skill name from the purpose (e.g., "analyze-claims", "extract-wisdom")
 - Save the generated skill to `.claude/skills/{skill-name}/SKILL.md` using the Write tool — Claude Code auto-discovers skills in this location

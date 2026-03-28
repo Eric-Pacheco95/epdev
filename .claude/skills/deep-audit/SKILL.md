@@ -78,6 +78,7 @@ For `--onboard` and `--cherry-pick` modes, Tier 1 (Blocker) findings that are sa
 For `--evaluate` mode: NO remediation loop. Report only -- this mode is read-only by design.
 
 - Present the full audit report to Eric before any implementation actions
+- **Auto-offer visualization**: After presenting the audit report, offer: "Want a `/visualize system` diagram of the architecture findings? This maps components, trust boundaries, and dependency flows from the audit." — invoke `/visualize` only if Eric accepts
 
 # OUTPUT INSTRUCTIONS
 

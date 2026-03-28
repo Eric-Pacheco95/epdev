@@ -64,6 +64,17 @@ LEARN
   - **Rating** (1-10): How important/impactful is this signal? 1 = trivial, 10 = fundamental shift
   - **Observation**: What specifically was observed (factual, not interpretive)
   - **Implication**: What should change or be remembered as a result
+- **Quality gate** (replaces standalone /rate-content): Before writing each signal, apply this tier check:
+  - Count distinct, actionable ideas in the signal (not restatements)
+  - Evaluate relevance to Eric's core themes: AI/orchestration | security | crypto/finance | business | music | personal growth | systems thinking
+  - Assign a tier:
+    - **S Tier** (18+ ideas OR strong multi-theme match): critical signal, must capture
+    - **A Tier** (15+ ideas OR good theme match): high-value, write signal
+    - **B Tier** (12+ ideas OR decent match): worth a signal, keep concise
+    - **C Tier** (10+ ideas OR some match): skip unless Eric specifically asked
+    - **D Tier** (few ideas, weak match): do not write -- noise
+  - Only write signals rated B tier or above. For C/D tier learnings, note them in the output summary as "filtered out" with the tier so Eric can override
+  - Add the tier to the signal file header (see updated SIGNAL FORMAT)
 - Assess session sentiment: Was the user satisfied, frustrated, neutral, energized? Look for:
   - Explicit feedback ("great", "no not that", "perfect")
   - Implicit signals (repeated corrections = frustration, quick approvals = satisfaction)
@@ -90,6 +101,7 @@ Write each signal as a markdown file at `memory/learning/signals/{date}_{slug}.m
 # Signal: {short title}
 - Date: {YYYY-MM-DD}
 - Rating: {1-10}
+- Tier: {S|A|B}
 - Category: {pattern|insight|anomaly|improvement}
 - Source: {session|voice|manual}
 - Observation: {what was observed — factual}

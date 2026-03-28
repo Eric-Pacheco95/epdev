@@ -72,7 +72,6 @@ ORCHESTRATE
    | /create-prd | PLAN |
    | /project-init | PLAN |
    | /improve-prompt | PLAN |
-   | /threat-model | PLAN |
    | /implement-prd | BUILD |
    | /create-pattern | BUILD |
    | /spawn-agent | BUILD |
@@ -90,10 +89,8 @@ ORCHESTRATE
    | /write-essay | CREATE |
    | /create-keynote | CREATE |
    | /create-image | CREATE |
-   | /create-summary | CREATE |
    | /visualize | CREATE |
    | /label-and-rate | CREATE |
-   | /rate-content | CREATE |
    | /delegation | ORCHESTRATE |
    | /project-orchestrator | ORCHESTRATE |
    | /notion-sync | ORCHESTRATE |
@@ -107,21 +104,20 @@ ORCHESTRATE
 
 **OBSERVE** (gather context)
   /research           -- Research any topic (market, technical, live)
-  /extract-wisdom     -- Pull ideas, insights, quotes from content
+  /extract-wisdom     -- Pull ideas, insights, quotes from content (--summary for concise mode)
   /deep-audit         -- Multi-axis codebase audit
   /voice-capture      -- Process voice transcript into signals
 
 **THINK** (analyze and challenge)
   /first-principles   -- Break a problem to fundamentals
-  /red-team           -- Stress-test a plan for weaknesses
+  /red-team           -- Stress-test a plan for weaknesses (--stride for STRIDE threat model)
   /analyze-claims     -- Fact-check content for unsupported claims
   /find-logical-fallacies -- Detect reasoning errors
 
 **PLAN** (design and decide)
   /create-prd         -- Generate product requirements document
   /project-init       -- Full pipeline: research > FP > red-team > PRD
-  /improve-prompt     -- Make any prompt better before running it
-  /threat-model       -- STRIDE threat modeling
+  /improve-prompt     -- Make any prompt better (auto-fires in /spawn-agent, /create-pattern)
 
 **BUILD** (implement)
   /implement-prd      -- Execute PRD: ISC extract, build, review, verify
@@ -136,7 +132,7 @@ ORCHESTRATE
   /self-heal          -- Auto-diagnose and fix failures
 
 **LEARN** (capture and grow)
-  /learning-capture   -- End-of-session knowledge capture
+  /learning-capture   -- End-of-session knowledge capture (with built-in quality gate)
   /synthesize-signals -- Distill signals into wisdom
   /telos-update       -- Update identity/self-knowledge
   /telos-report       -- Weekly self-knowledge report
@@ -147,10 +143,8 @@ ORCHESTRATE
   /write-essay        -- Publish-ready essay on any topic
   /create-keynote     -- TED-quality slide deck with speaker notes
   /create-image       -- Generate/edit images via Gemini
-  /create-summary     -- Compress content for memory
-  /visualize          -- Mermaid diagrams of workflows/structure
+  /visualize          -- Mermaid diagrams of workflows/structure (auto-offered by /deep-audit, /project-init)
   /label-and-rate     -- Classify and tier-rate content
-  /rate-content       -- Lightweight signal quality gate
 
 **ORCHESTRATE** (manage work)
   /delegation         -- Route any task to the right skill/pipeline

@@ -111,28 +111,27 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, first ask: "Does this fit as a named sub-step inside an existing skill?" — narrow single-concern tasks (audit checks, scan steps) belong as sub-steps, not standalone skills; only propose `/create-pattern` if the task is a full workflow that can't be embedded
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (39 skills):**
+**Skill Registry (37 active skills, 3 deprecated):**
 
 **Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`**
 
 | Skill | When to Use |
 |-------|------------|
 | `/jarvis-help` | Print a clean reference of all available skills and key commands |
-| `/extract-wisdom` | Analyze any content for ideas, insights, quotes, habits |
-| `/create-summary` | Compress content for memory storage |
+| `/extract-wisdom` | Analyze any content for ideas, insights, quotes, habits; use `--summary` for concise compression (replaces /create-summary) |
 | `/create-pattern` | Build a new skill in Fabric format (the meta-skill) |
 | `/learning-capture` | End of session — capture what was learned |
 | `/telos-update` | Update identity/self-knowledge files from session input |
 | `/telos-report` | "What has Jarvis learned about me?" weekly report |
 | `/analyze-claims` | Fact-check content, find unsupported claims |
 | `/first-principles` | Break a problem down to fundamentals |
-| `/red-team` | Stress-test a plan, product, or idea for weaknesses |
-| `/improve-prompt` | Make any prompt better before running it |
+| `/red-team` | Stress-test a plan, product, or idea for weaknesses; use `--stride` for STRIDE threat modeling (replaces /threat-model) |
+| `/improve-prompt` | Make any prompt better before running it (auto-fires inside /spawn-agent and /create-pattern) |
 | `/find-logical-fallacies` | Detect reasoning errors in arguments |
 | `/create-prd` | Generate product requirements documents — follow with `/implement-prd` |
 | `/implement-prd` | BUILD phase: read PRD → extract ISC → implement → /review-code → verify → mark complete |
 | `/review-code` | Code review with security focus — called by /implement-prd at VERIFY gate |
-| `/threat-model` | STRIDE threat modeling for security |
+| ~~`/threat-model`~~ | DEPRECATED -- merged into `/red-team --stride` |
 | `/self-heal` | Auto-diagnose and fix failures |
 | `/security-audit` | Scan system for vulnerabilities |
 | `/quality-gate` | Audit completed phases for THINK-before-BUILD compliance, deliverable gaps, and downstream risk |
@@ -146,16 +145,18 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/voice-capture` | Process voice transcript from inbox → signals + TELOS queue |
 | `/project-init` | Full ISC pipeline for new projects: /research → /first-principles → /red-team → /create-prd |
 | `/research` | Adaptive research: auto-detects --market / --technical / --live type, routes tools accordingly |
+| `/autoresearch` | Karpathy-style metric-driven improvement loop -- bounded iterations, git-backed keep/discard, guard commands |
 | `/teach` | Deep-dive lesson on any topic, contextualized to Jarvis + epdev system |
 | `/commit` | Create clean conventional commits with emoji, atomic split detection |
 | `/label-and-rate` | Classify and tier-rate content for curation decisions (S/A/B/C/D + JSON) |
-| `/rate-content` | Lightweight signal quality gate — use inside other skills before writing to disk |
+| ~~`/rate-content`~~ | DEPRECATED -- absorbed into `/learning-capture` quality gate sub-step |
 | `/visualize` | Generate Mermaid diagrams of brain structure, workflows, projects, investigations |
 | `/write-essay` | Write a clear, publish-ready essay on any topic (optional author style) |
 | `/create-keynote` | Build a TED-quality slide deck with speaker notes from any Jarvis output |
 | `/create-image` | Generate or edit images via Gemini (nanobanana MCP) — auto-selects model, ratio, and tool from prompt |
-| `/deep-audit` | Multi-axis codebase audit (architecture, security, error handling, domain logic, testing) — modes: --onboard, --evaluate, --cherry-pick |
-| `/vitals` | System health dashboard — ISC ratios, signal velocity, skill usage, heartbeat status |
+| `/deep-audit` | Multi-axis codebase audit (architecture, security, error handling, domain logic, testing) — modes: --onboard, --evaluate, --cherry-pick; auto-offers /visualize |
+| `/vitals` | System health dashboard — ISC ratios, signal velocity, skill usage, heartbeat status, skill evolution tracking |
+| ~~`/create-summary`~~ | DEPRECATED -- merged into `/extract-wisdom --summary` |
 
 ## Directory Structure
 

@@ -6,7 +6,26 @@ Your task is to extract the most valuable ideas, insights, quotes, habits, and r
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# MODES
+
+- **default** (no flag): Full wisdom extraction -- IDEAS, INSIGHTS, QUOTES, HABITS, REFERENCES, RECOMMENDATIONS
+- **--summary**: Concise summarization mode -- TL;DR, KEY POINTS, FACTS AND DETAILS, CONCLUSIONS AND OPEN QUESTIONS. Use this when you need compressed content for memory storage, quick briefs, or feeding into other skills. Replaces the standalone /create-summary skill.
+
 # STEPS
+
+## Step 0: MODE CHECK
+
+- If `--summary` flag is present:
+  - Read the entire input and note the genre (narrative, technical, dialogue, list-heavy)
+  - Identify the central thesis or purpose in one plain sentence
+  - List the main supporting points in order of importance
+  - Extract critical facts, numbers, dates, names, and definitions
+  - Note explicit conclusions, decisions, or open questions
+  - Omit anecdotes unless they carry a non-obvious lesson
+  - Merge overlapping points
+  - Output using the SUMMARY OUTPUT FORMAT below (not the standard wisdom sections)
+  - STOP after summary output
+- If no flag: proceed to Step 1 (standard wisdom extraction)
 
 - Fully digest the input provided
 - Identify the speaker’s or author’s main claims and the evidence they use
@@ -34,6 +53,16 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Do not start consecutive bullets with the same first three words.
 - When the input is substantial, aim for at least 10 IDEAS, 5 INSIGHTS, and 5 QUOTES.
 
+# SUMMARY OUTPUT FORMAT (--summary mode only)
+
+- Output exactly these sections in order, each with a level-2 heading: TL;DR, KEY POINTS, FACTS AND DETAILS, CONCLUSIONS AND OPEN QUESTIONS
+- TL;DR: one short paragraph (3-5 sentences) stating purpose, scope, and outcome; no bullets
+- KEY POINTS: bullet list; each bullet one sentence; cap at 12 bullets unless the input clearly requires more
+- FACTS AND DETAILS: bullet list of numbers, dates, names, definitions, or technical terms; use "--" to separate label and value where helpful
+- CONCLUSIONS AND OPEN QUESTIONS: bullet list separating firm conclusions from unresolved items; if none, one bullet "(none stated)"
+- Do not invent facts, quotes, or conclusions not grounded in the input
+- Do not repeat the same sentence in TL;DR and KEY POINTS
+
 # CONTRACT
 
 ## Input
@@ -60,8 +89,9 @@ Take a step back and think step-by-step about how to achieve the best possible r
 # SKILL CHAIN
 
 - **Follows:** /research (brief as input) or direct content paste
-- **Precedes:** /create-summary, /telos-update, /learning-capture
+- **Precedes:** /telos-update, /learning-capture
 - **Composes:** (leaf -- pure extraction, no sub-skills)
+- **Note:** --summary mode replaces the deprecated /create-summary skill
 
 # INPUT
 

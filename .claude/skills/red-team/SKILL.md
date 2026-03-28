@@ -15,15 +15,17 @@ Stress-test a plan, product, or idea for weaknesses and failure modes
 THINK
 
 ## Syntax
-/red-team <plan, product description, or file path>
+/red-team [--stride] <plan, product description, or file path>
 
 ## Parameters
 - input: free-text description of the plan/product/policy to attack, or a file path to review (required for execution, omit for usage help)
+- --stride: activate STRIDE threat modeling mode (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege) -- produces a structured threat model alongside the adversarial analysis
 
 ## Examples
 - /red-team memory/work/jarvis/PRD.md
 - /red-team Our crypto bot uses a simple moving average crossover strategy
 - /red-team The new auth flow stores session tokens in localStorage
+- /red-team --stride The Jarvis heartbeat system runs as a scheduled task with file-based state
 
 ## Chains
 - Before: /first-principles (decompose assumptions first)
@@ -49,6 +51,21 @@ THINK
   - Print: "For code-level security review, use /review-code. /red-team is for architectural and strategic analysis. Need both? Run /review-code first, then /red-team on the design."
 - Once input is validated, proceed to Step 1
 
+## Step 0.5: STRIDE MODE CHECK
+
+- If `--stride` flag is present, activate STRIDE overlay:
+  - After completing the standard red-team analysis (Steps 1+), add STRIDE-specific sections
+  - Identify trust boundaries: where data crosses privilege levels, networks, or organizational boundaries
+  - List relevant actors with intent notes (users, admins, external services, anonymous internet, insiders)
+  - For each STRIDE category (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege):
+    - Brainstorm plausible threats specific to the described architecture
+    - Tie threats to affected assets or data flows
+    - Note preconditions and attacker capabilities
+  - If a category has no plausible threats: "(no distinct threats identified for this category given current description)"
+  - Map STRIDE findings into the MITIGATIONS section alongside the standard red-team mitigations
+  - Add TRUST BOUNDARIES AND DATA FLOWS and STRIDE ANALYSIS sections to the output (after DATA AND TRUST RISKS)
+- If `--stride` flag is NOT present, skip directly to Step 1
+
 ## Step 1: SUMMARIZE
 
 - Summarize the artifact under review in one neutral sentence
@@ -63,7 +80,7 @@ THINK
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output exactly these sections in order, each with a level-2 heading: SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE AND ABUSE CASES, DATA AND TRUST RISKS, RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS
+- Output exactly these sections in order, each with a level-2 heading: SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE AND ABUSE CASES, DATA AND TRUST RISKS, [if --stride: TRUST BOUNDARIES AND DATA FLOWS, STRIDE ANALYSIS (with subsections: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege)], RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS
 - SUMMARY: one paragraph describing what is being red-teamed
 - THREAT MODEL: bullet list naming actor types and their incentives (e.g. curious user, malicious insider)
 - FAILURE MODES: bullet list of ways the thing breaks or behaves badly
