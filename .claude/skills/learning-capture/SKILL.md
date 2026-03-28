@@ -26,7 +26,7 @@ LEARN
 
 ## Chains
 - Before: any build, research, or design session (this is always the final step)
-- After: /synthesize-signals (auto-invoked if signal count >= 15 or >= 8 with stale synthesis)
+- After: /synthesize-signals (auto-invoked if signal count >= 20 or >= 10 with 48h+ stale synthesis)
 - Full: [any session work] > /learning-capture > /synthesize-signals > /telos-update
 
 ## Output Contract
@@ -84,7 +84,7 @@ LEARN
 - Write each signal to `memory/learning/signals/` using the format below
 - Write any failures to `memory/learning/failures/` using the failure format below
 - Update `memory/learning/_signal_meta.json` with the new count
-- After writing signals, count unprocessed signals in `memory/learning/signals/` (excluding `processed/` subdirectory). If count >= 15 (hard ceiling) OR count >= 8 and last synthesis is 24h+ old: **auto-invoke `/synthesize-signals` immediately** — do not just note it. If synthesis produces proposed steering rules, present them to Eric for approval but do not auto-invoke `/update-steering-rules`
+- After writing signals, count unprocessed signals in `memory/learning/signals/` (excluding `processed/` subdirectory). If count >= 20 (hard ceiling) OR count >= 10 and last synthesis is 48h+ old OR count >= 8 and last synthesis is 72h+ old: **auto-invoke `/synthesize-signals` immediately** — do not just note it. If synthesis produces proposed steering rules, present them to Eric for approval but do not auto-invoke `/update-steering-rules`
 - **Skill gap check**: After writing signals, scan the session for tasks or patterns that were handled ad-hoc but would benefit from a reusable skill. Evaluate each candidate against:
   - **Recurrence**: Would this task plausibly come up again (weekly+)?
   - **Repeatability**: Does it follow a consistent enough structure to script?
@@ -160,7 +160,7 @@ Analyze the current session and extract learnings. If invoked with specific cont
   - writes signal files to `memory/learning/signals/`
   - writes failure files to `memory/learning/failures/` (if applicable)
   - updates `memory/learning/_signal_meta.json`
-  - may invoke `/synthesize-signals` if threshold met (>= 15 signals or >= 8 + 24h old)
+  - may invoke `/synthesize-signals` if threshold met (>= 20 signals or >= 10 + 48h or >= 8 + 72h)
 
 ## Errors
 - **trivial-session:** session had no meaningful work to capture
