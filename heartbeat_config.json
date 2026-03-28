@@ -130,6 +130,14 @@
       "isc_ref": "PRD-P4:ISC-5 Background jobs close gap versus documented ideal state"
     },
     {
+      "name": "cloud_audit_recency",
+      "type": "file_recency",
+      "path": "history/security",
+      "ext": ".md",
+      "thresholds": { "warn_above": 2, "crit_above": 3 },
+      "isc_ref": "PRD-P4:ISC-5 Background jobs close gap versus documented ideal state"
+    },
+    {
       "name": "context_budget_proxy",
       "type": "hook_output_size",
       "hook_script": "tools/scripts/hook_session_start.py",
