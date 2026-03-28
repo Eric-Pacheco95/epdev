@@ -2,9 +2,10 @@
 Convert a /create-keynote markdown output into a PowerPoint (.pptx) file.
 
 Usage:
-    python keynote_to_pptx.py <input.md> [output.pptx]
+    python keynote_to_pptx.py <input.md> [output.pptx] [--images-dir <path>]
 
 If output path is omitted, writes to the same directory as input with .pptx extension.
+If --images-dir is provided, looks for slide_1.png, slide_2.png, etc. to embed in slides.
 """
 
 from __future__ import annotations
@@ -123,7 +124,7 @@ def parse_keynote_md(text: str) -> dict:
     return result
 
 
-def build_pptx(data: dict, output_path: Path) -> None:
+def build_pptx(data: dict, output_path: Path, images_dir: Path | None = None) -> None:
     """Build a PowerPoint file from parsed keynote data."""
     prs = Presentation()
     prs.slide_width = Inches(13.333)
@@ -184,8 +185,26 @@ def build_pptx(data: dict, output_path: Path) -> None:
                 p.space_after = Pt(12)
                 p.level = 0
 
-        # Image description as subtle footer
-        if s["image"]:
+        # Image: embed file if available, otherwise show text description
+        slide_num = data["slides"].index(s) + 1
+        image_path = None
+        if images_dir:
+            for ext in (".png", ".jpg", ".jpeg", ".webp"):
+                candidate = images_dir / f"slide_{slide_num}{ext}"
+                if candidate.exists():
+                    image_path = candidate
+                    break
+
+        if image_path:
+            # Place image on the right side of the slide
+            img_left = slide_width - margin - Inches(5.0)
+            img_top = Inches(1.8)
+            img_height = Inches(4.0)
+            slide.shapes.add_picture(
+                str(image_path), img_left, img_top, height=img_height
+            )
+            # Narrow bullet text to left half when image is present
+        elif s["image"]:
             _add_text_box(slide, margin, Inches(6.2), content_width, Inches(0.8),
                           "Visual: " + s["image"][:120], 10, NOTE_COLOR)
 
@@ -208,19 +227,22 @@ def build_pptx(data: dict, output_path: Path) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print("Usage: keynote_to_pptx.py <input.md> [output.pptx]")
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    images_dir = None
+    for i, a in enumerate(sys.argv[1:], 1):
+        if a == "--images-dir" and i + 1 < len(sys.argv):
+            images_dir = Path(sys.argv[i + 1])
+
+    if not args:
+        print("Usage: keynote_to_pptx.py <input.md> [output.pptx] [--images-dir <path>]")
         sys.exit(1)
 
-    input_path = Path(sys.argv[1])
+    input_path = Path(args[0])
     if not input_path.exists():
         print(f"File not found: {input_path}")
         sys.exit(1)
 
-    if len(sys.argv) >= 3:
-        output_path = Path(sys.argv[2])
-    else:
-        output_path = input_path.with_suffix(".pptx")
+    output_path = Path(args[1]) if len(args) >= 2 else input_path.with_suffix(".pptx")
 
     text = input_path.read_text(encoding="utf-8")
     data = parse_keynote_md(text)
@@ -229,8 +251,9 @@ def main() -> None:
         print("No slides found in input. Expected '### Slide N: Title' format.")
         sys.exit(1)
 
-    build_pptx(data, output_path)
-    print(f"Generated {len(data['slides'])} slides -> {output_path}")
+    build_pptx(data, output_path, images_dir)
+    img_note = f" (with images from {images_dir})" if images_dir else ""
+    print(f"Generated {len(data['slides'])} slides{img_note} -> {output_path}")
 
 
 if __name__ == "__main__":

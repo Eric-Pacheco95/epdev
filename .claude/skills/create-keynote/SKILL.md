@@ -53,10 +53,21 @@ Default to **consumer** if unspecified and topic is general, **technical** if to
 
 7. **Total slides**: 10-20 depending on input complexity (see audience mode for guidance).
 
-8. **PPTX generation**: If Eric requested PPTX (or said yes to the pre-flight prompt), after outputting the markdown, save the full presentation markdown to a temp file and run:
+8. **Image generation** (optional but recommended): After writing the deck markdown, offer to generate real images for each slide using `/create-image` (nanobanana MCP):
+   - Ask: "Want me to generate images for these slides? (~1 image per slide, Pro quality)"
+   - If yes, for each slide's `**Image**:` description:
+     - Use `gemini_generate_image` with `conversation_id` set to the deck name (e.g., `keynote-{topic}`) and `use_image_history: true` for style consistency
+     - Set model to `pro` and aspect ratio to `16:9`
+     - Enhance the image description with style, lighting, composition details
+     - Save each image to `memory/work/{topic}/images/slide_{N}.png`
+   - If no or MCP unavailable, proceed with text descriptions (current behavior)
+   - Track generated image paths for the PPTX step
+
+9. **PPTX generation**: If Eric requested PPTX (or said yes to the pre-flight prompt), after outputting the markdown, save the full presentation markdown to a temp file and run:
    ```
-   python tools/scripts/keynote_to_pptx.py <saved_markdown.md> <output.pptx>
+   python tools/scripts/keynote_to_pptx.py <saved_markdown.md> <output.pptx> [--images-dir memory/work/{topic}/images/]
    ```
+   If `--images-dir` is provided and contains `slide_N.png` files, they are embedded in the slides. Otherwise falls back to text descriptions.
    Save the .pptx to `memory/work/{topic}/` alongside the markdown. Tell Eric the file path so he can open it or sync to phone.
 
 9. **Google Drive upload**: After PPTX generation, automatically upload the .pptx file(s) to Google Drive using the `mcp__google-drive__uploadFile` tool:
