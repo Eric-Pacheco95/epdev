@@ -14,8 +14,8 @@
       "type": "file_count_velocity",
       "path": "memory/learning/signals",
       "ext": ".md",
-      "window_days": 7,
-      "thresholds": { "warn_below": 1.0, "crit_below": 0.2 },
+      "window_days": 3,
+      "thresholds": { "warn_below": 0.5, "crit_below": 0.1 },
       "isc_ref": "PRD-P4:ISC-3 Research outputs become signals or queued review artifacts"
     },
     {
@@ -23,7 +23,7 @@
       "type": "file_count",
       "path": "memory/learning/failures",
       "ext": ".md",
-      "thresholds": { "warn_above": 5, "crit_above": 15 }
+      "thresholds": { "warn_above": 10, "crit_above": 20 }
     },
     {
       "name": "security_event_count",

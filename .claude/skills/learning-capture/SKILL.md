@@ -27,7 +27,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Write each signal to `memory/learning/signals/` using the format below
 - Write any failures to `memory/learning/failures/` using the failure format below
 - Update `memory/learning/_signal_meta.json` with the new count
-- If signal count exceeds 10 unprocessed signals, note that synthesis is due
+- After writing signals, count unprocessed signals in `memory/learning/signals/` (excluding `processed/` subdirectory). If count >= 15 (hard ceiling) OR count >= 8 and last synthesis is 24h+ old: **auto-invoke `/synthesize-signals` immediately** — do not just note it. If synthesis produces proposed steering rules, present them to Eric for approval but do not auto-invoke `/update-steering-rules`
 - **Skill gap check**: After writing signals, scan the session for tasks or patterns that were handled ad-hoc but would benefit from a reusable skill. Evaluate each candidate against:
   - **Recurrence**: Would this task plausibly come up again (weekly+)?
   - **Repeatability**: Does it follow a consistent enough structure to script?
@@ -74,7 +74,8 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 - Each signal gets its own file — do not combine multiple signals into one file
 - Be honest about ratings — most sessions produce 3-6 rated signals, not all 10s
 - Prioritize signals that affect future behavior (insights about the user, workflow improvements, system bugs)
-- After writing signals, output a brief summary: how many signals written, highest-rated one, whether synthesis is due, and any skill gap candidates
+- After writing signals, output a brief summary: how many signals written, highest-rated one, and any skill gap candidates
+- If synthesis threshold is met, invoke `/synthesize-signals` inline — do not ask permission. If synthesis proposes steering rules, present them for Eric's approval. If synthesis surfaces TELOS-relevant themes, note them for next `/telos-update` but do not auto-invoke
 - Do not write stub signals with "(pending)" — every signal must have real content or don't write it at all
 - If you detect patterns across multiple recent signals, note this as a meta-signal worth synthesis
 

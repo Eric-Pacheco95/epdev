@@ -355,7 +355,10 @@ def collect_scheduled_tasks(cfg: dict, root_dir: Path, _prev: dict = None) -> di
             except ValueError:
                 last_result = -1
 
-            healthy = (state in ("Ready", "Running")) and last_result == 0
+            # 0x00041303 = SCHED_S_TASK_HAS_NOT_RUN (waiting for first trigger)
+            # 0x00041301 = SCHED_S_TASK_RUNNING (currently executing)
+            benign_codes = {0, 0x00041303, 0x00041301}
+            healthy = (state in ("Ready", "Running")) and last_result in benign_codes
             if not healthy:
                 unhealthy += 1
                 status_str = f"{state}/0x{last_result & 0xFFFFFFFF:08X}" if last_result != 0 else state
