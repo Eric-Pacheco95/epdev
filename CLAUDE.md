@@ -100,6 +100,9 @@ Load documentation on-demand, not upfront:
 - Claude Code Remote Triggers (cloud-scheduled agents) cannot invoke /skills, load CLAUDE.md, fire hooks, or access local files — prompts must be fully self-contained with inline instructions; for Jarvis-context work (security audit, steering, tasklist), use local Task Scheduler with `claude -p` instead
 - When facing 3+ viable implementation paths mid-build, run `/first-principles` before picking — ADHD build velocity defaults to the option with the most energy, not the best fit; `/first-principles` takes 5 minutes and prevents rework from wrong-fork commits
 - Before committing to any hard-to-reverse architecture decision (new integration, data model, infrastructure choice), run `/red-team` on the design — this catches failure modes, edge cases, and scope creep before they become sunk cost; especially important for Phase 4B+ autonomous systems where bad architecture compounds silently
+- Heartbeat auto-signals must require non-zero delta — do not emit WARN/CRIT signals when the metric value has not changed since the last snapshot; zero-delta signals are noise that inflates signal counts and triggers unnecessary synthesis runs; the guard is `change.get("delta", 0) != 0` in the auto-signal call site
+- When evaluating external AI orchestration patterns (agent frameworks, multi-agent architectures, loop patterns), filter through "is this solving a team coordination problem?" — if yes, it likely doesn't apply to Jarvis; Jarvis is skill-first (39 skills as execution engine), not agent-first; wire improvements into skills, not agent layers
+- New agent definitions must use Six-Section anatomy (Identity, Mission, Critical Rules, Deliverables, Workflow, Success Metrics) — validate with `python tools/scripts/validate_agents.py`; Critical Rules section is non-negotiable: 2-3 "Never X because Y" sentences that prevent the agent's most likely failure modes
 
 ## Skill-First Execution
 
