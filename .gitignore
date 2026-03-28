@@ -114,6 +114,7 @@ memory/learning/signals/processed/
 memory/learning/failures/*.md
 memory/learning/synthesis/*.md
 memory/learning/_signal_meta.json
+memory/learning/signal_lineage.jsonl
 
 # ------------------------------------------------------------------------------
 # Personal history content — blank-slate template only

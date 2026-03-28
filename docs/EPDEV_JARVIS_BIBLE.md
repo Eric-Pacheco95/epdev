@@ -254,8 +254,44 @@ type data\logs\heartbeat_2026-03-27.log
 | `tools/scripts/run_heartbeat.bat` | Task Scheduler wrapper |
 | `tools/scripts/jarvis_heartbeat.py` | Heartbeat engine |
 | `tools/scripts/jarvis_index.py` | Knowledge Index (build/update/search/stats) |
+| `tools/scripts/rotate_events.py` | Log rotation (gzip, retention) |
 | `heartbeat_config.json` | Thresholds, collectors, alert routing |
 | `memory/work/isce/heartbeat_latest.json` | Latest snapshot |
+
+### Log rotation
+
+Runs automatically at end of each heartbeat cycle. Managed by `rotate_events.py`:
+- **Rollup**: daily JSONL files aggregated into monthly summaries after 30 days
+- **Gzip**: raw files compressed after 180 days
+- **Retention**: files deleted after 90 days (raw) per `heartbeat_config.json`
+
+Dry-run: `python tools/scripts/rotate_events.py`
+Execute: `python tools/scripts/rotate_events.py --execute`
+
+### Troubleshooting
+
+**Heartbeat not running:**
+```powershell
+# Check task status
+schtasks /query /tn "JarvisHeartbeat" /v /fo list
+# Look for "Status: Ready" and "Last Run Time" within the last 60 min
+
+# Check today's log for errors
+type data\logs\heartbeat_%date:~0,4%-%date:~5,2%-%date:~8,2%.log
+
+# Manual test run
+cd C:\Users\ericp\Github\epdev
+python tools/scripts/jarvis_heartbeat.py
+```
+
+**No Slack alerts firing:**
+- Verify `SLACK_BOT_TOKEN` is set in user environment variables (not just terminal)
+- Check `heartbeat_config.json` alert routing section
+- Confirm daily cap (20/channel) hasn't been hit
+
+**Snapshot not updating:**
+- Check `memory/work/isce/heartbeat_latest.json` timestamp
+- If stale, run heartbeat manually and check for Python errors in log
 
 ---
 

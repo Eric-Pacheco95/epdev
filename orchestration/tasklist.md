@@ -109,12 +109,13 @@
 >
 > **Miessler / PAI alignment:** Prefer **PAI-shaped** wiring: MCP for external tools, **hooks** as nervous system, **Fabric** patterns, **structured events** — see PAI’s observability direction (e.g. `pai-observability-server` / event capture in the PAI repo). Use **Langfuse or similar** only if you want hosted LLM tracing and it fits deployment better than PAI-style telemetry.
 
-- [x] **Notion (MCP)** — 🧠 Jarvis Brain structure created (Inbox, Journal, Goals & Growth, Ideas, Music, Jarvis Reports, TELOS Mirror). Page registry at `memory/work/notion_brain.md`. Session-start hook Notion read + auto-write to Reports/Mirror pending (Phase 3E era).
+- [x] **Notion (MCP)** — Jarvis Brain structure created (Inbox, Journal, Goals & Growth, Ideas, Music, Jarvis Reports, TELOS Mirror). Page registry at `memory/work/notion_brain.md`. Session-start hook reads Notion on load.
+- [ ] **Notion auto-write** — Auto-push Reports/TELOS Mirror to Notion (split from MCP setup; was "pending" inside checked item since Phase 3E)
 - [x] **Slack (MCP)** — `#epdev` routine traffic via ClaudeActivities app confirmed working; stop hook posts session-end summaries. Full MCP read/write integration deferred — current posting flow meets needs.
 - [x] **Calendar (MCP)** — `@cocal/google-calendar-mcp` working. OAuth via `gcp-oauth.keys.json`. 3 calendars loading (primary, Family, Holidays). Validated 2026-03-27.
 - [x] **Gmail (MCP)** — `@gongrzhe/server-gmail-autoauth-mcp` working. Web app OAuth client (separate from calendar Desktop client). Credentials at `~/.gmail-mcp/credentials.json`. Scopes: `gmail.modify` + `gmail.settings.basic`. Validated 2026-03-27. **Note**: requires new session to load tools.
 - ~~**ntfy**~~ **RETIRED** — All notifications routed to Slack. Scripts (`ntfy_notify.py`, `hook_notification.py`) remain but are inactive. Decision: 2026-03-27.
-- [x] **Observability Phase 1** — `hook_events.py` captures all PostToolUse events to `history/events/YYYY-MM-DD.jsonl`. Research brief at `memory/work/observability/research_brief.md`. Phase 2 (Langfuse) deferred to Phase 3E+.
+- [x] **Observability Phase 1** — `hook_events.py` captures all PostToolUse events to `history/events/YYYY-MM-DD.jsonl`. Research brief at `memory/work/observability/research_brief.md`. Phase 2 (Langfuse) deferred to Phase 4+.
 
 ### Phase 3C: Voice & Mobile Interface
 
@@ -194,12 +195,12 @@
 - [x] **ISC engine PRD** — `memory/work/isce/PRD.md` — 25 ISCs across 5 phases, 6 resolved decisions, config-driven architecture. Completed 2026-03-27.
 - [x] **Metric collectors** — `tools/scripts/collectors/core.py` — 19 collectors: file_count, velocity, checkbox, PRD ISC, query_events, recency, dir_count, disk_usage, hook_output_size, derived. All passing on live epdev. Completed 2026-03-27.
 - [x] **`heartbeat` runner** — `tools/scripts/jarvis_heartbeat.py` — Config-driven, 19 collectors, diff engine, auto-signal writing, modular alert routing, backward-compatible snapshot. Completed 2026-03-27.
-- [ ] **Scheduler** — **Windows Task Scheduler** (primary on your machine) or cron/WSL; document interval (e.g. 60 min), failure alerts, and log rotation in `docs/EPDEV_JARVIS_BIBLE.md`. Heartbeat CLI ready (`--quiet`, `--session-end`, `--config`).
+- [x] **Scheduler** — JarvisHeartbeat in Task Scheduler every 60 min. `rotate_events.py` wired into `run_heartbeat.bat`. Troubleshooting section added to BIBLE. Completed 2026-03-28.
 - [x] **Gap → learning pipeline** — Auto-signal writing on WARN/CRIT threshold crossings. Severity-scaled ratings (INFO=4, WARN=6, CRIT=8). Cooldown (60 min per metric). 3 auto-signals produced on first run. Completed 2026-03-27.
 - [x] **Security & safety** — Path traversal prevention via `_resolve_path` validation. Metric name sanitization for filenames. No secrets in output (verified). Alert daily caps. `/review-code` passed. Completed 2026-03-27.
 - [x] **Optional integrations** — Slack + ntfy alert routing built and config-driven. `rotate_events.py` for storage rotation. Completed 2026-03-27.
 - [x] **AI Steering Rules cadence** — Ritual established: run `/update-steering-rules` after each `/synthesize-signals` pass. Dynamic synthesis threshold replaces static count (15 hard ceiling, 8+24h, 5+72h tiers). 5 synthesis runs + 5 steering rule updates completed 2026-03-27. Decision logged.
-- [ ] **Agent-based hooks** — Upgrade `PreToolUse` validator (`security/validators/`) from shell script to Python agent: enables MCP tool access, richer logic, testability, and AST-based bash command approval (Dippy pattern from awesome-claude-code). Do after heartbeat is stable — hooks must not block ISC collection.
+- [x] **Agent-based hooks** — Validators already Python (`validate_tool_use.py` with 26 rules, `secret_scanner.py`). No shell scripts remain. Full coverage confirmed 2026-03-28.
 - [x] **`/vitals` skill (3E capstone)** — `.claude/skills/vitals/SKILL.md` — Runs heartbeat, reads snapshot, presents ASCII-safe dashboard with ISC ratio, signal velocity, sessions/day, storage budget, missing skill detection. Completed 2026-03-27.
 - [x] **[ISC 8/10] Context budget as vitals metric** — `context_budget_proxy` collector measures hook output char count (1,692 chars current). Threshold: warn_above 3,000, crit_above 5,000. Tracked in heartbeat snapshot. Completed 2026-03-27. Remaining: MCP schema overhead estimate, per-session burn rate (needs API usage headers).
 
@@ -263,6 +264,23 @@
 
 ---
 
+### Phase 4E — Data management & reporting layer
+
+> **Why now:** Phases 4B-4D (auto-research, Slack digests, autoresearch) will produce 200-500+ signals/day, 10K+ event lines/day, and 3-5 synthesis runs/day. Without a data layer, autonomous producers create unbounded growth in directories that 6+ consumers read. This phase builds the plumbing that autonomous Jarvis produces into.
+>
+> **Corrected by first-principles + quality-gate audit (2026-03-28):** LSM-tree archival was rejected — synthesis aggregates, it doesn't merge-and-discard; moving files from processed/ breaks FTS indexer (absolute paths), heartbeat collectors (false velocity alerts), and brain-map parser. Approach: threshold-triggered retention + lineage indexing, not premature archival.
+
+- [ ] **Signal lineage index** — After each `/synthesize-signals` run, append to `memory/learning/signal_lineage.jsonl`: `{"signal": "filename.md", "synthesis": "YYYY-MM-DD_synthesis.md", "date": "..."}`. Solves reverse-lookup (signal -> synthesis) without moving files.
+- [ ] **Signal retention policy** — Add `processed_retention_days` to `heartbeat_config.json`. When processed/ exceeds threshold (2,000 files OR 30+ days since synthesis consumed a signal), delete consumed signals. FTS index retains content; synthesis docs retain references. Gate: only activate after FTS index is verified to contain all processed signal content.
+- [ ] **Event rotation scheduled** — Wire `rotate_events.py` into monthly Task Scheduler job. Already built + tested; monthly rollup -> `history/events/rollups/YYYY-MM_summary.json`, gzip after 180d, 90d raw retention.
+- [ ] **FTS index as canonical search layer** — Validate `jarvis_index.py` indexes all signal sources (signals/, processed/, synthesis/, failures/). Ensure `update` command runs on heartbeat cadence. This is the layer that survives retention — raw files can be deleted because FTS retains the content.
+- [ ] **Reporting dashboard data contract** — Define what `/vitals` and brain-map Phase 3.5 need: signal velocity, synthesis frequency, event volume, FTS index size, retention status. Emit as structured JSON from heartbeat for downstream consumers.
+- [ ] **Autonomous signal volume monitoring** — Add `autonomous_signal_rate` collector to heartbeat. Alert if `Source: autonomous` signals exceed daily cap (prevents runaway research loops from flooding the pipeline).
+
+**Depends on:** Phase 4D (autoresearch is the primary producer). Can be built incrementally alongside 4B-4D — lineage index and event rotation are safe to ship immediately.
+
+---
+
 ## Phase 4 → Phase 5 Gate (verify before starting Phase 5)
 
 - [ ] **PAIMM AS2 verified** — Jarvis is proactive: heartbeat runs without human prompt, background research produces signals, Slack digests fire on cadence
@@ -270,6 +288,7 @@
 - [ ] **Steering rules updated from autonomous signals** — at least one CLAUDE.md change promoted from a `Source: autonomous` signal
 - [ ] **Voice capture Layer 1 live** — Notion app / Slack `#jarvis-voice` → poller → signal pipeline confirmed working end-to-end; at least one real voice signal exists in `memory/learning/signals/` with `Source: voice`
 - [ ] **Remote terminal Layer 3 live** — Tailscale installed on desktop + iPhone; Blink Shell confirmed; full `claude` CLI session reachable from iPhone over Tailscale from outside home network
+- [ ] **Data layer operational** — Phase 4E signal lineage index appending after synthesis runs; event rotation scheduled; autonomous signal rate monitoring active
 - [ ] **Phase 5 scoped** — `memory/work/jarvis/PRD_phase5.md` stub exists with initial behavioral-change goals defined
 
 ---
