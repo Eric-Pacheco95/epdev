@@ -32,7 +32,12 @@ Take a step back and think step-by-step about how to achieve the best possible r
     - **Auto-triggers wired?** (skill is invoked by other skills, not just manually)
     - Score: count of 4 axes present. Maturity levels: 4/4 = Mature, 3/4 = Developing, 2/4 = Basic, 0-1/4 = Stub
     - Surface the top 3 upgrade candidates: active skills with the lowest maturity scores that are in the top/mid usage tier (prioritize upgrading skills people actually use)
-14. Format everything into an ASCII-safe dashboard
+15. **Skill Usage**: Run `python tools/scripts/skill_usage.py --json` and parse the output:
+    - Read `raw.counts_30d` and `raw.tiers` for per-skill invocation counts and tier assignments
+    - Tier thresholds: top (>=10 invocations/30d), mid (>=4), low (1-3), zero (0 -- registered in CLAUDE.md but never invoked in 30d)
+    - For zero-tier: compare skills listed in the Skill Registry table in CLAUDE.md against `raw.counts_30d` keys; any registered non-deprecated skill absent from the counts is zero-tier
+    - Display top/mid tiers with counts; list low-tier skill names; list zero-tier skill names
+16. Format everything into an ASCII-safe dashboard
 
 # OUTPUT FORMAT
 
@@ -62,6 +67,13 @@ Storage Budget
 Skills Coverage
   Total skills: {n}
   Tasks without matching skill: {list or "none detected"}
+
+Skill Usage (trailing 30d)
+  Invocations: {n} (30d) / {n} (7d)    Unique: {n}
+  Top:  {skill}({n}), {skill}({n}), ...
+  Mid:  {skill}({n}), {skill}({n}), ...
+  Low:  {skill}, {skill}, ...
+  Zero: {skill}, {skill}, ... {or "none"}
 
 Threshold Crossings
   {[SEVERITY] metric: value (threshold)} or "None"
@@ -109,7 +121,7 @@ Collector Health
 
 - **Follows:** heartbeat run (automatic)
 - **Precedes:** `/synthesize-signals` (if signals accumulated), `/self-heal` (if collectors failing)
-- **Composes:** heartbeat.py (subprocess)
+- **Composes:** heartbeat.py (subprocess), skill_usage.py (subprocess)
 - **Escalate to:** `/delegation` if health is CRITICAL
 
 # INPUT
