@@ -114,7 +114,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, first ask: "Does this fit as a named sub-step inside an existing skill?" — narrow single-concern tasks (audit checks, scan steps) belong as sub-steps, not standalone skills; only propose `/create-pattern` if the task is a full workflow that can't be embedded
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (37 active skills, 3 deprecated):**
+**Skill Registry (38 active skills, 3 deprecated):**
 
 **Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`**
 
@@ -159,6 +159,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/create-image` | Generate or edit images via Gemini (nanobanana MCP) — auto-selects model, ratio, and tool from prompt |
 | `/deep-audit` | Multi-axis codebase audit (architecture, security, error handling, domain logic, testing) — modes: --onboard, --evaluate, --cherry-pick; auto-offers /visualize |
 | `/vitals` | System health dashboard — ISC ratios, signal velocity, skill usage, heartbeat status, skill evolution tracking |
+| `/capture-recording` | Analyze guitar recordings via Gemini API — solo/band/batch modes, MUSIC.md goal loading, practice log updates |
 | ~~`/create-summary`~~ | DEPRECATED -- merged into `/extract-wisdom --summary` |
 
 ## Directory Structure

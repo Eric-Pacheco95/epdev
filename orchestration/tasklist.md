@@ -38,6 +38,10 @@
 - [ ] **4E: Reporting dashboard data contract** — Define `/vitals` + brain-map Phase 3.5 JSON contract
 - [ ] **Voice signals in heartbeat** — `voice_session_count` metric. Low priority until voice is daily habit
 
+### New Skills
+
+- [x] **`/capture-recording` skill** — Guitar recording analysis via Gemini API. SKILL.md orchestration + Python CLI (`analyze_recording.py`). Solo/band/batch modes, MUSIC.md goal loading, token tracking. 12/12 ISC items passed. PRD: `memory/work/capture-recording/PRD.md`. (2026-03-28)
+
 ### Parked (No demand signal within 60 days — research saved)
 
 > Items below failed the enthusiasm filter: no specific project, no specific user, no specific ship date. Research is preserved. Revisit when a real project creates demand.

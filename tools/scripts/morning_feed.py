@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """Jarvis Morning Feed -- combined briefing to Slack at 9am.
 
-Uses `claude -p` for proposal generation so the full Jarvis brain context
-(CLAUDE.md, skills, memory, TELOS) is available. Safe from Task Scheduler
-since there is no parent Claude Code session to contend with.
-
-Posts to both #epdev (routine) and #general (temporary, during validation phase).
-Remove #general posting after validation is confirmed stable.
+Uses claude -p (Claude Max subscription, no API key needed) for proposal
+generation. Posts a single combined message to #epdev with: vitals snapshot,
+learning progress, overnight diff summary, and 1-3 research proposals.
 
 Usage:
     python tools/scripts/morning_feed.py                # full run
@@ -28,6 +25,7 @@ import json
 import os
 import re
 import sys
+import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -35,23 +33,15 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-
-def _find_claude() -> str:
-    """Resolve absolute path to claude CLI for Task Scheduler compatibility."""
-    candidate = Path.home() / ".local" / "bin" / "claude.exe"
-    return str(candidate) if candidate.is_file() else "claude"
-
-
-CLAUDE_BIN = _find_claude()
+# Absolute path to claude CLI -- Task Scheduler doesn't have .local/bin on PATH
+_claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
+CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 
 SOURCES_FILE = REPO_ROOT / "memory" / "work" / "jarvis" / "sources.yaml"
 STATE_FILE = REPO_ROOT / "data" / "overnight_state.json"
 FEED_DIR = REPO_ROOT / "memory" / "work" / "jarvis" / "morning_feed"
 HEARTBEAT_FILE = REPO_ROOT / "memory" / "work" / "isce" / "heartbeat_latest.json"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
-
-# Temporary: post to #general during validation phase. Remove after confirmed stable.
-POST_TO_GENERAL = True
 
 
 # -- Source loading -----------------------------------------------------------
@@ -107,26 +97,24 @@ def get_vitals_snapshot() -> str:
     """Build a quick vitals summary from heartbeat data."""
     lines = []
 
-    # Heartbeat data — only show metrics that actually exist
+    # Heartbeat data
     if HEARTBEAT_FILE.is_file():
         try:
             hb = json.loads(HEARTBEAT_FILE.read_text(encoding="utf-8"))
             metrics = hb.get("metrics", {})
 
+            # ISC ratio
+            isc_pass = metrics.get("isc_pass_count", {}).get("value", "?")
+            isc_total = metrics.get("isc_total_count", {}).get("value", "?")
+            lines.append(f"ISC: {isc_pass}/{isc_total}")
+
             # Signal count
-            sig = metrics.get("signal_count", {}).get("value")
-            if sig is not None:
-                lines.append(f"Signals: {sig}")
+            sig = metrics.get("signal_count", {}).get("value", "?")
+            lines.append(f"Signals: {sig}")
 
-            # Open tasks
-            tasks = metrics.get("open_task_count", {}).get("value")
-            if tasks is not None:
-                lines.append(f"Open tasks: {tasks}")
-
-            # Security events
-            sec = metrics.get("security_event_count", {}).get("value")
-            if sec is not None:
-                lines.append(f"Security events: {sec}")
+            # Test health
+            test_pass = metrics.get("test_pass_count", {}).get("value", "?")
+            lines.append(f"Tests passing: {test_pass}")
 
         except (json.JSONDecodeError, OSError):
             lines.append("Heartbeat: unavailable")
@@ -206,33 +194,41 @@ def check_github_source(url: str) -> str:
 
 # -- Claude CLI call ----------------------------------------------------------
 
-def call_claude(prompt: str) -> str:
-    """Call claude -p for proposal generation with full Jarvis context.
+def call_claude(prompt: str, system: str = "") -> str:
+    """Call claude -p for proposal generation. Uses Claude Max (no API key).
 
+    Passes prompt via stdin to avoid Windows 32K command-line limit.
     Only safe from Task Scheduler or standalone CMD -- never from within
     an active Claude Code session (subprocess hang risk).
     """
     import subprocess
 
+    if system:
+        full_prompt = "SYSTEM INSTRUCTIONS:\n%s\n\nUSER INPUT:\n%s" % (system, prompt)
+    else:
+        full_prompt = prompt
+
     try:
         result = subprocess.run(
-            [CLAUDE_BIN, "-p", prompt],
+            [CLAUDE_BIN, "-p", "-"],
+            input=full_prompt,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=120,
             cwd=str(REPO_ROOT),
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
         if result.stderr.strip():
-            return f"(claude -p error: {result.stderr.strip()[:200]})"
+            return "(claude -p error: %s)" % result.stderr.strip()[:200]
         return "(claude -p returned empty response)"
-    except FileNotFoundError:
-        return "(claude CLI not found -- ensure it is on PATH)"
+    except FileNotFoundError as exc:
+        return "(claude CLI not found: %s)" % exc
     except subprocess.TimeoutExpired:
         return "(claude -p timed out after 120s)"
     except Exception as exc:
-        return f"(claude -p failed: {exc})"
+        return "(claude -p failed: %s)" % exc
 
 
 # -- Feed generation ---------------------------------------------------------
@@ -259,25 +255,59 @@ def generate_feed(dry_run: bool = False) -> str:
     # 4. Build context for LLM to generate proposals
     source_context = "\n".join(source_updates) if source_updates else "No new updates from sources."
 
-    # 5. Call claude -p for proposals (full Jarvis context available)
-    user_prompt = (
-        f"Generate morning briefing proposals for {today}. "
-        f"You have full Jarvis context via CLAUDE.md. "
-        f"Read memory/work/telos/GOALS.md for goal alignment. "
-        f"Source updates:\n{source_context}\n\n"
-        f"Overnight results:\n{overnight}\n\n"
-        f"Rate each source update S/A/B/C/D. Only propose items rated B+ or higher. "
-        f"Output format (plain text, no markdown): "
-        f"RATINGS line, then 1-3 numbered proposals with title, TELOS goal connection, "
-        f"and 2-3 actionable sentences. Under 300 words. Do not fabricate updates. "
-        f"If source updates are thin, suggest 1 idea based on overnight results or "
-        f"current project gaps instead."
-    )
+    # Read TELOS goals for cross-referencing
+    telos_file = REPO_ROOT / "memory" / "work" / "TELOS.md"
+    telos_summary = ""
+    if telos_file.is_file():
+        telos_text = telos_file.read_text(encoding="utf-8")
+        # Extract just the goals section (first 500 chars)
+        telos_summary = telos_text[:500]
+
+    # 5. Call Anthropic API to rate and generate proposals
+    system_prompt = """You are Jarvis, an AI assistant generating a morning briefing for Eric.
+
+TASK: Review source updates and overnight results. Rate each item, then propose 1-3 actionable ideas from the highest-rated items only.
+
+RATING SYSTEM (apply to each source update):
+Rate each item S/A/B/C/D based on:
+- S (exceptional): paradigm-shifting, directly enables a TELOS goal breakthrough
+- A (high signal): concrete, actionable, clearly relevant to active projects or goals
+- B (solid): useful context or pattern, worth knowing but not urgent
+- C (filler): incremental update, no new insight
+- D (noise): irrelevant or redundant
+
+QUALITY GATE: Only propose items rated B+ or higher (S, A, or B). Drop C and D entirely.
+
+OUTPUT FORMAT (plain text, no markdown headers or bold):
+First, the rating breakdown:
+RATINGS: [S] item1 | [A] item2 | [B+] item3 | [C] item4 (dropped) | ...
+
+Then 1-3 numbered proposals from B+ items only. Each proposal must have:
+- A title
+- Which TELOS goal it connects to
+- 2-3 sentences making the idea interesting and actionable (not just informational)
+
+If no items pass B+, say: "No high-signal items today. Sources checked: N"
+
+Keep total response under 300 words. Do not fabricate updates."""
+
+    user_prompt = f"""Generate morning briefing proposals for {today}.
+
+Source updates:
+{source_context}
+
+Overnight results:
+{overnight}
+
+TELOS goals context:
+{telos_summary}
+
+If source updates are thin today, suggest 1 idea based on overnight results or current project gaps instead."""
 
     if dry_run:
         proposals = f"[DRY RUN] Would call claude -p with {len(user_prompt)} char prompt"
     else:
-        proposals = call_claude(user_prompt)
+        proposals = call_claude(user_prompt, system_prompt)
 
     # 6. Assemble combined message
     lines = [
@@ -333,17 +363,13 @@ def main() -> int:
         return 0
 
     # Post to Slack
-    # Temporary: posting to #general during validation phase for visibility.
-    # Switch back to EPDEV after validation is confirmed stable.
     try:
-        from tools.scripts.slack_notify import notify, EPDEV, CRITICAL
-        channel = CRITICAL if POST_TO_GENERAL else EPDEV
-        channel_name = "#general" if POST_TO_GENERAL else "#epdev"
-        ok = notify(feed_content, channel)
+        from tools.scripts.slack_notify import notify, EPDEV
+        ok = notify(feed_content, EPDEV)
         if ok:
-            print(f"Posted to {channel_name} Slack")
+            print("Posted to #epdev Slack")
         else:
-            print(f"Failed to post to {channel_name} Slack", file=sys.stderr)
+            print("Failed to post to Slack", file=sys.stderr)
     except ImportError:
         print("slack_notify not available", file=sys.stderr)
 
