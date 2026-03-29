@@ -99,12 +99,12 @@ Load documentation on-demand, not upfront:
 - When onboarding a pre-existing project under Jarvis governance: (1) `/deep-audit --onboard` for 5-axis parallel audit, (2) synthesize into tiered ISC tasklist, (3) create domain skills in project repo `.claude/skills/`, (4) register as `/project-orchestrator` external health source — this is the standard four-step pattern validated on crypto-bot
 - Claude Code Remote Triggers (cloud-scheduled agents) cannot invoke /skills, load CLAUDE.md, fire hooks, or access local files — prompts must be fully self-contained with inline instructions; for Jarvis-context work (security audit, steering, tasklist), use local Task Scheduler with `claude -p` instead
 - When facing 3+ viable implementation paths mid-build, run `/first-principles` before picking — ADHD build velocity defaults to the option with the most energy, not the best fit; `/first-principles` takes 5 minutes and prevents rework from wrong-fork commits
-- Before committing to any hard-to-reverse architecture decision (new integration, data model, infrastructure choice), run `/red-team` on the design — this catches failure modes, edge cases, and scope creep before they become sunk cost; especially important for Phase 4B+ autonomous systems where bad architecture compounds silently
+- Before committing to any hard-to-reverse architecture decision (new integration, data model, infrastructure choice), run `/architecture-review` (or at minimum `/red-team`) on the design — `/architecture-review` launches first-principles + fallacy detection + optional red-team in parallel and synthesizes findings; this catches failure modes, edge cases, and scope creep before they become sunk cost; especially important for Phase 4B+ autonomous systems where bad architecture compounds silently
 - Heartbeat auto-signals must require non-zero delta — do not emit WARN/CRIT signals when the metric value has not changed since the last snapshot; zero-delta signals are noise that inflates signal counts and triggers unnecessary synthesis runs; the guard is `change.get("delta", 0) != 0` in the auto-signal call site
 - When evaluating external AI orchestration patterns (agent frameworks, multi-agent architectures, loop patterns), filter through "is this solving a team coordination problem?" — if yes, it likely doesn't apply to Jarvis; Jarvis is skill-first (39 skills as execution engine), not agent-first; wire improvements into skills, not agent layers
 - New agent definitions must use Six-Section anatomy (Identity, Mission, Critical Rules, Deliverables, Workflow, Success Metrics) — validate with `python tools/scripts/validate_agents.py`; Critical Rules section is non-negotiable: 2-3 "Never X because Y" sentences that prevent the agent's most likely failure modes
 - Before proposing any new tool, MCP server, or external dependency to solve a failure: (1) identify the specific root cause, (2) test all existing configured tools against that root cause, (3) only evaluate new infrastructure if existing tools cannot solve it — the pattern is: diagnose -> test existing -> evaluate new; this prevented unnecessary Chrome headless adoption when Tavily advanced solved the problem in 5 seconds
-- Before adopting any external tool or dependency, run `/first-principles` + `/find-logical-fallacies` + `/quality-gate` in parallel on the adoption decision — default posture is absorb ideas over adopt dependencies; only adopt when implementation is genuinely hard (>1 day) AND the dependency is mature (>1 year, multiple maintainers, tests, license); track evaluation frequency for 3 months to determine if this should graduate to a standalone skill
+- Before adopting any external tool or dependency, run `/architecture-review` on the adoption decision (this replaces manual `/first-principles` + `/find-logical-fallacies` + `/quality-gate` parallel invocation) — default posture is absorb ideas over adopt dependencies; only adopt when implementation is genuinely hard (>1 day) AND the dependency is mature (>1 year, multiple maintainers, tests, license)
 - Any scheduled or background process that mutates git state (creates branches, commits, modifies tracked files) must operate in a git worktree (`git worktree add`), never in the main working tree — background branch switching and stash/pop in the main tree causes file overwrites, merge conflicts, and dirty-tree surprises during interactive sessions; worktrees with self-healing cleanup (auto-prune stale worktrees on next run) eliminate this class of bugs entirely
 - During `/implement-prd` runs with 4+ ISC items, commit after every 3-4 completed items rather than only at phase end — context compaction during long sessions can lose file writes that the Write tool reported as successful; mid-build commits create recovery points
 
@@ -118,7 +118,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, first ask: "Does this fit as a named sub-step inside an existing skill?" — narrow single-concern tasks (audit checks, scan steps) belong as sub-steps, not standalone skills; only propose `/create-pattern` if the task is a full workflow that can't be embedded
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (38 active skills, 3 deprecated):**
+**Skill Registry (39 active skills, 3 deprecated):**
 
 **Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`**
 
@@ -135,6 +135,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/red-team` | Stress-test a plan, product, or idea for weaknesses; use `--stride` for STRIDE threat modeling (replaces /threat-model) |
 | `/improve-prompt` | Make any prompt better before running it (auto-fires inside /spawn-agent and /create-pattern) |
 | `/find-logical-fallacies` | Detect reasoning errors in arguments |
+| `/architecture-review` | Parallel multi-angle architecture analysis (FP + fallacies + optional red-team) |
 | `/create-prd` | Generate product requirements documents — follow with `/implement-prd` |
 | `/implement-prd` | BUILD phase: read PRD → extract ISC → implement → /review-code → verify → mark complete |
 | `/review-code` | Code review with security focus — called by /implement-prd at VERIFY gate |

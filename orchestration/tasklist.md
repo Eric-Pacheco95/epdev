@@ -31,6 +31,9 @@
 - [ ] **4E: Heartbeat history rotation** — heartbeat_history.jsonl grows unbounded; wire retention config (raw_days=90) into actual code
 - [ ] **4E: jarvis_index.py heartbeat path fix** — FTS expects `data/logs/` but heartbeat writes to `memory/work/isce/`; fix path constant
 - [ ] **4E: Delta thresholds in config** — Support `delta_above`/`delta_below` in threshold dict for ramp detection
+- [ ] **5-pre: Observability audit** — Instrument → observe → design. Map all Jarvis data flows (MCP calls, token usage, skill invocations, scheduled jobs, signal volume) before designing the data layer schema. Precursor to Phase 5 data layer. Target: 2026-03-30
+- [ ] **5-pre: Evaluate MCPorter for MCP→CLI** — `steipete/mcporter` wraps MCP servers as standalone CLIs. Evaluate for: (1) moving deterministic tool calls off the LLM path (cost reduction), (2) enabling Task Scheduler jobs to call MCP tools without `claude -p`. Blocked by: observability audit (need usage data first). Target: 2026-03-30
+- [ ] **5-pre: Context efficiency audit** — Review sub-agent, fresh-agent, and `claude -p` session context loading. Are agents getting full CLAUDE.md / skill registry / steering rules they don't use? Map what each agent type actually needs vs what it loads. Goal: minimal required context per invocation type. Blocked by: observability audit + MCPorter eval (need to know which calls stay on-LLM first). Target: 2026-03-30
 
 ### Tier 3: Additive Improvements (Useful but don't compound)
 

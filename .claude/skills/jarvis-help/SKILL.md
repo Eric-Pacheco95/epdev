@@ -69,6 +69,7 @@ ORCHESTRATE
    | /red-team | THINK |
    | /analyze-claims | THINK |
    | /find-logical-fallacies | THINK |
+   | /architecture-review | THINK |
    | /create-prd | PLAN |
    | /project-init | PLAN |
    | /improve-prompt | PLAN |
@@ -113,6 +114,7 @@ ORCHESTRATE
   /red-team           -- Stress-test a plan for weaknesses (--stride for STRIDE threat model)
   /analyze-claims     -- Fact-check content for unsupported claims
   /find-logical-fallacies -- Detect reasoning errors
+  /architecture-review -- Parallel multi-angle architecture analysis (FP + fallacies + optional red-team)
 
 **PLAN** (design and decide)
   /create-prd         -- Generate product requirements document
