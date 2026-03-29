@@ -103,6 +103,10 @@ Load documentation on-demand, not upfront:
 - Heartbeat auto-signals must require non-zero delta — do not emit WARN/CRIT signals when the metric value has not changed since the last snapshot; zero-delta signals are noise that inflates signal counts and triggers unnecessary synthesis runs; the guard is `change.get("delta", 0) != 0` in the auto-signal call site
 - When evaluating external AI orchestration patterns (agent frameworks, multi-agent architectures, loop patterns), filter through "is this solving a team coordination problem?" — if yes, it likely doesn't apply to Jarvis; Jarvis is skill-first (39 skills as execution engine), not agent-first; wire improvements into skills, not agent layers
 - New agent definitions must use Six-Section anatomy (Identity, Mission, Critical Rules, Deliverables, Workflow, Success Metrics) — validate with `python tools/scripts/validate_agents.py`; Critical Rules section is non-negotiable: 2-3 "Never X because Y" sentences that prevent the agent's most likely failure modes
+- Before proposing any new tool, MCP server, or external dependency to solve a failure: (1) identify the specific root cause, (2) test all existing configured tools against that root cause, (3) only evaluate new infrastructure if existing tools cannot solve it — the pattern is: diagnose -> test existing -> evaluate new; this prevented unnecessary Chrome headless adoption when Tavily advanced solved the problem in 5 seconds
+- Before adopting any external tool or dependency, run `/first-principles` + `/find-logical-fallacies` + `/quality-gate` in parallel on the adoption decision — default posture is absorb ideas over adopt dependencies; only adopt when implementation is genuinely hard (>1 day) AND the dependency is mature (>1 year, multiple maintainers, tests, license); track evaluation frequency for 3 months to determine if this should graduate to a standalone skill
+- Any scheduled or background process that mutates git state (creates branches, commits, modifies tracked files) must operate in a git worktree (`git worktree add`), never in the main working tree — background branch switching and stash/pop in the main tree causes file overwrites, merge conflicts, and dirty-tree surprises during interactive sessions; worktrees with self-healing cleanup (auto-prune stale worktrees on next run) eliminate this class of bugs entirely
+- During `/implement-prd` runs with 4+ ISC items, commit after every 3-4 completed items rather than only at phase end — context compaction during long sessions can lose file writes that the Write tool reported as successful; mid-build commits create recovery points
 
 ## Skill-First Execution
 
@@ -114,7 +118,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, first ask: "Does this fit as a named sub-step inside an existing skill?" — narrow single-concern tasks (audit checks, scan steps) belong as sub-steps, not standalone skills; only propose `/create-pattern` if the task is a full workflow that can't be embedded
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (37 active skills, 3 deprecated):**
+**Skill Registry (38 active skills, 3 deprecated):**
 
 **Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`**
 
@@ -159,6 +163,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 | `/create-image` | Generate or edit images via Gemini (nanobanana MCP) — auto-selects model, ratio, and tool from prompt |
 | `/deep-audit` | Multi-axis codebase audit (architecture, security, error handling, domain logic, testing) — modes: --onboard, --evaluate, --cherry-pick; auto-offers /visualize |
 | `/vitals` | System health dashboard — ISC ratios, signal velocity, skill usage, heartbeat status, skill evolution tracking |
+| `/capture-recording` | Analyze guitar recordings via Gemini API — solo/band/batch modes, MUSIC.md goal loading, practice log updates |
 | ~~`/create-summary`~~ | DEPRECATED -- merged into `/extract-wisdom --summary` |
 
 ## Directory Structure

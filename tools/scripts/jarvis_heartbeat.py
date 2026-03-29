@@ -381,12 +381,15 @@ def route_alerts(changes: list[dict], cfg: dict, root_dir: Path, quiet: bool = F
 
         if slack_changes and slack_count < slack_cap:
             try:
-                from tools.scripts.slack_notify import notify, EPDEV  # noqa: E402
+                from tools.scripts.slack_notify import notify  # noqa: E402
+                # Route by max severity: CRIT -> #general, WARN -> #epdev
+                max_sev = max(SEVERITY_ORDER.get(c["severity"], 0) for c in slack_changes)
+                sev = "critical" if max_sev >= SEVERITY_ORDER["CRIT"] else "routine"
                 lines = [":heartbeat: *Jarvis ISC Engine Alert*"]
                 for c in slack_changes[:5]:  # max 5 metrics per message
                     lines.append(f"[{c['severity']}] `{c['metric']}`: {c['previous']} -> "
                                  f"{c['current']} ({c['delta_pct']:+.1f}%)")
-                notify("\n".join(lines), EPDEV)
+                notify("\n".join(lines), severity=sev)
                 alert_state.setdefault("counts", {})["slack"] = slack_count + 1
             except (ImportError, ConnectionError, TimeoutError, OSError) as exc:
                 print(f"  Slack alert skipped: {exc}", file=sys.stderr)
@@ -504,6 +507,24 @@ def main() -> None:
 
     # Diff
     changes = diff_snapshots(snap, prev, cfg)
+
+    # Meta-alert: detect collectors returning null (monitoring blind spots)
+    null_collectors = [
+        name for name, data in snap.get("metrics", {}).items()
+        if data.get("value") is None
+    ]
+    if null_collectors:
+        # Inject synthetic change entry so it flows through alert routing
+        null_severity = "CRIT" if len(null_collectors) >= 3 else "WARN"
+        changes.append({
+            "metric": "_collector_health",
+            "previous": 0,
+            "current": len(null_collectors),
+            "delta": len(null_collectors),
+            "delta_pct": 0.0,
+            "severity": null_severity,
+            "detail": f"Null collectors: {', '.join(null_collectors)}",
+        })
 
     # Save snapshot
     save_snapshot(snap, latest_path, history_path)

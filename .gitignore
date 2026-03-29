@@ -133,6 +133,7 @@ history/events/
 # ------------------------------------------------------------------------------
 .claude/prompt_ts.json
 data/
+tools/scripts/.notify_state/
 
 # ------------------------------------------------------------------------------
 # Fabric upstream patterns (large dependency, cloned locally — not part of repo)

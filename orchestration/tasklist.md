@@ -21,11 +21,16 @@
 
 > Each item makes Jarvis smarter without you in a session. Phase 4C + 4E complete the autonomous foundation.
 
-- [ ] **4C: Notifier wrapper** — Map event types to `#epdev` vs `#general` per `slack-routing.md`; implement daily cap / dedupe
-- [ ] **4C: Heartbeat + research digests** — Routine summaries → `#epdev`; regressions and must-see criteria → `#general` only when rules match
+- [x] **4C: Notifier wrapper** — Severity routing (routine→#epdev, critical→#general), dedup (1hr hash window), daily caps (20 routine, 5 critical). All 7 callers migrated. (2026-03-28)
+- [x] **4C: Heartbeat + research digests** — Heartbeat CRIT→#general, overnight failures→#general, autoresearch high-contradiction→#general. Routine traffic stays in #epdev. (2026-03-28)
+- [x] **4C: Auth health collector + meta-alerting** — `auth_health` collector tests Slack token via auth.test API. Collector-failure meta-alerting injects synthetic WARN/CRIT when any collector returns null. Local fallback log at `data/auth_failures.jsonl`. (2026-03-28)
 - [ ] **4E: Signal lineage index** — After `/synthesize-signals`, append to `signal_lineage.jsonl`. Solves signal→synthesis reverse-lookup
 - [ ] **4E: Event rotation scheduled** — Wire `rotate_events.py` into monthly Task Scheduler. Already built + tested
 - [ ] **4E: Autonomous signal volume monitoring** — `autonomous_signal_rate` collector. Prevents runaway research loops
+- [ ] **4E: Heartbeat trend detection** — 3-5 run moving average in diff engine to catch slow degradation invisible to single-snapshot thresholds
+- [ ] **4E: Heartbeat history rotation** — heartbeat_history.jsonl grows unbounded; wire retention config (raw_days=90) into actual code
+- [ ] **4E: jarvis_index.py heartbeat path fix** — FTS expects `data/logs/` but heartbeat writes to `memory/work/isce/`; fix path constant
+- [ ] **4E: Delta thresholds in config** — Support `delta_above`/`delta_below` in threshold dict for ramp detection
 
 ### Tier 3: Additive Improvements (Useful but don't compound)
 
@@ -37,6 +42,10 @@
 - [ ] **4E: FTS index validation** — Validate `jarvis_index.py` covers all signal sources
 - [ ] **4E: Reporting dashboard data contract** — Define `/vitals` + brain-map Phase 3.5 JSON contract
 - [ ] **Voice signals in heartbeat** — `voice_session_count` metric. Low priority until voice is daily habit
+
+### New Skills
+
+- [x] **`/capture-recording` skill** — Guitar recording analysis via Gemini API. SKILL.md orchestration + Python CLI (`analyze_recording.py`). Solo/band/batch modes, MUSIC.md goal loading, token tracking. 12/12 ISC items passed. PRD: `memory/work/capture-recording/PRD.md`. (2026-03-28)
 
 ### Parked (No demand signal within 60 days — research saved)
 
@@ -58,9 +67,9 @@
 | 3E | COMPLETE | 0 |
 | 4A | COMPLETE | 0 |
 | 4B | Near-complete | 3 (source review, interleaved thinking, tool search) |
-| 4C | Not started | 2 |
+| 4C | **COMPLETE** | 0 |
 | 4D | **COMPLETE** | 0 |
-| 4E | Not started | 6 |
+| 4E | Not started | 10 |
 
 ## Active Projects
 

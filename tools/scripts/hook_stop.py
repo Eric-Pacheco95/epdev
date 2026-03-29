@@ -16,7 +16,7 @@ from pathlib import Path
 # Add repo root to path so slack_notify is importable
 _REPO_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO_ROOT_FOR_IMPORT))
-from tools.scripts.slack_notify import notify, EPDEV  # noqa: E402
+from tools.scripts.slack_notify import notify  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
@@ -115,7 +115,7 @@ def main() -> None:
         )
         if count > 0:
             msg += "\n_Run `/learning-capture` to process signals._"
-        notify(msg, EPDEV)
+        notify(msg)
 
     sys.exit(0)
 

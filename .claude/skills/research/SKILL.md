@@ -149,7 +149,27 @@ OBSERVE
 
 9. Rate each source 1-10 for relevance and credibility. Discard sources below 5.
 
-## Phase 3: SYNTHESIZE — Build output
+### URL Content Extraction Waterfall
+
+When fetching full page content from a URL (step 7 extract, or any URL-based retrieval):
+
+**Tier 1 -- Difficult domains: use `tavily_extract` with `extract_depth: "advanced"`**
+Preferred for: `x.com`, `twitter.com`, `linkedin.com`, `medium.com`
+These sites block or degrade standard fetch. Tavily advanced extraction handles JS-rendered and auth-walled content reliably.
+
+**Tier 2 -- Static/public sites: use WebFetch (fast path)**
+Preferred for: `github.com`, blog domains, documentation sites, news sites with clean HTML.
+WebFetch is faster and sufficient when the page serves static content.
+
+**Tier 3 -- Fallback chain:**
+If tavily_extract fails on a difficult domain -> fall back to WebFetch.
+If WebFetch also fails -> fall back to WebSearch for metadata-only (title, snippet, date).
+Always note in the brief when a source was metadata-only due to extraction failure.
+
+**KNOWN GAP -- Reddit (`reddit.com`):**
+Tavily advanced extraction returns empty content for Reddit threads. Do NOT attempt tavily_extract on Reddit URLs. For Reddit content: fall back directly to WebSearch for metadata, or ask Eric to paste the thread content manually.
+
+## Phase 3: SYNTHESIZE -- Build output
 
 10. Write the brief using the output template matching the detected type (see formats below).
 
