@@ -364,8 +364,8 @@ def main() -> int:
 
     # Post to Slack
     try:
-        from tools.scripts.slack_notify import notify, EPDEV
-        ok = notify(feed_content, EPDEV)
+        from tools.scripts.slack_notify import notify
+        ok = notify(feed_content)
         if ok:
             print("Posted to #epdev Slack")
         else:

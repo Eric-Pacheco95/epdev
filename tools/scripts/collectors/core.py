@@ -21,6 +21,8 @@ import os
 import re
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -379,6 +381,81 @@ def collect_scheduled_tasks(cfg: dict, root_dir: Path, _prev: dict = None) -> di
         return _result(name, None, "count", f"failed to query tasks: {exc}")
 
 
+# ── auth_health ─────────────────────────────────────────────────────
+
+_AUTH_FAILURE_LOG = Path(__file__).resolve().parents[2] / "data" / "auth_failures.jsonl"
+
+
+def collect_auth_health(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Test auth token validity for configured services.
+
+    Currently tests:
+      - SLACK_BOT_TOKEN via Slack auth.test API
+
+    Returns count of unhealthy tokens. 0 = all healthy.
+    Writes to local auth_failures.jsonl as fallback when Slack itself is down.
+    """
+    name = cfg["name"]
+    checks = cfg.get("checks", ["slack"])
+    unhealthy = 0
+    details = []
+
+    for check in checks:
+        if check == "slack":
+            token = os.environ.get("SLACK_BOT_TOKEN", "").strip()
+            if not token:
+                unhealthy += 1
+                details.append("slack:missing_token")
+                _log_auth_failure(root_dir, "slack", "SLACK_BOT_TOKEN not set")
+                continue
+
+            try:
+                req = urllib.request.Request(
+                    "https://slack.com/api/auth.test",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json; charset=utf-8",
+                    },
+                    data=b"{}",
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    body = json.loads(resp.read())
+                    if not body.get("ok"):
+                        unhealthy += 1
+                        error = body.get("error", "unknown")
+                        details.append(f"slack:{error}")
+                        _log_auth_failure(root_dir, "slack", error)
+                    else:
+                        details.append("slack:ok")
+            except (urllib.error.URLError, OSError) as exc:
+                unhealthy += 1
+                details.append(f"slack:network_error")
+                _log_auth_failure(root_dir, "slack", str(exc))
+
+    detail_str = f"{len(checks)} checks, {unhealthy} unhealthy"
+    if details:
+        detail_str += ": " + ", ".join(details)
+    return _result(name, unhealthy, "count", detail_str)
+
+
+def _log_auth_failure(root_dir: Path, service: str, error: str) -> None:
+    """Write auth failure to local JSONL as fallback when Slack is down."""
+    log_dir = root_dir / "data"
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_path = log_dir / "auth_failures.jsonl"
+        entry = json.dumps({
+            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "service": service,
+            "error": error[:200],
+        })
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except OSError:
+        pass
+
+
 # ── Dispatcher ──────────────────────────────────────────────────────
 
 COLLECTOR_TYPES = {
@@ -394,6 +471,7 @@ COLLECTOR_TYPES = {
     "disk_usage": collect_disk_usage,
     "hook_output_size": collect_hook_output_size,
     "scheduled_tasks": collect_scheduled_tasks,
+    "auth_health": collect_auth_health,
 }
 
 

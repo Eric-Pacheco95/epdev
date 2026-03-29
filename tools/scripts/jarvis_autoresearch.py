@@ -480,7 +480,7 @@ def write_autonomous_signal(metrics: dict, run_dir: Path) -> bool:
 def post_slack_summary(metrics: dict, run_dir: Path) -> bool:
     """Post summary to #epdev if thresholds crossed."""
     try:
-        from tools.scripts.slack_notify import notify, EPDEV
+        from tools.scripts.slack_notify import notify
     except ImportError:
         print("  Slack notify not available", file=sys.stderr)
         return False
@@ -516,7 +516,10 @@ def post_slack_summary(metrics: dict, run_dir: Path) -> bool:
             % SIGNAL_THRESHOLD_COVERAGE
         )
 
-    return notify("\n".join(lines), EPDEV)
+    # Escalate to #general if contradictions or low coverage need attention
+    sev = "critical" if (contradictions >= SIGNAL_THRESHOLD_CONTRADICTIONS
+                         or coverage < SIGNAL_THRESHOLD_COVERAGE) else "routine"
+    return notify("\n".join(lines), severity=sev)
 
 
 # -- Main --------------------------------------------------------------------

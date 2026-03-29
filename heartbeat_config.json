@@ -144,6 +144,13 @@
       "type": "hook_output_size",
       "hook_script": "tools/scripts/hook_session_start.py",
       "thresholds": { "warn_above": 3000, "crit_above": 5000 }
+    },
+    {
+      "name": "auth_health",
+      "type": "auth_health",
+      "checks": ["slack"],
+      "thresholds": { "crit_above": 1 },
+      "isc_ref": "PRD-P4C:ISC Auth failures escalate to #general"
     }
   ],
   "alert_routing": {

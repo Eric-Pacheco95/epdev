@@ -485,7 +485,7 @@ Print a one-line result: SECURITY_AUDIT: PASS or SECURITY_AUDIT: FAIL: <reason>"
 def post_slack_summary(result: dict, quality: str, security: str) -> bool:
     """Post overnight summary to #epdev Slack."""
     try:
-        from tools.scripts.slack_notify import notify, EPDEV
+        from tools.scripts.slack_notify import notify
     except ImportError:
         print("  Slack notify not available", file=sys.stderr)
         return False
@@ -509,7 +509,9 @@ def post_slack_summary(result: dict, quality: str, security: str) -> bool:
         f"Report: `{result.get('report_path', 'N/A')}`",
     ]
 
-    return notify("\n".join(lines), EPDEV)
+    # Escalate failures to #general so they don't get buried
+    sev = "critical" if status in ("failed", "error") else "routine"
+    return notify("\n".join(lines), severity=sev)
 
 
 # -- Main --------------------------------------------------------------------
