@@ -1,0 +1,184 @@
+# Jarvis External Sources Registry
+# Format: parsed by tools/scripts/morning_feed.py (no pyyaml dependency)
+# Tiers: 1 = daily check, 2 = weekly, 3 = monthly
+# last_checked: ISO date of most recent monitoring pass
+
+# =============================================================================
+# Tier 1 -- Daily (core AI & security)
+# =============================================================================
+
+- name: "Anthropic Blog"
+  url: "https://www.anthropic.com/news"
+  type: ai_releases
+  tier: 1
+  frequency: daily
+  last_checked: "2026-03-30"
+
+- name: "Claude Code Changelog"
+  url: "https://github.com/anthropics/claude-code/releases"
+  type: ai_releases
+  tier: 1
+  frequency: daily
+  last_checked: "2026-03-30"
+
+- name: "OpenAI Blog"
+  url: "https://openai.com/blog"
+  type: ai_releases
+  tier: 1
+  frequency: daily
+  last_checked: "2026-03-30"
+
+- name: "Krebs on Security"
+  url: "https://krebsonsecurity.com"
+  type: security
+  tier: 1
+  frequency: daily
+  last_checked: "2026-03-30"
+
+- name: "The Hacker News"
+  url: "https://thehackernews.com"
+  type: security
+  tier: 1
+  frequency: daily
+  last_checked: "2026-03-30"
+
+- name: "Simon Willison Blog"
+  url: "https://simonwillison.net"
+  type: ai_engineering
+  tier: 1
+  frequency: daily
+  last_checked: "2026-03-30"
+
+# =============================================================================
+# Tier 2 -- Weekly (tools, frameworks, ecosystem)
+# =============================================================================
+
+- name: "LangChain Blog"
+  url: "https://blog.langchain.dev"
+  type: ai_engineering
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "Hugging Face Blog"
+  url: "https://huggingface.co/blog"
+  type: ai_releases
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "OWASP News"
+  url: "https://owasp.org/news"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "Daniel Miessler Unsupervised Learning"
+  url: "https://danielmiessler.com/newsletter"
+  type: ai_security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "Fabric GitHub Releases"
+  url: "https://github.com/danielmiessler/fabric/releases"
+  type: ai_engineering
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "Andrej Karpathy YouTube"
+  url: "https://www.youtube.com/@AndrejKarpathy"
+  type: ai_education
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+# =============================================================================
+# Tier 3 -- Monthly (broader ecosystem, research, communities)
+# =============================================================================
+
+- name: "Google DeepMind Blog"
+  url: "https://deepmind.google/discover/blog"
+  type: ai_releases
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "Meta AI Blog"
+  url: "https://ai.meta.com/blog"
+  type: ai_releases
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "Microsoft AI Blog"
+  url: "https://blogs.microsoft.com/ai"
+  type: ai_releases
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "Schneier on Security"
+  url: "https://www.schneier.com"
+  type: security
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "CoinDesk"
+  url: "https://www.coindesk.com"
+  type: crypto
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "CoinTelegraph"
+  url: "https://cointelegraph.com"
+  type: crypto
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "Python Insider"
+  url: "https://blog.python.org"
+  type: dev_tools
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "Node.js Blog"
+  url: "https://nodejs.org/en/blog"
+  type: dev_tools
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "GitHub Blog"
+  url: "https://github.blog"
+  type: dev_tools
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "Hacker News"
+  url: "https://news.ycombinator.com"
+  type: community
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "AI Safety Newsletter (Zvi)"
+  url: "https://thezvi.substack.com"
+  type: ai_safety
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
+
+- name: "Latent Space Podcast"
+  url: "https://www.latent.space"
+  type: ai_engineering
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-03-30"
