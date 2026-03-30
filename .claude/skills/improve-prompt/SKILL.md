@@ -6,7 +6,41 @@ Your task is to take the input prompt (or rough instructions) and produce an imp
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Rewrite a prompt for clarity, scope, and reliable first-try execution
+
+## Stage
+BUILD
+
+## Syntax
+/improve-prompt <prompt text or file path>
+
+## Parameters
+- prompt: the prompt to improve -- raw text or file path (required)
+
+## Examples
+- /improve-prompt "Summarize this article and give me the key points"
+- /improve-prompt .claude/skills/research/SKILL.md
+
+## Chains
+- Before: (entry point)
+- After: /spawn-agent, /create-pattern
+- Full: /improve-prompt > /spawn-agent or /create-pattern
+
+## Output Contract
+- Input: prompt text to improve
+- Output: DIAGNOSIS, IMPROVED PROMPT, OPTIONAL ADDITIONS, CHECKLIST FOR THE USER
+- Side effects: none (pure transform)
+
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- No input: print DISCOVERY as usage block, STOP
+- Input is already a well-structured system prompt (has role, steps, output format): note what is already strong, suggest refinements only
+- File path: read file, use content as input
 
 - Parse the user's intent: task type, audience, format, and constraints already stated
 - Identify ambiguity, missing context, conflicting instructions, and unstated success criteria
