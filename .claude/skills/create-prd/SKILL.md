@@ -62,6 +62,7 @@ PLAN
 - List dependencies, integrations, and external systems the input names or reasonably implies
 - Record risks, assumptions, and open questions separately so they are visible to decision-makers
 - Structure the output using the prescribed sections below
+- **ISC Quality Gate** — Before finalizing the PRD, validate every ISC criterion against the 6-check gate (see CLAUDE.md > ISC Quality Gate). For each criterion, confirm: (1) count is 3-8 per phase, (2) single sentence with no compound "and", (3) state-not-action phrasing, (4) binary pass/fail, (5) at least one anti-criterion exists, (6) `| Verify:` suffix present. If any check fails, fix the criterion inline before writing the PRD file. Append a one-line "ISC Quality Gate: PASS (6/6)" or "PARTIAL (N/6 — {which failed})" note at the end of the ACCEPTANCE CRITERIA section
 - After outputting the PRD, remind the user: "Next step: `/implement-prd` to execute this PRD through the full BUILD → VERIFY → LEARN loop"
 
 # OUTPUT INSTRUCTIONS

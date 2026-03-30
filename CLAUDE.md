@@ -28,6 +28,17 @@ All non-trivial tasks use TheAlgorithm's 7-phase loop:
 - Tag confidence: `[E]`xplicit, `[I]`nferred, `[R]`everse-engineered
 - Tag verification type: `[M]`easurable (tested by collectors/metrics) or `[A]`rchitectural (enforced by code structure, verified by review) — prevents building unnecessary monitoring for invariants
 
+### ISC Quality Gate (blocks PLAN → BUILD)
+
+Before BUILD begins, every ISC set must pass these 6 checks. If any check fails, fix the criteria before proceeding — do not build against weak ISC:
+
+1. **Count** — At least 3 criteria for any non-trivial task; no more than 8 for a single phase (split if larger)
+2. **Conciseness** — Each criterion is one sentence; no compound criteria joined by "and"
+3. **State-not-action** — Criteria describe what IS true when done, not what to DO ("Auth tokens expire after 24h", not "Implement token expiry")
+4. **Binary-testable** — Each criterion has a clear pass/fail evaluation with no subjective judgment
+5. **Anti-criteria** — At least one criterion states what must NOT happen (prevents regressions, security violations)
+6. **Verify method** — Every criterion has a `| Verify:` suffix specifying how to test it (CLI, Test, Grep, Read, Review, Custom)
+
 ## Context Routing
 
 Load documentation on-demand, not upfront:
