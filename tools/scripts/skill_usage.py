@@ -14,7 +14,6 @@ from __future__ import annotations
 import argparse
 import glob
 import json
-import sys
 from collections import Counter
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -150,7 +149,7 @@ def main() -> None:
         metrics = to_heartbeat_metrics(usage)
         print(json.dumps({"metrics": metrics, "raw": usage}, indent=2))
     else:
-        print(f"Skill Usage (trailing 30d / 7d)")
+        print("Skill Usage (trailing 30d / 7d)")
         print("-" * 45)
         print(f"Total invocations: {usage['total_invocations_30d']} (30d) / "
               f"{usage['total_invocations_7d']} (7d)")
