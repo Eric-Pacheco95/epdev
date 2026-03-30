@@ -123,6 +123,10 @@ Load documentation on-demand, not upfront:
 - Synthesis threshold should scale with signal velocity — raise the hard ceiling from 20 to 30 when auto-signal producers are active; lower to 15 when velocity drops below 3/day
 - New agent definitions must use Six-Section anatomy (Identity, Mission, Critical Rules, Deliverables, Workflow, Success Metrics) — validate with `python tools/scripts/validate_agents.py`
 - After any production failure involving an agent role, promote the failure pattern to that agent's Critical Rules section as a "Never X because Y" entry
+- Model routing is about correctness, not cost — select the model whose strengths match the task: Opus for judgment/security/architecture, Sonnet for code generation/refactoring/bulk work, Haiku for extraction/classification/formatting
+- External models (Codex, Gemini) are review-only — they verify and critique but never execute tasks, write code, or modify state; route security-adjacent reviews through Codex adversarial mode
+- Dispatcher must resolve model from task `model` field first, then tier defaults, then Opus as fallback — never hardcode a single model for all autonomous tasks
+- Track review catch rate per external model — if Codex review catches zero issues over 20+ tasks, either the routing is wrong or the primary model is sufficient; adjust or remove
 
 ### Research & External Patterns
 
