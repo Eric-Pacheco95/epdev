@@ -121,6 +121,8 @@ Load documentation on-demand, not upfront:
 - Autonomous capabilities must follow the three-layer pattern: SENSE (read-only monitoring), DECIDE (dispatcher logic), ACT (worker execution in isolated worktrees) — never combine sensing and acting in the same component; the heartbeat's reliability comes from its narrow read-only scope, and adding mutation capabilities would destroy that property; this was validated by two independent parallel analyses that identified 8 logical fallacies in the "heartbeat as dispatcher" design
 - Autonomous job outputs follow the "Idle Is Success" doctrine — generating zero proposals, zero signals, or zero tasks is a valid and desirable outcome when thresholds are not met; autonomous jobs must never create busywork to appear productive; silence means the system is healthy
 - After any production failure involving an agent role, promote the failure pattern to that agent's Critical Rules section as a "Never X because Y" entry — if Critical Rules exceeds 5 items, consolidate by generalizing related rules; this keeps institutional memory at the point of use without creating a second memory pipeline alongside signals -> synthesis -> steering rules
+- Synthesis threshold should scale with signal velocity — when auto-signal producers (heartbeat, overnight, autoresearch) are active, raise the hard ceiling from 20 to 30 to avoid synthesis being triggered by noise; when signal velocity drops below 3/day (quiet periods), lower to 15 to ensure timely synthesis; the static ceiling of 20 was designed for manual-only signals and triggers too frequently during high-autonomy days
+- After completing a multi-phase build sprint (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifact existence, verify file paths in tasklist match actual locations, verify counts and dates are current — the gap audit pattern (parallel agents checking artifact existence) takes ~2 minutes and catches the drift that inevitably occurs during fast build cycles
 
 ## Skill-First Execution
 
@@ -132,54 +134,9 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 3. If no skill matches but the task is repeatable, first ask: "Does this fit as a named sub-step inside an existing skill?" — narrow single-concern tasks (audit checks, scan steps) belong as sub-steps, not standalone skills; only propose `/create-pattern` if the task is a full workflow that can't be embedded
 4. If the task is truly one-off, proceed normally but note it could become a skill if it recurs
 
-**Skill Registry (39 active skills, 3 deprecated):**
+**Full build chain: `/research` -> `/create-prd` -> `/implement-prd` -> `/quality-gate` -> `/learning-capture`**
 
-**Full build chain: `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`**
-
-| Skill | When to Use |
-|-------|------------|
-| `/jarvis-help` | Print a clean reference of all available skills and key commands |
-| `/extract-wisdom` | Analyze any content for ideas, insights, quotes, habits; use `--summary` for concise compression (replaces /create-summary) |
-| `/create-pattern` | Build a new skill in Fabric format (the meta-skill) |
-| `/learning-capture` | End of session — capture what was learned |
-| `/telos-update` | Update identity/self-knowledge files from session input |
-| `/telos-report` | "What has Jarvis learned about me?" weekly report |
-| `/analyze-claims` | Fact-check content, find unsupported claims |
-| `/first-principles` | Break a problem down to fundamentals |
-| `/red-team` | Stress-test a plan, product, or idea for weaknesses; use `--stride` for STRIDE threat modeling (replaces /threat-model) |
-| `/improve-prompt` | Make any prompt better before running it (auto-fires inside /spawn-agent and /create-pattern) |
-| `/find-logical-fallacies` | Detect reasoning errors in arguments |
-| `/architecture-review` | Parallel multi-angle architecture analysis (FP + fallacies + optional red-team) |
-| `/create-prd` | Generate product requirements documents — follow with `/implement-prd` |
-| `/implement-prd` | BUILD phase: read PRD → extract ISC → implement → /review-code → verify → mark complete |
-| `/review-code` | Code review with security focus — called by /implement-prd at VERIFY gate |
-| ~~`/threat-model`~~ | DEPRECATED -- merged into `/red-team --stride` |
-| `/self-heal` | Auto-diagnose and fix failures |
-| `/security-audit` | Scan system for vulnerabilities |
-| `/quality-gate` | Audit completed phases for THINK-before-BUILD compliance, deliverable gaps, and downstream risk |
-| `/synthesize-signals` | Distill accumulated signals into wisdom |
-| `/update-steering-rules` | Propose new rules from failures/feedback |
-| `/workflow-engine` | Chain skills into pipelines (Fabric "Stitches") |
-| `/delegation` | Route any task to the right skill/pipeline/handler |
-| `/project-orchestrator` | Manage projects, prioritize, track status |
-| `/spawn-agent` | Compose an AI agent from traits for a specific task |
-| `/notion-sync` | Sync Notion Brain ↔ Jarvis: read Journal/Goals/Inbox, push Reports/TELOS Mirror |
-| `/voice-capture` | Process voice transcript from inbox → signals + TELOS queue |
-| `/project-init` | Full ISC pipeline for new projects: /research → /first-principles → /red-team → /create-prd |
-| `/research` | Adaptive research: auto-detects --market / --technical / --live type, routes tools accordingly |
-| `/autoresearch` | Karpathy-style metric-driven improvement loop -- bounded iterations, git-backed keep/discard, guard commands |
-| `/teach` | Deep-dive lesson on any topic, contextualized to Jarvis + epdev system |
-| `/commit` | Create clean conventional commits with emoji, atomic split detection |
-| `/label-and-rate` | Classify and tier-rate content for curation decisions (S/A/B/C/D + JSON) |
-| ~~`/rate-content`~~ | DEPRECATED -- absorbed into `/learning-capture` quality gate sub-step |
-| `/visualize` | Generate Mermaid diagrams of brain structure, workflows, projects, investigations |
-| `/write-essay` | Write a clear, publish-ready essay on any topic (optional author style) |
-| `/create-keynote` | Build a TED-quality slide deck with speaker notes from any Jarvis output |
-| `/create-image` | Generate or edit images via Gemini (nanobanana MCP) — auto-selects model, ratio, and tool from prompt |
-| `/deep-audit` | Multi-axis codebase audit (architecture, security, error handling, domain logic, testing) — modes: --onboard, --evaluate, --cherry-pick; auto-offers /visualize |
-| `/vitals` | System health dashboard — ISC ratios, signal velocity, skill usage, heartbeat status, skill evolution tracking |
-| `/capture-recording` | Analyze guitar recordings via Gemini API — solo/band/batch modes, MUSIC.md goal loading, practice log updates |
-| ~~`/create-summary`~~ | DEPRECATED -- merged into `/extract-wisdom --summary` |
+**38 active skills available.** Skills are auto-discovered at session start. Run `/jarvis-help` for the full registry.
 
 ## Directory Structure
 

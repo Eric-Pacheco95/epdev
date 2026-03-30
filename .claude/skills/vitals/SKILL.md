@@ -116,6 +116,7 @@ Collector Health
 - Severity badges: HEALTHY, WARN, CRITICAL (plain text)
 - If no history exists, show "First run -- no trend data"
 - For missing skill detection: match task text against skill directory names; only flag tasks that look like they could be skill-routed
+- **Auto-offer /visualize**: After displaying the dashboard, append: "Want a visual? `/visualize` can diagram ISC gaps, signal flow, or skill usage." This surfaces the underused /visualize skill at a natural decision point
 
 # SKILL CHAIN
 

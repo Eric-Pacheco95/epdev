@@ -13,7 +13,7 @@
 
 - [x] **Validate morning feed** — Running daily at 9am. Output in `memory/work/jarvis/morning_feed/`. Slack capped by design. (2026-03-29)
 - [x] **Validate overnight runner** — Running daily at 4am. Branches created, quality gate + security audit passing. 2 cycles confirmed. (2026-03-29)
-- [ ] **Validate TELOS introspection runner** — 3/28 run succeeded (all 5 artifacts). 3/29 run FAILED: `WinError 206` PATH length bug in Task Scheduler context prevents `claude.exe` invocation. Needs `/self-heal`.
+- [ ] **Validate TELOS introspection runner** — 3/28 run succeeded (all 5 artifacts). 3/29 run FAILED: old version passed 102K prompt as CLI arg (WinError 206). Fix already in codebase (stdin pipe, commit 41f1644). Self-test 19/19 passing. BUILT -- awaiting validation: 3/30 7am scheduled run.
 - [ ] **Validate autonomous value tracking** — Reference a morning brief in session, then check `data/autonomous_value.jsonl` for `acted_on` flip.
 - [ ] **Human source review ritual** — After first validated morning feed: "What other sources? YouTube channels, blogs, GitHub repos, newsletters?" → update `sources.yaml`
 
@@ -24,16 +24,16 @@
 - [x] **4C: Notifier wrapper** — Severity routing (routine→#epdev, critical→#general), dedup (1hr hash window), daily caps (20 routine, 5 critical). All 7 callers migrated. (2026-03-28)
 - [x] **4C: Heartbeat + research digests** — Heartbeat CRIT→#general, overnight failures→#general, autoresearch high-contradiction→#general. Routine traffic stays in #epdev. (2026-03-28)
 - [x] **4C: Auth health collector + meta-alerting** — `auth_health` collector tests Slack token via auth.test API. Collector-failure meta-alerting injects synthetic WARN/CRIT when any collector returns null. Local fallback log at `data/auth_failures.jsonl`. (2026-03-28)
-- [ ] **4E: Signal lineage index** — After `/synthesize-signals`, append to `signal_lineage.jsonl`. Solves signal→synthesis reverse-lookup
+- [x] **5-pre: Observability audit** — Data flow audit complete. All producers/consumers mapped with empirical volumes. Hybrid architecture decided (files=truth, SQLite=query accelerator). Audit doc: `memory/work/observability/data_flow_audit.md`. Decision: `history/decisions/2026-03-29_data-layer-hybrid-architecture.md`. (2026-03-29)
 - [x] **4E: Event rotation scheduled** — `\Jarvis\JarvisEventRotation` runs 1st of month at 3am. Summarizes + gzips old event JSONL. (2026-03-29)
-- [ ] **4E: Autonomous signal volume monitoring** — `autonomous_signal_rate` collector. Prevents runaway research loops
-- [ ] **4E: Heartbeat trend detection** — 3-5 run moving average in diff engine to catch slow degradation invisible to single-snapshot thresholds
-- [ ] **4E: Heartbeat history rotation** — heartbeat_history.jsonl grows unbounded; wire retention config (raw_days=90) into actual code
-- [ ] **4E: jarvis_index.py heartbeat path fix** — FTS expects `data/logs/` but heartbeat writes to `memory/work/isce/`; fix path constant
-- [ ] **4E: Delta thresholds in config** — Support `delta_above`/`delta_below` in threshold dict for ramp detection
-- [ ] **5-pre: Observability audit** — Instrument → observe → design. Map all Jarvis data flows (MCP calls, token usage, skill invocations, scheduled jobs, signal volume) before designing the data layer schema. Precursor to Phase 5 data layer. Target: 2026-03-30
-- [ ] **5-pre: Evaluate MCPorter for MCP→CLI** — `steipete/mcporter` wraps MCP servers as standalone CLIs. Evaluate for: (1) moving deterministic tool calls off the LLM path (cost reduction), (2) enabling Task Scheduler jobs to call MCP tools without `claude -p`. Blocked by: observability audit (need usage data first). Target: 2026-03-30
-- [ ] **5-pre: Context efficiency audit** — Review sub-agent, fresh-agent, and `claude -p` session context loading. Are agents getting full CLAUDE.md / skill registry / steering rules they don't use? Map what each agent type actually needs vs what it loads. Goal: minimal required context per invocation type. Blocked by: observability audit + MCPorter eval (need to know which calls stay on-LLM first). Target: 2026-03-30
+- **--- 4E Revised Plan (Hybrid Architecture, sequential with gates) ---**
+- [ ] **4E-S1: Foundation** — Delete orphaned `jarvis_events.db`, enable WAL mode on `jarvis_index.db`, schedule daily `jarvis_index.py update` (3am), verify FTS resilience after file deletion. Gate: FTS test passes.
+- [ ] **4E-S2: Manifest tables** — Add `signals`, `lineage`, `producer_runs` tables to `jarvis_index.db`. Backfill signal metadata from existing files. Gate: manifest queryable.
+- [ ] **4E-S3: Wire producers** — `/synthesize-signals` writes lineage rows. All producers write `producer_runs` rows. Add `producer_health` heartbeat collector. Gate: lineage populated after next synthesis run.
+- [ ] **4E-S4: Retention layer** — Compress-in-place for processed signals (gzip, retain 180d). Heartbeat history rotation (30d raw, monthly summary). `autonomous_signal_rate` collector. `signal_volume` collector reads manifest. Gate: no unbounded datasets remain.
+- [ ] **4E-S5: Consumer migration** — Migrate heartbeat collectors to manifest queries. Pre-aggregate event metrics. Heartbeat trend detection (moving average). Define `/vitals` + brain-map JSON contract. Gate: no consumer scans directories for data available in manifest.
+- [ ] **5-pre: Evaluate MCPorter for MCP→CLI** — `steipete/mcporter` wraps MCP servers as standalone CLIs. Evaluate for: (1) moving deterministic tool calls off the LLM path (cost reduction), (2) enabling Task Scheduler jobs to call MCP tools without `claude -p`. Blocked by: 4E-S2 (need manifest data). Target: after 4E-S2.
+- [ ] **5-pre: Context efficiency audit** — Review sub-agent, fresh-agent, and `claude -p` session context loading. Map what each agent type actually needs vs what it loads. Goal: minimal required context per invocation type. Blocked by: 4E-S5 + MCPorter eval. Target: after 4E complete.
 
 ### Tier 3: Additive Improvements (Useful but don't compound)
 
@@ -72,7 +72,7 @@
 | 4B | Near-complete | 3 (source review, interleaved thinking, tool search) |
 | 4C | **COMPLETE** | 0 |
 | 4D | **COMPLETE** | 0 |
-| 4E | Not started | 10 |
+| 4E | In progress (hybrid arch decided, 5-step plan) | 2 done, 5 steps remaining |
 
 ## Active Projects
 
@@ -93,7 +93,7 @@
 - [x] Create orchestration system with README
 - [x] Populate TELOS identity
 - [x] Configure personality.yaml
-- [x] Create lifecycle hooks (session start, security validator, learning capture)
+- [x] Create lifecycle hooks (session start, security validator, learning capture) — scripts in `tools/scripts/`, wired via `.claude/settings.json`
 - [x] Create agent definitions (Architect, Engineer, SecurityAnalyst, QATester, Orchestrator)
 - [x] Create defensive test baseline (injection + secret scanner — all passing)
 - [x] Create Cursor integration (.cursorrules + PRD workflow)
@@ -102,7 +102,7 @@
 - [x] Install Fabric CLI (installed via winget v1.4.441)
 - [x] Create self-heal test baseline
 - [x] Initial git commit
-- [x] Split TELOS into individual identity documents (18 files in memory/work/telos/)
+- [x] Split TELOS into individual identity documents (19 files in memory/work/telos/)
 
 ## Phase 2: Skills, Learning Loop & TELOS System
 
@@ -212,8 +212,8 @@
 #### Layer 2: Slack Mobile Hub (ACTIVE — supersedes 3C-6/3C-7)
 
 - [x] **3C-Slack-1: Channel setup** — Channels created, bot invited, all 4 channel IDs + SLACK_BOT_TOKEN added to epdev `.env`. Scope fix applied (channels:history + reinstall).
-- [x] **3C-Slack-2: `tools/slack_poller.py`** — Built. Polls `#jarvis-inbox` every 60s; runs `claude -p` from repo root (CLAUDE.md context auto-loads); replies in thread. State in `data/slack_poller_state.json`.
-- [x] **3C-Slack-3: `tools/slack_voice_processor.py`** — Built. Polls `#jarvis-voice` every 60s; runs voice-capture prompt headlessly; writes signals to `memory/learning/signals/`; posts confirmation in thread.
+- [x] **3C-Slack-2: `tools/scripts/slack_poller.py`** — Built. Polls `#jarvis-inbox` every 60s; runs `claude -p` from repo root (CLAUDE.md context auto-loads); replies in thread. State in `data/slack_poller_state.json`.
+- [x] **3C-Slack-3: `tools/scripts/slack_voice_processor.py`** — Built. Polls `#jarvis-voice` every 60s; runs voice-capture prompt headlessly; writes signals to `memory/learning/signals/`; posts confirmation in thread.
 - [x] **3C-Slack-4: Heartbeat → `#epdev`** — Already operational (`jarvis_heartbeat.py` posts to #epdev via SLACK_BOT_TOKEN).
 - [x] **3C-Slack-5: `tools/start_jarvis.bat`** — Built. Launches poller + voice processor in separate CMD windows; runs heartbeat once on startup.
 - [x] **3C-Slack-6: End-to-end test** — Validated 2026-03-27: iPhone dictation → `#jarvis-voice` → poller detected → Jarvis replied in thread. Gap found: `claude -p` sessions are stateless per message (steering rule added). Voice signal produced.
@@ -314,10 +314,11 @@
 - [ ] **Interleaved thinking for orchestration skills** — Enable interleaved thinking on `/delegation`, `/workflow-engine`, and `/spawn-agent`: think→tool→think→tool pattern dramatically improves multi-step research and agent composition. Configure via `interleaved-thinking-2025-05-14` header on Claude API calls inside these skills. Do alongside research runner — this is where it pays off most.
 - [ ] **Tool Search API** — When skill/tool count exceeds 50, implement Tool Search to prevent token explosion in orchestration loops. Evaluate as part of research runner architecture — autonomous research will eventually need to query 100+ tools by description without loading all schemas upfront.
 
-### Phase 4C — Slack notifications by severity
+### Phase 4C — Slack notifications by severity (COMPLETE)
 
-- [ ] **Notifier wrapper or policy** — Map event types to `#epdev` vs `#general` per `slack-routing.md`; implement daily cap / dedupe
-- [ ] **Heartbeat + research digests** — Routine summaries → `#epdev`; regressions and must-see criteria → `#general` only when rules match
+- [x] **Notifier wrapper** — `tools/scripts/slack_notify.py`: severity routing (routine→#epdev, critical→#general), dedup (1hr hash window), daily caps (20 routine, 5 critical). All 7 callers migrated. (2026-03-28)
+- [x] **Heartbeat + research digests** — Heartbeat CRIT→#general, overnight failures→#general, autoresearch high-contradiction→#general. Routine traffic stays in #epdev. (2026-03-28)
+- [x] **Auth health collector + meta-alerting** — `auth_health` collector tests Slack token via auth.test API. Collector-failure meta-alerting injects synthetic WARN/CRIT when any collector returns null. Local fallback log at `data/auth_failures.jsonl` (created on-demand when auth fails, not pre-existing). (2026-03-28)
 
 ### Phase 4D — Capstone: internal autoresearch (Karpathy-inspired)
 
@@ -347,20 +348,45 @@
 
 ---
 
-### Phase 4E — Data management & reporting layer
+### Phase 4E — Data management & reporting layer (Hybrid Architecture)
 
-> **Why now:** Phases 4B-4D (auto-research, Slack digests, autoresearch) will produce 200-500+ signals/day, 10K+ event lines/day, and 3-5 synthesis runs/day. Without a data layer, autonomous producers create unbounded growth in directories that 6+ consumers read. This phase builds the plumbing that autonomous Jarvis produces into.
+> **Architecture decision (2026-03-29):** Hybrid — files remain source of truth, extend existing `jarvis_index.db` (SQLite FTS5) as read-optimized query/lineage/manifest layer. Rebuildable from files at any time. See `history/decisions/2026-03-29_data-layer-hybrid-architecture.md`.
 >
-> **Corrected by first-principles + quality-gate audit (2026-03-28):** LSM-tree archival was rejected — synthesis aggregates, it doesn't merge-and-discard; moving files from processed/ breaks FTS indexer (absolute paths), heartbeat collectors (false velocity alerts), and brain-map parser. Approach: threshold-triggered retention + lineage indexing, not premature archival.
+> **Informed by:** `/first-principles` analysis (9 core assumptions challenged), `/find-logical-fallacies` audit (9 issues in original plan), empirical data exploration (92 signals/day, 1 MB/day events, 1 MB/day heartbeat history). Full audit: `memory/work/observability/data_flow_audit.md`.
+>
+> **Build order is sequential with gates.** Original plan assumed independent items — fallacy analysis proved they have forced dependencies: FTS verification > lineage > retention > monitoring.
 
-- [ ] **Signal lineage index** — After each `/synthesize-signals` run, append to `memory/learning/signal_lineage.jsonl`: `{"signal": "filename.md", "synthesis": "YYYY-MM-DD_synthesis.md", "date": "..."}`. Solves reverse-lookup (signal -> synthesis) without moving files.
-- [ ] **Signal retention policy** — Add `processed_retention_days` to `heartbeat_config.json`. When processed/ exceeds threshold (2,000 files OR 30+ days since synthesis consumed a signal), delete consumed signals. FTS index retains content; synthesis docs retain references. Gate: only activate after FTS index is verified to contain all processed signal content.
-- [ ] **Event rotation scheduled** — Wire `rotate_events.py` into monthly Task Scheduler job. Already built + tested; monthly rollup -> `history/events/rollups/YYYY-MM_summary.json`, gzip after 180d, 90d raw retention.
-- [ ] **FTS index as canonical search layer** — Validate `jarvis_index.py` indexes all signal sources (signals/, processed/, synthesis/, failures/). Ensure `update` command runs on heartbeat cadence. This is the layer that survives retention — raw files can be deleted because FTS retains the content.
-- [ ] **Reporting dashboard data contract** — Define what `/vitals` and brain-map Phase 3.5 need: signal velocity, synthesis frequency, event volume, FTS index size, retention status. Emit as structured JSON from heartbeat for downstream consumers.
-- [ ] **Autonomous signal volume monitoring** — Add `autonomous_signal_rate` collector to heartbeat. Alert if `Source: autonomous` signals exceed daily cap (prevents runaway research loops from flooding the pipeline).
+#### Step 1: Foundation (gate: FTS resilience test passes)
+- [ ] Delete orphaned `data/jarvis_events.db` (0 bytes, created 2026-03-28)
+- [ ] Enable WAL mode on `jarvis_index.db` (`PRAGMA journal_mode=WAL`) — prevents lock contention
+- [ ] Schedule `jarvis_index.py update` as daily Task Scheduler job (3am)
+- [ ] FTS resilience test: delete one processed signal, query index for its content, confirm retention
+- [x] Event rotation scheduled — `\Jarvis\JarvisEventRotation` runs 1st of month at 3am (2026-03-29)
 
-**Depends on:** Phase 4D (autoresearch is the primary producer). Can be built incrementally alongside 4B-4D — lineage index and event rotation are safe to ship immediately.
+#### Step 2: Manifest tables (gate: manifest queryable with backfilled data)
+- [ ] Add `signals` metadata table: `(id, filename, source, category, date, processed, synthesis_id, compressed)`
+- [ ] Add `lineage` table: `(signal_id, synthesis_id, date)`
+- [ ] Add `producer_runs` table: `(producer, run_date, status, artifact_count, log_path)`
+- [ ] Backfill signal metadata from existing 276+ signal files (one-time migration)
+
+#### Step 3: Wire producers (gate: lineage populated after next synthesis run)
+- [ ] `/synthesize-signals` writes lineage rows after processing
+- [ ] Heartbeat, overnight, autoresearch, morning_feed write `producer_runs` row on completion
+- [ ] Add `producer_health` heartbeat collector (queries producer_runs for stale/failed runs)
+
+#### Step 4: Retention layer (gate: no unbounded datasets remain)
+- [ ] Compress-in-place for processed signals (gzip after synthesis, retain 180 days for Phase 5)
+- [ ] Heartbeat history rotation (30 days raw, monthly summary JSON, delete >180 days)
+- [ ] `autonomous_signal_rate` collector — alert if Source:autonomous signals exceed daily cap
+- [ ] `signal_volume` collector reads manifest table instead of directory scan
+
+#### Step 5: Consumer migration (gate: no consumer scans directories for manifest-available data)
+- [ ] Migrate heartbeat file_count/velocity collectors to manifest table queries
+- [ ] Pre-aggregate event metrics (move query_events.py patterns into manifest or summary table)
+- [ ] Heartbeat trend detection — 3-5 run moving average from heartbeat_history
+- [ ] Define `/vitals` + brain-map JSON data contract against manifest tables
+
+**Depends on:** Phase 4D complete (autoresearch is primary producer). Observability audit complete (2026-03-29).
 
 ---
 
@@ -371,7 +397,7 @@
 - [ ] **PAIMM AS2 verified** — Jarvis is proactive: heartbeat runs without human prompt, background research produces signals, Slack digests fire on cadence
 - [ ] **Autoresearch loop has run >=3 cycles** — `memory/work/jarvis/autoresearch/` contains >=3 `run-YYYY-MM-DD/` directories with `metrics.json`; overnight runner has >=3 `overnight-YYYY-MM-DD/` directories
 - [ ] **Steering rules updated from autonomous signals** — at least one CLAUDE.md change promoted from a `Source: autonomous` signal
-- [ ] **Autonomous signal rate monitoring active** — `autonomous_signal_rate` collector operational in heartbeat; prevents runaway autonomous execution from flooding signals
+- [ ] **Data layer operational** — 4E hybrid architecture complete: manifest tables in jarvis_index.db queryable, lineage populated after synthesis, retention compressing (not deleting), producer health monitored, no unbounded datasets
 - [ ] **Phase 5 scoped** — `memory/work/jarvis/PRD_phase5.md` exists with autonomous execution ISC, capability tiers, and architecture defined
 
 > **Moved to independent Tier 3 tasks (not Phase 5 gate):** Voice capture Layer 1, Remote terminal Layer 3 (Tailscale). These are valuable but orthogonal to autonomous execution.

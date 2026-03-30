@@ -186,6 +186,8 @@ Tavily advanced extraction returns empty content for Reddit threads. Do NOT atte
 
 13. Propose next steps in the Algorithm pipeline.
 
+14. **Auto-offer /analyze-claims**: If the research sources contain factual claims, statistics, or assertions that could be verified (common in market, news, and competitive analysis), append: "Some sources contain verifiable claims. Run `/analyze-claims` to fact-check?" This surfaces the underused skill at the moment it's most valuable.
+
 14. Append to `history/changes/research_log.md`:
     ```
     - {YYYY-MM-DD HH:MM} | topic: {topic} | type: {market|technical|live} | depth: {quick|full|deep} | sub-questions: {n} | sources: {n} | brief: {path or "inline"}
