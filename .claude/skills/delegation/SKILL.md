@@ -118,11 +118,12 @@ Project initialization (new project from scratch):
 
 ## Leaf Skills (no chaining needed — stand-alone tools)
 `/analyze-claims`, `/find-logical-fallacies`, `/improve-prompt`,
-`/commit`, `/teach`, `/voice-capture`, `/notion-sync`,
+`/commit`, `/teach`, `/notion-sync`,
 `/telos-report`, `/spawn-agent`
 
 ## Deprecated Skills (route to replacement)
 - `/threat-model` → use `/red-team --stride`
+- `/voice-capture` → use `/absorb` for URLs, `#jarvis-voice` for voice dumps
 - `/create-summary` → use `/extract-wisdom --summary`
 - `/rate-content` → absorbed into `/learning-capture` (quality gate sub-step)
 - `/label-and-rate` → absorbed into `/learning-capture` (quality gate sub-step)

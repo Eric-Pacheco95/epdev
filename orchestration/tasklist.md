@@ -49,6 +49,7 @@
 ### New Skills
 
 - [x] **`/capture-recording` skill** — Guitar recording analysis via Gemini API. SKILL.md orchestration + Python CLI (`analyze_recording.py`). Solo/band/batch modes, MUSIC.md goal loading, token tracking. 12/12 ISC items passed. PRD: `memory/work/capture-recording/PRD.md`. (2026-03-28)
+- [ ] **`/absorb` skill** — External content ingestion + dual-lens analysis + TELOS routing. Phase 1 (Core Skill): 8/8 ISC PASS. Phase 2A-C + Phase 3 pending. PRD: `memory/work/absorb/PRD.md`. `/voice-capture` deprecated. (2026-03-29)
 
 ### Parked (No demand signal within 60 days — research saved)
 

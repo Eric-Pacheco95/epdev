@@ -64,7 +64,7 @@ ORCHESTRATE
    | /research | OBSERVE |
    | /extract-wisdom | OBSERVE |
    | /deep-audit | OBSERVE |
-   | /voice-capture | OBSERVE |
+   | /absorb | OBSERVE |
    | /first-principles | THINK |
    | /red-team | THINK |
    | /analyze-claims | THINK |
@@ -107,7 +107,7 @@ ORCHESTRATE
   /research           -- Research any topic (market, technical, live)
   /extract-wisdom     -- Pull ideas, insights, quotes from content (--summary for concise mode)
   /deep-audit         -- Multi-axis codebase audit
-  /voice-capture      -- Process voice transcript into signals
+  /absorb             -- Absorb external content (URLs) with dual-lens analysis + TELOS routing
 
 **THINK** (analyze and challenge)
   /first-principles   -- Break a problem to fundamentals

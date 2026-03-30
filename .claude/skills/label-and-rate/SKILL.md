@@ -75,7 +75,7 @@ After outputting JSON, append a one-line plain-text recommendation:
 → Recommended action: /extract-wisdom | write signal | skip
 ```
 
-This output can be piped directly into `/extract-wisdom` or `/voice-capture` signal rating.
+This output can be piped directly into `/extract-wisdom` or `/absorb` signal rating.
 
 # INPUT
 
