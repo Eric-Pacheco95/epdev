@@ -186,12 +186,12 @@ CREATE TABLE IF NOT EXISTS schema_version (
 - [x] No consumer assumes DB availability without a directory-scan fallback | Verify: `/review-code` on all consumers [I][A]
 
 ### Step 2: Manifest Tables
-- [ ] All 6 new tables created in `jarvis_index.db` with schema version 1 | Verify: `sqlite3 jarvis_index.db ".tables"` shows signals, lineage, producer_runs, session_costs, skill_usage, schema_version [E][M]
-- [ ] Signal metadata backfilled from existing signal files (276+ rows) | Verify: `sqlite3 jarvis_index.db "SELECT COUNT(*) FROM signals"` >= 276 [E][M]
-- [ ] Lineage backfilled from `signal_lineage.jsonl` (33+ rows) | Verify: `sqlite3 jarvis_index.db "SELECT COUNT(*) FROM lineage"` >= 33 [E][M]
-- [ ] Producer runs backfilled from `data/logs/*.log` | Verify: `sqlite3 jarvis_index.db "SELECT COUNT(DISTINCT producer) FROM producer_runs"` >= 4 [E][M]
-- [ ] `jarvis_index.py build` preserves manifest tables (regression test) | Verify: run build, confirm manifest row counts unchanged [E][M]
-- [ ] Schema version check at connection time rejects version mismatches | Verify: test with wrong version number [E][M]
+- [x] All 6 new tables created in `jarvis_index.db` with schema version 1 | Verify: `sqlite3 jarvis_index.db ".tables"` shows signals, lineage, producer_runs, session_costs, skill_usage, schema_version [E][M]
+- [x] Signal metadata backfilled from existing signal files (276+ rows) | Verify: `sqlite3 jarvis_index.db "SELECT COUNT(*) FROM signals"` >= 276 [E][M]
+- [x] Lineage backfilled from synthesis docs into `signal_lineage.jsonl` + DB (17+ rows; original 33 estimate revised after data audit -- only 22 signal refs exist across 16 synthesis docs, 4 are failure refs) | Verify: `sqlite3 jarvis_index.db "SELECT COUNT(*) FROM lineage"` >= 17 [E][M]
+- [x] Producer runs backfilled from `data/logs/*.log` | Verify: `sqlite3 jarvis_index.db "SELECT COUNT(DISTINCT producer) FROM producer_runs"` >= 4 [E][M]
+- [x] `jarvis_index.py build` preserves manifest tables (regression test) | Verify: run build, confirm manifest row counts unchanged [E][M]
+- [x] Schema version check at connection time rejects version mismatches | Verify: test with wrong version number [E][M]
 
 ### Step 3: Wire Producers
 - [ ] `/synthesize-signals` writes lineage rows to DB after processing | Verify: run synthesis, check `SELECT COUNT(*) FROM lineage` increased [E][M]

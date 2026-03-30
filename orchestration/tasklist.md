@@ -28,7 +28,7 @@
 - [x] **4E: Event rotation scheduled** — `\Jarvis\JarvisEventRotation` runs 1st of month at 3am. Summarizes + gzips old event JSONL. (2026-03-29)
 - **--- 4E Revised Plan (Hybrid Architecture, sequential with gates) ---**
 - [x] **4E-S1: Foundation** — Orphaned DB deleted, WAL checkpoint added to build/update, FTS index scheduled daily 3am, FTS resilience verified (content persists after file deletion), memory/session/ removed (FTS indexes native JSONL), all consumers confirmed directory-scan based. Gate: PASSED. (2026-03-29)
-- [ ] **4E-S2: Manifest tables** — Add `signals`, `lineage`, `producer_runs` tables to `jarvis_index.db`. Backfill signal metadata from existing files. Gate: manifest queryable.
+- [x] **4E-S2: Manifest tables** — 6 tables created (signals, lineage, producer_runs, session_costs, skill_usage, schema_version). Backfill: 284 signals, 17 lineage edges, 14 producer runs (8 producers). Build regression + schema version check passing. (2026-03-29)
 - [ ] **4E-S3: Wire producers** — `/synthesize-signals` writes lineage rows. All producers write `producer_runs` rows. Add `producer_health` heartbeat collector. Gate: lineage populated after next synthesis run.
 - [ ] **4E-S4: Retention layer** — Compress-in-place for processed signals (gzip, retain 180d). Heartbeat history rotation (30d raw, monthly summary). `autonomous_signal_rate` collector. `signal_volume` collector reads manifest. Gate: no unbounded datasets remain.
 - [ ] **4E-S5: Consumer migration** — Migrate heartbeat collectors to manifest queries. Pre-aggregate event metrics. Heartbeat trend detection (moving average). Define `/vitals` + brain-map JSON contract. Gate: no consumer scans directories for data available in manifest.
