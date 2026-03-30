@@ -16,11 +16,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re as _re
 import sqlite3
-import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -761,7 +758,7 @@ def cmd_backfill(args: argparse.Namespace) -> None:
     lin_total = conn.execute("SELECT COUNT(*) FROM lineage").fetchone()[0]
     _safe_print(f"  lineage: {lin_total} rows (backfilled {lin_count})")
 
-    prod_count = _backfill_producer_runs(conn)
+    _backfill_producer_runs(conn)
     prod_total = conn.execute("SELECT COUNT(*) FROM producer_runs").fetchone()[0]
     producers = conn.execute("SELECT DISTINCT producer FROM producer_runs").fetchall()
     _safe_print(f"  producer_runs: {prod_total} rows ({len(producers)} producers)")
