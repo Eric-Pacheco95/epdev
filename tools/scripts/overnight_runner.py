@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
@@ -478,7 +477,7 @@ def post_slack_summary(results: list[dict], quality: str, security: str,
     dim_names = [r.get("dimension", "?") for r in results]
 
     lines = [
-        f"*Overnight Self-Improvement Complete*",
+        "*Overnight Self-Improvement Complete*",
         f"Dimensions: {', '.join(dim_names)} ({len(results)} of {len(DIMENSION_ORDER)})",
         f"Total: {total_kept} kept, {total_discarded} discarded ({elapsed_min:.0f} min)",
     ]

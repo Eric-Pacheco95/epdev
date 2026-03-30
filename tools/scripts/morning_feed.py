@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 import urllib.error
@@ -379,7 +378,7 @@ def main() -> int:
     # Track proposal IDs for value tracking
     track_proposals(today, feed_content)
 
-    print(f"Morning feed complete.")
+    print("Morning feed complete.")
     return 0
 
 
