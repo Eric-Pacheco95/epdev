@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "vitals_collector.v1.json",
   "title": "Jarvis Vitals Collector Output",
-  "description": "Structured health data from vitals_collector.py. Consumed by /vitals skill and brain-map dashboard.",
+  "description": "Structured health data from vitals_collector.py. Consumed by /vitals skill and jarvis-app dashboard.",
   "type": "object",
   "required": ["_schema_version", "_provenance", "heartbeat", "errors"],
   "properties": {

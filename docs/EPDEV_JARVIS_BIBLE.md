@@ -141,7 +141,7 @@ YOU (Eric)
  |     |-- #jarvis-inbox (mobile prompts -> claude -p -> thread reply)
  |     +-- #jarvis-voice (voice transcripts -> signals)
  |
- |-- brain-map (separate repo) --- visual system of record
+ |-- jarvis-app (separate repo) -- visual system of record
  |     +-- React Flow dashboard, ISC tracking, 23/25 passing
  |
  +-- Memory / History ------------ persistent brain state
@@ -178,7 +178,7 @@ YOU (Eric)
 2. **Run `/telos-report`** -- "What has Jarvis learned about me?"
 3. **Review `history/security/`** -- any events this week?
 4. **Update this bible** -- add any micro-learning from the week
-5. **Check brain-map** -- node growth = brain growth
+5. **Check jarvis-app** -- node growth = brain growth
 
 ---
 

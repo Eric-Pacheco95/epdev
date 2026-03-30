@@ -73,7 +73,7 @@ External projects are repos outside epdev that Jarvis manages strategically. Eac
 | Project | Repo Path | ISC Tasklist | CLAUDE.md |
 |---------|-----------|--------------|-----------|
 | crypto-bot | `C:\Users\ericp\Github\crypto-bot` | `docs/ISC_HARDENING_TASKLIST.md` | `CLAUDE.md` "Current State" section |
-| brain-map (isce) | `C:\Users\ericp\Github\isce` | (not yet created) | `CLAUDE.md` |
+| jarvis-app | `C:\Users\ericp\Github\jarvis-app` | (not yet created) | `CLAUDE.md` |
 
 When reading an external ISC tasklist:
 1. Count checked `[x]` vs unchecked `[ ]` items per tier

@@ -31,7 +31,7 @@
 - [x] **4E-S2: Manifest tables** — 6 tables created (signals, lineage, producer_runs, session_costs, skill_usage, schema_version). Backfill: 284 signals, 17 lineage edges, 14 producer runs (8 producers). Build regression + schema version check passing. (2026-03-29)
 - [x] **4E-S3: Wire producers** — `manifest_db.py` shared writer. `self_diagnose_wrapper.py` writes `producer_runs` for all 4 producers. `hook_stop.py` writes `session_costs` (token counts N/A — Claude Code doesn't expose in hook payload). `hook_events.py` writes `skill_usage` (sys.path bug fixed 2026-03-30). `producer_health` heartbeat collector wired. `/synthesize-signals` uses `sync_lineage.py` for JSONL→SQLite mirror. (2026-03-29, patched 2026-03-30)
 - [ ] **4E-S4: Retention layer** — Compress-in-place for processed signals (gzip, retain 180d). Heartbeat history rotation (30d raw, monthly summary). `autonomous_signal_rate` collector. `signal_volume` collector reads manifest. Gate: no unbounded datasets remain.
-- [ ] **4E-S5: Consumer migration** — Migrate heartbeat collectors to manifest queries. Pre-aggregate event metrics. Heartbeat trend detection (moving average). Define `/vitals` + brain-map JSON contract. Gate: no consumer scans directories for data available in manifest.
+- [ ] **4E-S5: Consumer migration** — Migrate heartbeat collectors to manifest queries. Pre-aggregate event metrics. Heartbeat trend detection (moving average). Define `/vitals` + jarvis-app JSON contract. Gate: no consumer scans directories for data available in manifest.
 - [ ] **5-pre: Evaluate MCPorter for MCP→CLI** — `steipete/mcporter` wraps MCP servers as standalone CLIs. Evaluate for: (1) moving deterministic tool calls off the LLM path (cost reduction), (2) enabling Task Scheduler jobs to call MCP tools without `claude -p`. Blocked by: 4E-S2 (need manifest data). Target: after 4E-S2.
 - [ ] **5-pre: Context efficiency audit** — Review sub-agent, fresh-agent, and `claude -p` session context loading. Map what each agent type actually needs vs what it loads. Goal: minimal required context per invocation type. Blocked by: 4E-S5 + MCPorter eval. Target: after 4E complete.
 
@@ -43,7 +43,7 @@
 - [ ] **4B: Tool Search API** — Implement when skill/tool count exceeds 50. Not yet at threshold
 - [ ] **4E: Signal retention policy** — Only needed after autonomous producers generate 2,000+ processed signals
 - [ ] **4E: FTS index validation** — Validate `jarvis_index.py` covers all signal sources
-- [ ] **4E: Reporting dashboard data contract** — Define `/vitals` + brain-map Phase 3.5 JSON contract
+- [ ] **4E: Reporting dashboard data contract** — Define `/vitals` + jarvis-app Phase 3.5 JSON contract
 - [ ] **Voice signals in heartbeat** — `voice_session_count` metric. Low priority until voice is daily habit
 
 ### New Skills
@@ -80,7 +80,7 @@
 |---------|--------|--------|-------|-------------|
 | epdev-jarvis-setup | active | green | epdev | Phase 3C Layer 2 + 3E ISC engine — see `orchestration/tasklist.md` Phase 3C/3E |
 | crypto-bot | active | yellow | epdev | Paper trading → production gate — see `memory/work/crypto_trading_bot/project_state.md` |
-| jarvis-brain-map | active | green | epdev | Phase 4: Drill-Down Panel — see `memory/work/jarvis_brain_map/PRD.md` |
+| jarvis-app | active | green | epdev | Phase 4: Drill-Down Panel — see `memory/work/jarvis_brain_map/PRD.md` |
 
 ## Phase 1: Foundation Tasks (COMPLETE)
 
@@ -242,22 +242,22 @@
 #### Cross-cutting
 
 - [ ] **Voice signals tracked in heartbeat** — Add `voice_session_count` metric to heartbeat; alert in `#epdev` when no voice sessions in 7 days (behavioral gap signal for Phase 5)
-- [x] **Dashboard UI** — Replaced by jarvis-brain-map project (standalone repo). Phase 3.5 vitals route will serve as the dashboard. See `memory/work/jarvis_brain_map/PRD.md`.
+- [x] **Dashboard UI** — Replaced by jarvis-app project (standalone repo). Phase 3.5 vitals route will serve as the dashboard. See `memory/work/jarvis_brain_map/PRD.md`.
 
 ### Phase 3D: Visual system of record & ideal-state workflow (COMPLETE)
 
-> **Status:** Replaced by standalone `jarvis-brain-map` project. PRD, research, architecture, and Phase 1 parser all complete. Remaining work tracked in `memory/work/jarvis_brain_map/PRD.md`.
+> **Status:** Replaced by standalone `jarvis-app` project. PRD, research, architecture, and Phase 1 parser all complete. Remaining work tracked in `memory/work/jarvis_brain_map/PRD.md`.
 >
-> **Dependency note:** Phase 3E can now proceed — the “current vs ideal” vocabulary is defined by the brain-map node/edge taxonomy and ISC gap model.
+> **Dependency note:** Phase 3E can now proceed — the “current vs ideal” vocabulary is defined by the jarvis-app node/edge taxonomy and ISC gap model.
 
-- [x] **Clarify requirements** — Completed via `/project-init` pipeline: `/research` → `/first-principles` → `/red-team` → `/create-prd`. Brain spec defined in `memory/work/jarvis_brain_map/PRD.md` — nodes = TELOS/Goal/Project/Phase/PRD/ISC/Task/Skill/Signal; edges = drives/defines/decomposes-into/gap/etc. Git-markdown is source of truth; brain-map is read-only through Phase 3.
-- [x] **Survey tooling** — React Flow + Next.js + dagre chosen. Research brief at `memory/work/jarvis_brain_map/research_brief.md`. Compared Obsidian, Mermaid, custom dashboard. Decision: standalone `jarvis-brain-map` repo at `C:\Users\ericp\Github\jarvis-brain-map`.
+- [x] **Clarify requirements** — Completed via `/project-init` pipeline: `/research` → `/first-principles` → `/red-team` → `/create-prd`. Brain spec defined in `memory/work/jarvis_brain_map/PRD.md` — nodes = TELOS/Goal/Project/Phase/PRD/ISC/Task/Skill/Signal; edges = drives/defines/decomposes-into/gap/etc. Git-markdown is source of truth; jarvis-app is read-only through Phase 3.
+- [x] **Survey tooling** — React Flow + Next.js + dagre chosen. Research brief at `memory/work/jarvis_brain_map/research_brief.md`. Compared Obsidian, Mermaid, custom dashboard. Decision: standalone `jarvis-app` repo at `C:\Users\ericp\Github\jarvis-app`.
 - [x] **Current vs ideal workflow** — **REOPENED then COMPLETED 2026-03-27**: Original ISC gap model was insufficient. Proper workflow spec now written from Eric's direct input at `memory/work/jarvis/3D_workflow_spec.md`. Covers: actual session patterns, ADHD-driven branching, mobile gap, life coach vision, operator familiarity gap (#1 pain point), measurement vocabulary beyond ISC checkboxes, and downstream requirements for 4D/5.
-- [x] **Claude Code analysis session** — Full repo scan + analysis done 2026-03-27. Parser expansion roadmap defined (Phase 2.5). Vitals dashboard scoped (Phase 3.5). Cross-project dependency mapped: brain-map 3.5 depends on epdev 3E.
+- [x] **Claude Code analysis session** — Full repo scan + analysis done 2026-03-27. Parser expansion roadmap defined (Phase 2.5). Vitals dashboard scoped (Phase 3.5). Cross-project dependency mapped: jarvis-app 3.5 depends on epdev 3E.
 
 ### Phase 3E: ISC engine & scheduled heartbeat
 
-> **Parallel with 3C:** Layers 2+3 of 3C (Tailscale, voice server, STT/TTS) are independent of 3E. Build whichever has energy — they don't block each other. 3D is now complete (brain-map), so 3E can proceed.
+> **Parallel with 3C:** Layers 2+3 of 3C (Tailscale, voice server, STT/TTS) are independent of 3E. Build whichever has energy — they don't block each other. 3D is now complete (jarvis-app), so 3E can proceed.
 >
 > **Intent:** A **time-driven VERIFY** loop—Miessler-style **current state** as measurable data points, compared to **PRD ISC**, with **gaps** flowing into **learning** (signals/failures), not only when you are in a chat session.
 >
@@ -275,7 +275,7 @@
 - [x] **`/vitals` skill (3E capstone)** — `.claude/skills/vitals/SKILL.md` — Runs heartbeat, reads snapshot, presents ASCII-safe dashboard with ISC ratio, signal velocity, sessions/day, storage budget, missing skill detection. Completed 2026-03-27.
 - [x] **[ISC 8/10] Context budget as vitals metric** — `context_budget_proxy` collector measures hook output char count (1,692 chars current). Threshold: warn_above 3,000, crit_above 5,000. Tracked in heartbeat snapshot. Completed 2026-03-27. Remaining: MCP schema overhead estimate, per-session burn rate (needs API usage headers).
 
-**Depends on:** Phase 2 maturity (signals/synthesis patterns), Phase 3D “current vs ideal” spec (shared vocabulary for gaps). **Build in:** mostly **Claude Code/Python** + OS scheduler; Claude Code sessions **review** trends and promote steering rules. **Feeds into:** jarvis-brain-map Phase 3.5 vitals dashboard.
+**Depends on:** Phase 2 maturity (signals/synthesis patterns), Phase 3D “current vs ideal” spec (shared vocabulary for gaps). **Build in:** mostly **Claude Code/Python** + OS scheduler; Claude Code sessions **review** trends and promote steering rules. **Feeds into:** jarvis-app Phase 3.5 vitals dashboard.
 
 ---
 
@@ -384,7 +384,7 @@
 - [ ] Migrate heartbeat file_count/velocity collectors to manifest table queries
 - [ ] Pre-aggregate event metrics (move query_events.py patterns into manifest or summary table)
 - [ ] Heartbeat trend detection — 3-5 run moving average from heartbeat_history
-- [ ] Define `/vitals` + brain-map JSON data contract against manifest tables
+- [ ] Define `/vitals` + jarvis-app JSON data contract against manifest tables
 
 **Depends on:** Phase 4D complete (autoresearch is primary producer). Observability audit complete (2026-03-29).
 
@@ -407,7 +407,7 @@
 ## Phase 5: Autonomous Project Execution
 
 > **Status:** design phase — PRD in progress.
-> **Concept:** Jarvis autonomously picks tasks from a structured backlog, executes them in isolated git worktrees via `claude -p`, verifies against ISC, and presents ready-to-merge branches. Cross-project awareness (epdev, crypto-bot, brain-map). No new external dependencies — skill-first single-brain architecture using Task Scheduler + worktrees + existing skills.
+> **Concept:** Jarvis autonomously picks tasks from a structured backlog, executes them in isolated git worktrees via `claude -p`, verifies against ISC, and presents ready-to-merge branches. Cross-project awareness (epdev, crypto-bot, jarvis-app). No new external dependencies — skill-first single-brain architecture using Task Scheduler + worktrees + existing skills.
 > **Inspiration:** Aron Prins / Paperclip AI playbook patterns, translated for single-operator skill-first architecture. Research brief: `memory/work/aron-prins-research/research_brief.md`
 > **Key principle:** Three-layer SENSE/DECIDE/ACT. Dispatcher (DECIDE) is the hard part — 60% of implementation effort. Workers run in worktrees, never touch main tree, never push.
 
@@ -438,7 +438,7 @@
 
 ### Phase 5C — Cross-Project + Routines (2-3 sessions)
 
-- [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + brain-map. Per-project config: repo path, context files, ISC sources
+- [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources
 - [ ] **Routines engine** — Recurring tasks that re-enter backlog on schedule (weekly security audit, monthly steering review). Config-driven, not hardcoded
 - [ ] **Heartbeat -> task generation** — When ISC gaps detected by heartbeat, dispatcher can propose new tasks for human approval before execution
 - [ ] **Budget controls** — Max tasks/day, max `claude -p` time per task, daily aggregate time cap
@@ -465,4 +465,4 @@
 
 **Claude Code (Claude Max)** = All implementation. Skills, hooks, parsers, scripts — everything is built in Claude Code. Cursor is retired (2026-03-27).
 
-**jarvis-brain-map repo** = Standalone project at `C:\Users\ericp\Github\jarvis-brain-map`. React Flow + Next.js + TypeScript. Parser reads epdev markdown. Tracked separately in `memory/work/jarvis_brain_map/PRD.md`.
+**jarvis-app repo** = Standalone project at `C:\Users\ericp\Github\jarvis-app`. React Flow + Next.js + TypeScript. Parser reads epdev markdown. Tracked separately in `memory/work/jarvis_brain_map/PRD.md`.

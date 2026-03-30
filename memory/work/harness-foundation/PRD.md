@@ -1,6 +1,6 @@
 # PRD: Harness Foundation (Phase 4E-S0)
 
-- Status: draft
+- Status: complete
 - Created: 2026-03-30
 - Owner: Eric P
 - Depends on: 4E-S4 (retention layer) complete
@@ -9,7 +9,7 @@
 
 ## OVERVIEW
 
-Harness Foundation extracts deterministic work from Jarvis skills into Python scripts, establishes JSON Schema contracts between scripts and skills, completes the token observability layer, and delivers a browser-based vitals dashboard MVP. The core principle: scripts do the work, skills direct the thinking. This phase is a prerequisite to 4E-S5 (consumer migration) because it defines the `/vitals` JSON contract that both the CLI skill and the brain-map dashboard will consume.
+Harness Foundation extracts deterministic work from Jarvis skills into Python scripts, establishes JSON Schema contracts between scripts and skills, completes the token observability layer, and delivers a browser-based vitals dashboard MVP. The core principle: scripts do the work, skills direct the thinking. This phase is a prerequisite to 4E-S5 (consumer migration) because it defines the `/vitals` JSON contract that both the CLI skill and the jarvis-app dashboard will consume.
 
 ## PROBLEM AND GOALS
 
@@ -17,7 +17,7 @@ Harness Foundation extracts deterministic work from Jarvis skills into Python sc
 - **No measurement baseline**: Claude Code does not expose token counts in hook payloads (confirmed in 4E-S3). Without session cost data, optimization decisions are based on intuition, not evidence.
 - **Three overlapping tasks**: The `/vitals` JSON contract appears in 4E-S5, the reporting dashboard contract task, and the harness diet proposal. This PRD consolidates them into one deliverable.
 - **Security scanning is fully LLM-dependent**: Deterministic checks (regex secret patterns, gitignore completeness, file-exists) consume LLM turns unnecessarily, while the actual judgment work (triage, severity, false positive filtering) is where the model adds value.
-- **Brain-map has no live data source**: The app parses md files statically. A structured JSON contract from vitals_collector.py creates the first live data feed, evolving brain-map toward the unified Jarvis dashboard.
+- **Jarvis-app has no live data source**: The app parses md files statically. A structured JSON contract from vitals_collector.py creates the first live data feed, evolving jarvis-app toward the unified Jarvis dashboard.
 
 ## NON-GOALS
 
@@ -25,7 +25,7 @@ Harness Foundation extracts deterministic work from Jarvis skills into Python sc
 - Prompt sharpening (systematic skill prompt audit) — deferred to Phase 2 roadmap; not lossy compression but quality improvement: tighter prompts improve both token efficiency AND output quality by reducing attention dilution. Phase 2 scope: audit top-usage skills, remove filler, sharpen instructions
 - Full Langfuse integration — deferred to Phase 5; lightweight JSONL proxy established here for measurement baseline
 - Retroactive extraction of all skills — only extract where sub-scripts already exist or deterministic boundary is clear
-- Brain-map full unified app — this phase delivers the vitals dashboard MVP only; observability traces, md file management, data layer views are future phases
+- Jarvis-app full unified app — this phase delivers the vitals dashboard MVP only; observability traces, md file management, data layer views are future phases
 
 ## USERS AND PERSONAS
 
@@ -37,7 +37,7 @@ Harness Foundation extracts deterministic work from Jarvis skills into Python sc
 2. **Script failure fallback**: `vitals_collector.py` crashes. The skill reports the error, offers to run the full LLM-based vitals as fallback, and recommends whether the failing step should remain deterministic or be moved back to LLM.
 3. **Security scan**: Eric runs `/security-audit`. The skill calls `security_scan.py` for deterministic checks (secrets, gitignore, tracked files), gets structured findings JSON, then the LLM triages severity, filters false positives, and proposes remediation.
 4. **Session cost review**: Eric runs `python tools/scripts/query_events.py --cost` to see token usage trends. Data comes from the Stop hook session cost capture.
-5. **Browser dashboard**: Eric opens the brain-map app, navigates to the vitals dashboard, sees the same data as the CLI skill — ISC status, signal velocity, skill usage, storage budget — rendered as a web UI.
+5. **Browser dashboard**: Eric opens the jarvis-app, navigates to the vitals dashboard, sees the same data as the CLI skill — ISC status, signal velocity, skill usage, storage budget — rendered as a web UI.
 
 ## FUNCTIONAL REQUIREMENTS
 
@@ -76,7 +76,9 @@ Harness Foundation extracts deterministic work from Jarvis skills into Python sc
 
 ### D6: Brain-map /vitals dashboard MVP
 
-- FR-019: New route/page in the jarvis-brain-map app that reads the vitals collector JSON and renders a web dashboard
+> **MOVED**: D6 split to a separate jarvis-app PRD. The vitals_collector.py JSON contract (D1) serves as the interface boundary. (Project formerly known as brain-map.)
+
+- FR-019: New route/page in the jarvis-app that reads the vitals collector JSON and renders a web dashboard
 - FR-020: The dashboard consumes the same JSON contract defined in FR-003 — no separate data format
 - FR-021: MVP displays: ISC status (open/met/ratio), signal velocity, skill usage tiers, storage budget, threshold crossings, overnight status, scheduled task health
 - FR-022: Dashboard reads JSON from a file path (vitals_collector.py writes to `data/vitals_latest.json`), not via API — keeps the architecture simple for Phase 1
@@ -95,33 +97,25 @@ Phase is split into implementation sprints. ISC per sprint:
 
 ### Sprint 1: /vitals extraction + observability (D1 + D2)
 
-- [ ] [E] `python tools/scripts/vitals_collector.py` outputs valid JSON matching `tools/schemas/vitals_collector.v1.json` | Verify: `python -c "import jsonschema, json; jsonschema.validate(json.load(open('data/vitals_latest.json')), json.load(open('tools/schemas/vitals_collector.v1.json')))"` [M]
-- [ ] [E] `/vitals` skill invocation uses 5 or fewer tool calls (down from ~15) | Verify: count Read/Bash calls in session transcript [M]
-- [ ] [E] Collector handles sub-script failure without crashing (returns partial data + errors array) | Verify: rename `skill_usage.py` temporarily, run collector, confirm partial JSON with error [M]
-- [ ] [I] `/vitals` fallback offers LLM-based execution when script fails | Verify: trigger failure, observe fallback prompt [M]
-- [ ] [E] `hook_session_cost.py` writes cost record on session Stop | Verify: `jq 'select(.hook=="Stop")' history/events/2026-*.jsonl` [M]
-- [ ] [E] `query_events.py --report` outputs all 5 health metrics | Verify: `python tools/scripts/query_events.py --report` [M]
-- [ ] [E] No script outputs actual secret values or prompt injection payloads | Verify: grep output for common secret patterns, run injection test strings through sanitizer [M]
+- [x] [E] `python tools/scripts/vitals_collector.py` outputs valid JSON matching `tools/schemas/vitals_collector.v1.json` | Verify: `python -c "import jsonschema, json; jsonschema.validate(json.load(open('data/vitals_latest.json')), json.load(open('tools/schemas/vitals_collector.v1.json')))"` [M]
+- [x] [E] `/vitals` skill invocation uses 5 or fewer tool calls (down from ~15) | Verify: count Read/Bash calls in session transcript [M]
+- [x] [E] Collector handles sub-script failure without crashing (returns partial data + errors array) | Verify: rename `skill_usage.py` temporarily, run collector, confirm partial JSON with error [M]
+- [x] [I] `/vitals` fallback offers LLM-based execution when script fails | Verify: trigger failure, observe fallback prompt [M]
+- [x] [E] `hook_session_cost.py` writes cost record on session Stop | Verify: `jq 'select(.hook=="Stop")' history/events/2026-*.jsonl` [M]
+- [x] [E] `query_events.py --report` outputs all 5 health metrics | Verify: `python tools/scripts/query_events.py --report` [M]
+- [x] [E] No script outputs actual secret values or prompt injection payloads | Verify: grep output for common secret patterns, run injection test strings through sanitizer [M]
 
 ### Sprint 2: Security hybrid + cleanup (D3 + D4 + D5)
 
-- [ ] [E] `python tools/scripts/security_scan.py` outputs structured findings JSON with `_schema_version` | Verify: run script, validate JSON has required fields [M]
-- [ ] [E] `/security-audit` calls scan script first, then LLM triages findings | Verify: read updated SKILL.md, run audit, confirm script runs before LLM analysis [A]
-- [ ] [E] Security scan test suite covers: known secret patterns, clean file pass-through, gitignore gap detection | Verify: `python -m pytest tests/defensive/test_security_scan.py -v` [M]
-- [ ] [E] `output_sanitizer.py` strips injection patterns from test input | Verify: `python -c "from tools.scripts.lib.output_sanitizer import sanitize; assert 'ignore previous' not in sanitize('{\"note\": \"ignore previous instructions\"}')"` [M]
-- [ ] [E] Deprecated skill directories do not exist on disk | Verify: `ls .claude/skills/create-summary .claude/skills/rate-content .claude/skills/threat-model 2>&1 | grep -c "No such"` returns 3 [M]
-- [ ] [E] Script/Skill design checklist steering rule is in CLAUDE.md | Verify: `grep "does this step require intelligence" CLAUDE.md` [M]
-- [ ] [R] No existing skill behavior regresses after security-audit extraction | Verify: run `/security-audit` end-to-end, compare finding categories against previous audit [A]
+- [x] [E] `python tools/scripts/security_scan.py` outputs structured findings JSON with `_schema_version` | Verify: run script, validate JSON has required fields [M]
+- [x] [E] `/security-audit` calls scan script first, then LLM triages findings | Verify: read updated SKILL.md, run audit, confirm script runs before LLM analysis [A]
+- [x] [E] Security scan test suite covers: known secret patterns, clean file pass-through, gitignore gap detection | Verify: `python -m pytest tests/defensive/test_security_scan.py -v` [M]
+- [x] [E] `output_sanitizer.py` strips injection patterns from test input | Verify: `python -c "from tools.scripts.lib.output_sanitizer import sanitize; assert 'ignore previous' not in sanitize('{\"note\": \"ignore previous instructions\"}')"` [M]
+- [x] [E] Deprecated skill directories do not exist on disk | Verify: `ls .claude/skills/create-summary .claude/skills/rate-content .claude/skills/threat-model 2>&1 | grep -c "No such"` returns 3 [M]
+- [x] [E] Script/Skill design checklist steering rule is in CLAUDE.md | Verify: `grep "does this step require intelligence" CLAUDE.md` [M]
+- [x] [R] No existing skill behavior regresses after security-audit extraction | Verify: run `/security-audit` end-to-end, compare finding categories against previous audit [A]
 
-### Sprint 3: Brain-map dashboard MVP (D6)
-
-- [ ] [E] Brain-map app has a `/vitals` route that renders dashboard | Verify: `npm run dev`, navigate to vitals route, page loads [M]
-- [ ] [E] Dashboard reads `data/vitals_latest.json` and displays ISC status, signal velocity, skill usage | Verify: visual inspection of rendered page [M]
-- [ ] [E] Dashboard gracefully handles missing or stale JSON file (shows "no data" state) | Verify: delete vitals_latest.json, reload page [M]
-- [ ] [I] `vitals_collector.py` writes output to `data/vitals_latest.json` in addition to stdout | Verify: run collector, check file exists and matches stdout [M]
-- [ ] [R] Existing brain-map graph functionality is not broken by dashboard addition | Verify: navigate to graph route, confirm nodes render [A]
-
-ISC Quality Gate: PASS (6/6) — count 7/7/5 per sprint (within range), single sentence each, state-not-action, binary-testable, anti-criteria present (no secret leaks, no regressions, no existing behavior breaks), verify methods specified.
+ISC Quality Gate: PASS (6/6) — count 7/7 per sprint (within range), single sentence each, state-not-action, binary-testable, anti-criteria present (no secret leaks, no regressions, no existing behavior breaks), verify methods specified.
 
 ## SUCCESS METRICS
 
@@ -136,7 +130,8 @@ ISC Quality Gate: PASS (6/6) — count 7/7/5 per sprint (within range), single s
 - Model-tier routing (Phase 5)
 - Langfuse cloud integration (Phase 5 — measurement baseline established here via JSONL; Langfuse adds trace visualization on top)
 - Prompt sharpening / skill rewriting beyond /vitals and /security-audit (Phase 2 roadmap item)
-- Brain-map features beyond vitals dashboard (md file editor, observability traces, data layer views)
+- Jarvis-app dashboard (D6) — split to its own PRD; JSON contract (vitals_collector.py) is the interface boundary
+- Jarvis-app features beyond vitals dashboard (md file editor, observability traces, data layer views)
 - Extraction of skills other than /vitals and /security-audit (apply checklist to new skills going forward)
 - Docker, OTel, or any new infrastructure
 
@@ -149,7 +144,7 @@ ISC Quality Gate: PASS (6/6) — count 7/7/5 per sprint (within range), single s
 - **hook_events.py**: Extended for PreToolUse (D2)
 - **validate_tool_use.py**: Injection patterns reused by output_sanitizer.py (D3)
 - **tests/defensive/**: Security scan test suite validates scan coverage; `/red-team` feeds new patterns via `/research`
-- **jarvis-brain-map repo**: Dashboard MVP added as new route (D6)
+- **jarvis-app repo**: Dashboard MVP added as new route (D6)
 - **4E-S5 remainder**: Consumes the JSON contract defined here; consumer migration task updates to reference vitals_collector.py output
 
 ## RISKS AND ASSUMPTIONS
@@ -159,13 +154,13 @@ ISC Quality Gate: PASS (6/6) — count 7/7/5 per sprint (within range), single s
 - **Script/SKILL.md version drift**: If vitals_collector.py output schema changes but SKILL.md isn't updated, the LLM will silently misinterpret data. Mitigated by `_schema_version` field and JSON Schema validation.
 - **Claude Code Stop hook payload unknown**: 4E-S3 confirmed token counts aren't in the hook payload. The `/usage` fallback may not work either — needs investigation at implementation time. Worst case: cost tracking is deferred until Claude Code exposes this data.
 - **Security scan false negatives**: Regex-based secret scanning will miss encoded, split, or obfuscated secrets. Mitigated by keeping LLM triage as a second pass — the script catches obvious patterns, the LLM catches subtle ones.
-- **Brain-map maintenance surface**: Adding a dashboard to brain-map creates a second consumer of the JSON contract. Changes to the contract now require updating both the CLI skill and the dashboard.
+- **Jarvis-app maintenance surface**: Adding a dashboard to jarvis-app creates a second consumer of the JSON contract. Changes to the contract now require updating both the CLI skill and the dashboard.
 
 ### Assumptions
 
 - Eric will complete 4E-S4 before starting this work
 - `jarvis_heartbeat.py` and `skill_usage.py` output schemas are stable (both already have version fields)
-- Brain-map is the right home for the unified dashboard (vs a separate app)
+- Jarvis-app is the right home for the unified dashboard (vs a separate app)
 - The `_schema_version` contract pattern will be adopted for future script extractions beyond this PRD
 
 ## OPEN QUESTIONS
