@@ -194,14 +194,14 @@ CREATE TABLE IF NOT EXISTS schema_version (
 - [x] Schema version check at connection time rejects version mismatches | Verify: test with wrong version number [E][M]
 
 ### Step 3: Wire Producers
-- [ ] `/synthesize-signals` writes lineage rows to DB after processing | Verify: run synthesis, check `SELECT COUNT(*) FROM lineage` increased [E][M]
-- [ ] Heartbeat writes `producer_runs` row on each run | Verify: `SELECT * FROM producer_runs WHERE producer='heartbeat' ORDER BY run_date DESC LIMIT 1` [E][M]
-- [ ] Overnight runner writes `producer_runs` row on completion | Verify: same query with producer='overnight' [E][M]
-- [ ] Autoresearch writes `producer_runs` row on completion | Verify: same query with producer='autoresearch' [E][M]
-- [ ] Morning feed writes `producer_runs` row on completion | Verify: same query with producer='morning_feed' [E][M]
-- [ ] `producer_health` heartbeat collector alerts on stale/failed producer runs | Verify: mock a failed run, confirm WARN signal generated [E][M]
-- [ ] Stop hook writes `session_costs` row with token counts (if available from Claude Code) | Verify: end a session, check `SELECT * FROM session_costs ORDER BY id DESC LIMIT 1` [I][M]
-- [ ] `hook_events.py` detects and records skill invocations to `skill_usage` table | Verify: invoke a skill, check `SELECT * FROM skill_usage ORDER BY id DESC LIMIT 1` [I][M]
+- [x] `/synthesize-signals` writes lineage rows to DB after processing | Verify: run synthesis, check `SELECT COUNT(*) FROM lineage` increased [E][M]
+- [x] Heartbeat writes `producer_runs` row on each run | Verify: `SELECT * FROM producer_runs WHERE producer='heartbeat' ORDER BY run_date DESC LIMIT 1` [E][M]
+- [x] Overnight runner writes `producer_runs` row on completion | Verify: same query with producer='overnight' [E][M]
+- [x] Autoresearch writes `producer_runs` row on completion | Verify: same query with producer='autoresearch' [E][M]
+- [x] Morning feed writes `producer_runs` row on completion | Verify: same query with producer='morning_feed' [E][M]
+- [x] `producer_health` heartbeat collector alerts on stale/failed producer runs | Verify: mock a failed run, confirm WARN signal generated [E][M]
+- [x] Stop hook writes `session_costs` row with token counts (if available from Claude Code) | Verify: end a session, check `SELECT * FROM session_costs ORDER BY id DESC LIMIT 1` [I][M]
+- [x] `hook_events.py` detects and records skill invocations to `skill_usage` table | Verify: invoke a skill, check `SELECT * FROM skill_usage ORDER BY id DESC LIMIT 1` [I][M]
 
 ### Step 4: Retention
 - [ ] Processed signals older than 90 days are automatically deleted | Verify: create a backdated test signal, run retention, confirm deleted [E][M]

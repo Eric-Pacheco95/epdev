@@ -456,6 +456,31 @@ def _log_auth_failure(root_dir: Path, service: str, error: str) -> None:
         pass
 
 
+# ── producer_health ──────────────────────────────────────────────────
+
+def collect_producer_health(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Check producer_runs manifest table for stale or failed producers."""
+    name = cfg.get("name", "producer_health")
+    max_age_hours = cfg.get("max_age_hours", 26)
+    try:
+        sys.path.insert(0, str(root_dir))
+        from tools.scripts.manifest_db import query_producer_health
+        issues = query_producer_health(max_age_hours=max_age_hours)
+        if not issues:
+            return _result(name, 0, "count", "all producers healthy")
+        detail_parts = []
+        for iss in issues:
+            detail_parts.append(
+                "%s: %s (%.0fh ago, last: %s)" % (
+                    iss["producer"], iss["issue"],
+                    iss["hours_ago"], iss["last_status"]
+                )
+            )
+        return _result(name, len(issues), "count", "; ".join(detail_parts))
+    except Exception as exc:
+        return _result(name, None, "count", "producer_health error: %s" % exc)
+
+
 # ── Dispatcher ──────────────────────────────────────────────────────
 
 COLLECTOR_TYPES = {
@@ -472,6 +497,7 @@ COLLECTOR_TYPES = {
     "hook_output_size": collect_hook_output_size,
     "scheduled_tasks": collect_scheduled_tasks,
     "auth_health": collect_auth_health,
+    "producer_health": collect_producer_health,
 }
 
 

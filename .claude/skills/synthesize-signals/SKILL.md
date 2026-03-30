@@ -34,7 +34,7 @@ LEARN
 ## Output Contract
 - Input: unprocessed signals in memory/learning/signals/ (auto-read)
 - Output: synthesis document + stdout summary (themes found, actions proposed)
-- Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends signal_lineage.jsonl
+- Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends data/signal_lineage.jsonl, mirrors lineage to SQLite manifest
 
 # STEPS
 
@@ -61,7 +61,8 @@ LEARN
 - Review existing synthesis themes from prior runs for **confidence decay**: any theme not revalidated by new signals within 90 days should be downgraded one maturity level. Themes that decay below candidate become archived.
 - Write the synthesis document to `memory/learning/synthesis/`
 - Archive processed signals: move them to `memory/learning/signals/processed/` (create if needed)
-- Append lineage records to `memory/learning/signal_lineage.jsonl` — one JSON line per consumed signal: `{"signal": "filename.md", "synthesis": "YYYY-MM-DD_synthesis.md", "date": "YYYY-MM-DD", "themes": ["theme1", "theme2"]}`. This enables reverse-lookup (signal -> synthesis) without a separate manifest system.
+- Append lineage records to `data/signal_lineage.jsonl` — one JSON line per consumed signal: `{"signal_filename": "memory/learning/signals/processed/filename.md", "synthesis_filename": "YYYY-MM-DD_synthesis.md", "date": "YYYY-MM-DD"}`. Use relative paths from repo root for signal_filename.
+- Mirror lineage records to SQLite by running: `python tools/scripts/sync_lineage.py` after appending to the JSONL file. This syncs all JSONL rows to the DB (idempotent, safe to re-run). If this fails, the JSONL file is still the source of truth.
 - Update `memory/learning/_signal_meta.json` with new counts
 
 # CONFIDENCE MODEL
@@ -166,7 +167,7 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 - **side-effects:**
   - moves processed signals to memory/learning/signals/processed/
   - updates memory/learning/_signal_meta.json
-  - appends to memory/learning/signal_lineage.jsonl
+  - appends to data/signal_lineage.jsonl + mirrors to SQLite lineage table
 
 ## Errors
 - **insufficient-signals:** fewer than 3 unprocessed signals

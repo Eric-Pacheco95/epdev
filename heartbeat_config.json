@@ -151,6 +151,13 @@
       "checks": ["slack"],
       "thresholds": { "crit_above": 1 },
       "isc_ref": "PRD-P4C:ISC Auth failures escalate to #general"
+    },
+    {
+      "name": "producer_health",
+      "type": "producer_health",
+      "max_age_hours": 26,
+      "thresholds": { "warn_above": 1, "crit_above": 3 },
+      "isc_ref": "PRD-P4E:ISC-S3 producer_health alerts on stale/failed runs"
     }
   ],
   "alert_routing": {

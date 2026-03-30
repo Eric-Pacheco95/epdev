@@ -60,9 +60,11 @@ def main() -> None:
 
     # Try to read stop context from stdin (Claude Code provides session info)
     stop_reason = "session-end"
+    session_id = now.strftime("%Y%m%d%H%M%S")
     try:
         data = json.load(sys.stdin)
         stop_reason = data.get("stop_reason", "end_turn") or "end_turn"
+        session_id = data.get("session_id", session_id)
     except (json.JSONDecodeError, EOFError):
         pass
 
@@ -105,6 +107,18 @@ def main() -> None:
             session_minutes = (now - oldest_signal_today).total_seconds() / 60
     except Exception:
         session_minutes = 0
+
+    # Write session_costs row to manifest DB
+    try:
+        from tools.scripts.manifest_db import write_session_cost
+        write_session_cost(
+            session_id=session_id,
+            date=now.strftime("%Y-%m-%d"),
+            session_type="interactive",
+            duration_seconds=session_minutes * 60 if session_minutes > 0 else None,
+        )
+    except Exception:
+        pass  # graceful fallback
 
     if session_minutes >= 10:
         ts = now.strftime("%Y-%m-%d %H:%M UTC")

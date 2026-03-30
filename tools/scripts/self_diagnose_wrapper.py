@@ -316,6 +316,7 @@ def main() -> int:
 
     # 1. Run the command
     print("self-diagnose: running %s ..." % runner_name)
+    run_start = datetime.now()
     try:
         result = subprocess.run(
             command,
@@ -345,6 +346,26 @@ def main() -> int:
         exit_code = 127  # command not found
         combined_output = "Command not found: %s" % " ".join(command)
         print(combined_output, file=sys.stderr)
+
+    # 1b. Write producer_runs row to manifest DB
+    run_end = datetime.now()
+    run_date = run_start.strftime("%Y-%m-%d")
+    started_iso = run_start.strftime("%Y-%m-%dT%H:%M:%S")
+    completed_iso = run_end.strftime("%Y-%m-%dT%H:%M:%S")
+    run_status = "success" if exit_code == 0 else "failure"
+    try:
+        from tools.scripts.manifest_db import write_producer_run
+        write_producer_run(
+            producer=runner_name,
+            run_date=run_date,
+            started_at=started_iso,
+            completed_at=completed_iso,
+            duration_seconds=(run_end - run_start).total_seconds(),
+            status=run_status,
+            exit_code=exit_code,
+        )
+    except Exception:
+        pass  # graceful fallback -- DB write is non-critical
 
     # 2. Detect failure
     if not detect_failure(exit_code, combined_output):
