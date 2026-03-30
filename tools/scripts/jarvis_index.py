@@ -273,6 +273,7 @@ def cmd_build(args: argparse.Namespace) -> None:
     conn.commit()
 
     total = _do_index(conn)
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     conn.close()
     print(f"Index built: {total} documents indexed")
     print(f"Database: {_DB_PATH}")
@@ -282,6 +283,7 @@ def cmd_update(args: argparse.Namespace) -> None:
     """Incremental update -- only new/modified files."""
     conn = _get_conn()
     total = _do_index(conn)
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     conn.close()
     print(f"Index updated: {total} new documents indexed")
 

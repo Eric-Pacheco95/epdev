@@ -74,10 +74,6 @@ tmp/
 *.tmp
 *.bak
 
-# Session memory (ephemeral, not committed)
-memory/session/*
-!memory/session/.gitkeep
-
 # ------------------------------------------------------------------------------
 # Personal memory content — blank-slate template only; users populate their own
 # ------------------------------------------------------------------------------

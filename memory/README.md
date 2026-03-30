@@ -1,13 +1,8 @@
 # Memory System
 
-3-tier persistent memory modeled on PAI's hot/warm/cold architecture.
+2-tier persistent memory modeled on PAI's warm/cold architecture. Session transcripts are indexed directly from Claude Code's native JSONL files (`~/.claude/projects/`) via FTS5.
 
 ## Tiers
-
-### Session (Hot) — `memory/session/`
-- Current session transcripts and context
-- Cleared or archived at session end
-- Format: `YYYY-MM-DD_HH-MM_session.md`
 
 ### Work (Warm) — `memory/work/`
 - Active project state, PRDs, task tracking
