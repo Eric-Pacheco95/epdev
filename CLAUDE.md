@@ -87,7 +87,7 @@ Load documentation on-demand, not upfront:
 - Mark tasklist items `[x]` only after the deliverable is validated in its target context — if built but unvalidated, leave unchecked and add "BUILT — awaiting validation: [specific test]"; update checkboxes immediately upon validation; the tasklist is Eric's primary trust tool
 - VERIFY phase must include `/review-code` for any script that reads external input (hook payloads, API responses, file content, stdin)
 - Phase gate criteria must include a verification command or file-existence check, not just self-reported status
-- Before any hard-to-reverse decision (architecture, tool adoption, 3+ implementation paths), run `/architecture-review` — it launches first-principles + fallacy detection + optional red-team in parallel; ADHD build velocity defaults to the option with the most energy, not the best fit
+- Before any hard-to-reverse decision (architecture, tool adoption, 3+ implementation paths), run `/architecture-review` — it launches first-principles + fallacy detection + red-team in parallel; ADHD build velocity defaults to the option with the most energy, not the best fit
 - After completing a build phase (all ISCs met), check `git status` for uncommitted work and prompt Eric to commit — phrased as a prompt, not a gate, since Eric sometimes intentionally batches commits
 - During `/implement-prd` runs with 4+ ISC items, commit after every 3-4 completed items — context compaction during long sessions can lose file writes; mid-build commits create recovery points
 - After completing a multi-phase build sprint (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifact existence, verify file paths match actual locations, verify counts and dates are current
