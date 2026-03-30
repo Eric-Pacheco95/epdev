@@ -75,6 +75,32 @@ THINK
 - Do not give warnings or self-referential notes; only output the seven sections.
 - Do not start consecutive bullets with the same first three words.
 
+# CONTRACT
+
+## Input
+- **required:** problem or question to decompose
+  - type: text
+  - example: `Should I build a custom trading bot or use an existing platform?`
+
+## Output
+- **produces:** structured first-principles analysis
+  - format: structured-markdown
+  - sections: PROBLEM, KNOWN AND UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION
+  - destination: stdout
+- **side-effects:** none (pure analysis)
+
+## Errors
+- **input-too-vague:** single word or no decomposable problem
+  - recover: provide a specific problem, decision, or question with enough context to identify assumptions
+
+# SKILL CHAIN
+
+- **Follows:** `/research` (provides context to decompose)
+- **Precedes:** `/red-team` (stress-test conclusions), `/create-prd` (turn conclusions into requirements)
+- **Composes:** (leaf -- pure analysis, no sub-skills)
+- **Full chain:** `/research` > `/first-principles` > `/red-team` > `/create-prd`
+- **Escalate to:** `/architecture-review` for complex multi-angle decisions (runs first-principles + fallacy detection + red-team in parallel)
+
 # INPUT
 
 INPUT:

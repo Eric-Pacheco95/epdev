@@ -53,6 +53,15 @@ VERIFY
 ## Step 1: ESTABLISH CONTEXT
 
 - Establish context: language, framework, entry points, and what the code is supposed to do
+
+### Step 1.5: FORMAT AND ENCODING CHECK
+
+- For Python scripts with print/logging: verify all string literals are ASCII-safe (no em-dashes, box-drawing chars, special quotes) — Windows cp1252 encoding causes hard UnicodeEncodeError on these characters
+- For JSON-producing code: verify serialization paths use `json.dumps()` or equivalent (not string concatenation) — malformed JSON causes silent downstream parse failures
+- For Markdown-producing code (Slack posts, proposals, reports): verify heading levels, link syntax, and code fence closure — broken markdown renders incorrectly in target contexts
+- For HTML-producing code: verify well-formedness (closed tags, escaped entities) — only when the codebase produces HTML output
+- Tag any format/encoding issue as severity "Medium" in the RELIABILITY AND CORRECTNESS section with a "FORMAT:" prefix
+
 - Trace data flow from untrusted inputs to sinks (queries, shells, file paths, HTML, deserialization, dynamic code)
 - Check authentication and session handling, authorization checks, and least-privilege access to resources
 - Look for secret and credential handling: hardcoded keys, logging of sensitive data, weak crypto or missing TLS where relevant

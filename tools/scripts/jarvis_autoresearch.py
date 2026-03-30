@@ -174,8 +174,11 @@ def call_claude(prompt: str, system: str = "") -> str:
         full_prompt = prompt
 
     try:
+        # Pass prompt via stdin ("-") to avoid Windows command-line length
+        # limits (WinError 206).  The overnight_runner uses the same pattern.
         result = subprocess.run(
-            [CLAUDE_BIN, "-p", full_prompt],
+            [CLAUDE_BIN, "-p", "-"],
+            input=full_prompt,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -188,7 +191,7 @@ def call_claude(prompt: str, system: str = "") -> str:
             return "(claude -p error: %s)" % result.stderr.strip()[:200]
         return "(claude -p returned empty response)"
     except FileNotFoundError:
-        return "(claude CLI not found -- ensure it is on PATH)"
+        return "(claude CLI not found at %s -- ensure it exists)" % CLAUDE_BIN
     except subprocess.TimeoutExpired:
         return "(claude -p timed out after 300s)"
     except Exception as exc:
@@ -250,6 +253,13 @@ For each proposed TELOS update:
 - Evidence: <signal/synthesis citation>
 - Priority: HIGH | MEDIUM | LOW
 
+DEDUP RULES (mandatory before creating any proposal):
+- Check the CURRENT TASKS section below. Do NOT propose changes that duplicate
+  existing unchecked tasklist items or open validations.
+- If a proposal overlaps with an existing task, skip it or reference the task
+  instead of creating a duplicate.
+- Generating zero proposals is a valid outcome. Silence means the system is healthy.
+
 Keep analysis grounded in evidence. Do not speculate beyond what signals show.
 Use ASCII only (no Unicode dashes, arrows, or box characters)."""
 
@@ -294,6 +304,19 @@ Use ASCII only (no Unicode dashes, arrows, or box characters)."""
     parts.append("- Raw signals (7d): %d" % scope["raw_signals_7d"])
     parts.append("- Failures (14d): %d" % scope["failures_14d"])
     parts.append("- Sessions (7d): %d" % scope["sessions_7d"])
+
+    # Include current tasklist for dedup
+    tasklist_path = REPO_ROOT / "orchestration" / "tasklist.md"
+    if tasklist_path.is_file():
+        tasklist_content = tasklist_path.read_text(encoding="utf-8")
+        # Truncate to unchecked items only (keep it focused)
+        unchecked = [
+            line for line in tasklist_content.splitlines()
+            if "[ ]" in line or ">>> " in line
+        ]
+        if unchecked:
+            parts.append("\n## CURRENT TASKS (for dedup -- do not duplicate)\n")
+            parts.append("\n".join(unchecked[:30]))  # cap at 30 items
 
     parts.append("\nAnalyze the gap between TELOS identity and signal evidence.")
     parts.append("Follow the output format exactly.")

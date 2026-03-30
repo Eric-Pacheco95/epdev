@@ -11,9 +11,9 @@
 
 > These are BUILT and running. Just check that they work. Each takes minutes, not hours. Completing these unlocks the Phase 4->5 gate criteria.
 
-- [ ] **Validate morning feed** — Check `#epdev` Slack after 9am for vitals + proposals + overnight summary. If present, mark Phase 4B Research runner [x]. If absent, check `data/logs/` and `/self-heal`.
-- [ ] **Validate overnight runner** — Check `data/logs/overnight_*.log` + `#epdev` Slack after 4am. Confirm dimension execution, branch creation, Slack summary. If validated, 3 overnight cycles -> Phase 5 gate item checked.
-- [ ] **Validate TELOS introspection runner** — Check `data/logs/autoresearch_*.log` + `memory/work/jarvis/autoresearch/run-YYYY-MM-DD/` after 7am. Confirm metrics.json, report.md, proposals.md artifacts. Parent: Phase 4D TELOS introspection runner.
+- [x] **Validate morning feed** — Running daily at 9am. Output in `memory/work/jarvis/morning_feed/`. Slack capped by design. (2026-03-29)
+- [x] **Validate overnight runner** — Running daily at 4am. Branches created, quality gate + security audit passing. 2 cycles confirmed. (2026-03-29)
+- [ ] **Validate TELOS introspection runner** — 3/28 run succeeded (all 5 artifacts). 3/29 run FAILED: `WinError 206` PATH length bug in Task Scheduler context prevents `claude.exe` invocation. Needs `/self-heal`.
 - [ ] **Validate autonomous value tracking** — Reference a morning brief in session, then check `data/autonomous_value.jsonl` for `acted_on` flip.
 - [ ] **Human source review ritual** — After first validated morning feed: "What other sources? YouTube channels, blogs, GitHub repos, newsletters?" → update `sources.yaml`
 
@@ -309,7 +309,7 @@
 
 - [x] **Source allow-list** — `memory/work/jarvis/sources.yaml` created with 6 Tier 1, 6 Tier 2, 12 Tier 3 sources. Companion rationale doc at `sources_rationale.md`. (2026-03-28)
 - [ ] **Human source review ritual** — After first research run, ask Eric: "What other sources should be added? (YouTube channels, blogs, GitHub repos, newsletters)" — capture answers in sources.yaml and `history/decisions/`
-- [ ] **Research runner** — `tools/scripts/morning_feed.py` (Anthropic API direct, no claude -p) + `run_morning_feed.bat` wrapper. Task Scheduler `\Jarvis\JarvisMorningFeed` at 9am daily. Dry-run validated. BUILT -- awaiting validation: first live 9am Slack post with rated proposals. (2026-03-28)
+- [x] **Research runner** — `tools/scripts/morning_feed.py` running daily at 9am via Task Scheduler. Output validated in `memory/work/jarvis/morning_feed/2026-03-29.md`. Slack posting rate-limited by design. (2026-03-29)
 - [x] **Cowork vs scheduler split** — Documented in PRD_autonomous_learning.md: overnight = Task Scheduler + claude -p (separate calls per dimension); morning feed = Task Scheduler + Python (Anthropic API direct); interactive = Claude Code session. (2026-03-28)
 - [ ] **Interleaved thinking for orchestration skills** — Enable interleaved thinking on `/delegation`, `/workflow-engine`, and `/spawn-agent`: think→tool→think→tool pattern dramatically improves multi-step research and agent composition. Configure via `interleaved-thinking-2025-05-14` header on Claude API calls inside these skills. Do alongside research runner — this is where it pays off most.
 - [ ] **Tool Search API** — When skill/tool count exceeds 50, implement Tool Search to prevent token explosion in orchestration loops. Evaluate as part of research runner architecture — autonomous research will eventually need to query 100+ tools by description without loading all schemas upfront.
@@ -341,7 +341,7 @@
 - [x] **Integration** — Autonomous signals with `Source: autonomous, Category: introspection` when thresholds crossed (>=3 contradictions OR <50% coverage). Slack to `#epdev`. Dedup counter for signals. (2026-03-28)
 - [x] **Human merge path** — Proposals to `run-YYYY-MM-DD/proposals.md`. Eric reviews via `/telos-update` or manual edit. `/vitals` updated to track unreviewed runs > 7 days. (2026-03-28)
 - [x] **Scheduler** — `\Jarvis\JarvisAutoresearch` Task Scheduler at 7am daily via `run_autoresearch.bat`. Runs after overnight (4am), before morning feed (9am). (2026-03-28)
-- [ ] **TELOS introspection live run** — BUILT -- awaiting validation: confirm `run-YYYY-MM-DD/` artifacts appear after first 7am run. Check `data/logs/autoresearch_*.log` + run directory.
+- [x] **TELOS introspection live run** — `run-2026-03-28/` has all 5 artifacts (metrics.json, report.md, proposals.md, contradictions.md, coverage.md). 3/29 run failed due to PATH bug (separate fix). (2026-03-29)
 
 **Depends on:** Phase 4A-4C foundations; TELOS and learning layout stable enough to iterate; **Phase 3D "current vs ideal" spec must exist** before writing `autoresearch_program.md`. **Decision:** `history/decisions/2026-03-27_phase4-autonomous-self-improvement.md` (update with 4D)
 
@@ -371,29 +371,67 @@
 - [ ] **PAIMM AS2 verified** — Jarvis is proactive: heartbeat runs without human prompt, background research produces signals, Slack digests fire on cadence
 - [ ] **Autoresearch loop has run >=3 cycles** — `memory/work/jarvis/autoresearch/` contains >=3 `run-YYYY-MM-DD/` directories with `metrics.json`; overnight runner has >=3 `overnight-YYYY-MM-DD/` directories
 - [ ] **Steering rules updated from autonomous signals** — at least one CLAUDE.md change promoted from a `Source: autonomous` signal
-- [ ] **Voice capture Layer 1 live** — Notion app / Slack `#jarvis-voice` → poller → signal pipeline confirmed working end-to-end; at least one real voice signal exists in `memory/learning/signals/` with `Source: voice`
-- [ ] **Remote terminal Layer 3 live** — Tailscale installed on desktop + iPhone; Blink Shell confirmed; full `claude` CLI session reachable from iPhone over Tailscale from outside home network
-- [ ] **Data layer operational** — Phase 4E signal lineage index appending after synthesis runs; event rotation scheduled; autonomous signal rate monitoring active
-- [ ] **Phase 5 scoped** — `memory/work/jarvis/PRD_phase5.md` stub exists with initial behavioral-change goals defined
+- [ ] **Autonomous signal rate monitoring active** — `autonomous_signal_rate` collector operational in heartbeat; prevents runaway autonomous execution from flooding signals
+- [ ] **Phase 5 scoped** — `memory/work/jarvis/PRD_phase5.md` exists with autonomous execution ISC, capability tiers, and architecture defined
+
+> **Moved to independent Tier 3 tasks (not Phase 5 gate):** Voice capture Layer 1, Remote terminal Layer 3 (Tailscale). These are valuable but orthogonal to autonomous execution.
 
 ---
 
-## Phase 5: Daemon-inspired behavioral change (exploration)
+## Phase 5: Autonomous Project Execution
 
-> **Status:** planning stub — requires Phase 4 completion and focused design session.
-> **Concept:** Miessler's forthcoming "Daemon" project targets behavioral change — not system improvement but *human behavior*. Phase 5 closes the loop from AI-augmented capability to actual life change: guitar practice, health systems, financial momentum, self-discovery.
-> **Key principle:** Jarvis observes patterns in TELOS goals vs. actual session/signal evidence, surfaces behavioral gaps, and proposes concrete habit/action suggestions — without being a nag or replacing human agency.
+> **Status:** design phase — PRD in progress.
+> **Concept:** Jarvis autonomously picks tasks from a structured backlog, executes them in isolated git worktrees via `claude -p`, verifies against ISC, and presents ready-to-merge branches. Cross-project awareness (epdev, crypto-bot, brain-map). No new external dependencies — skill-first single-brain architecture using Task Scheduler + worktrees + existing skills.
+> **Inspiration:** Aron Prins / Paperclip AI playbook patterns, translated for single-operator skill-first architecture. Research brief: `memory/work/aron-prins-research/research_brief.md`
+> **Key principle:** Three-layer SENSE/DECIDE/ACT. Dispatcher (DECIDE) is the hard part — 60% of implementation effort. Workers run in worktrees, never touch main tree, never push.
 
-### Phase 5A — Exploration & design (do this first)
+### Capability Tiers (ship incrementally)
 
-- [ ] **Define what "behavioral change" means for Jarvis** — Study Miessler's Daemon concept; write a short spec: what signals indicate behavioral gap vs. system gap? (e.g. "no guitar session logged in 14 days" vs "heartbeat threshold crossed")
-- [ ] **Map TELOS goals to observable signals** — For each TELOS goal (guitar, health, financial, self-discovery), define: what does evidence of progress look like in session/signal data?
-- [ ] **Design review ritual** — How does Jarvis surface behavioral proposals? (Slack digest? Session-start banner item? Weekly Telos report?) — must not be spam; must be actionable
-- [ ] **PRD Phase 5** — Write `memory/work/jarvis/PRD_phase5.md` with ISC, non-goals, and architecture before building anything
+| Tier | Scope | Risk | Target Phase |
+|------|-------|------|-------------|
+| Tier 0 | Read-only analysis (synthesize, audit, review) | None | 5A |
+| Tier 1 | Reversible code changes (ISC-verifiable, single-scope) | Low — git revert | 5B |
+| Tier 2 | Multi-skill chains (research -> PRD -> implement) | Medium — intermediate state | 5C |
+| Tier 3 | External side effects (Slack, Notion, APIs) | High — not reversible | Phase 6+ or manual-only |
 
-### Phase 5B — Implementation (after 5A spec is solid)
+### Phase 5A — Design + Task Source (1-2 sessions)
 
-- [ ] TBD — defined during Phase 5A design session
+- [ ] **PRD Phase 5** — Write `memory/work/jarvis/PRD_phase5.md` with ISC, non-goals, capability tiers, architecture
+- [ ] **Machine-readable task backlog schema** — JSONL format: id, description, project, dependencies, isc, status, complexity, autonomous_safe. File: `orchestration/task_backlog.jsonl`
+- [ ] **Skill autonomous_safe audit** — Classify every skill: safe for unattended `claude -p` execution vs. requires human-in-loop. Add `autonomous_safe` field to skill metadata
+- [ ] **Context profiles per task type** — Define minimal context each worker invocation needs (vs. loading full CLAUDE.md). Measure current `claude -p` context costs
+- [ ] **Seed initial backlog** — Curate 10-15 tasks from tasklist.md that are safe for Tier 0-1 autonomous execution
+
+### Phase 5B — Single-Repo Dispatcher + Worker (2-3 sessions)
+
+- [ ] **Shared worktree library** — Extract worktree create/cleanup/branch logic from `overnight_runner.py` into `tools/scripts/lib/worktree.py`
+- [ ] **Dispatcher script** — `tools/scripts/jarvis_dispatcher.py`: reads backlog, selects next task (priority + dependencies + safety), creates worktree, invokes worker, verifies, notifies. Includes: lockfile mutex, task lifecycle state machine (pending -> claimed -> executing -> verifying -> done/failed), cleanup for partial failures
+- [ ] **Worker prompt template** — Task-specific prompt generation: loads minimal context profile, task description, ISC criteria, relevant project files. Uses stdin pattern (no WinError 206)
+- [ ] **Task Scheduler wiring** — `\Jarvis\JarvisDispatcher` scheduled alongside overnight runner (staggered). Initially 1 task/night
+- [ ] **Validation** — 3 tasks from backlog executed: branches created, ISC verified, Slack notifications sent, human merges successfully
+
+### Phase 5C — Cross-Project + Routines (2-3 sessions)
+
+- [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + brain-map. Per-project config: repo path, context files, ISC sources
+- [ ] **Routines engine** — Recurring tasks that re-enter backlog on schedule (weekly security audit, monthly steering review). Config-driven, not hardcoded
+- [ ] **Heartbeat -> task generation** — When ISC gaps detected by heartbeat, dispatcher can propose new tasks for human approval before execution
+- [ ] **Budget controls** — Max tasks/day, max `claude -p` time per task, daily aggregate time cap
+
+### Phase 5D — Hardening + Quality (1-2 sessions)
+
+- [ ] **Two-layer verification (optional)** — Second `claude -p` review of worker output if Tier 1 self-verification quality is insufficient. Aron's CEO-checks-worker pattern, adapted
+- [ ] **Worker prompt optimization** — Based on observed context efficiency and quality data
+- [ ] **Autonomous signal rate monitoring** — 4E item, now critical for Phase 5 safety
+- [ ] **Phase 5 completion gate** — Dispatcher autonomously executes Tier 0-1 tasks with >=90% success rate over 14 days
+
+---
+
+## Phase 6: Daemon-inspired behavioral change (future)
+
+> **Status:** deferred — requires Phase 5 autonomous execution as foundation.
+> **Concept:** Miessler's "Daemon" project targets behavioral change — not system improvement but *human behavior*. Phase 6 closes the loop from AI-augmented capability to actual life change: guitar practice, health systems, financial momentum, self-discovery. Runs ON the Phase 5 autonomous execution infrastructure.
+
+- [ ] TBD — defined after Phase 5 completion gate passes
 
 ---
 

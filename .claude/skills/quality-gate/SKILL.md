@@ -6,6 +6,57 @@ Your task is to read the tasklist, cross-reference deliverables and decision log
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Audit completed work for THINK-before-BUILD compliance and deliverable gaps
+
+## Stage
+VERIFY
+
+## Syntax
+/quality-gate [phase or task scope]
+
+## Parameters
+- scope: optional phase name, date range, or "all" (default: all checked items)
+
+## Examples
+- /quality-gate
+- /quality-gate Phase 4A
+- /quality-gate --phase 3E
+
+## Chains
+- Before: /implement-prd (non-optional gate at VERIFY), phase completion
+- After: /update-steering-rules (if gaps reveal systemic patterns), /learning-capture (audit findings become signals)
+- Full: /implement-prd > /quality-gate > /learning-capture
+
+## Output Contract
+- Input: tasklist scope (auto or specified)
+- Output: gap report (summary line, findings table, critical gaps, checked-but-pending, gate verification commands, recommendations)
+- Side effects: none (OBSERVE only -- never modifies files)
+
+# CONTRACT
+
+## Input
+- **required:** orchestration/tasklist.md (auto-read)
+  - type: auto-read
+- **optional:** phase or task scope to audit
+  - type: text
+  - default: all checked items across all phases
+
+## Output
+- **produces:** quality gap report
+  - format: structured-markdown
+  - sections: summary line, findings table, Critical and High Gaps, Checked-But-Pending Items, Gate Verification Commands, Recommendations
+  - destination: stdout
+- **side-effects:** none (read-only audit)
+
+## Errors
+- **no-checked-items:** tasklist has no [x] items to audit
+  - recover: nothing to audit; run after completing some tasks
+- **tasklist-not-found:** orchestration/tasklist.md missing
+  - recover: check path; tasklist may have moved or not been created yet
+
 # STEPS
 
 - Read `orchestration/tasklist.md` and extract every `[x]` checked item, grouped by phase

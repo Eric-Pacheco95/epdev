@@ -6,6 +6,36 @@ This is the compound learning loop — raw observations become patterns, pattern
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Distill accumulated signals into themes, patterns, and proposed steering rules
+
+## Stage
+LEARN
+
+## Syntax
+/synthesize-signals [--date-range <start> <end>] [--focus <category>]
+
+## Parameters
+- --date-range: optional start and end dates to scope signal selection (default: all unprocessed)
+- --focus: optional category filter (pattern, insight, anomaly, improvement)
+
+## Examples
+- /synthesize-signals
+- /synthesize-signals --focus anomaly
+- /synthesize-signals --date-range 2026-03-20 2026-03-29
+
+## Chains
+- Before: /learning-capture (produces the signals to synthesize)
+- After: /update-steering-rules (encode proven themes as rules), /telos-update (if identity-level insights emerge)
+- Full: [session work] > /learning-capture > /synthesize-signals > /update-steering-rules > /telos-update
+
+## Output Contract
+- Input: unprocessed signals in memory/learning/signals/ (auto-read)
+- Output: synthesis document + stdout summary (themes found, actions proposed)
+- Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends signal_lineage.jsonl
+
 # STEPS
 
 - Read all unprocessed signals from `memory/learning/signals/`
@@ -117,6 +147,39 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 - After writing synthesis, move processed signals to the processed/ subdirectory
 - Output a summary: signals processed, themes found, actions proposed
 - If fewer than 3 signals exist, skip synthesis and say "insufficient signals for synthesis"
+
+# CONTRACT
+
+## Input
+- **required:** unprocessed signals in memory/learning/signals/
+  - type: auto-read (directory scan)
+  - minimum: 3 signals required to run synthesis
+- **optional:** date range or category focus
+  - type: text flags
+  - default: all unprocessed signals
+
+## Output
+- **produces:** synthesis document
+  - format: structured-markdown
+  - sections: Themes, Proposed Steering Rules, Proposed TELOS Updates, Confidence Decay Review, Anti-Patterns, Meta-Observations
+  - destination: file (memory/learning/synthesis/{date}_synthesis.md) + stdout summary
+- **side-effects:**
+  - moves processed signals to memory/learning/signals/processed/
+  - updates memory/learning/_signal_meta.json
+  - appends to memory/learning/signal_lineage.jsonl
+
+## Errors
+- **insufficient-signals:** fewer than 3 unprocessed signals
+  - recover: skip synthesis, print count, wait for more signals
+- **write-failure:** cannot write to memory/learning/synthesis/
+  - recover: check directory permissions; synthesis output is also printed to stdout as backup
+
+# SKILL CHAIN
+
+- **Follows:** `/learning-capture` (produces signals), auto-triggered when signal count >= 20 or >= 10 with 48h+ stale synthesis
+- **Precedes:** `/update-steering-rules` (encode proven themes), `/telos-update` (identity-level insights)
+- **Composes:** confidence decay review (inline), signal lineage tracking (inline)
+- **Escalate to:** `/delegation` if synthesis reveals cross-project patterns requiring orchestration
 
 # INPUT
 
