@@ -430,7 +430,7 @@ def collect_auth_health(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
                         details.append("slack:ok")
             except (urllib.error.URLError, OSError) as exc:
                 unhealthy += 1
-                details.append(f"slack:network_error")
+                details.append("slack:network_error")
                 _log_auth_failure(root_dir, "slack", str(exc))
 
     detail_str = f"{len(checks)} checks, {unhealthy} unhealthy"

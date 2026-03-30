@@ -489,7 +489,7 @@ def run_batch(args):
     today = datetime.date.today()
     synth_path = out_dir / f"synthesis_{today}.md"
     with open(synth_path, "w", encoding="utf-8") as f:
-        f.write(f"# Guitar Playing Synthesis\n")
+        f.write("# Guitar Playing Synthesis\n")
         f.write(f"- Date: {today}\n")
         f.write(f"- Recordings analyzed: {len(results)}\n")
         f.write(f"- Total tokens: {total_tokens}\n\n")

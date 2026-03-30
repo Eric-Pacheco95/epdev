@@ -45,7 +45,7 @@ def sync() -> int:
     if watch is None:
         print("No watch source found. Set up one of:")
         print(f"  iCloud:   install iCloud for Windows → sign in → {ICLOUD_SHORTCUTS}")
-        print(f"  OneDrive: create 'jarvis-voice' folder at OneDrive root")
+        print("  OneDrive: create 'jarvis-voice' folder at OneDrive root")
         return 0
 
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Watching {transport}: {watch}")
@@ -61,7 +61,7 @@ def sync() -> int:
 
     for src in sorted(candidates):
         # Give iCloud file a stable name in the inbox
-        dest_name = src.name if src.suffix else f"pai-voice-recording.md"
+        dest_name = src.name if src.suffix else "pai-voice-recording.md"
         dest = INBOX_DIR / dest_name
         if dest.exists() and src.stat().st_mtime <= dest.stat().st_mtime:
             continue

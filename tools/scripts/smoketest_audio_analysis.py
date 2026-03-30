@@ -109,7 +109,7 @@ def main():
     print(f"Size: {file_size_mb:.1f} MB")
     print(f"Format: {ext}")
     print(f"Mode: {mode}")
-    print(f"Model: gemini-3-flash-preview")
+    print("Model: gemini-3-flash-preview")
     print("-" * 60)
 
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
