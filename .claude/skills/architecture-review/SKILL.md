@@ -65,28 +65,34 @@ THINK
 
 ## Step 2: LAUNCH PARALLEL AGENTS
 
+- Create a temp directory for agent outputs: `memory/work/_arch-review-{timestamp}/`
 - Launch 3 Agent tool calls simultaneously in a single message (this is critical — they must run in parallel, not sequentially):
 
   **Agent 1: First-Principles Decomposition**
   - Scope: What is the fundamental problem? What are the irreducible requirements? What assumptions might be wrong? What is the simplest architecture that satisfies the requirements?
   - Include full proposal context in the prompt
   - Ask agent to examine each component independently and output structured sections
+  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/first-principles.md` before returning** — this is critical for surviving context compaction in long sessions
 
   **Agent 2: Logical Fallacy Detection**
   - Scope: What category errors, hidden assumptions, scope creep, false analogies, and reasoning flaws exist in the proposal? What parts are sound?
   - Include full proposal context in the prompt
   - Ask agent to be adversarial but fair — flag what's wrong AND what's right
+  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/fallacy-detection.md` before returning**
 
   **Agent 3: Red-Team (+ STRIDE if --stride flag or auto-detected)**
   - Scope: What are the attack surfaces, failure modes, blast radius, and trust model gaps?
   - Include full proposal context in the prompt
   - Always runs. Add STRIDE framework analysis when --stride flag is present or proposal involves system boundaries
+  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/red-team.md` before returning**
 
 - All agents run in background simultaneously. Do NOT duplicate their work in the main thread while waiting
+- Each agent writes to disk as its LAST action — this ensures findings survive context compaction even if the synthesis happens in a later session or after compaction
 
 ## Step 3: SYNTHESIZE FINDINGS
 
-- When all agents return, read their full outputs
+- Read all agent outputs from `memory/work/_arch-review-{timestamp}/` — do NOT rely on agent return values alone, as these may be lost to context compaction in long sessions
+- When all agents have completed (all 3 files exist), read their full outputs
 - Identify points of convergence (findings that multiple agents agree on — these are high-confidence)
 - Identify points of divergence (where agents disagree — these need explicit resolution)
 - For each element of the proposal, classify as:
@@ -102,6 +108,7 @@ THINK
 - List the top 3 changes from the original proposal (if any)
 - Identify the single highest-risk element that should be validated first
 - Suggest the next step: /create-prd, /implement-prd, or "needs more research on X"
+- Clean up the temp directory: delete `memory/work/_arch-review-{timestamp}/` after synthesis is complete
 
 # OUTPUT INSTRUCTIONS
 
@@ -141,7 +148,7 @@ THINK
   - format: structured-markdown
   - sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION
   - destination: stdout (inline — not saved to file unless explicitly requested)
-- **side-effects:** none (analysis only)
+- **side-effects:** creates temp directory `memory/work/_arch-review-{timestamp}/` with agent output files (cleaned up after synthesis)
 
 ## Errors
 - **trivial-decision:** proposal doesn't warrant full review
