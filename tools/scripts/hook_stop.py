@@ -89,10 +89,7 @@ def main() -> None:
 
     # Post session digest to #epdev — only for sessions longer than 10 minutes
     # Short sessions (quick questions, typos, restarts) are noise
-    session_start = None
     try:
-        data_reread = {}
-        # Check if session duration info is available from stdin data
         # Fall back to signal file timestamps as a proxy for session length
         oldest_signal_today = None
         if SIGNALS_DIR.is_dir():
