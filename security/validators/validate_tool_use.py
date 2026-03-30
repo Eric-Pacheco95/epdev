@@ -193,6 +193,9 @@ def validate_bash_command(command: str) -> dict[str, Any]:
     if _blocked_git_force_main(cmd):
         return _result("block", "git push --force to main/master is blocked")
 
+    if re.search(r"\bgit\b", cmd) and re.search(r"--no-verify\b", cmd):
+        return _result("block", "--no-verify bypasses pre-commit hooks and is blocked")
+
     if DISK_DANGER.search(cmd):
         return _result("block", "Disk format/partition command blocked")
 

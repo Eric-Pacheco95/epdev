@@ -94,6 +94,16 @@
         ]
       }
     ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_post_compact.py"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

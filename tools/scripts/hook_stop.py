@@ -22,6 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 META_PATH = REPO_ROOT / "memory" / "learning" / "_signal_meta.json"
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
+WORK_DIR = REPO_ROOT / "memory" / "work"
 
 
 def _slugify(title: str) -> str:
@@ -120,6 +121,21 @@ def main() -> None:
     except Exception:
         pass  # graceful fallback
 
+    # Check for incomplete ISC items in active PRDs
+    incomplete_iscs: dict[str, int] = {}
+    if WORK_DIR.is_dir():
+        for prd in WORK_DIR.glob("*/PRD.md"):
+            try:
+                prd_text = prd.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            unchecked = sum(
+                1 for line in prd_text.splitlines()
+                if re.match(r"^\s*-\s+\[ \]\s+", line)
+            )
+            if unchecked > 0:
+                incomplete_iscs[prd.parent.name] = unchecked
+
     if session_minutes >= 10:
         ts = now.strftime("%Y-%m-%d %H:%M UTC")
         msg = (
@@ -129,7 +145,17 @@ def main() -> None:
         )
         if count > 0:
             msg += "\n_Run `/learning-capture` to process signals._"
+        if incomplete_iscs:
+            isc_parts = [f"{proj}: {n} remaining" for proj, n in incomplete_iscs.items()]
+            msg += f"\n:warning: *Incomplete ISCs:* {', '.join(isc_parts)}"
         notify(msg)
+    elif incomplete_iscs:
+        # Short session but incomplete ISCs — still warn
+        isc_parts = [f"{proj}: {n} remaining" for proj, n in incomplete_iscs.items()]
+        notify(
+            f":warning: *Session ended with incomplete ISCs:* {', '.join(isc_parts)}"
+            f"\n_Resume with `/implement-prd` to continue._"
+        )
 
     sys.exit(0)
 
