@@ -454,12 +454,15 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
     print(f"  Running dimension: {dim_name} ...")
     print(f"  Working directory: {run_cwd}")
 
+    env = os.environ.copy()
+    env["JARVIS_SESSION_TYPE"] = "autonomous"
     try:
         proc = subprocess.run(
             [CLAUDE_BIN, "-p", "--verbose", "-"],
             input=prompt,
             capture_output=True, text=True, encoding="utf-8", cwd=run_cwd,
             timeout=7200,  # 2 hour hard kill
+            env=env,
         )
 
         output = proc.stdout or ""

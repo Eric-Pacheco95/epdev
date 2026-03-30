@@ -208,6 +208,8 @@ def call_claude(prompt: str, system: str = "") -> str:
     else:
         full_prompt = prompt
 
+    env = os.environ.copy()
+    env["JARVIS_SESSION_TYPE"] = "autonomous"
     try:
         result = subprocess.run(
             [CLAUDE_BIN, "-p", "-"],
@@ -217,6 +219,7 @@ def call_claude(prompt: str, system: str = "") -> str:
             encoding="utf-8",
             timeout=120,
             cwd=str(REPO_ROOT),
+            env=env,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()

@@ -120,42 +120,42 @@ ISC Quality Gate: PASS (6/6)
 
 ### Phase 2A: Slack /absorb Integration (jarvis-inbox)
 
-- [ ] [E] URL + depth flag in `#jarvis-inbox` triggers `/absorb` pipeline via poller within 60s | Verify: CLI — post `https://example.com --normal` to channel, confirm analysis file appears
-- [ ] [E] URL without depth flag in `#jarvis-inbox` gets a reply asking for depth, no analysis runs | Verify: Slack — post bare URL, confirm reply asks for `--quick/--normal/--deep`
-- [ ] [E] Poller replies in Slack thread with absorption summary (title, insight count, fallacy count, TELOS status) | Verify: Slack — check thread reply content after successful absorption
-- [ ] [E] Non-URL messages in `#jarvis-inbox` get a redirect reply, not generic Jarvis processing | Verify: Slack — post plain text, confirm "URLs only" reply
-- [ ] [E] `JARVIS_SESSION_TYPE=autonomous` is set by poller before `claude -p` invocation | Verify: Grep — check slack_poller.py for env var assignment
-- [ ] [I] TELOS proposals from Slack-initiated runs are queued in the analysis file with `status: PENDING`, not auto-applied | Verify: Read — inspect analysis file, confirm no TELOS files modified
+- [x] [E] URL + depth flag in `#jarvis-inbox` triggers `/absorb` pipeline via poller within 60s | Verify: CLI — post `https://example.com --normal` to channel, confirm analysis file appears
+- [x] [E] URL without depth flag in `#jarvis-inbox` gets a reply asking for depth, no analysis runs | Verify: Slack — post bare URL, confirm reply asks for `--quick/--normal/--deep`
+- [x] [E] Poller replies in Slack thread with absorption summary (title, insight count, fallacy count, TELOS status) | Verify: Slack — check thread reply content after successful absorption
+- [x] [E] Non-URL messages in `#jarvis-inbox` get a redirect reply, not generic Jarvis processing | Verify: Slack — post plain text, confirm "URLs only" reply
+- [x] [E] `JARVIS_SESSION_TYPE=autonomous` is set by poller before `claude -p` invocation | Verify: Grep — check slack_poller.py for env var assignment
+- [x] [I] TELOS proposals from Slack-initiated runs are queued in the analysis file with `status: PENDING`, not auto-applied | Verify: Read — inspect analysis file, confirm no TELOS files modified
 
 ISC Quality Gate: PASS (6/6)
 
 ### Phase 2B: Voice Processor Upgrade (jarvis-voice)
 
-- [ ] [E] Voice dumps in `#jarvis-voice` are processed through `/find-logical-fallacies` → `/extract-wisdom` → `/learning-capture` pipeline | Verify: Slack — post voice text, confirm thread reply includes fallacy count + insight count + signal count
-- [ ] [E] Voice processor does NOT generate TELOS routing proposals — insights feed signals only | Verify: Read — confirm no TELOS proposals in voice processing output
-- [ ] [E] Fallacy analysis results are included in the Slack thread reply (fallacy names + count) | Verify: Slack — check thread reply for fallacy section
-- [ ] [I] Voice content is treated as Eric's own thinking, not external content — no `[source: external]` tags | Verify: Read — inspect generated signals for correct source tagging (`Source: voice`)
-- [ ] [E] `JARVIS_SESSION_TYPE=autonomous` is set by voice processor before `claude -p` invocation | Verify: Grep — check slack_voice_processor.py for env var assignment
+- [x] [E] Voice dumps in `#jarvis-voice` are processed through `/find-logical-fallacies` → `/extract-wisdom` → `/learning-capture` pipeline | Verify: Slack — post voice text, confirm thread reply includes fallacy count + insight count + signal count
+- [x] [E] Voice processor does NOT generate TELOS routing proposals — insights feed signals only | Verify: Read — confirm no TELOS proposals in voice processing output
+- [x] [E] Fallacy analysis results are included in the Slack thread reply (fallacy names + count) | Verify: Slack — check thread reply for fallacy section
+- [x] [I] Voice content is treated as Eric's own thinking, not external content — no `[source: external]` tags | Verify: Read — inspect generated signals for correct source tagging (`Source: voice`)
+- [x] [E] `JARVIS_SESSION_TYPE=autonomous` is set by voice processor before `claude -p` invocation | Verify: Grep — check slack_voice_processor.py for env var assignment
 
 ISC Quality Gate: PASS (6/6)
 
 ### Phase 2C: Review Flow + Session Hook
 
-- [ ] [E] `/absorb --review` scans absorbed files and presents pending proposals one file at a time, one proposal at a time | Verify: CLI — create a mock absorbed file with PENDING proposals, run `--review`, confirm walkthrough UX
-- [ ] [E] Approved proposals are written to TELOS files with snapshot-before-write; rejected proposals marked `status: REJECTED` | Verify: CLI — approve one, reject one, confirm snapshot + TELOS write + rejection marker
-- [ ] [E] Session-start hook prints pending proposal count when `memory/learning/absorbed/` has PENDING files | Verify: CLI — create PENDING file, start new session, confirm one-liner appears
-- [ ] [I] Fully reviewed files are marked `status: REVIEWED` and no longer surface in hook or `--review` | Verify: CLI — review all proposals in a file, confirm it stops appearing
-- [ ] [E] Audit trail entry written to `history/changes/absorb_log.md` for each approved proposal | Verify: Read — check absorb_log.md after approval
+- [x] [E] `/absorb --review` scans absorbed files and presents pending proposals one file at a time, one proposal at a time | Verify: CLI — create a mock absorbed file with PENDING proposals, run `--review`, confirm walkthrough UX
+- [x] [E] Approved proposals are written to TELOS files with snapshot-before-write; rejected proposals marked `status: REJECTED` | Verify: CLI — approve one, reject one, confirm snapshot + TELOS write + rejection marker
+- [x] [E] Session-start hook prints pending proposal count when `memory/learning/absorbed/` has PENDING files | Verify: CLI — create PENDING file, start new session, confirm one-liner appears
+- [x] [I] Fully reviewed files are marked `status: REVIEWED` and no longer surface in hook or `--review` | Verify: CLI — review all proposals in a file, confirm it stops appearing
+- [x] [E] Audit trail entry written to `history/changes/absorb_log.md` for each approved proposal | Verify: Read — check absorb_log.md after approval
 
 ISC Quality Gate: PASS (6/6)
 
 ### Phase 3: Autonomous Enforcement
 
-- [ ] [E] `validate_tool_use.py` blocks Write/Edit to `memory/work/telos/` when `JARVIS_SESSION_TYPE=autonomous` | Verify: Test — run validator with mock Write input targeting telos/ path with env var set
-- [ ] [E] Constitutional rules include "Autonomous sessions MUST NOT write to `memory/work/telos/`" | Verify: Grep — search constitutional-rules.md for the rule
-- [ ] [E] All autonomous Python scripts (`slack_poller.py`, `slack_voice_processor.py`, `morning_feed.py`, `overnight_runner.py`, `jarvis_autoresearch.py`) set `JARVIS_SESSION_TYPE=autonomous` before `claude -p` calls | Verify: Grep — search all scripts for env var assignment
-- [ ] [I] Interactive Claude Code sessions (no env var) can still write to TELOS files after human approval | Verify: CLI — approve a TELOS proposal in interactive session, confirm write succeeds
-- [ ] [E] Blocked TELOS write attempts in autonomous mode are logged (not silent) | Verify: Test — trigger a blocked write, confirm log output
+- [x] [E] `validate_tool_use.py` blocks Write/Edit to `memory/work/telos/` when `JARVIS_SESSION_TYPE=autonomous` | Verify: Test — run validator with mock Write input targeting telos/ path with env var set
+- [x] [E] Constitutional rules include "Autonomous sessions MUST NOT write to `memory/work/telos/`" | Verify: Grep — search constitutional-rules.md for the rule
+- [x] [E] All autonomous Python scripts (`slack_poller.py`, `slack_voice_processor.py`, `morning_feed.py`, `overnight_runner.py`, `jarvis_autoresearch.py`) set `JARVIS_SESSION_TYPE=autonomous` before `claude -p` calls | Verify: Grep — search all scripts for env var assignment
+- [x] [I] Interactive Claude Code sessions (no env var) can still write to TELOS files after human approval | Verify: CLI — approve a TELOS proposal in interactive session, confirm write succeeds
+- [x] [E] Blocked TELOS write attempts in autonomous mode are logged (not silent) | Verify: Test — trigger a blocked write, confirm log output
 
 ISC Quality Gate: PASS (6/6)
 

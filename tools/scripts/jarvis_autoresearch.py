@@ -173,6 +173,8 @@ def call_claude(prompt: str, system: str = "") -> str:
     else:
         full_prompt = prompt
 
+    env = os.environ.copy()
+    env["JARVIS_SESSION_TYPE"] = "autonomous"
     try:
         # Pass prompt via stdin ("-") to avoid Windows command-line length
         # limits (WinError 206).  The overnight_runner uses the same pattern.
@@ -184,6 +186,7 @@ def call_claude(prompt: str, system: str = "") -> str:
             encoding="utf-8",
             timeout=300,  # 5 min -- longer prompt needs more time
             cwd=str(REPO_ROOT),
+            env=env,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()

@@ -63,7 +63,7 @@ Each agent role has a defined tool access boundary. Tools not listed for a role 
 4. **Future** — when Claude Code supports per-subagent permissions, migrate this table into config
 
 **Non-negotiable rules:**
-- No background agent may write to `memory/work/telos/*.md` — TELOS changes require human merge (enforced by `overnight_path_guard.py`)
+- Autonomous sessions MUST NOT write to `memory/work/telos/` — TELOS identity changes require interactive human approval per-item; enforced by `validate_tool_use.py` (blocks Write/Edit when `JARVIS_SESSION_TYPE=autonomous`) and `overnight_path_guard.py`
 - No background agent may invoke `git push` or any destructive git operation
 - Autoresearch agents may `git commit` and `git checkout -b` ONLY on `jarvis/overnight-*` or `jarvis/autoresearch-*` branches — never on `main`, `master`, or `feat/*` branches
 - No background agent may send Slack messages to `#general` (`C0AKR43PDA4`) — only the notifier wrapper with severity check may post there
