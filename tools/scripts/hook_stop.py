@@ -8,6 +8,7 @@ Reads session context from stdin JSON provided by Claude Code.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -26,7 +27,6 @@ WORK_DIR = REPO_ROOT / "memory" / "work"
 
 
 def _slugify(title: str) -> str:
-    import re
     s = re.sub(r"[^a-zA-Z0-9]+", "-", title.strip().lower()).strip("-")
     return (s[:60] if s else "session-end") or "session-end"
 
