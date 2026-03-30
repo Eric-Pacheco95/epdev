@@ -178,12 +178,12 @@ CREATE TABLE IF NOT EXISTS schema_version (
 ## Ideal State Criteria
 
 ### Step 1: Foundation
-- [ ] Orphaned `data/jarvis_events.db` is deleted | Verify: `test ! -f data/jarvis_events.db` [E][M]
-- [ ] `jarvis_index.py update` runs daily at 3am via Task Scheduler | Verify: `schtasks /query /tn "\Jarvis\JarvisIndexUpdate"` returns Ready [E][M]
-- [ ] WAL checkpoint runs after each producer write (add `PRAGMA wal_checkpoint(TRUNCATE)` call) | Verify: Grep for `wal_checkpoint` in producer scripts [E][M]
-- [ ] FTS resilience verified: delete a processed signal, query index, content retained | Verify: test script output [E][M]
-- [ ] `memory/session/` directory removed from scaffold (FTS indexes Claude Code native JSONL) | Verify: `test ! -d memory/session` [E][M]
-- [ ] No consumer assumes DB availability without a directory-scan fallback | Verify: `/review-code` on all consumers [I][A]
+- [x] Orphaned `data/jarvis_events.db` is deleted | Verify: `test ! -f data/jarvis_events.db` [E][M]
+- [x] `jarvis_index.py update` runs daily at 3am via Task Scheduler | Verify: `schtasks /query /tn "\Jarvis\JarvisIndexUpdate"` returns Ready [E][M]
+- [x] WAL checkpoint runs after each producer write (add `PRAGMA wal_checkpoint(TRUNCATE)` call) | Verify: Grep for `wal_checkpoint` in producer scripts [E][M]
+- [x] FTS resilience verified: delete a processed signal, query index, content retained | Verify: test script output [E][M]
+- [x] `memory/session/` directory removed from scaffold (FTS indexes Claude Code native JSONL) | Verify: `test ! -d memory/session` [E][M]
+- [x] No consumer assumes DB availability without a directory-scan fallback | Verify: `/review-code` on all consumers [I][A]
 
 ### Step 2: Manifest Tables
 - [ ] All 6 new tables created in `jarvis_index.db` with schema version 1 | Verify: `sqlite3 jarvis_index.db ".tables"` shows signals, lineage, producer_runs, session_costs, skill_usage, schema_version [E][M]

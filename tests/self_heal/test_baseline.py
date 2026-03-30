@@ -116,7 +116,6 @@ def check_hooks_wired() -> None:
 
 MEMORY_DIRS = [
     "memory",
-    "memory/session",
     "memory/work",
     "memory/learning",
     "memory/learning/signals",
