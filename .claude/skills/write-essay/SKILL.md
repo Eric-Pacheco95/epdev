@@ -6,7 +6,43 @@ Adapted from Daniel Miessler's `write_essay` pattern. Use this to crystallize th
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Write a clear, direct, publish-ready essay on any topic
+
+## Stage
+BUILD
+
+## Syntax
+/write-essay [--style AUTHOR] <topic>
+
+## Parameters
+- topic: the essay subject or argument (required)
+- --style: write in the style of a specific author (e.g. Paul Graham, Miessler)
+
+## Examples
+- /write-essay Why systems beat intelligence in AI infrastructure
+- /write-essay --style "Paul Graham" The compounding value of personal knowledge systems
+- /write-essay The case for AI-augmented, not AI-dependent, living
+
+## Chains
+- Before: /research, /first-principles
+- After: /learning-capture
+- Full: /research > /first-principles > /write-essay > /learning-capture
+
+## Output Contract
+- Input: topic + optional style author
+- Output: publish-ready essay with TELOS signal note
+- Side effects: none (pure text output)
+
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- No input: print DISCOVERY as usage block, STOP
+- Topic is a single word with no context: ask for the specific angle or argument, STOP
+- Style author specified: internalize their voice before writing
 
 - Identify the topic and any style instruction from the input (e.g. "in the style of Paul Graham" or "write like Miessler")
 - If a style author is specified, internalize their known voice: vocabulary level, sentence length, use of examples, how they open and close, what they avoid

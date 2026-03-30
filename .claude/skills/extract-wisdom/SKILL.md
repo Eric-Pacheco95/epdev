@@ -11,7 +11,44 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - **default** (no flag): Full wisdom extraction -- IDEAS, INSIGHTS, QUOTES, HABITS, REFERENCES, RECOMMENDATIONS
 - **--summary**: Concise summarization mode -- TL;DR, KEY POINTS, FACTS AND DETAILS, CONCLUSIONS AND OPEN QUESTIONS. Use this when you need compressed content for memory storage, quick briefs, or feeding into other skills. Replaces the standalone /create-summary skill.
 
+# DISCOVERY
+
+## One-liner
+Extract ideas, insights, quotes, habits, and references from any content
+
+## Stage
+LEARN
+
+## Syntax
+/extract-wisdom [--summary] <content or file path>
+
+## Parameters
+- content: text to analyze -- article, transcript, essay, or file path (required)
+- --summary: concise summarization mode (TL;DR, KEY POINTS, FACTS, CONCLUSIONS)
+
+## Examples
+- /extract-wisdom <paste article or transcript>
+- /extract-wisdom --summary memory/work/research_brief.md
+- /extract-wisdom https://example.com/article (use /research to fetch first)
+
+## Chains
+- Before: /research (brief as input) or direct content paste
+- After: /telos-update, /learning-capture
+- Full: /research > /extract-wisdom > /telos-update > /learning-capture
+
+## Output Contract
+- Input: text content (article, transcript, essay, notes)
+- Output: structured extraction: IDEAS, INSIGHTS, QUOTES, HABITS, REFERENCES, RECOMMENDATIONS (or TL;DR summary in --summary mode)
+- Side effects: none (pure transform)
+
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- No input: print DISCOVERY as usage block, STOP
+- Input under 200 words: warn content may be too short for meaningful extraction, proceed
+- File path: read file, use content as input
+- URL without content: suggest running /research first to fetch, STOP
 
 ## Step 0: MODE CHECK
 

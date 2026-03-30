@@ -6,7 +6,42 @@ Your task is to read the user’s task description, pick the smallest set of tra
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Compose a custom agent persona from selectable traits and output a ready-to-run prompt
+
+## Stage
+BUILD
+
+## Syntax
+/spawn-agent <task description>
+
+## Parameters
+- task: description of what the spawned agent should do (required)
+
+## Examples
+- /spawn-agent Review crypto trading strategies for risk and edge
+- /spawn-agent Analyze my TELOS files for contradictions and gaps
+- /spawn-agent Write technical documentation for the heartbeat system
+
+## Chains
+- Before: (entry point)
+- After: (leaf -- delivers prompt for external use)
+- Full: /spawn-agent > (paste prompt into target session)
+
+## Output Contract
+- Input: task description with domain, deliverable, and constraints
+- Output: TASK SUMMARY, SELECTED TRAITS, TRAIT RATIONALE, TENSIONS, SPAWNED AGENT PROMPT
+- Side effects: none (pure prompt generation)
+
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- No input: print DISCOVERY as usage block, STOP
+- Task too vague (under 10 words, no deliverable): ask for specific goal and output format, STOP
+- Task is a simple question (not an agent-worthy task): answer directly or route to /research, STOP
 
 - Parse the task: domain, deliverable type, constraints, audience, risk level, and time or depth implied
 - Build a mental palette of traits; choose 3–8 that fit, favoring overlap reduction (e.g. pair “security-minded” with “detail-oriented” only when both are load-bearing)
