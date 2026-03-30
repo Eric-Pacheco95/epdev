@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from pptx import Presentation
-from pptx.util import Inches, Pt, Emu
+from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 
@@ -132,7 +132,6 @@ def build_pptx(data: dict, output_path: Path, images_dir: Path | None = None) ->
     blank_layout = prs.slide_layouts[6]  # Blank layout
 
     slide_width = prs.slide_width
-    slide_height = prs.slide_height
     margin = Inches(0.8)
     content_width = slide_width - (margin * 2)
 
