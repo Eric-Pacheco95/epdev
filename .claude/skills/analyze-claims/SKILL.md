@@ -6,7 +6,42 @@ Your task is to analyze the input text and produce a structured audit of claims,
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Audit claims, map evidence, and rate how well an argument is supported
+
+## Stage
+THINK
+
+## Syntax
+/analyze-claims <content or file path>
+
+## Parameters
+- content: text to analyze -- article, essay, argument, or file path (required)
+
+## Examples
+- /analyze-claims <paste article text>
+- /analyze-claims memory/work/research_brief.md
+
+## Chains
+- Before: /research, /extract-wisdom
+- After: /find-logical-fallacies, /learning-capture
+- Full: /research > /analyze-claims > /find-logical-fallacies > /learning-capture
+
+## Output Contract
+- Input: text containing claims and arguments
+- Output: structured audit with CLAIM INVENTORY, EVIDENCE MAP, SUPPORT ASSESSMENT, GAPS, CONSISTENCY, VERDICT
+- Side effects: none (analysis only)
+
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- No input: print DISCOVERY as usage block, STOP
+- Input under 50 words: ask for more substantial content to analyze, STOP
+- File path: read file, use content as input
+- Input contains no discernible claims (pure fiction, poetry, lists): note limitation, proceed with best effort
 
 - Read the full input and list every distinct factual or normative claim the author makes
 - Label each claim as empirical, interpretive, predictive, or prescriptive where possible
