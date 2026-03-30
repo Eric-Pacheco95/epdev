@@ -48,7 +48,7 @@ PLAN
   - Print: "A PRD already exists at {path}. Overwrite it, or create a versioned copy?"
   - STOP and wait for user decision
 - If no research context found and topic seems complex:
-  - Print: "No research brief found for this topic. The PRD will be based solely on your description. For a stronger foundation, run /research <topic> first. Proceed anyway?"
+  - Print: "No research brief found for this topic. The PRD will be based solely on your description. For a stronger foundation, run `/project-init` (full pipeline: research + analysis + PRD) or `/research <topic>` (research only). Proceed with standalone PRD anyway?"
 - Once input is validated, proceed to Step 1
 
 ## Step 1: EXTRACT

@@ -79,6 +79,7 @@ BUILD
   5. Re-run the same verify method
   6. If still failing after cycle 3: log the failure to `memory/learning/failures/`, mark ISC item as BLOCKED with diagnosis notes, and move to next item — do NOT silently skip
 - Track loop iterations: after BUILD completes, report in IMPLEMENTATION LOG how many items needed 0, 1, 2, or 3 fix cycles (this measures loop value)
+- **Mid-build commit checkpoint**: After every 3-4 completed ISC items, prompt Eric to commit: "Checkpoint: {N} ISC items verified. Run /commit to save progress?" This creates recovery points against context compaction. Do not auto-commit — wait for confirmation. If Eric declines, continue building
 
 ### REVIEW GATE: Auto-invoke /review-code with fix loop
 
@@ -106,6 +107,7 @@ BUILD
 - Find the corresponding task in `orchestration/tasklist.md` and mark it complete (`[ ]` → `[x]`) with a one-line completion note
 - Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
 - Log a brief decision record to `history/decisions/` noting what was built, which ISC items passed, and any deferred items
+- **Final commit prompt**: Run `git status` — if there are uncommitted changes, prompt: "BUILD complete and verified. Ready to commit? Run /commit or I can stage and commit now." Do not auto-commit — wait for Eric's confirmation. If Eric declines, proceed to /learning-capture
 - Invoke `/learning-capture` to close the session with captured signals
 
 # OUTPUT INSTRUCTIONS
@@ -160,7 +162,7 @@ BUILD
 
 - **Follows:** `/create-prd` (takes PRD file path as input)
 - **Precedes:** `/learning-capture` (always — no build session ends without capture)
-- **Composes:** `/review-code` (non-optional VERIFY gate), `/quality-gate` (non-optional phase-completion gate), `/self-heal` (if tests fail)
+- **Composes:** `/review-code` (non-optional VERIFY gate), `/quality-gate` (non-optional phase-completion gate), `/commit` (mid-build checkpoints + final commit prompt), `/self-heal` (if tests fail)
 - **Full chain:** `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`
 - **Escalate to:** `/delegation` if scope expands mid-build or new dependencies are discovered
 
