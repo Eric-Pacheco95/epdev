@@ -13,7 +13,7 @@
 
 - [x] **Validate morning feed** — Running daily at 9am. Output in `memory/work/jarvis/morning_feed/`. Slack capped by design. (2026-03-29)
 - [x] **Validate overnight runner** — Running daily at 4am. Branches created, quality gate + security audit passing. 2 cycles confirmed. (2026-03-29)
-- [ ] **Validate TELOS introspection runner** — 3/28 run succeeded (all 5 artifacts). 3/29 run FAILED: old version passed 102K prompt as CLI arg (WinError 206). Fix already in codebase (stdin pipe, commit 41f1644). Self-test 19/19 passing. BUILT -- awaiting validation: 3/30 7am scheduled run.
+- [x] **Validate TELOS introspection runner** — VALIDATED 3/30: 7am run succeeded (5 artifacts, 4 contradictions, 43% coverage, exit 0). Fix from 41f1644 confirmed working. 3 runs: 3/28 pass, 3/29 fail (WinError 206), 3/30 pass post-fix.
 - [ ] **Validate autonomous value tracking** — Reference a morning brief in session, then check `data/autonomous_value.jsonl` for `acted_on` flip.
 - [ ] **Human source review ritual** — After first validated morning feed: "What other sources? YouTube channels, blogs, GitHub repos, newsletters?" → update `sources.yaml`
 

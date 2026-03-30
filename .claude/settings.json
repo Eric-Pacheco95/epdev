@@ -120,6 +120,14 @@
             "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_events.py"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_session_cost.py"
+          }
+        ]
       }
     ]
   }

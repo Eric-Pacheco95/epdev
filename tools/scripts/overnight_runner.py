@@ -266,7 +266,54 @@ def worktree_setup(branch: str) -> Path:
         return None
 
     print(f"  Worktree created at {wt} (branch: {branch})")
+
+    # Symlink local memory dirs so knowledge_synthesis can read real data.
+    # These dirs are gitignored so the worktree only has .gitkeep files.
+    symlink_local_memory(wt)
+
     return wt
+
+
+# Directories to symlink from main repo into worktree.
+# Each tuple: (relative path from repo root, read-only flag for logging).
+_MEMORY_SYMLINKS = [
+    ("memory/learning/signals", True),
+    ("memory/learning/synthesis", False),  # knowledge_synthesis writes here
+    ("memory/learning/failures", True),
+]
+
+
+def symlink_local_memory(wt: Path) -> None:
+    """Replace gitkeep-only dirs in worktree with symlinks to real local dirs.
+
+    This lets the knowledge_synthesis dimension read accumulated signals and
+    synthesis docs that are gitignored (personal content stays local).
+    Synthesis writes go directly to the real dir -- monitor and validate
+    before committing.
+    """
+    for rel_path, readonly in _MEMORY_SYMLINKS:
+        src = REPO_ROOT / rel_path
+        dst = wt / rel_path
+
+        if not src.is_dir():
+            continue
+
+        # Remove the worktree's empty dir (contains only .gitkeep)
+        if dst.is_dir() and not dst.is_symlink():
+            import shutil
+            shutil.rmtree(dst)
+
+        if dst.exists() or dst.is_symlink():
+            continue
+
+        # Create symlink: worktree dir -> main repo dir
+        try:
+            dst.symlink_to(src, target_is_directory=True)
+            mode = "read-only" if readonly else "read-write"
+            print(f"  Symlinked {rel_path} -> {src} ({mode})")
+        except OSError as exc:
+            print(f"  WARNING: Could not symlink {rel_path}: {exc}",
+                  file=sys.stderr)
 
 
 def worktree_cleanup() -> None:

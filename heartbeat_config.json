@@ -158,6 +158,20 @@
       "max_age_hours": 26,
       "thresholds": { "warn_above": 1, "crit_above": 3 },
       "isc_ref": "PRD-P4E:ISC-S3 producer_health alerts on stale/failed runs"
+    },
+    {
+      "name": "autonomous_signal_rate",
+      "type": "autonomous_signal_rate",
+      "path": "memory/learning/signals",
+      "window_days": 7,
+      "thresholds": { "warn_above": 10, "crit_above": 20 },
+      "isc_ref": "PRD-P4E:ISC-S4 retention layer prevents unbounded growth"
+    },
+    {
+      "name": "signal_volume",
+      "type": "signal_volume",
+      "thresholds": { "warn_above": 500, "crit_above": 1000 },
+      "isc_ref": "PRD-P4E:ISC-S4 retention layer prevents unbounded growth"
     }
   ],
   "alert_routing": {

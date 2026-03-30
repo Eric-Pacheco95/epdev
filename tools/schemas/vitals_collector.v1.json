@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vitals_collector.v1.json",
+  "title": "Jarvis Vitals Collector Output",
+  "description": "Structured health data from vitals_collector.py. Consumed by /vitals skill and brain-map dashboard.",
+  "type": "object",
+  "required": ["_schema_version", "_provenance", "heartbeat", "errors"],
+  "properties": {
+    "_schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semver version of this schema. SKILL.md must validate this matches expected version."
+    },
+    "_provenance": {
+      "type": "object",
+      "required": ["script", "git_hash", "files_scanned", "execution_time_ms", "collected_at"],
+      "properties": {
+        "script": { "type": "string" },
+        "git_hash": { "type": "string" },
+        "files_scanned": { "type": "array", "items": { "type": "string" } },
+        "execution_time_ms": { "type": "integer", "minimum": 0 },
+        "collected_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "heartbeat": {
+      "type": "object",
+      "description": "Metrics from jarvis_heartbeat.py. Keys are metric names, values have value/unit/detail.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "value": {},
+          "unit": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "heartbeat_meta": {
+      "type": "object",
+      "properties": {
+        "ts": { "type": ["string", "null"] },
+        "version": { "type": ["integer", "null"] },
+        "signals": { "type": ["integer", "null"] },
+        "failures": { "type": ["integer", "null"] },
+        "security_events": { "type": ["integer", "null"] },
+        "open_tasks": { "type": ["integer", "null"] }
+      }
+    },
+    "skill_usage": {
+      "type": "object",
+      "description": "Output from skill_usage.py --json"
+    },
+    "heartbeat_trend": {
+      "type": "array",
+      "description": "Last 5 heartbeat history entries for trend analysis",
+      "items": { "type": "object" }
+    },
+    "overnight": {
+      "type": ["object", "null"],
+      "description": "Overnight self-improvement state from data/overnight_state.json"
+    },
+    "autonomous_value": {
+      "type": "object",
+      "required": ["total", "acted_on", "rate_pct", "status"],
+      "properties": {
+        "total": { "type": "integer" },
+        "acted_on": { "type": "integer" },
+        "rate_pct": { "type": "number" },
+        "status": { "type": "string", "enum": ["OK", "WARN", "NO DATA"] }
+      }
+    },
+    "telos_introspection": {
+      "type": "object",
+      "required": ["last_run", "status"],
+      "properties": {
+        "last_run": { "type": ["string", "null"] },
+        "metrics": { "type": ["object", "null"] },
+        "unreviewed_runs": { "type": "integer" },
+        "status": { "type": "string", "enum": ["OK", "WARN", "NO RUNS"] }
+      }
+    },
+    "skill_evolution": {
+      "type": "object",
+      "properties": {
+        "active": { "type": "integer" },
+        "deprecated": { "type": "integer" },
+        "scores": { "type": "object" },
+        "upgrade_candidates": { "type": "array" }
+      }
+    },
+    "unmerged_branches": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "errors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Collector errors. Empty array means all data sources succeeded."
+    }
+  }
+}

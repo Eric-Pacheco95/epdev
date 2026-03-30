@@ -456,6 +456,86 @@ def _log_auth_failure(root_dir: Path, service: str, error: str) -> None:
         pass
 
 
+# ── autonomous_signal_rate ──────────────────────────────────────────
+
+def collect_autonomous_signal_rate(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Count signals with 'Source: autonomous' over last N days, return rate/day."""
+    name = cfg.get("name", "autonomous_signal_rate")
+    window = cfg.get("window_days", 7)
+    signal_dir = _resolve_path(cfg.get("path", "memory/learning/signals"), root_dir)
+
+    if not signal_dir.is_dir():
+        return _result(name, None, "per_day", "signal directory not found")
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=window)
+    count = 0
+    scanned = 0
+
+    # Scan all .md files recursively
+    for p in signal_dir.rglob("*.md"):
+        if not p.is_file():
+            continue
+        mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
+        if mtime < cutoff:
+            continue
+        scanned += 1
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+            for line in text.splitlines():
+                stripped = line.strip().lower()
+                if stripped.startswith("- source:") and "autonomous" in stripped:
+                    count += 1
+                    break
+        except OSError:
+            continue
+
+    rate = round(count / max(window, 1), 2)
+    return _result(name, rate, "per_day", "%d autonomous signals in last %dd (%d scanned)" % (count, window, scanned))
+
+
+# ── signal_volume ──────────────────────────────────────────────────
+
+def collect_signal_volume(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Read signal counts from manifest DB (signals table)."""
+    name = cfg.get("name", "signal_volume")
+    db_path = root_dir / "data" / "jarvis_index.db"
+
+    if not db_path.exists():
+        return _result(name, None, "count", "manifest DB not found")
+
+    try:
+        import sqlite3
+        conn = sqlite3.connect(str(db_path), timeout=5)
+        conn.execute("PRAGMA journal_mode=WAL")
+
+        # Total signals (not soft-deleted)
+        total = conn.execute(
+            "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL"
+        ).fetchone()[0]
+
+        # By processed status
+        processed = conn.execute(
+            "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL AND processed = 1"
+        ).fetchone()[0]
+        unprocessed = total - processed
+
+        # By source (top sources)
+        source_rows = conn.execute(
+            "SELECT source, COUNT(*) as cnt FROM signals "
+            "WHERE deleted_at IS NULL GROUP BY source ORDER BY cnt DESC LIMIT 5"
+        ).fetchall()
+        conn.close()
+
+        source_parts = ["%s=%d" % (s or "unknown", c) for s, c in source_rows]
+        detail = "total=%d processed=%d unprocessed=%d sources=[%s]" % (
+            total, processed, unprocessed, ", ".join(source_parts)
+        )
+        return _result(name, total, "count", detail)
+
+    except Exception as exc:
+        return _result(name, None, "count", "signal_volume error: %s" % exc)
+
+
 # ── producer_health ──────────────────────────────────────────────────
 
 def collect_producer_health(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
@@ -498,6 +578,8 @@ COLLECTOR_TYPES = {
     "scheduled_tasks": collect_scheduled_tasks,
     "auth_health": collect_auth_health,
     "producer_health": collect_producer_health,
+    "autonomous_signal_rate": collect_autonomous_signal_rate,
+    "signal_volume": collect_signal_volume,
 }
 
 
