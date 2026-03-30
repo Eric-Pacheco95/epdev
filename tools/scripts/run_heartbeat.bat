@@ -13,7 +13,7 @@ for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') d
 set LOGFILE=data\logs\heartbeat_%LOGDATE%.log
 
 echo [%date% %time%] Heartbeat run starting >> "%LOGFILE%" 2>&1
-"C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\jarvis_heartbeat.py >> "%LOGFILE%" 2>&1
+"C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\self_diagnose_wrapper.py -- "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\jarvis_heartbeat.py --quiet >> "%LOGFILE%" 2>&1
 echo [%date% %time%] Heartbeat run complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
 
 REM Knowledge Index incremental update (keeps search index fresh)

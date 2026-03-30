@@ -37,6 +37,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+# Absolute path to claude CLI -- Task Scheduler doesn't have .local/bin on PATH
+_claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
+CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
+
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 PROCESSED_DIR = SIGNALS_DIR / "processed"
@@ -169,16 +173,9 @@ def call_claude(prompt: str, system: str = "") -> str:
     else:
         full_prompt = prompt
 
-    # Use absolute path -- Task Scheduler doesn't have .local/bin on PATH
-    claude_bin = os.path.join(
-        os.path.expanduser("~"), ".local", "bin", "claude.exe"
-    )
-    if not os.path.isfile(claude_bin):
-        claude_bin = "claude"  # fallback to PATH
-
     try:
         result = subprocess.run(
-            [claude_bin, "-p", full_prompt],
+            [CLAUDE_BIN, "-p", full_prompt],
             capture_output=True,
             text=True,
             encoding="utf-8",
