@@ -513,8 +513,20 @@ def verify_isc(task: dict, wt_path: Path) -> list[dict]:
             continue
 
         try:
+            # Use Git Bash on Windows (WSL bash fails without WSL installed).
+            # Git Bash provides find, grep, test, etc. natively.
+            if os.name == "nt":
+                git_bash = shutil.which("bash")
+                if git_bash and "Git" in git_bash:
+                    shell_cmd = [git_bash, "-c", cmd]
+                else:
+                    # Fallback: try common Git Bash path
+                    git_bash_path = r"C:\Program Files\Git\bin\bash.exe"
+                    shell_cmd = [git_bash_path, "-c", cmd]
+            else:
+                shell_cmd = ["bash", "-c", cmd]
             result = subprocess.run(
-                ["bash", "-c", cmd],
+                shell_cmd,
                 capture_output=True, text=True, encoding="utf-8",
                 cwd=str(wt_path),
                 timeout=30,
