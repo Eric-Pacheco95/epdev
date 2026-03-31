@@ -6,7 +6,45 @@ Your job is to take a goal or input, decompose it into a skill chain, execute ea
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Chain multiple skills into automated pipelines -- the Fabric "Stitches" conductor
+
+## Stage
+EXECUTE
+
+## Syntax
+/workflow-engine [workflow-name] <goal or input>
+
+## Parameters
+- workflow-name: named pipeline (learn-from-content, session-end, deep-analysis, new-project, improve-system, content-to-wisdom, build-feature) or omit for custom
+- goal: what the pipeline should accomplish (required if no named workflow)
+
+## Examples
+- /workflow-engine learn-from-content <paste article>
+- /workflow-engine session-end
+- /workflow-engine deep-analysis "Should Jarvis adopt LangGraph?"
+- /workflow-engine build-feature memory/work/dashboard/PRD.md
+
+## Chains
+- Before: /delegation (routes pipeline tasks here)
+- After: /learning-capture (all workflows end with capture)
+- Full: /delegation > /workflow-engine > /learning-capture
+
+## Output Contract
+- Input: named workflow or custom goal + content
+- Output: pipeline diagram, step-by-step execution, final aggregated output
+- Side effects: executes each skill in the chain (side effects depend on constituent skills)
+
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- No input: print DISCOVERY with available named workflows, STOP
+- Named workflow but no content/context: ask for required input, STOP
+- Unknown workflow name: show available workflows, offer custom pipeline composition
+- Custom goal with no clear skill mapping: suggest closest named workflow or ask to clarify
 
 - Parse the user's goal and identify which skills are needed in what order
 - If a named workflow is requested (see Built-in Workflows below), load that pipeline

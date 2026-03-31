@@ -37,6 +37,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+# Absolute path to claude CLI -- Task Scheduler doesn't have .local/bin on PATH
+_claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
+CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
+
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 PROCESSED_DIR = SIGNALS_DIR / "processed"
@@ -169,21 +173,20 @@ def call_claude(prompt: str, system: str = "") -> str:
     else:
         full_prompt = prompt
 
-    # Use absolute path -- Task Scheduler doesn't have .local/bin on PATH
-    claude_bin = os.path.join(
-        os.path.expanduser("~"), ".local", "bin", "claude.exe"
-    )
-    if not os.path.isfile(claude_bin):
-        claude_bin = "claude"  # fallback to PATH
-
+    env = os.environ.copy()
+    env["JARVIS_SESSION_TYPE"] = "autonomous"
     try:
+        # Pass prompt via stdin ("-") to avoid Windows command-line length
+        # limits (WinError 206).  The overnight_runner uses the same pattern.
         result = subprocess.run(
-            [claude_bin, "-p", full_prompt],
+            [CLAUDE_BIN, "-p", "-"],
+            input=full_prompt,
             capture_output=True,
             text=True,
             encoding="utf-8",
             timeout=300,  # 5 min -- longer prompt needs more time
             cwd=str(REPO_ROOT),
+            env=env,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -191,7 +194,7 @@ def call_claude(prompt: str, system: str = "") -> str:
             return "(claude -p error: %s)" % result.stderr.strip()[:200]
         return "(claude -p returned empty response)"
     except FileNotFoundError:
-        return "(claude CLI not found -- ensure it is on PATH)"
+        return "(claude CLI not found at %s -- ensure it exists)" % CLAUDE_BIN
     except subprocess.TimeoutExpired:
         return "(claude -p timed out after 300s)"
     except Exception as exc:
@@ -253,6 +256,13 @@ For each proposed TELOS update:
 - Evidence: <signal/synthesis citation>
 - Priority: HIGH | MEDIUM | LOW
 
+DEDUP RULES (mandatory before creating any proposal):
+- Check the CURRENT TASKS section below. Do NOT propose changes that duplicate
+  existing unchecked tasklist items or open validations.
+- If a proposal overlaps with an existing task, skip it or reference the task
+  instead of creating a duplicate.
+- Generating zero proposals is a valid outcome. Silence means the system is healthy.
+
 Keep analysis grounded in evidence. Do not speculate beyond what signals show.
 Use ASCII only (no Unicode dashes, arrows, or box characters)."""
 
@@ -297,6 +307,19 @@ Use ASCII only (no Unicode dashes, arrows, or box characters)."""
     parts.append("- Raw signals (7d): %d" % scope["raw_signals_7d"])
     parts.append("- Failures (14d): %d" % scope["failures_14d"])
     parts.append("- Sessions (7d): %d" % scope["sessions_7d"])
+
+    # Include current tasklist for dedup
+    tasklist_path = REPO_ROOT / "orchestration" / "tasklist.md"
+    if tasklist_path.is_file():
+        tasklist_content = tasklist_path.read_text(encoding="utf-8")
+        # Truncate to unchecked items only (keep it focused)
+        unchecked = [
+            line for line in tasklist_content.splitlines()
+            if "[ ]" in line or ">>> " in line
+        ]
+        if unchecked:
+            parts.append("\n## CURRENT TASKS (for dedup -- do not duplicate)\n")
+            parts.append("\n".join(unchecked[:30]))  # cap at 30 items
 
     parts.append("\nAnalyze the gap between TELOS identity and signal evidence.")
     parts.append("Follow the output format exactly.")
@@ -519,7 +542,7 @@ def post_slack_summary(metrics: dict, run_dir: Path) -> bool:
     # Escalate to #general if contradictions or low coverage need attention
     sev = "critical" if (contradictions >= SIGNAL_THRESHOLD_CONTRADICTIONS
                          or coverage < SIGNAL_THRESHOLD_COVERAGE) else "routine"
-    return notify("\n".join(lines), severity=sev)
+    return notify("\n".join(lines), severity=sev, bypass_caps=True)
 
 
 # -- Main --------------------------------------------------------------------

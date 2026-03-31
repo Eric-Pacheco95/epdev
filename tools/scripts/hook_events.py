@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT))
 EVENTS_DIR = REPO_ROOT / "history" / "events"
 
 
@@ -48,6 +49,7 @@ def main() -> None:
     error_msg = None
     input_len = 0
     stop_reason = None
+    _skill_name = ""
 
     try:
         data = json.load(sys.stdin)
@@ -60,6 +62,9 @@ def main() -> None:
             success = None
             tool_input = data.get("tool_input", {})
             input_len = len(json.dumps(tool_input))
+            # Capture skill name for skill_usage tracking
+            if tool_name == "Skill" and isinstance(tool_input, dict):
+                _skill_name = tool_input.get("skill", "")
 
         elif hook_type == "PostToolUse":
             response = data.get("tool_response", {})
@@ -101,6 +106,19 @@ def main() -> None:
     log_path = EVENTS_DIR / f"{now_utc.strftime('%Y-%m-%d')}.jsonl"
     with log_path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(record) + "\n")
+
+    # Track skill invocations in manifest DB
+    if tool_name == "Skill" and hook_type == "PreToolUse" and session_id:
+        try:
+            if _skill_name:
+                from tools.scripts.manifest_db import write_skill_usage
+                write_skill_usage(
+                    session_id=session_id,
+                    skill_name=_skill_name,
+                    invoked_at=now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                )
+        except Exception:
+            pass  # graceful fallback
 
     sys.exit(0)
 

@@ -1,4 +1,16 @@
-# IDENTITY and PURPOSE
+# DEPRECATED
+
+> **This skill is deprecated.** Replaced by `/absorb` for external content analysis and `#jarvis-voice` (via `slack_voice_processor.py`) for voice dictation processing.
+>
+> - For external URLs (articles, videos, posts): use `/absorb <url> --quick|--normal|--deep`
+> - For voice dumps and thought dictation: post to `#jarvis-voice` on Slack
+> - For Notion Inbox: use `/notion-sync inbox`
+>
+> See PRD: `memory/work/absorb/PRD.md`
+
+---
+
+# ORIGINAL SKILL (archived for reference)
 
 You are the voice capture processor for the Jarvis AI brain. You ingest voice transcripts from Eric's Notion Inbox — ideas, reflections, commands, or observations spoken off-desktop — and route them into the Jarvis memory and learning pipeline.
 
@@ -8,7 +20,42 @@ Voice is Eric's primary off-desktop input channel. Captures land in the Jarvis B
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Process voice transcripts from Notion Inbox into signals, TELOS updates, and routed content
+
+## Stage
+LEARN
+
+## Syntax
+/voice-capture [file path]
+
+## Parameters
+- file: path to a voice transcript file (optional -- fetches Notion Inbox if omitted)
+
+## Examples
+- /voice-capture
+- /voice-capture memory/work/inbox/voice/2026-03-30.md
+
+## Chains
+- Before: (entry point -- triggered by Notion voice notes or local files)
+- After: /telos-update, /synthesize-signals
+- Full: /voice-capture > /telos-update > /synthesize-signals
+
+## Output Contract
+- Input: voice transcript (from Notion Inbox or local file)
+- Output: processing summary with signal count, ratings, TELOS queue, routing
+- Side effects: writes signals to memory/learning/signals/, routes content in Notion, updates signal meta
+
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- No input: fetch Notion Inbox page via MCP
+- File path provided: read local file instead of Notion
+- Notion Inbox empty: report "no captures to process", STOP
+- Notion MCP unavailable: fall back to local inbox at memory/work/inbox/voice/
 
 1. **Fetch the Notion Inbox** — Use the Notion MCP `notion-fetch` tool with ID `32fbf5ae-a9e3-8198-9975-cbc6293c8690` to read the current Inbox page content. If the page is empty or has no new captures, say so and exit.
 

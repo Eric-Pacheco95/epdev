@@ -24,10 +24,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -48,6 +48,10 @@ DIMENSION_ORDER = [
     "prompt_quality",
     "cross_project",
 ]
+
+# Time budget for multi-dimension runs (seconds).
+# 100 min = 6000s, leaving ~20 min buffer for worktree setup, quality checks, cleanup.
+TIME_BUDGET_S = 6000
 
 
 # -- State management -------------------------------------------------------
@@ -87,6 +91,38 @@ def next_dimension(state: dict, force: str = None) -> str:
 
     idx = DIMENSION_ORDER.index(last)
     return DIMENSION_ORDER[(idx + 1) % len(DIMENSION_ORDER)]
+
+
+def dimensions_to_run(state: dict, dimensions: dict, force: str = None) -> list[str]:
+    """Return ordered list of enabled dimensions to run tonight.
+
+    Starts from next_dimension(), wraps around, skips disabled.
+    If force is set, returns only that dimension.
+    """
+    if force and force in DIMENSION_ORDER:
+        if dimensions.get(force, {}).get("enabled", True):
+            return [force]
+        return []
+
+    start = next_dimension(state)
+    start_idx = DIMENSION_ORDER.index(start)
+
+    result = []
+    for i in range(len(DIMENSION_ORDER)):
+        dim_name = DIMENSION_ORDER[(start_idx + i) % len(DIMENSION_ORDER)]
+        if dim_name in dimensions and dimensions[dim_name].get("enabled", True):
+            result.append(dim_name)
+
+    return result
+
+
+def worktree_is_clean(cwd: str) -> bool:
+    """Check if the worktree has no uncommitted changes."""
+    result = subprocess.run(
+        ["git", "status", "--porcelain"],
+        capture_output=True, text=True, encoding="utf-8", cwd=cwd,
+    )
+    return result.returncode == 0 and not result.stdout.strip()
 
 
 # -- Command validation ------------------------------------------------------
@@ -187,100 +223,31 @@ def parse_program(path: Path) -> dict:
 
 
 # -- Git operations (worktree-based) -----------------------------------------
+# Delegated to shared library; overnight runner uses a dedicated directory.
+
+from tools.scripts.lib.worktree import (
+    worktree_setup as _wt_setup,
+    worktree_cleanup as _wt_cleanup,
+    cleanup_old_branches as _cleanup_branches,
+    git_diff_stat,
+)
 
 WORKTREE_DIR = REPO_ROOT.parent / "epdev-overnight"
 
 
 def worktree_setup(branch: str) -> Path:
-    """Create a git worktree for the overnight branch. Returns worktree path.
-
-    Uses a sibling directory (../epdev-overnight) so the main working tree
-    is never touched -- no stash, no branch switch, no conflict with active
-    Claude Code sessions.
-    """
-    wt = WORKTREE_DIR
-
-    # Clean up stale worktree if it exists (crash recovery)
-    if wt.exists():
-        print(f"  Cleaning up stale worktree at {wt}")
-        subprocess.run(
-            ["git", "worktree", "remove", str(wt), "--force"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-        )
-        subprocess.run(
-            ["git", "worktree", "prune"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-        )
-
-    # Delete stale branch if it exists (from previous day's run)
-    subprocess.run(
-        ["git", "branch", "-D", branch],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
-
-    # Create worktree with new branch
-    result = subprocess.run(
-        ["git", "worktree", "add", "-b", branch, str(wt)],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
-    if result.returncode != 0:
-        print(f"ERROR: Failed to create worktree: {result.stderr.strip()}",
-              file=sys.stderr)
-        return None
-
-    print(f"  Worktree created at {wt} (branch: {branch})")
-    return wt
+    """Create overnight worktree. Delegates to shared library."""
+    return _wt_setup(branch, worktree_dir=WORKTREE_DIR, symlink_memory=True)
 
 
 def worktree_cleanup() -> None:
-    """Remove the overnight worktree. Safe to call even if it doesn't exist."""
-    wt = WORKTREE_DIR
-    if wt.exists():
-        subprocess.run(
-            ["git", "worktree", "remove", str(wt), "--force"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-        )
-    subprocess.run(
-        ["git", "worktree", "prune"],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
+    """Remove overnight worktree. Delegates to shared library."""
+    _wt_cleanup(worktree_dir=WORKTREE_DIR)
 
 
 def cleanup_old_branches(days: int = 7) -> None:
     """Delete jarvis/overnight-* branches older than N days."""
-    from datetime import timedelta
-    cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
-
-    result = subprocess.run(
-        ["git", "branch", "--list", "jarvis/overnight-*"],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
-    for line in result.stdout.splitlines():
-        branch_name = line.strip().lstrip("* ")
-        # Extract date from branch name: jarvis/overnight-YYYY-MM-DD
-        parts = branch_name.split("-")
-        if len(parts) >= 4:
-            try:
-                branch_date = "-".join(parts[-3:])
-                if branch_date < cutoff:
-                    subprocess.run(
-                        ["git", "branch", "-D", branch_name],
-                        capture_output=True, text=True, encoding="utf-8",
-                        cwd=str(REPO_ROOT),
-                    )
-                    print(f"  Cleaned up old branch: {branch_name}")
-            except (ValueError, IndexError):
-                pass
-
-
-def git_diff_stat(cwd: str = None) -> str:
-    """Get diff stat for latest commit."""
-    result = subprocess.run(
-        ["git", "diff", "--stat", "HEAD~1..HEAD"],
-        capture_output=True, text=True, encoding="utf-8",
-        cwd=cwd or str(REPO_ROOT),
-    )
-    return result.stdout.strip() if result.returncode == 0 else "(no diff available)"
+    _cleanup_branches(prefix="jarvis/overnight", days=days)
 
 
 def git_log_oneline(n: int = 20, cwd: str = None) -> str:
@@ -370,12 +337,15 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
     print(f"  Running dimension: {dim_name} ...")
     print(f"  Working directory: {run_cwd}")
 
+    env = os.environ.copy()
+    env["JARVIS_SESSION_TYPE"] = "autonomous"
     try:
         proc = subprocess.run(
             [CLAUDE_BIN, "-p", "--verbose", "-"],
             input=prompt,
             capture_output=True, text=True, encoding="utf-8", cwd=run_cwd,
             timeout=7200,  # 2 hour hard kill
+            env=env,
         )
 
         output = proc.stdout or ""
@@ -482,36 +452,51 @@ Print a one-line result: SECURITY_AUDIT: PASS or SECURITY_AUDIT: FAIL: <reason>"
 
 # -- Slack notification ------------------------------------------------------
 
-def post_slack_summary(result: dict, quality: str, security: str) -> bool:
-    """Post overnight summary to #epdev Slack."""
+def post_slack_summary(results: list[dict], quality: str, security: str,
+                       elapsed_min: float = 0) -> bool:
+    """Post overnight summary to #epdev Slack.
+
+    Args:
+        results: List of result dicts from run_dimension() calls.
+        quality: Quality gate result string.
+        security: Security audit result string.
+        elapsed_min: Total elapsed time in minutes.
+    """
     try:
         from tools.scripts.slack_notify import notify
     except ImportError:
         print("  Slack notify not available", file=sys.stderr)
         return False
 
-    dim = result.get("dimension", "unknown")
-    branch = result.get("branch", "unknown")
-    status = result.get("status", "unknown")
-    baseline = result.get("baseline", "?")
-    final = result.get("final", "?")
-    kept = result.get("kept", 0)
-    discarded = result.get("discarded", 0)
+    if not results:
+        return False
+
+    branch = results[0].get("branch", "unknown")
+    total_kept = sum(r.get("kept", 0) for r in results)
+    total_discarded = sum(r.get("discarded", 0) for r in results)
+    dim_names = [r.get("dimension", "?") for r in results]
 
     lines = [
-        f"*Overnight Self-Improvement Complete*",
-        f"Dimension: {dim}",
-        f"Status: {status}",
-        f"Metric: {baseline} -> {final} ({kept} kept, {discarded} discarded)",
+        "*Overnight Self-Improvement Complete*",
+        f"Dimensions: {', '.join(dim_names)} ({len(results)} of {len(DIMENSION_ORDER)})",
+        f"Total: {total_kept} kept, {total_discarded} discarded ({elapsed_min:.0f} min)",
+    ]
+
+    for r in results:
+        status_icon = "+" if r.get("status") == "completed" else "!"
+        lines.append(f"  {status_icon} {r['dimension']}: {r.get('baseline', '?')} -> "
+                      f"{r.get('final', '?')} ({r.get('kept', 0)} kept)")
+
+    lines.extend([
         f"Branch: `{branch}`",
         f"{quality}",
         f"{security}",
-        f"Report: `{result.get('report_path', 'N/A')}`",
-    ]
+    ])
 
-    # Escalate failures to #general so they don't get buried
-    sev = "critical" if status in ("failed", "error") else "routine"
-    return notify("\n".join(lines), severity=sev)
+    # Escalate if any dimension failed
+    any_failed = any(r.get("status") in ("failed", "error") for r in results)
+    sev = "critical" if any_failed else "routine"
+    return notify("\n".join(lines), severity=sev, bypass_caps=True)
 
 
 # -- Main --------------------------------------------------------------------
@@ -521,7 +506,7 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true",
                         help="Plan only, no execution")
     parser.add_argument("--dimension", type=str, default=None,
-                        help="Force a specific dimension")
+                        help="Force a specific dimension (runs only that one)")
     parser.add_argument("--test", action="store_true",
                         help="Run self-tests")
     args = parser.parse_args()
@@ -532,48 +517,43 @@ def main() -> int:
     today = datetime.now().strftime("%Y-%m-%d")
     print(f"Jarvis Overnight Runner -- {today}")
     print(f"Repo: {REPO_ROOT}")
+    print(f"Time budget: {TIME_BUDGET_S // 60} min")
 
-    # 1. Load state and determine dimension
+    # 1. Load state and parse program
     state = load_state()
-    dim_name = next_dimension(state, args.dimension)
 
     # Check for dedup: same date already ran
     if state.get("last_run_date") == today and not args.dimension:
         print(f"Already ran today ({today}). Use --dimension to force.")
         return 0
 
-    # 2. Parse program.md
     dimensions = parse_program(PROGRAM_FILE)
-    if dim_name not in dimensions:
-        print(f"ERROR: dimension '{dim_name}' not found in program.md",
-              file=sys.stderr)
-        return 1
 
-    dim_config = dimensions[dim_name]
-
-    # 2b. Validate metric/guard commands (C1 mitigation)
-    if not validate_command(dim_config.get("metric", ""), "metric"):
-        return 1
-    if not validate_command(dim_config.get("guard", ""), "guard"):
-        return 1
-
-    if not dim_config.get("enabled", True):
-        print(f"Dimension '{dim_name}' is disabled in program.md. Skipping.")
-        # Advance to next dimension for tomorrow
-        state["last_dimension"] = dim_name
-        state["last_run_date"] = today
-        save_state(state)
+    # 2. Determine dimensions to run
+    dim_queue = dimensions_to_run(state, dimensions, args.dimension)
+    if not dim_queue:
+        print("No enabled dimensions to run.")
         return 0
 
+    # 2b. Validate all dimension commands upfront
+    for dim_name in dim_queue:
+        dim_config = dimensions[dim_name]
+        if not validate_command(dim_config.get("metric", ""), f"{dim_name}/metric"):
+            dim_queue.remove(dim_name)
+        if not validate_command(dim_config.get("guard", ""), f"{dim_name}/guard"):
+            if dim_name in dim_queue:
+                dim_queue.remove(dim_name)
+
     branch = f"jarvis/overnight-{today}"
-    print(f"Dimension: {dim_name}")
+    print(f"Dimension queue: {', '.join(dim_queue)}")
     print(f"Branch: {branch}")
-    print(f"Iterations: {dim_config.get('iterations', 20)}")
     print()
 
     if args.dry_run:
-        result = run_dimension(dim_name, dim_config, branch, dry_run=True)
-        print("\n[DRY RUN] No changes made.")
+        for i, dim_name in enumerate(dim_queue, 1):
+            iters = dimensions[dim_name].get("iterations", 20)
+            print(f"  [{i}/{len(dim_queue)}] {dim_name} ({iters} iterations)")
+        print(f"\n[DRY RUN] Would run {len(dim_queue)} dimensions. No changes made.")
         return 0
 
     # 3. Clean up old branches (>7 days)
@@ -585,38 +565,80 @@ def main() -> int:
         print("ERROR: Failed to create worktree. Aborting.", file=sys.stderr)
         return 1
 
+    results = []
+    last_completed_dim = None
+    start_time = time.monotonic()
+
     try:
         wt_cwd = str(wt_path)
 
-        # 5. Run dimension in the worktree
-        result = run_dimension(dim_name, dim_config, branch, cwd=wt_cwd)
+        # 5. Run dimensions in sequence until time budget exhausted
+        for i, dim_name in enumerate(dim_queue, 1):
+            elapsed = time.monotonic() - start_time
+            remaining = TIME_BUDGET_S - elapsed
 
-        # 6. Post-loop validation (run in worktree so claude sees the branch diff)
-        print("\nPost-loop validation:")
+            if remaining < 120:  # less than 2 min left -- not enough for a dimension
+                print(f"\n  Time budget exhausted ({elapsed / 60:.0f} min elapsed). "
+                      f"Stopping after {i - 1} dimensions.")
+                break
+
+            # Pre-dimension dirty-state guard
+            if not worktree_is_clean(wt_cwd):
+                print(f"\n  WARNING: Worktree is dirty before {dim_name}. "
+                      f"Skipping remaining dimensions.")
+                break
+
+            dim_config = dimensions[dim_name]
+            iters = dim_config.get("iterations", 20)
+            print(f"\n--- [{i}/{len(dim_queue)}] {dim_name} "
+                  f"({iters} iters, {remaining / 60:.0f} min remaining) ---")
+
+            result = run_dimension(dim_name, dim_config, branch, cwd=wt_cwd)
+            results.append(result)
+            last_completed_dim = dim_name
+
+            dim_elapsed = time.monotonic() - start_time - elapsed
+            print(f"  {dim_name} completed in {dim_elapsed / 60:.1f} min "
+                  f"({result.get('kept', 0)} kept, {result.get('discarded', 0)} discarded)")
+
+        # 6. Post-loop validation (once, covering all dimensions)
+        total_elapsed = time.monotonic() - start_time
+        print(f"\nPost-loop validation ({len(results)} dimensions, "
+              f"{total_elapsed / 60:.0f} min total):")
         quality = run_quality_check(branch, cwd=wt_cwd)
         print(f"  {quality}")
         security = run_security_check(branch, cwd=wt_cwd)
         print(f"  {security}")
 
-        # 7. Post to Slack
+        # 7. Post to Slack (single summary for all dimensions)
         print("\nPosting to Slack ...")
-        post_slack_summary(result, quality, security)
+        elapsed_min = (time.monotonic() - start_time) / 60
+        post_slack_summary(results, quality, security, elapsed_min)
 
         # 8. Update state (writes to main tree, not worktree)
-        state["last_dimension"] = dim_name
+        if last_completed_dim:
+            state["last_dimension"] = last_completed_dim
         state["last_run_date"] = today
         state["run_count"] = state.get("run_count", 0) + 1
-        dim_stats = state.setdefault("dimensions", {}).setdefault(dim_name, {})
-        dim_stats["last_run"] = today
-        dim_stats["total_runs"] = dim_stats.get("total_runs", 0) + 1
-        dim_stats["total_kept"] = dim_stats.get("total_kept", 0) + result.get("kept", 0)
+        state["dimensions_per_run"] = len(results)
+
+        for result in results:
+            dim_name = result.get("dimension", "unknown")
+            dim_stats = state.setdefault("dimensions", {}).setdefault(dim_name, {})
+            dim_stats["last_run"] = today
+            dim_stats["total_runs"] = dim_stats.get("total_runs", 0) + 1
+            dim_stats["total_kept"] = (dim_stats.get("total_kept", 0)
+                                       + result.get("kept", 0))
         save_state(state)
 
     finally:
         # 9. Always clean up worktree (safe even if it doesn't exist)
         worktree_cleanup()
 
-    print(f"\nOvernight run complete. Branch: {branch}")
+    total_kept = sum(r.get("kept", 0) for r in results)
+    total_min = (time.monotonic() - start_time) / 60
+    print(f"\nOvernight run complete. {len(results)} dimensions, "
+          f"{total_kept} kept, {total_min:.0f} min. Branch: {branch}")
     return 0
 
 
@@ -651,6 +673,28 @@ def run_self_test() -> int:
 
     check(next_dimension(state, "prompt_quality") == "prompt_quality",
           "Force dimension override works")
+
+    # dimensions_to_run ordering
+    state_for_queue = {"last_dimension": "scaffolding"}
+    mock_dims = {
+        "scaffolding": {"enabled": True},
+        "codebase_health": {"enabled": True},
+        "knowledge_synthesis": {"enabled": True},
+        "external_monitoring": {"enabled": False},
+        "prompt_quality": {"enabled": True},
+        "cross_project": {"enabled": True},
+    }
+    queue = dimensions_to_run(state_for_queue, mock_dims)
+    check(queue[0] == "codebase_health",
+          "dimensions_to_run starts from next after last")
+    check("external_monitoring" not in queue,
+          "dimensions_to_run skips disabled dimensions")
+    check(len(queue) == 5,
+          f"dimensions_to_run returns 5 enabled dims ({len(queue)} found)")
+
+    # Force single dimension
+    forced = dimensions_to_run(state_for_queue, mock_dims, "prompt_quality")
+    check(forced == ["prompt_quality"], "Force dimension returns single-item list")
 
     # Program parsing
     if PROGRAM_FILE.is_file():

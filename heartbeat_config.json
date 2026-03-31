@@ -4,18 +4,12 @@
   "collectors": [
     {
       "name": "signal_count",
-      "type": "file_count",
-      "path": "memory/learning/signals",
-      "ext": ".md",
-      "recursive": true,
+      "type": "manifest_signal_count",
       "thresholds": {}
     },
     {
       "name": "signal_velocity",
-      "type": "file_count_velocity",
-      "path": "memory/learning/signals",
-      "ext": ".md",
-      "recursive": true,
+      "type": "manifest_signal_velocity",
       "window_days": 3,
       "thresholds": { "warn_below": 0.5, "crit_below": 0.1 },
       "isc_ref": "PRD-P4:ISC-3 Research outputs become signals or queued review artifacts"
@@ -151,6 +145,26 @@
       "checks": ["slack"],
       "thresholds": { "crit_above": 1 },
       "isc_ref": "PRD-P4C:ISC Auth failures escalate to #general"
+    },
+    {
+      "name": "producer_health",
+      "type": "producer_health",
+      "max_age_hours": 26,
+      "thresholds": { "warn_above": 1, "crit_above": 3 },
+      "isc_ref": "PRD-P4E:ISC-S3 producer_health alerts on stale/failed runs"
+    },
+    {
+      "name": "autonomous_signal_rate",
+      "type": "manifest_autonomous_signal_rate",
+      "window_days": 7,
+      "thresholds": { "warn_above": 10, "crit_above": 20 },
+      "isc_ref": "PRD-P4E:ISC-S4 retention layer prevents unbounded growth"
+    },
+    {
+      "name": "signal_volume",
+      "type": "signal_volume",
+      "thresholds": { "warn_above": 500, "crit_above": 1000 },
+      "isc_ref": "PRD-P4E:ISC-S4 retention layer prevents unbounded growth"
     }
   ],
   "alert_routing": {

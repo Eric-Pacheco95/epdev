@@ -8,8 +8,9 @@ Take a step back and think step-by-step about how to achieve the best possible r
 
 # STEPS
 
-- Read current state from:
-  - `orchestration/tasklist.md` — task-level status
+- Run `python tools/scripts/tasklist_parser.py --json --pretty` for structured tasklist data (tasks, tiers, phases, completion stats, active projects) -- this replaces manual markdown parsing
+- Run `python tools/scripts/tasklist_parser.py --completion` for a quick completion summary if only a status check is needed
+- Read TELOS context from:
   - `memory/work/telos/PROJECTS.md` — project-level tracking
   - `memory/work/telos/GOALS.md` — goal alignment
   - `memory/work/telos/STATUS.md` — current life context
@@ -73,7 +74,7 @@ External projects are repos outside epdev that Jarvis manages strategically. Eac
 | Project | Repo Path | ISC Tasklist | CLAUDE.md |
 |---------|-----------|--------------|-----------|
 | crypto-bot | `C:\Users\ericp\Github\crypto-bot` | `docs/ISC_HARDENING_TASKLIST.md` | `CLAUDE.md` "Current State" section |
-| brain-map (isce) | `C:\Users\ericp\Github\isce` | (not yet created) | `CLAUDE.md` |
+| jarvis-app | `C:\Users\ericp\Github\jarvis-app` | (not yet created) | `CLAUDE.md` |
 
 When reading an external ISC tasklist:
 1. Count checked `[x]` vs unchecked `[ ]` items per tier

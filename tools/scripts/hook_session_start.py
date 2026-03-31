@@ -45,6 +45,7 @@ FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
 SECURITY_DIR = REPO_ROOT / "history" / "security"
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
+ABSORBED_DIR = REPO_ROOT / "memory" / "learning" / "absorbed"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
 
 # Dynamic synthesis threshold:
@@ -247,6 +248,28 @@ def _check_open_validations() -> list[str]:
     return validations
 
 
+def _count_pending_absorb_proposals() -> int:
+    """Count absorbed files with status: PENDING in YAML frontmatter."""
+    if not ABSORBED_DIR.is_dir():
+        return 0
+    count = 0
+    for p in ABSORBED_DIR.iterdir():
+        if not p.is_file() or p.suffix != ".md":
+            continue
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+            # Check YAML frontmatter for status: PENDING
+            if text.startswith("---"):
+                end = text.find("---", 3)
+                if end > 0:
+                    front = text[3:end]
+                    if re.search(r"^status:\s*PENDING", front, re.MULTILINE):
+                        count += 1
+        except OSError:
+            continue
+    return count
+
+
 _PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
 
 
@@ -328,6 +351,14 @@ def main() -> None:
         print("-" * 40)
         for v in validations:
             print(f"  >>> {_ascii_safe(v)}")
+        print()
+
+    # Pending /absorb TELOS proposals
+    pending = _count_pending_absorb_proposals()
+    if pending:
+        print(f"Pending /absorb TELOS proposals: {pending}")
+        print("-" * 40)
+        print(f"  >>> {pending} TELOS proposal(s) pending from /absorb -- run `/absorb --review`")
         print()
 
     # Recent security events

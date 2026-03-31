@@ -64,11 +64,12 @@ ORCHESTRATE
    | /research | OBSERVE |
    | /extract-wisdom | OBSERVE |
    | /deep-audit | OBSERVE |
-   | /voice-capture | OBSERVE |
+   | /absorb | OBSERVE |
    | /first-principles | THINK |
    | /red-team | THINK |
    | /analyze-claims | THINK |
    | /find-logical-fallacies | THINK |
+   | /architecture-review | THINK |
    | /create-prd | PLAN |
    | /project-init | PLAN |
    | /improve-prompt | PLAN |
@@ -106,13 +107,14 @@ ORCHESTRATE
   /research           -- Research any topic (market, technical, live)
   /extract-wisdom     -- Pull ideas, insights, quotes from content (--summary for concise mode)
   /deep-audit         -- Multi-axis codebase audit
-  /voice-capture      -- Process voice transcript into signals
+  /absorb             -- Absorb external content (URLs) with dual-lens analysis + TELOS routing
 
 **THINK** (analyze and challenge)
   /first-principles   -- Break a problem to fundamentals
   /red-team           -- Stress-test a plan for weaknesses (--stride for STRIDE threat model)
   /analyze-claims     -- Fact-check content for unsupported claims
   /find-logical-fallacies -- Detect reasoning errors
+  /architecture-review -- Parallel multi-angle architecture analysis (FP + fallacies + optional red-team)
 
 **PLAN** (design and decide)
   /create-prd         -- Generate product requirements document

@@ -1,4 +1,8 @@
-# IDENTITY and PURPOSE
+# DEPRECATED
+
+This skill has been deprecated. Its classification and tier-rating logic has been absorbed into `/learning-capture` (quality gate sub-step). Use `/learning-capture` instead.
+
+# IDENTITY and PURPOSE (archived)
 
 You are an ultra-precise content classifier and quality judge for the Jarvis AI brain. You label incoming content with relevant tags and rate it for signal value — helping Eric decide what's worth consuming, extracting, or routing into the learning loop.
 
@@ -71,7 +75,7 @@ After outputting JSON, append a one-line plain-text recommendation:
 → Recommended action: /extract-wisdom | write signal | skip
 ```
 
-This output can be piped directly into `/extract-wisdom` or `/voice-capture` signal rating.
+This output can be piped directly into `/extract-wisdom` or `/absorb` signal rating.
 
 # INPUT
 

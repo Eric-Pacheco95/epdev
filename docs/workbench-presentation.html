@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Workbench - From AI Brain to Bank-Safe Harness</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0a0a0a; color: #e0e0e0; }
+
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 60px;
+            position: relative;
+        }
+
+        .slide-1 { background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); }
+        .slide-2 { background: linear-gradient(135deg, #0d1117 0%, #1a1d23 100%); }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: #484f58;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+            background: linear-gradient(90deg, #58a6ff, #bc8cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #8b949e;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .diagram-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .diagram-container pre.mermaid {
+            width: 100%;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 40px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #8b949e;
+            margin-top: 4px;
+        }
+
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: #30363d;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            font-size: 12px;
+            color: #484f58;
+        }
+
+        .key-points {
+            display: flex;
+            gap: 24px;
+            margin-top: 30px;
+            max-width: 1200px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .key-point {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px 20px;
+            flex: 1;
+            min-width: 220px;
+            max-width: 280px;
+        }
+
+        .key-point-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #58a6ff;
+            margin-bottom: 6px;
+        }
+
+        .key-point-text {
+            font-size: 13px;
+            color: #8b949e;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<!-- SLIDE 1: What Was Kept vs Stripped -->
+<div class="slide slide-1">
+    <div class="slide-number">1 / 2</div>
+    <h1>From Personal AI Brain to Bank-Safe Harness</h1>
+    <div class="subtitle">One session: audit 38 skills, strip personal data, ship 13 portable workflows</div>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+graph LR
+    subgraph FULL["FULL SYSTEM &mdash; 38 Skills"]
+        direction TB
+        subgraph kept["KEPT &mdash; Portable Infrastructure"]
+            A1["7-Phase Algorithm\nOBSERVE > THINK > PLAN >\nBUILD > EXECUTE > VERIFY > LEARN"]
+            A2["ISC Quality Gate\n6-check acceptance criteria"]
+            A3["13 Core Skills\nresearch, PRD, build, review"]
+            A4["Constitutional Security\n4-layer defense rules"]
+            A5["Decision Audit Trail\nhistory/decisions/"]
+        end
+        subgraph stripped["STRIPPED &mdash; Not Bank-Safe"]
+            B1["Learning System\n156 signals, synthesis"]
+            B2["Autonomous Agents\nheartbeat, overnight"]
+            B3["Identity Tracking\npersonal goals"]
+            B4["25 Personal Skills\nvoice, music, crypto"]
+            B5["MCP Integrations\nSlack, Notion, Calendar"]
+            B6["Memory System\n3-tier persistent"]
+        end
+    end
+
+    subgraph BANK["BANK-SAFE EXTRACT"]
+        direction TB
+        C1["13 Skills"]
+        C2["Algorithm + ISC"]
+        C3["Security Rules"]
+        C4["Audit Trail"]
+        C5["Stateless\nNo data between sessions"]
+    end
+
+    kept -->|"extracted"| BANK
+    stripped -.->|"removed"| X["blocked"]
+
+    classDef keptStyle fill:#2d6a4f,stroke:#1b4332,color:#d8f3dc
+    classDef strippedStyle fill:#9d0208,stroke:#6a040f,color:#ffd7d7
+    classDef bankStyle fill:#023e8a,stroke:#03045e,color:#caf0f8
+    classDef removeStyle fill:#6c757d,stroke:#495057,color:#fff
+
+    class A1,A2,A3,A4,A5 keptStyle
+    class B1,B2,B3,B4,B5,B6 strippedStyle
+    class C1,C2,C3,C4,C5 bankStyle
+    class X removeStyle
+        </pre>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value">38</div>
+            <div class="stat-label">Skills in Full System</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">13</div>
+            <div class="stat-label">Skills Extracted</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Personal Data in Output</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">1</div>
+            <div class="stat-label">Session to Complete</div>
+        </div>
+    </div>
+
+    <div class="footer">Claude Workbench &mdash; github.com/Eric-Pacheco95/claude-workbench</div>
+</div>
+
+<!-- SLIDE 2: The Skill Pipeline -->
+<div class="slide slide-2">
+    <div class="slide-number">2 / 2</div>
+    <h1>Repeatable Skill Pipeline</h1>
+    <div class="subtitle">13 chainable skills across 5 workflow phases &mdash; composable into any pipeline</div>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+graph LR
+    subgraph OBS["OBSERVE"]
+        R["/research\nmarket | technical | live"]
+    end
+
+    subgraph THK["THINK"]
+        FP["/first-principles\nbedrock assumptions"]
+        RT["/red-team\nfailure modes + STRIDE"]
+        AR["/architecture-review\nparallel 3-agent analysis"]
+    end
+
+    subgraph PLN["PLAN"]
+        PRD["/create-prd\nISC-gated requirements"]
+    end
+
+    subgraph BLD["BUILD"]
+        IMP["/implement-prd\nverify loop per ISC item"]
+        CP["/create-pattern\nnew reusable skills"]
+    end
+
+    subgraph VFY["VERIFY"]
+        RC["/review-code\nsecurity-first review"]
+        QG["/quality-gate\ncompliance audit"]
+    end
+
+    R -->|"brief"| FP
+    FP -->|"assumptions"| RT
+    RT -->|"risks"| PRD
+    R -->|"shortcut"| PRD
+    PRD -->|"PRD file"| IMP
+    IMP -->|"changed files"| RC
+    RC -->|"findings"| IMP
+    IMP -->|"complete"| QG
+    AR -.->|"composes"| FP
+    AR -.->|"composes"| RT
+
+    classDef obsStyle fill:#0077b6,stroke:#023e8a,color:#fff
+    classDef thkStyle fill:#7209b7,stroke:#560bad,color:#fff
+    classDef plnStyle fill:#e85d04,stroke:#dc2f02,color:#fff
+    classDef bldStyle fill:#2d6a4f,stroke:#1b4332,color:#fff
+    classDef vfyStyle fill:#d00000,stroke:#9d0208,color:#fff
+
+    class R obsStyle
+    class FP,RT,AR thkStyle
+    class PRD plnStyle
+    class IMP,CP bldStyle
+    class RC,QG vfyStyle
+        </pre>
+    </div>
+
+    <div class="key-points">
+        <div class="key-point">
+            <div class="key-point-title">Disciplined Thinking</div>
+            <div class="key-point-text">Algorithm enforces OBSERVE and THINK phases before any BUILD begins. No cowboy coding.</div>
+        </div>
+        <div class="key-point">
+            <div class="key-point-title">Security by Default</div>
+            <div class="key-point-text">4-layer constitutional rules: input validation, secret protection, execution safety, audit logging.</div>
+        </div>
+        <div class="key-point">
+            <div class="key-point-title">Composable Pipelines</div>
+            <div class="key-point-text">Skills chain together. Full build: /research > /create-prd > /implement-prd > /quality-gate</div>
+        </div>
+        <div class="key-point">
+            <div class="key-point-title">Self-Extending</div>
+            <div class="key-point-text">/create-pattern builds new domain-specific skills. The harness grows with your team's needs.</div>
+        </div>
+    </div>
+
+    <div class="footer">Claude Workbench &mdash; github.com/Eric-Pacheco95/claude-workbench</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        themeVariables: {
+            darkMode: true,
+            background: '#161b22',
+            primaryColor: '#238636',
+            primaryTextColor: '#e6edf3',
+            lineColor: '#484f58',
+            fontSize: '14px'
+        }
+    });
+</script>
+
+<noscript>
+<p>JavaScript is required to render the Mermaid diagrams. The raw diagram source is embedded in the HTML.</p>
+</noscript>
+
+</body>
+</html>

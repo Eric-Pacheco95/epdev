@@ -74,15 +74,12 @@ tmp/
 *.tmp
 *.bak
 
-# Session memory (ephemeral, not committed)
-memory/session/*
-!memory/session/.gitkeep
-
 # ------------------------------------------------------------------------------
 # Personal memory content — blank-slate template only; users populate their own
 # ------------------------------------------------------------------------------
 # TELOS identity files (user fills these in on first setup)
 memory/work/telos/*.md
+memory/work/telos/recordings/
 !memory/work/telos/README.md
 # Legacy flat TELOS files
 memory/work/TELOS.md
@@ -109,6 +106,11 @@ memory/work/agent-orchestration-research/
 memory/work/teach/
 memory/work/frontend-research/
 memory/work/poc-agent-loop/
+memory/work/capture-recording/
+memory/work/jarvis-dashboard/
+memory/work/aron-prins-research/
+memory/work/data-layer/
+memory/work/harness-engineering/
 # Voice inbox content
 memory/work/inbox/voice/*.md
 memory/work/inbox/voice/processed/*.md

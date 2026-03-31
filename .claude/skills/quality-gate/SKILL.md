@@ -6,11 +6,63 @@ Your task is to read the tasklist, cross-reference deliverables and decision log
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Audit completed work for THINK-before-BUILD compliance and deliverable gaps
+
+## Stage
+VERIFY
+
+## Syntax
+/quality-gate [phase or task scope]
+
+## Parameters
+- scope: optional phase name, date range, or "all" (default: all checked items)
+
+## Examples
+- /quality-gate
+- /quality-gate Phase 4A
+- /quality-gate --phase 3E
+
+## Chains
+- Before: /implement-prd (non-optional gate at VERIFY), phase completion
+- After: /update-steering-rules (if gaps reveal systemic patterns), /learning-capture (audit findings become signals)
+- Full: /implement-prd > /quality-gate > /learning-capture
+
+## Output Contract
+- Input: tasklist scope (auto or specified)
+- Output: gap report (summary line, findings table, critical gaps, checked-but-pending, gate verification commands, recommendations)
+- Side effects: none (OBSERVE only -- never modifies files)
+
+# CONTRACT
+
+## Input
+- **required:** orchestration/tasklist.md (auto-read)
+  - type: auto-read
+- **optional:** phase or task scope to audit
+  - type: text
+  - default: all checked items across all phases
+
+## Output
+- **produces:** quality gap report
+  - format: structured-markdown
+  - sections: summary line, findings table, Critical and High Gaps, Checked-But-Pending Items, Gate Verification Commands, Recommendations
+  - destination: stdout
+- **side-effects:** none (read-only audit)
+
+## Errors
+- **no-checked-items:** tasklist has no [x] items to audit
+  - recover: nothing to audit; run after completing some tasks
+- **tasklist-not-found:** orchestration/tasklist.md missing
+  - recover: check path; tasklist may have moved or not been created yet
+
 # STEPS
 
-- Read `orchestration/tasklist.md` and extract every `[x]` checked item, grouped by phase
-- Read all decision log entries in `history/decisions/` to build a coverage map of which phases and tasks have documented rationale
-- For each checked item, evaluate four dimensions:
+- Run `python tools/scripts/quality_gate_check.py --check-files` to get the deterministic report: tasklist stats, open items, decision log coverage, and file reference validation. If a `--phase` argument was provided, pass it through: `python tools/scripts/quality_gate_check.py --check-files --phase <PHASE>`
+- If a PRD is being gated, also run `python tools/scripts/quality_gate_check.py --prd <path>` to validate ISC items (verify methods present, minimum count, completion percentage)
+- Parse the report output — the script handles all file counting, cross-referencing, and existence checks deterministically. You only need to interpret the findings
+- For each checked item in the tasklist (use `python tools/scripts/tasklist_parser.py --status checked --json` for structured data), evaluate four dimensions:
   - **THINK-before-BUILD**: Was a THINK artifact (PRD, decision log, spec, design doc, or research brief) produced before or alongside the BUILD artifact? Check `memory/work/*/PRD.md`, `memory/work/*/research_brief.md`, `history/decisions/`, and any spec files referenced in the task description
   - **Intent match**: Does the actual deliverable match the original intent described in the task text and phase header? Look for scope drift, silent reductions, or "pending" qualifiers embedded inside checked items
   - **Decision log**: Is there an entry in `history/decisions/` that explains why this approach was chosen over alternatives? Not every task needs one — focus on architectural choices, tool selections, and phase-level decisions

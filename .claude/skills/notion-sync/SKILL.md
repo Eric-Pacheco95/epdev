@@ -12,7 +12,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 
 | Mode | Trigger | Purpose |
 |------|---------|---------|
-| `inbox` | `/notion-sync` or `/notion-sync inbox` | Check Inbox for new captures (default — also done by /voice-capture) |
+| `inbox` | `/notion-sync` or `/notion-sync inbox` | Check Inbox for new captures (default) |
 | `journal` | `/notion-sync journal` | Weekly: read Journal → signals → queue telos-update |
 | `goals` | `/notion-sync goals` | Monthly: read Goals pages → compare with TELOS GOALS.md → propose updates |
 | `push` | `/notion-sync push` | After reports/updates: write Jarvis output back to Notion |
@@ -22,7 +22,7 @@ Take a step back and think step-by-step about how to achieve the best possible r
 All IDs sourced from `memory/work/notion_brain.md`. Load that file first to confirm IDs before making MCP calls.
 
 **Jarvis Brain pages (read + write):**
-- 📥 Inbox: `32fbf5ae-a9e3-8198-9975-cbc6293c8690` — voice/note captures (also handled by /voice-capture)
+- 📥 Inbox: `32fbf5ae-a9e3-8198-9975-cbc6293c8690` — voice/note captures
 - 📓 Journal: `32fbf5ae-a9e3-81ca-9f21-f230024533b3` — personal journal entries
 - 🎯 Goals & Growth: `32fbf5ae-a9e3-819a-8499-d4fa39bb96a9` — current goals
 - 💡 Ideas: `32fbf5ae-a9e3-81ff-b851-d45fad5727f3` — ideas Jarvis routed here
@@ -43,7 +43,7 @@ All IDs sourced from `memory/work/notion_brain.md`. Load that file first to conf
 
 ## Mode: inbox
 
-This mode overlaps with `/voice-capture`. Use `/voice-capture` for voice transcripts. Use this mode only if checking for non-voice Inbox entries (typed notes, links, quick thoughts).
+Check for new Inbox entries (typed notes, links, quick thoughts). For URL analysis, use `/absorb`. For voice dictation, use `#jarvis-voice`.
 
 1. Fetch Inbox page via `notion-fetch` with ID `32fbf5ae-a9e3-8198-9975-cbc6293c8690`
 2. Identify any entries not marked as processed and not voice transcripts

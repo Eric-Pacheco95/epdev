@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 import urllib.error
@@ -208,6 +207,8 @@ def call_claude(prompt: str, system: str = "") -> str:
     else:
         full_prompt = prompt
 
+    env = os.environ.copy()
+    env["JARVIS_SESSION_TYPE"] = "autonomous"
     try:
         result = subprocess.run(
             [CLAUDE_BIN, "-p", "-"],
@@ -217,6 +218,7 @@ def call_claude(prompt: str, system: str = "") -> str:
             encoding="utf-8",
             timeout=120,
             cwd=str(REPO_ROOT),
+            env=env,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -365,7 +367,7 @@ def main() -> int:
     # Post to Slack
     try:
         from tools.scripts.slack_notify import notify
-        ok = notify(feed_content)
+        ok = notify(feed_content, bypass_caps=True)
         if ok:
             print("Posted to #epdev Slack")
         else:
@@ -376,7 +378,7 @@ def main() -> int:
     # Track proposal IDs for value tracking
     track_proposals(today, feed_content)
 
-    print(f"Morning feed complete.")
+    print("Morning feed complete.")
     return 0
 
 

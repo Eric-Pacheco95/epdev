@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""Jarvis health report — aggregate JSONL event files into the 5 core health metrics.
+"""Jarvis health report -- aggregate JSONL event files into core health metrics.
 
 Usage:
-  python tools/scripts/query_events.py              # full report, last 7 days
-  python tools/scripts/query_events.py --days 30    # longer window
-  python tools/scripts/query_events.py --isc-gaps   # ISC gap detail only
-  python tools/scripts/query_events.py --failures   # tool failure breakdown
-  python tools/scripts/query_events.py --cost        # session cost summary (when available)
-  python tools/scripts/query_events.py --json        # machine-readable output (for Phase 3E)
+  python tools/scripts/query_events.py --report          # full health report, last 7 days
+  python tools/scripts/query_events.py --cost            # cost summary only (session_cost records)
+  python tools/scripts/query_events.py --failures        # tool failure breakdown
+  python tools/scripts/query_events.py --isc-gaps        # ISC gap analysis (Phase 5)
+  python tools/scripts/query_events.py --report --days 30  # longer window
+  python tools/scripts/query_events.py --json            # machine-readable output (for Phase 3E)
 
 Metrics:
-  1. sessions/day      — Stop records per day (session boundaries)
-  2. tool_failure_rate — PostToolUse failures / total PostToolUse calls
-  3. isc_gap_count     — PostToolUse failures per session (proxy for ISC gaps)
-  4. top_tools         — tool call frequency histogram
-  5. cost              — session cost in USD (requires Stop hook cost data; N/A until wired)
+  1. sessions/day      -- Stop records per day (session boundaries)
+  2. tool_failure_rate -- PostToolUse failures / total PostToolUse calls
+  3. top_tools         -- tool call frequency histogram
+  4. cost              -- session cost in USD (from session_cost records; null until Claude Code exposes tokens)
 
 Phase 3E: --json outputs a dict that the heartbeat can compare against ISC thresholds.
 """
@@ -27,11 +26,12 @@ import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Optional
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EVENTS_DIR = REPO_ROOT / "history" / "events"
 
-# Health thresholds — adjust in Phase 3E ISC engine
+# Health thresholds --adjust in Phase 3E ISC engine
 THRESHOLDS = {
     "failure_rate_warn": 0.05,   # 5% failures = WARN
     "failure_rate_crit": 0.15,   # 15% failures = CRITICAL
@@ -96,7 +96,7 @@ def compute_metrics(records: list[dict]) -> dict:
     failure_count = len(failures)
     failure_rate = round(failure_count / total_calls, 4) if total_calls else 0.0
 
-    # 3. ISC gaps — failures per session (proxy: sessions with ≥1 failure)
+    # 3. ISC gaps --failures per session (proxy: sessions with >=1 failure)
     session_failures: dict[str, list] = defaultdict(list)
     for r in failures:
         session_failures[r.get("session_id", "unknown")].append(r.get("tool", "?"))
@@ -106,10 +106,28 @@ def compute_metrics(records: list[dict]) -> dict:
     tool_counts = Counter(r.get("tool", "?") for r in post_tool)
     top_tools = tool_counts.most_common(10)
 
-    # 5. Cost — read from Stop records if hook_events writes cost_usd field
-    cost_records = [r for r in stops if r.get("cost_usd") is not None]
-    total_cost = sum(r["cost_usd"] for r in cost_records)
-    avg_cost = round(total_cost / len(cost_records), 4) if cost_records else None
+    # 5. Cost --read from session_cost records (hook_session_cost.py) or legacy Stop records
+    cost_records = [r for r in records if r.get("type") == "session_cost"]
+    # Also check legacy Stop records with cost_usd field
+    legacy_cost = [r for r in stops if r.get("cost_usd") is not None and r.get("type") != "session_cost"]
+    all_cost_records = cost_records + legacy_cost
+
+    # Token aggregation from session_cost records
+    input_tokens_total = sum(r["input_tokens"] for r in all_cost_records if r.get("input_tokens") is not None)
+    output_tokens_total = sum(r["output_tokens"] for r in all_cost_records if r.get("output_tokens") is not None)
+    cache_read_total = sum(r["cache_read_tokens"] for r in all_cost_records if r.get("cache_read_tokens") is not None)
+    has_token_data = any(r.get("input_tokens") is not None for r in all_cost_records)
+
+    records_with_cost = [r for r in all_cost_records if r.get("cost_usd") is not None]
+    total_cost = sum(r["cost_usd"] for r in records_with_cost)
+    avg_cost = round(total_cost / len(records_with_cost), 4) if records_with_cost else None
+
+    # Also count session_cost records for session tracking
+    for r in cost_records:
+        sid = r.get("session_id", "")
+        if sid:
+            session_ids.add(sid)
+    sessions_total = len(session_ids - {""})
 
     # Intent calls (PreToolUse)
     intent_calls = len(pre_tool)
@@ -124,9 +142,12 @@ def compute_metrics(records: list[dict]) -> dict:
         "session_failures": dict(session_failures),
         "top_tools": top_tools,
         "intent_calls": intent_calls,
-        "cost_total_usd": round(total_cost, 4) if cost_records else None,
+        "cost_total_usd": round(total_cost, 4) if records_with_cost else None,
         "cost_avg_per_session_usd": avg_cost,
-        "cost_sessions_tracked": len(cost_records),
+        "cost_sessions_tracked": len(all_cost_records),
+        "input_tokens_total": input_tokens_total if has_token_data else None,
+        "output_tokens_total": output_tokens_total if has_token_data else None,
+        "cache_read_tokens_total": cache_read_total if has_token_data else None,
         "unique_days_with_data": unique_days,
     }
 
@@ -145,7 +166,16 @@ def status_badge(metric: str, value: float) -> str:
     return "OK"
 
 
+def _compute_date_range(days: int) -> tuple:
+    """Return (start_date_str, end_date_str) for display."""
+    now = datetime.now(timezone.utc)
+    end = now.date()
+    start = (now - timedelta(days=days)).date()
+    return str(start), str(end)
+
+
 def print_report(m: dict, days: int) -> None:
+    start_str, end_str = _compute_date_range(days)
     fail_pct = f"{m['failure_rate'] * 100:.1f}%"
     fail_status = status_badge("failure_rate", m["failure_rate"])
     session_status = status_badge("sessions_per_day", m["sessions_per_day"])
@@ -157,44 +187,49 @@ def print_report(m: dict, days: int) -> None:
     elif "WARN" in [fail_status, session_status]:
         overall = "WARN"
 
-    cost_line = "N/A (Stop cost hook not yet wired)"
+    # Status reason
+    if overall == "HEALTHY":
+        status_reason = "(failure rate < 5%)"
+    elif overall == "WARN" and fail_status == "WARN":
+        status_reason = "(failure rate 5-15%)"
+    elif overall == "CRITICAL":
+        status_reason = "(failure rate >= 15%)"
+    else:
+        status_reason = "(low session activity)"
+
+    # Cost line
+    cost_line = "unavailable (token tracking pending)"
     if m["cost_total_usd"] is not None:
         cost_line = (
-            f"${m['cost_total_usd']:.4f} total  "
+            f"${m['cost_total_usd']:.2f} total "
             f"(${m['cost_avg_per_session_usd']:.4f}/session avg, "
             f"{m['cost_sessions_tracked']} sessions tracked)"
         )
+    elif m["input_tokens_total"] is not None:
+        cost_line = (
+            f"{m['input_tokens_total']:,} input, "
+            f"{m['output_tokens_total']:,} output tokens"
+        )
 
-    top_tools_str = "  ".join(f"{t}({c})" for t, c in m["top_tools"][:7])
+    top_tools_str = " ".join(f"{t}({c})" for t, c in m["top_tools"][:5])
+    if not top_tools_str:
+        top_tools_str = "none"
 
-    print(f"\nJarvis Health -- last {days} days  ({m['unique_days_with_data']} days with data)")
-    print("-" * 60)
-    print(f"Sessions:     {m['sessions_total']} total  ({m['sessions_per_day']}/day avg)  [{session_status}]")
-    print(f"Tool calls:   {m['total_tool_calls']} total  {m['failure_count']} failures  ({fail_pct} rate)  [{fail_status}]")
-    print(f"Intent calls: {m['intent_calls']} PreToolUse recorded")
-    print(f"ISC gaps:     {m['isc_gap_sessions']} sessions had >=1 failure")
-    print(f"Cost:         {cost_line}")
-    print(f"Top tools:    {top_tools_str}")
-    print("-" * 60)
-    print(f"Status: {overall}")
+    header = f"Jarvis Health -- {start_str} to {end_str}"
+    separator = "-" * len(header)
 
-    if m["isc_gap_sessions"] > 0 and m["session_failures"]:
-        print("\nSessions with failures:")
-        for sid, tools in list(m["session_failures"].items())[:5]:
-            sid_short = sid[:12] if sid else "unknown"
-            print(f"  {sid_short}...  tools: {', '.join(tools)}")
+    print(header)
+    print(separator)
+    print(f"Sessions:        {m['sessions_total']} sessions ({m['sessions_per_day']}/day avg)")
+    print(f"Tool calls:      {m['total_tool_calls']} total, {m['failure_count']} failures ({fail_pct} failure rate)")
+    print(f"Cost:            {cost_line}")
+    print(f"Top tools:       {top_tools_str}")
+    print(separator)
+    print(f"Status: {overall}  {status_reason}")
 
 
 def print_isc_gaps(m: dict) -> None:
-    if not m["session_failures"]:
-        print("No ISC gaps detected (0 tool failures).")
-        return
-    print(f"\nISC Gaps — {m['isc_gap_sessions']} session(s) with failures:\n")
-    for sid, tools in m["session_failures"].items():
-        sid_short = sid[:16] if sid else "unknown"
-        tool_counts = Counter(tools)
-        for tool, count in tool_counts.items():
-            print(f"  {sid_short}  {tool:<20} {count} failure(s)")
+    print("ISC gap detection requires more data. Coming in Phase 5.")
 
 
 def print_failures(records: list[dict]) -> None:
@@ -203,7 +238,7 @@ def print_failures(records: list[dict]) -> None:
         print("No tool failures in this window.")
         return
     by_tool = Counter(r.get("tool", "?") for r in failures)
-    print(f"\nTool Failures — {len(failures)} total:\n")
+    print(f"\nTool Failures --{len(failures)} total:\n")
     for tool, count in by_tool.most_common():
         print(f"  {tool:<25} {count:>4} failure(s)")
     print(f"\nSample error messages:")
@@ -216,53 +251,95 @@ def print_failures(records: list[dict]) -> None:
 
 
 def print_cost(m: dict) -> None:
-    if m["cost_total_usd"] is None:
-        print("\nCost tracking: N/A")
-        print("The Stop hook does not yet write cost_usd to JSONL.")
-        print("Cost data will appear here once hook_session_cost.py is wired.")
+    start_str, end_str = _compute_date_range(7)  # uses default; caller could override
+    header = f"Jarvis Cost Summary -- {start_str} to {end_str}"
+    separator = "-" * len(header)
+    print(header)
+    print(separator)
+    if m["cost_sessions_tracked"] == 0:
+        print("No session_cost records found.")
+    elif m["cost_total_usd"] is not None:
+        print(f"Sessions tracked: {m['cost_sessions_tracked']}")
+        print(f"Total cost:       ${m['cost_total_usd']:.2f}")
+        print(f"Per session:      ${m['cost_avg_per_session_usd']:.4f}")
     else:
-        print(f"\nCost Summary:")
-        print(f"  Total:      ${m['cost_total_usd']:.4f}")
-        print(f"  Per session: ${m['cost_avg_per_session_usd']:.4f}")
-        print(f"  Sessions tracked: {m['cost_sessions_tracked']}")
+        print(f"Sessions tracked: {m['cost_sessions_tracked']}")
+        print(f"Cost data:        unavailable (token tracking pending)")
+    if m.get("input_tokens_total") is not None:
+        print(f"Input tokens:     {m['input_tokens_total']:,}")
+        print(f"Output tokens:    {m['output_tokens_total']:,}")
+    print(separator)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Build the argument parser."""
+    parser = argparse.ArgumentParser(
+        description="Query Jarvis observability events and produce health reports.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--report", action="store_true", help="Full health report (default)")
+    group.add_argument("--cost", action="store_true", help="Cost summary only")
+    group.add_argument("--failures", action="store_true", help="Tool failure breakdown")
+    group.add_argument("--isc-gaps", action="store_true", help="ISC gap analysis (not yet implemented)")
+    group.add_argument("--json", action="store_true", help="Machine-readable JSON output (for Phase 3E)")
+    parser.add_argument("--days", type=int, default=7, help="Number of days to include (default: 7)")
+    return parser
+
+
+def run(args: Optional[argparse.Namespace] = None) -> str:
+    """Execute the query and return the report as a string.
+
+    Captures stdout so callers can use this as a library function.
+    """
+    import io
+    if args is None:
+        args = build_parser().parse_args()
+
+    records = load_records(args.days)
+
+    # Capture print output
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    sys.stdout = buf
+
+    try:
+        if not records:
+            print(f"No events found in history/events/ for the last {args.days} days.")
+        elif args.json:
+            m = compute_metrics(records)
+            output = {k: v for k, v in m.items() if k != "session_failures"}
+            output["isc_gap_sessions"] = m["isc_gap_sessions"]
+            output["status"] = (
+                "CRITICAL" if m["failure_rate"] >= THRESHOLDS["failure_rate_crit"]
+                else "WARN" if (
+                    m["failure_rate"] >= THRESHOLDS["failure_rate_warn"]
+                    or m["sessions_per_day"] < THRESHOLDS["sessions_per_day_min"]
+                )
+                else "HEALTHY"
+            )
+            print(json.dumps(output, indent=2))
+        elif args.isc_gaps:
+            m = compute_metrics(records)
+            print_isc_gaps(m)
+        elif args.failures:
+            print_failures(records)
+        elif args.cost:
+            m = compute_metrics(records)
+            print_cost(m)
+        else:
+            # Default to --report
+            m = compute_metrics(records)
+            print_report(m, args.days)
+    finally:
+        sys.stdout = old_stdout
+
+    return buf.getvalue().rstrip("\n")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Jarvis health report")
-    parser.add_argument("--days", type=int, default=7, help="Look-back window in days (default: 7)")
-    parser.add_argument("--isc-gaps", action="store_true", help="Show ISC gap detail")
-    parser.add_argument("--failures", action="store_true", help="Show tool failure breakdown")
-    parser.add_argument("--cost", action="store_true", help="Show cost summary")
-    parser.add_argument("--json", action="store_true", help="Machine-readable JSON output (for Phase 3E)")
-    args = parser.parse_args()
-
-    records = load_records(args.days)
-    if not records:
-        print(f"No event records found in history/events/ for the last {args.days} days.")
-        sys.exit(0)
-
-    m = compute_metrics(records)
-
-    if args.json:
-        output = {k: v for k, v in m.items() if k != "session_failures"}
-        output["isc_gap_sessions"] = m["isc_gap_sessions"]
-        output["status"] = (
-            "CRITICAL" if m["failure_rate"] >= THRESHOLDS["failure_rate_crit"]
-            else "WARN" if (
-                m["failure_rate"] >= THRESHOLDS["failure_rate_warn"]
-                or m["sessions_per_day"] < THRESHOLDS["sessions_per_day_min"]
-            )
-            else "HEALTHY"
-        )
-        print(json.dumps(output, indent=2))
-    elif args.isc_gaps:
-        print_isc_gaps(m)
-    elif args.failures:
-        print_failures(records)
-    elif args.cost:
-        print_cost(m)
-    else:
-        print_report(m, args.days)
+    output = run()
+    print(output)
 
 
 if __name__ == "__main__":

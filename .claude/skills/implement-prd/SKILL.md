@@ -62,6 +62,15 @@ BUILD
 - Read every context file, existing script, or related module referenced in the PRD before writing a single line of code
 - Adopt the Engineer persona (see `orchestration/agents/Engineer.md`): senior developer, defensive by default, security-first, minimal surface area — no gold-plating, no unnecessary abstractions
 
+### ISC QUALITY GATE (blocks BUILD)
+
+- Run `python tools/scripts/isc_validator.py --prd <PRD-path> --pretty` to get deterministic quality gate results
+- Review the validator output: check `gate_passed`, `hard_fails`, and `warnings`
+- If `gate_passed: true`: proceed to BUILD
+- If `gate_passed: false`: review the hard fails and fix the criteria in the PRD file. Note fixes in IMPLEMENTATION LOG
+- If the PRD has 3+ hard fails across multiple criteria: STOP and print "ISC Quality Gate: FAIL -- this PRD needs /create-prd revision before implementation" with specifics
+- Fallback: if isc_validator.py is unavailable, manually validate against the 6-check gate (see CLAUDE.md > ISC Quality Gate): count (3-8 per phase), conciseness (no compound "and"), state-not-action, binary-testable, anti-criteria (at least one), verify method present
+
 ### BUILD PHASE: Implement with per-item verify loop
 
 - For each ISC item, implement the required component or change in dependency order (foundations before features)
@@ -73,6 +82,7 @@ BUILD
   5. Re-run the same verify method
   6. If still failing after cycle 3: log the failure to `memory/learning/failures/`, mark ISC item as BLOCKED with diagnosis notes, and move to next item — do NOT silently skip
 - Track loop iterations: after BUILD completes, report in IMPLEMENTATION LOG how many items needed 0, 1, 2, or 3 fix cycles (this measures loop value)
+- **Mid-build commit checkpoint**: After every 3-4 completed ISC items, prompt Eric to commit: "Checkpoint: {N} ISC items verified. Run /commit to save progress?" This creates recovery points against context compaction. Do not auto-commit — wait for confirmation. If Eric declines, continue building
 
 ### REVIEW GATE: Auto-invoke /review-code with fix loop
 
@@ -87,11 +97,20 @@ BUILD
 
 ### VERIFY PHASE: Full pass
 
+- **Ownership Check** (before running any verify methods): Reflect and document in the VERIFY RESULTS section:
+  1. What approach did I take?
+  2. What alternatives existed that I did not pursue?
+  3. Knowing what I know now, would I choose the same approach again? If not, note why — this feeds LEARN phase
 - Run the full VERIFY phase: execute every ISC verify method in sequence and record pass/fail for each
-- Mark completed ISC checkboxes in the PRD (`- [ ]` → `- [x]`) only after the verify method passes
+- **Structured Evidence**: For each ISC item, record three fields in the VERIFY RESULTS table:
+  - Evidence type: CLI output | test result | file exists | grep match | manual review
+  - Source: the exact command or file path that produced the evidence
+  - Content: the actual output snippet proving pass/fail (truncate to key lines if verbose)
+- Mark completed ISC checkboxes in the PRD (`- [ ]` → `- [x]`) only after the verify method passes AND structured evidence is recorded
 - Find the corresponding task in `orchestration/tasklist.md` and mark it complete (`[ ]` → `[x]`) with a one-line completion note
 - Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
 - Log a brief decision record to `history/decisions/` noting what was built, which ISC items passed, and any deferred items
+- **Final commit prompt**: Run `git status` — if there are uncommitted changes, prompt: "BUILD complete and verified. Ready to commit? Run /commit or I can stage and commit now." Do not auto-commit — wait for Eric's confirmation. If Eric declines, proceed to /learning-capture
 - Invoke `/learning-capture` to close the session with captured signals
 
 # OUTPUT INSTRUCTIONS
@@ -102,7 +121,7 @@ BUILD
 - ISC CHECKLIST: numbered list of all ISC items with status (PASS / FAIL / DEFERRED) and one-line verify result per item
 - IMPLEMENTATION LOG: bullet list of files created or modified with one-line description of each change. Include **LOOP METRICS**: how many ISC items needed 0/1/2/3 fix cycles, and how many review cycles were needed. This measures whether the loop is adding value
 - REVIEW FINDINGS: summary of `/review-code` output — severity, findings applied, findings accepted-risk with reasoning
-- VERIFY RESULTS: table with columns: ISC Item | Verify Method | Result | Notes
+- VERIFY RESULTS: starts with OWNERSHIP CHECK (approach taken, alternatives not pursued, would-I-choose-again verdict), then table with columns: ISC Item | Verify Method | Result | Evidence Type | Source | Content
 - QUALITY GATE: summary of `/quality-gate` output — pass/fail, issues found, resolutions applied
 - COMPLETION STATUS: one of COMPLETE / PARTIAL / BLOCKED — with a bullet list of any deferred or blocked items and why
 - Do not output code blocks for entire files — reference file paths instead
@@ -146,7 +165,7 @@ BUILD
 
 - **Follows:** `/create-prd` (takes PRD file path as input)
 - **Precedes:** `/learning-capture` (always — no build session ends without capture)
-- **Composes:** `/review-code` (non-optional VERIFY gate), `/quality-gate` (non-optional phase-completion gate), `/self-heal` (if tests fail)
+- **Composes:** `/review-code` (non-optional VERIFY gate), `/quality-gate` (non-optional phase-completion gate), `/commit` (mid-build checkpoints + final commit prompt), `/self-heal` (if tests fail)
 - **Full chain:** `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`
 - **Escalate to:** `/delegation` if scope expands mid-build or new dependencies are discovered
 

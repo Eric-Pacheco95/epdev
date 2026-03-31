@@ -375,7 +375,8 @@ def route_alerts(changes: list[dict], cfg: dict, root_dir: Path, quiet: bool = F
     slack_cfg = routing.get("slack", {})
     if slack_cfg and not quiet:
         slack_min = SEVERITY_ORDER.get(slack_cfg.get("min_severity", "WARN"), 0)
-        slack_changes = [c for c in changes if SEVERITY_ORDER.get(c["severity"], 0) >= slack_min]
+        slack_changes = [c for c in changes if SEVERITY_ORDER.get(c["severity"], 0) >= slack_min
+                         and c.get("delta", 0) != 0]
         slack_count = alert_state.get("counts", {}).get("slack", 0)
         slack_cap = caps.get("slack", 20)
 

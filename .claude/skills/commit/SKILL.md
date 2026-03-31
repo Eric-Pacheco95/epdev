@@ -53,13 +53,15 @@ ORCHESTRATE
 
 ## Step 1: STATUS
 
-1. Run `git status` to see what is staged and unstaged.
+1. Run `python tools/scripts/commit_precheck.py` for the deterministic pre-check. This gives you: staged/unstaged/untracked file lists, diff stats, file type classification, secret detection, dangerous file warnings, and recent commit style — all without consuming LLM tokens.
 
-2. If nothing is staged, run `git add` on all modified tracked files. Never add untracked files (secrets risk) — list them and ask Eric to confirm first.
+2. If the pre-check shows `status: nothing_staged`, run `git add` on all modified tracked files. Never add untracked files (secrets risk) — list them and ask Eric to confirm first.
 
-3. Run `git diff --staged` to fully understand what is being committed.
+3. If the pre-check shows `secrets_found: true` or `dangerous_files`, STOP and warn Eric. Do not proceed until resolved.
 
-4. Analyze the diff for distinct logical concerns:
+4. Run `git diff --staged` to read the actual diff content for message composition.
+
+5. Analyze the diff for distinct logical concerns:
    - Different features or bug fixes mixed together?
    - Source code changes mixed with docs or config?
    - Multiple unrelated files changed?

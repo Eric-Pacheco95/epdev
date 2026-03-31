@@ -53,14 +53,14 @@ Default to **consumer** if unspecified and topic is general, **technical** if to
 
 7. **Total slides**: 10-20 depending on input complexity (see audience mode for guidance).
 
-8. **Image generation** (optional but recommended): After writing the deck markdown, offer to generate real images for each slide using `/create-image` (nanobanana MCP):
-   - Ask: "Want me to generate images for these slides? (~1 image per slide, Pro quality)"
-   - If yes, for each slide's `**Image**:` description:
+8. **Image generation** (default — skip with `--no-images`): After writing the deck markdown, generate real images for each slide using `/create-image` (nanobanana MCP):
+   - Unless `--no-images` was passed, proceed directly to image generation without asking
+   - For each slide's `**Image**:` description:
      - Use `gemini_generate_image` with `conversation_id` set to the deck name (e.g., `keynote-{topic}`) and `use_image_history: true` for style consistency
      - Set model to `pro` and aspect ratio to `16:9`
      - Enhance the image description with style, lighting, composition details
      - Save each image to `memory/work/{topic}/images/slide_{N}.png`
-   - If no or MCP unavailable, proceed with text descriptions (current behavior)
+   - If MCP unavailable or image generation fails: print one-line notice ("nanobanana MCP unavailable — continuing with text descriptions") and proceed without blocking. Do not retry or error out
    - Track generated image paths for the PPTX step
 
 9. **PPTX generation**: If Eric requested PPTX (or said yes to the pre-flight prompt), after outputting the markdown, save the full presentation markdown to a temp file and run:

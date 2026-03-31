@@ -50,9 +50,25 @@ VERIFY
   - Print: "This looks like a plan or design document, not code. Did you mean /red-team (stress-test the design) or /threat-model (STRIDE analysis)?"
 - Once input is validated, proceed to Step 1
 
-## Step 1: ESTABLISH CONTEXT
+## Step 1: DETERMINISTIC PRESCAN
+
+- Run `python tools/scripts/code_prescan.py --path <files-to-review> --json` to collect deterministic findings (ruff lint + security scan)
+- Review the prescan JSON: check each tool's `status` field. If any tool shows `tool_unavailable` or `timeout`, note it as a gap in the review
+- Incorporate prescan findings into your review — ruff findings feed into RELIABILITY, security scan findings feed into SECURITY FINDINGS
+- The prescan pre-filters mechanical issues so you can focus judgment on: data flow tracing, threat modeling, logic correctness, and architectural concerns
+
+## Step 2: ESTABLISH CONTEXT
 
 - Establish context: language, framework, entry points, and what the code is supposed to do
+
+### Step 1.5: FORMAT AND ENCODING CHECK
+
+- For Python scripts with print/logging: verify all string literals are ASCII-safe (no em-dashes, box-drawing chars, special quotes) — Windows cp1252 encoding causes hard UnicodeEncodeError on these characters
+- For JSON-producing code: verify serialization paths use `json.dumps()` or equivalent (not string concatenation) — malformed JSON causes silent downstream parse failures
+- For Markdown-producing code (Slack posts, proposals, reports): verify heading levels, link syntax, and code fence closure — broken markdown renders incorrectly in target contexts
+- For HTML-producing code: verify well-formedness (closed tags, escaped entities) — only when the codebase produces HTML output
+- Tag any format/encoding issue as severity "Medium" in the RELIABILITY AND CORRECTNESS section with a "FORMAT:" prefix
+
 - Trace data flow from untrusted inputs to sinks (queries, shells, file paths, HTML, deserialization, dynamic code)
 - Check authentication and session handling, authorization checks, and least-privilege access to resources
 - Look for secret and credential handling: hardcoded keys, logging of sensitive data, weak crypto or missing TLS where relevant
