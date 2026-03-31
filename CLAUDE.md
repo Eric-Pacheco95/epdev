@@ -127,6 +127,7 @@ Load documentation on-demand, not upfront:
 - External models (Codex, Gemini) are review-only — they verify and critique but never execute tasks, write code, or modify state; route security-adjacent reviews through Codex adversarial mode
 - Dispatcher must resolve model from task `model` field first, then tier defaults, then Opus as fallback — never hardcode a single model for all autonomous tasks
 - Track review catch rate per external model — if Codex review catches zero issues over 20+ tasks, either the routing is wrong or the primary model is sufficient; adjust or remove
+- After any autonomous /absorb run (Slack poller Tier 1), verify the output chain: signal file exists, TELOS update is appropriate, audit trail is complete — autonomous ingestion without quality verification risks corrupting identity files
 
 ### Research & External Patterns
 
