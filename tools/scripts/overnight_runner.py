@@ -224,147 +224,31 @@ def parse_program(path: Path) -> dict:
 
 
 # -- Git operations (worktree-based) -----------------------------------------
+# Delegated to shared library; overnight runner uses a dedicated directory.
+
+from tools.scripts.lib.worktree import (
+    worktree_setup as _wt_setup,
+    worktree_cleanup as _wt_cleanup,
+    cleanup_old_branches as _cleanup_branches,
+    git_diff_stat,
+)
 
 WORKTREE_DIR = REPO_ROOT.parent / "epdev-overnight"
 
 
 def worktree_setup(branch: str) -> Path:
-    """Create a git worktree for the overnight branch. Returns worktree path.
-
-    Uses a sibling directory (../epdev-overnight) so the main working tree
-    is never touched -- no stash, no branch switch, no conflict with active
-    Claude Code sessions.
-    """
-    wt = WORKTREE_DIR
-
-    # Clean up stale worktree if it exists (crash recovery)
-    if wt.exists():
-        print(f"  Cleaning up stale worktree at {wt}")
-        subprocess.run(
-            ["git", "worktree", "remove", str(wt), "--force"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-        )
-        subprocess.run(
-            ["git", "worktree", "prune"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-        )
-
-    # Delete stale branch if it exists (from previous day's run)
-    subprocess.run(
-        ["git", "branch", "-D", branch],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
-
-    # Create worktree with new branch
-    result = subprocess.run(
-        ["git", "worktree", "add", "-b", branch, str(wt)],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
-    if result.returncode != 0:
-        print(f"ERROR: Failed to create worktree: {result.stderr.strip()}",
-              file=sys.stderr)
-        return None
-
-    print(f"  Worktree created at {wt} (branch: {branch})")
-
-    # Symlink local memory dirs so knowledge_synthesis can read real data.
-    # These dirs are gitignored so the worktree only has .gitkeep files.
-    symlink_local_memory(wt)
-
-    return wt
-
-
-# Directories to symlink from main repo into worktree.
-# Each tuple: (relative path from repo root, read-only flag for logging).
-_MEMORY_SYMLINKS = [
-    ("memory/learning/signals", True),
-    ("memory/learning/synthesis", False),  # knowledge_synthesis writes here
-    ("memory/learning/failures", True),
-]
-
-
-def symlink_local_memory(wt: Path) -> None:
-    """Replace gitkeep-only dirs in worktree with symlinks to real local dirs.
-
-    This lets the knowledge_synthesis dimension read accumulated signals and
-    synthesis docs that are gitignored (personal content stays local).
-    Synthesis writes go directly to the real dir -- monitor and validate
-    before committing.
-    """
-    for rel_path, readonly in _MEMORY_SYMLINKS:
-        src = REPO_ROOT / rel_path
-        dst = wt / rel_path
-
-        if not src.is_dir():
-            continue
-
-        # Remove the worktree's empty dir (contains only .gitkeep)
-        if dst.is_dir() and not dst.is_symlink():
-            import shutil
-            shutil.rmtree(dst)
-
-        if dst.exists() or dst.is_symlink():
-            continue
-
-        # Create symlink: worktree dir -> main repo dir
-        try:
-            dst.symlink_to(src, target_is_directory=True)
-            mode = "read-only" if readonly else "read-write"
-            print(f"  Symlinked {rel_path} -> {src} ({mode})")
-        except OSError as exc:
-            print(f"  WARNING: Could not symlink {rel_path}: {exc}",
-                  file=sys.stderr)
+    """Create overnight worktree. Delegates to shared library."""
+    return _wt_setup(branch, worktree_dir=WORKTREE_DIR, symlink_memory=True)
 
 
 def worktree_cleanup() -> None:
-    """Remove the overnight worktree. Safe to call even if it doesn't exist."""
-    wt = WORKTREE_DIR
-    if wt.exists():
-        subprocess.run(
-            ["git", "worktree", "remove", str(wt), "--force"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-        )
-    subprocess.run(
-        ["git", "worktree", "prune"],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
+    """Remove overnight worktree. Delegates to shared library."""
+    _wt_cleanup(worktree_dir=WORKTREE_DIR)
 
 
 def cleanup_old_branches(days: int = 7) -> None:
     """Delete jarvis/overnight-* branches older than N days."""
-    from datetime import timedelta
-    cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
-
-    result = subprocess.run(
-        ["git", "branch", "--list", "jarvis/overnight-*"],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
-    for line in result.stdout.splitlines():
-        branch_name = line.strip().lstrip("* ")
-        # Extract date from branch name: jarvis/overnight-YYYY-MM-DD
-        parts = branch_name.split("-")
-        if len(parts) >= 4:
-            try:
-                branch_date = "-".join(parts[-3:])
-                if branch_date < cutoff:
-                    subprocess.run(
-                        ["git", "branch", "-D", branch_name],
-                        capture_output=True, text=True, encoding="utf-8",
-                        cwd=str(REPO_ROOT),
-                    )
-                    print(f"  Cleaned up old branch: {branch_name}")
-            except (ValueError, IndexError):
-                pass
-
-
-def git_diff_stat(cwd: str = None) -> str:
-    """Get diff stat for latest commit."""
-    result = subprocess.run(
-        ["git", "diff", "--stat", "HEAD~1..HEAD"],
-        capture_output=True, text=True, encoding="utf-8",
-        cwd=cwd or str(REPO_ROOT),
-    )
-    return result.stdout.strip() if result.returncode == 0 else "(no diff available)"
+    _cleanup_branches(prefix="jarvis/overnight", days=days)
 
 
 def git_log_oneline(n: int = 20, cwd: str = None) -> str:

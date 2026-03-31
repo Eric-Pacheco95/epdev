@@ -258,6 +258,17 @@ TELOS_PATH_PATTERN = re.compile(
     r"memory[/\\]work[/\\]telos[/\\]", re.IGNORECASE
 )
 
+# Secrets patterns for Read tool blocking (autonomous sessions)
+_SECRET_FILE_PATTERNS = re.compile(
+    r"(?:^|[/\\])\.env(?:[/\\]|$)"
+    r"|(?:^|[/\\])credentials\.json$"
+    r"|\.pem$"
+    r"|\.key$"
+    r"|(?:^|[/\\])\.ssh[/\\]"
+    r"|(?:^|[/\\])\.aws[/\\]",
+    re.IGNORECASE,
+)
+
 
 def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None:
     """Block Write/Edit to memory/work/telos/ in autonomous sessions.
@@ -282,6 +293,75 @@ def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None
     return None
 
 
+def _check_autonomous_git_push(cmd: str) -> bool:
+    """Block ALL git push commands in autonomous sessions (not just force-push)."""
+    if os.environ.get("JARVIS_SESSION_TYPE") != "autonomous":
+        return False
+    return bool(re.search(r"\bgit\s+push\b", cmd))
+
+
+def _check_autonomous_read_secrets(tool: str, inp: dict) -> dict[str, Any] | None:
+    """Block Read tool on secret files in autonomous sessions.
+
+    Interactive sessions rely on user judgment; autonomous sessions must be
+    validator-enforced because there is no human in the loop.
+    """
+    if os.environ.get("JARVIS_SESSION_TYPE") != "autonomous":
+        return None
+
+    if tool != "Read":
+        return None
+
+    file_path = str(inp.get("file_path", "") or "")
+    if _SECRET_FILE_PATTERNS.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT read secret files. "
+            f"Blocked: Read {file_path}"
+        )
+
+    return None
+
+
+def _check_autonomous_file_containment(tool: str, inp: dict) -> dict[str, Any] | None:
+    """Block Read/Write/Edit outside worktree in autonomous sessions.
+
+    Workers must only access files within their git worktree. The worktree
+    path is communicated via JARVIS_WORKTREE_ROOT env var (set by dispatcher).
+    If the env var is not set, this check is skipped (allows non-dispatcher
+    autonomous jobs like overnight runner to work).
+    """
+    if os.environ.get("JARVIS_SESSION_TYPE") != "autonomous":
+        return None
+
+    worktree_root = os.environ.get("JARVIS_WORKTREE_ROOT")
+    if not worktree_root:
+        return None  # No containment when worktree root not specified
+
+    if tool not in ("Read", "Write", "Edit"):
+        return None
+
+    file_path = str(inp.get("file_path", "") or "")
+    if not file_path:
+        return None
+
+    # Normalize paths for comparison
+    try:
+        resolved = str(Path(file_path).resolve()).replace("\\", "/").lower()
+        wt_resolved = str(Path(worktree_root).resolve()).replace("\\", "/").lower()
+    except (OSError, ValueError):
+        return _result("block", f"Cannot resolve path for containment check: {file_path}")
+
+    if not resolved.startswith(wt_resolved):
+        return _result(
+            "block",
+            f"Autonomous worker file access blocked: path escapes worktree. "
+            f"Allowed root: {worktree_root}. Blocked: {tool} {file_path}"
+        )
+
+    return None
+
+
 def main() -> None:
     try:
         data = json.load(sys.stdin)
@@ -294,10 +374,24 @@ def main() -> None:
     if isinstance(inp, str):
         inp = {}
 
-    # Check autonomous TELOS write protection (Write/Edit tools)
+    # -- Autonomous session protections (Phase 5 P0 security) --
+
+    # TELOS write protection (Write/Edit tools)
     telos_block = _check_autonomous_telos_write(tool, inp)
     if telos_block:
         print(json.dumps(telos_block))
+        return
+
+    # Secret file read protection (Read tool)
+    secret_block = _check_autonomous_read_secrets(tool, inp)
+    if secret_block:
+        print(json.dumps(secret_block))
+        return
+
+    # Worktree file containment (Read/Write/Edit tools)
+    containment_block = _check_autonomous_file_containment(tool, inp)
+    if containment_block:
+        print(json.dumps(containment_block))
         return
 
     # Bash command validation
@@ -306,6 +400,11 @@ def main() -> None:
         return
 
     command = str(inp.get("command", "") or "")
+
+    # Autonomous git push blocking (all push, not just force-push)
+    if _check_autonomous_git_push(command):
+        print(json.dumps(_result("block", "Autonomous sessions MUST NOT run git push")))
+        return
 
     result = validate_bash_command(command)
     print(json.dumps(result))
