@@ -11,6 +11,7 @@ Claude Code sessions.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -84,6 +85,19 @@ def worktree_setup(
     return wt
 
 
+def _is_junction(path: Path) -> bool:
+    """Check if path is a Windows junction point (reparse point)."""
+    if os.name != "nt":
+        return False
+    try:
+        import ctypes
+        attrs = ctypes.windll.kernel32.GetFileAttributesW(str(path))
+        # FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+        return attrs != -1 and bool(attrs & 0x400)
+    except (OSError, AttributeError):
+        return False
+
+
 def _symlink_local_memory(wt: Path) -> None:
     """Replace gitkeep-only dirs in worktree with symlinks to real local dirs.
 
@@ -97,22 +111,47 @@ def _symlink_local_memory(wt: Path) -> None:
         if not src.is_dir():
             continue
 
-        # Remove the worktree's empty dir (contains only .gitkeep)
-        if dst.is_dir() and not dst.is_symlink():
+        # Remove the worktree's empty dir (contains only .gitkeep).
+        # Check for junction points (Windows) which report is_dir=True
+        # but is_symlink=False. Removing a junction with rmtree would
+        # delete the real files in the main repo.
+        if dst.is_dir() and not dst.is_symlink() and not _is_junction(dst):
             shutil.rmtree(dst)
 
-        if dst.exists() or dst.is_symlink():
+        if dst.exists() or dst.is_symlink() or _is_junction(dst):
             continue
 
         try:
             dst.symlink_to(src, target_is_directory=True)
             mode = "read-only" if readonly else "read-write"
             print(f"  Symlinked {rel_path} -> {src} ({mode})")
-        except OSError as exc:
-            print(
-                f"  WARNING: Could not symlink {rel_path}: {exc}",
-                file=sys.stderr,
-            )
+        except OSError:
+            # Symlinks require admin/Developer Mode on Windows.
+            # Fall back to junction points (mklink /J) which work unprivileged.
+            if os.name == "nt":
+                try:
+                    result = subprocess.run(
+                        ["cmd", "/c", "mklink", "/J", str(dst), str(src)],
+                        capture_output=True, text=True, encoding="utf-8",
+                    )
+                    if result.returncode == 0:
+                        mode = "read-only" if readonly else "read-write"
+                        print(f"  Junction {rel_path} -> {src} ({mode})")
+                    else:
+                        print(
+                            f"  WARNING: Junction failed for {rel_path}: {result.stderr.strip()}",
+                            file=sys.stderr,
+                        )
+                except OSError as exc2:
+                    print(
+                        f"  WARNING: Could not link {rel_path}: {exc2}",
+                        file=sys.stderr,
+                    )
+            else:
+                print(
+                    f"  WARNING: Could not symlink {rel_path}",
+                    file=sys.stderr,
+                )
 
 
 def worktree_cleanup(worktree_dir: Optional[Path] = None) -> None:

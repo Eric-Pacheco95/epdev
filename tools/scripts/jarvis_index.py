@@ -659,7 +659,7 @@ _PRODUCER_MAP = {
     "morning_feed": "Morning feed",
     "security_audit": "security audit",
     "steering_audit": "steering audit",
-    "task_runner": "task runner",
+    "dispatcher": "autonomous dispatcher",
     "tasklist_stale": "tasklist stale",
 }
 
