@@ -64,9 +64,12 @@ BUILD
 
 ### ISC QUALITY GATE (blocks BUILD)
 
-- Before writing any code, validate the extracted ISC against the 6-check gate (see CLAUDE.md > ISC Quality Gate): count (3-8 per phase), conciseness (no compound "and"), state-not-action, binary-testable, anti-criteria (at least one), verify method present
-- If any check fails: fix the criterion in the PRD file, note the fix in IMPLEMENTATION LOG, then proceed
-- If the PRD's ISC is fundamentally weak (3+ checks failing across multiple criteria): STOP and print "ISC Quality Gate: FAIL — this PRD needs /create-prd revision before implementation" with specifics
+- Run `python tools/scripts/isc_validator.py --prd <PRD-path> --pretty` to get deterministic quality gate results
+- Review the validator output: check `gate_passed`, `hard_fails`, and `warnings`
+- If `gate_passed: true`: proceed to BUILD
+- If `gate_passed: false`: review the hard fails and fix the criteria in the PRD file. Note fixes in IMPLEMENTATION LOG
+- If the PRD has 3+ hard fails across multiple criteria: STOP and print "ISC Quality Gate: FAIL -- this PRD needs /create-prd revision before implementation" with specifics
+- Fallback: if isc_validator.py is unavailable, manually validate against the 6-check gate (see CLAUDE.md > ISC Quality Gate): count (3-8 per phase), conciseness (no compound "and"), state-not-action, binary-testable, anti-criteria (at least one), verify method present
 
 ### BUILD PHASE: Implement with per-item verify loop
 

@@ -50,7 +50,14 @@ VERIFY
   - Print: "This looks like a plan or design document, not code. Did you mean /red-team (stress-test the design) or /threat-model (STRIDE analysis)?"
 - Once input is validated, proceed to Step 1
 
-## Step 1: ESTABLISH CONTEXT
+## Step 1: DETERMINISTIC PRESCAN
+
+- Run `python tools/scripts/code_prescan.py --path <files-to-review> --json` to collect deterministic findings (ruff lint + security scan)
+- Review the prescan JSON: check each tool's `status` field. If any tool shows `tool_unavailable` or `timeout`, note it as a gap in the review
+- Incorporate prescan findings into your review — ruff findings feed into RELIABILITY, security scan findings feed into SECURITY FINDINGS
+- The prescan pre-filters mechanical issues so you can focus judgment on: data flow tracing, threat modeling, logic correctness, and architectural concerns
+
+## Step 2: ESTABLISH CONTEXT
 
 - Establish context: language, framework, entry points, and what the code is supposed to do
 

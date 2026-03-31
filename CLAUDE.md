@@ -92,7 +92,7 @@ Load documentation on-demand, not upfront:
 - After completing a build phase (all ISCs met), check `git status` for uncommitted work and prompt Eric to commit — phrased as a prompt, not a gate, since Eric sometimes intentionally batches commits
 - During `/implement-prd` runs with 4+ ISC items, commit after every 3-4 completed items — context compaction during long sessions can lose file writes; mid-build commits create recovery points
 - After completing a multi-phase build sprint (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifact existence, verify file paths match actual locations, verify counts and dates are current
-- When building a new skill, evaluate each step: does this step require intelligence (judgment, synthesis, natural language generation)? No -> implement as Python script. Yes -> keep in SKILL.md. Apply retroactively only where sub-scripts already exist
+- When building a new skill, evaluate each step: does this step require intelligence (judgment, synthesis, natural language generation)? No -> implement as a deterministic script (default Python). Yes -> keep in SKILL.md. Apply retroactively only where sub-scripts already exist
 
 ### Eric's Working Style
 
