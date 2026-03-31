@@ -493,6 +493,90 @@ def collect_autonomous_signal_rate(cfg: dict, root_dir: Path, _prev: dict = None
     return _result(name, rate, "per_day", "%d autonomous signals in last %dd (%d scanned)" % (count, window, scanned))
 
 
+# ── manifest_signal_count ──────────────────────────────────────────
+
+def collect_manifest_signal_count(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Count signals from manifest DB instead of filesystem glob."""
+    name = cfg.get("name", "signal_count")
+    db_path = root_dir / "data" / "jarvis_index.db"
+
+    if not db_path.exists():
+        return _result(name, None, "count", "manifest DB not found")
+
+    try:
+        import sqlite3
+        conn = sqlite3.connect(str(db_path), timeout=5)
+        conn.execute("PRAGMA journal_mode=WAL")
+        total = conn.execute(
+            "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL"
+        ).fetchone()[0]
+        conn.close()
+        return _result(name, total, "count")
+    except Exception as exc:
+        return _result(name, None, "count", "manifest_signal_count error: %s" % exc)
+
+
+# ── manifest_signal_velocity ──────────────────────────────────────
+
+def collect_manifest_signal_velocity(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Compute signal velocity from manifest DB date field."""
+    name = cfg.get("name", "signal_velocity")
+    window = cfg.get("window_days", 7)
+    db_path = root_dir / "data" / "jarvis_index.db"
+
+    if not db_path.exists():
+        return _result(name, None, "per_day", "manifest DB not found")
+
+    try:
+        import sqlite3
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=window)).strftime("%Y-%m-%d")
+        conn = sqlite3.connect(str(db_path), timeout=5)
+        conn.execute("PRAGMA journal_mode=WAL")
+        count = conn.execute(
+            "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL AND date >= ?",
+            (cutoff,)
+        ).fetchone()[0]
+        conn.close()
+        velocity = round(count / max(window, 1), 2)
+        return _result(name, velocity, "per_day", "%d signals in last %dd" % (count, window))
+    except Exception as exc:
+        return _result(name, None, "per_day", "manifest_signal_velocity error: %s" % exc)
+
+
+# ── manifest_autonomous_signal_rate ───────────────────────────────
+
+def collect_manifest_autonomous_signal_rate(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Count autonomous signals from manifest DB source field."""
+    name = cfg.get("name", "autonomous_signal_rate")
+    window = cfg.get("window_days", 7)
+    db_path = root_dir / "data" / "jarvis_index.db"
+
+    if not db_path.exists():
+        return _result(name, None, "per_day", "manifest DB not found")
+
+    try:
+        import sqlite3
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=window)).strftime("%Y-%m-%d")
+        conn = sqlite3.connect(str(db_path), timeout=5)
+        conn.execute("PRAGMA journal_mode=WAL")
+        count = conn.execute(
+            "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL "
+            "AND source = 'autonomous' AND date >= ?",
+            (cutoff,)
+        ).fetchone()[0]
+        total = conn.execute(
+            "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL AND date >= ?",
+            (cutoff,)
+        ).fetchone()[0]
+        conn.close()
+        rate = round(count / max(window, 1), 2)
+        return _result(name, rate, "per_day",
+                       "%d autonomous signals in last %dd (%d total)" % (count, window, total))
+    except Exception as exc:
+        return _result(name, None, "per_day",
+                       "manifest_autonomous_signal_rate error: %s" % exc)
+
+
 # ── signal_volume ──────────────────────────────────────────────────
 
 def collect_signal_volume(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
@@ -580,6 +664,9 @@ COLLECTOR_TYPES = {
     "producer_health": collect_producer_health,
     "autonomous_signal_rate": collect_autonomous_signal_rate,
     "signal_volume": collect_signal_volume,
+    "manifest_signal_count": collect_manifest_signal_count,
+    "manifest_signal_velocity": collect_manifest_signal_velocity,
+    "manifest_autonomous_signal_rate": collect_manifest_autonomous_signal_rate,
 }
 
 

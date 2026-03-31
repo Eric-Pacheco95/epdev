@@ -101,6 +101,34 @@ def collect_heartbeat_trend() -> list[dict]:
     return _read_jsonl_tail(HEARTBEAT_HISTORY, 5)
 
 
+def compute_trend_averages(trend_data: list[dict]) -> dict:
+    """Compute moving averages for key metrics from heartbeat trend entries."""
+    if not trend_data:
+        return {}
+    key_metrics = [
+        "isc_ratio", "signal_velocity", "signal_count",
+        "autonomous_signal_rate", "tool_failure_rate",
+    ]
+    averages = {}
+    for metric in key_metrics:
+        values = []
+        for entry in trend_data:
+            metrics = entry.get("metrics", {})
+            m = metrics.get(metric, {})
+            v = m.get("value") if isinstance(m, dict) else None
+            if v is not None and isinstance(v, (int, float)):
+                values.append(v)
+        if values:
+            avg = round(sum(values) / len(values), 4)
+            averages[metric] = {
+                "avg": avg,
+                "min": min(values),
+                "max": max(values),
+                "samples": len(values),
+            }
+    return averages
+
+
 def collect_overnight_state() -> dict | None:
     """Read overnight self-improvement state."""
     return _read_json(OVERNIGHT_STATE)
@@ -370,6 +398,7 @@ def main() -> None:
         files_scanned.append("skill_usage.py")
 
     trend_data = collect_heartbeat_trend()
+    trend_averages = compute_trend_averages(trend_data)
     if trend_data:
         files_scanned.append(str(HEARTBEAT_HISTORY))
 
@@ -416,6 +445,7 @@ def main() -> None:
         },
         "skill_usage": skill_usage_data if skill_usage_data else {},
         "heartbeat_trend": trend_data,
+        "trend_averages": trend_averages,
         "overnight": overnight_data,
         "autonomous_value": autonomous_value,
         "telos_introspection": telos_introspection,

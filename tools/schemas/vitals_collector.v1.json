@@ -54,6 +54,19 @@
       "description": "Last 5 heartbeat history entries for trend analysis",
       "items": { "type": "object" }
     },
+    "trend_averages": {
+      "type": "object",
+      "description": "Moving averages for key metrics computed from heartbeat_trend entries. Keys are metric names (isc_ratio, signal_velocity, etc.), values have avg/min/max/samples.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "avg": { "type": "number" },
+          "min": { "type": "number" },
+          "max": { "type": "number" },
+          "samples": { "type": "integer" }
+        }
+      }
+    },
     "overnight": {
       "type": ["object", "null"],
       "description": "Overnight self-improvement state from data/overnight_state.json"
@@ -86,6 +99,10 @@
         "scores": { "type": "object" },
         "upgrade_candidates": { "type": "array" }
       }
+    },
+    "overnight_deep_dive": {
+      "type": "object",
+      "description": "Detailed overnight data: log summary, branch stats, autoresearch proposals/contradictions"
     },
     "unmerged_branches": {
       "type": "array",

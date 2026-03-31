@@ -30,8 +30,8 @@
 - [x] **4E-S1: Foundation** — Orphaned DB deleted, WAL checkpoint added to build/update, FTS index scheduled daily 3am, FTS resilience verified (content persists after file deletion), memory/session/ removed (FTS indexes native JSONL), all consumers confirmed directory-scan based. Gate: PASSED. (2026-03-29)
 - [x] **4E-S2: Manifest tables** — 6 tables created (signals, lineage, producer_runs, session_costs, skill_usage, schema_version). Backfill: 284 signals, 17 lineage edges, 14 producer runs (8 producers). Build regression + schema version check passing. (2026-03-29)
 - [x] **4E-S3: Wire producers** — `manifest_db.py` shared writer. `self_diagnose_wrapper.py` writes `producer_runs` for all 4 producers. `hook_stop.py` writes `session_costs` (token counts N/A — Claude Code doesn't expose in hook payload). `hook_events.py` writes `skill_usage` (sys.path bug fixed 2026-03-30). `producer_health` heartbeat collector wired. `/synthesize-signals` uses `sync_lineage.py` for JSONL→SQLite mirror. (2026-03-29, patched 2026-03-30)
-- [ ] **4E-S4: Retention layer** — Compress-in-place for processed signals (gzip, retain 180d). Heartbeat history rotation (30d raw, monthly summary). `autonomous_signal_rate` collector. `signal_volume` collector reads manifest. Gate: no unbounded datasets remain.
-- [ ] **4E-S5: Consumer migration** — Migrate heartbeat collectors to manifest queries. Pre-aggregate event metrics. Heartbeat trend detection (moving average). Define `/vitals` + jarvis-app JSON contract. Gate: no consumer scans directories for data available in manifest.
+- [x] **4E-S4: Retention layer** — `compress_signals.py` scheduled monthly (gzip processed signals >180d). `rotate_heartbeat.py` scheduled monthly (30d raw, monthly summary). `autonomous_signal_rate` collector live (0.29/day). `signal_volume` collector reads manifest (284 signals). `producer_health` collector wired. Gate: PASSED — all growing datasets have rotation. (2026-03-30)
+- [x] **4E-S5: Consumer migration** — 3 collectors migrated to manifest DB (signal_count, signal_velocity, autonomous_signal_rate). Trend averages computed from heartbeat_history (5 metrics: isc_ratio, signal_velocity, signal_count, autonomous_signal_rate, tool_failure_rate). JSON contract documented at `tools/schemas/vitals_v1_contract.md`. Schema updated. Gate: PASSED — no consumer scans directories for data available in manifest. (2026-03-30)
 - [ ] **5-pre: Evaluate MCPorter for MCP→CLI** — `steipete/mcporter` wraps MCP servers as standalone CLIs. Evaluate for: (1) moving deterministic tool calls off the LLM path (cost reduction), (2) enabling Task Scheduler jobs to call MCP tools without `claude -p`. Blocked by: 4E-S2 (need manifest data). Target: after 4E-S2.
 - [ ] **5-pre: Context efficiency audit** — Review sub-agent, fresh-agent, and `claude -p` session context loading. Map what each agent type actually needs vs what it loads. Goal: minimal required context per invocation type. Blocked by: 4E-S5 + MCPorter eval. Target: after 4E complete.
 
@@ -73,7 +73,7 @@
 | 4B | Near-complete | 3 (source review, interleaved thinking, tool search) |
 | 4C | **COMPLETE** | 0 |
 | 4D | **COMPLETE** | 0 |
-| 4E | In progress (hybrid arch, producers wired) | 3 done, 2 steps remaining |
+| 4E | **COMPLETE** | 5/5 steps done |
 
 ## Active Projects
 

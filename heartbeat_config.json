@@ -4,18 +4,12 @@
   "collectors": [
     {
       "name": "signal_count",
-      "type": "file_count",
-      "path": "memory/learning/signals",
-      "ext": ".md",
-      "recursive": true,
+      "type": "manifest_signal_count",
       "thresholds": {}
     },
     {
       "name": "signal_velocity",
-      "type": "file_count_velocity",
-      "path": "memory/learning/signals",
-      "ext": ".md",
-      "recursive": true,
+      "type": "manifest_signal_velocity",
       "window_days": 3,
       "thresholds": { "warn_below": 0.5, "crit_below": 0.1 },
       "isc_ref": "PRD-P4:ISC-3 Research outputs become signals or queued review artifacts"
@@ -161,8 +155,7 @@
     },
     {
       "name": "autonomous_signal_rate",
-      "type": "autonomous_signal_rate",
-      "path": "memory/learning/signals",
+      "type": "manifest_autonomous_signal_rate",
       "window_days": 7,
       "thresholds": { "warn_above": 10, "crit_above": 20 },
       "isc_ref": "PRD-P4E:ISC-S4 retention layer prevents unbounded growth"
