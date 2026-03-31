@@ -169,33 +169,44 @@ def worktree_cleanup(worktree_dir: Optional[Path] = None) -> None:
 
 
 def cleanup_old_branches(prefix: str, days: int = 7) -> None:
-    """Delete branches matching prefix-* older than N days.
+    """Delete branches matching prefix* older than N days.
 
-    Expects branch names like: prefix-YYYY-MM-DD or prefix-YYYY-MM-DD-suffix.
+    Uses the last commit date on each branch (not branch name parsing),
+    so it works for both date-named branches (jarvis/overnight-2026-03-31)
+    and ID-named branches (jarvis/auto-5b-004).
     """
-    cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+    cutoff_ts = (datetime.now() - timedelta(days=days)).timestamp()
 
     result = subprocess.run(
-        ["git", "branch", "--list", f"{prefix}-*"],
+        ["git", "branch", "--list", f"{prefix}*"],
         capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
     )
     for line in result.stdout.splitlines():
         branch_name = line.strip().lstrip("* ")
-        # Extract date from branch name after the prefix
-        after_prefix = branch_name[len(prefix) + 1:]  # skip "prefix-"
-        parts = after_prefix.split("-")
-        if len(parts) >= 3:
-            try:
-                branch_date = "-".join(parts[:3])
-                if branch_date < cutoff:
-                    subprocess.run(
-                        ["git", "branch", "-D", branch_name],
-                        capture_output=True, text=True, encoding="utf-8",
-                        cwd=str(REPO_ROOT),
-                    )
-                    print(f"  Cleaned up old branch: {branch_name}")
-            except (ValueError, IndexError):
-                pass
+        if not branch_name:
+            continue
+
+        # Get the last commit's Unix timestamp on this branch
+        date_result = subprocess.run(
+            ["git", "log", "-1", "--format=%ct", branch_name],
+            capture_output=True, text=True, encoding="utf-8",
+            cwd=str(REPO_ROOT),
+        )
+        if date_result.returncode != 0 or not date_result.stdout.strip():
+            continue
+
+        try:
+            commit_ts = float(date_result.stdout.strip())
+        except ValueError:
+            continue
+
+        if commit_ts < cutoff_ts:
+            subprocess.run(
+                ["git", "branch", "-D", branch_name],
+                capture_output=True, text=True, encoding="utf-8",
+                cwd=str(REPO_ROOT),
+            )
+            print(f"  Cleaned up old branch: {branch_name}")
 
 
 def git_diff_stat(cwd: Optional[str] = None) -> str:

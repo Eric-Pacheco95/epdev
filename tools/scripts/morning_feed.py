@@ -41,6 +41,7 @@ STATE_FILE = REPO_ROOT / "data" / "overnight_state.json"
 FEED_DIR = REPO_ROOT / "memory" / "work" / "jarvis" / "morning_feed"
 HEARTBEAT_FILE = REPO_ROOT / "memory" / "work" / "isce" / "heartbeat_latest.json"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
+CONSOLIDATION_DIR = REPO_ROOT / "data" / "overnight_summary"
 
 
 # -- Source loading -----------------------------------------------------------
@@ -159,6 +160,48 @@ def get_overnight_summary() -> str:
         return f"Overnight ran ({len(logs)} dimensions logged) but no structured report."
 
     return "Overnight directory exists but no reports found."
+
+
+# -- Consolidation report ----------------------------------------------------
+
+def get_consolidation_summary() -> str:
+    """Read the consolidation summary from the overnight consolidation script.
+
+    Returns the MD summary for today, or a fallback message.
+    """
+    today = datetime.now().strftime("%Y-%m-%d")
+    md_path = CONSOLIDATION_DIR / f"{today}.md"
+
+    if md_path.is_file():
+        text = md_path.read_text(encoding="utf-8")
+        if len(text) > 800:
+            return text[:800] + "\n... (truncated, full report in data/overnight_summary/)"
+        return text
+
+    json_path = CONSOLIDATION_DIR / f"{today}.json"
+    if json_path.is_file():
+        try:
+            data = json.loads(json_path.read_text(encoding="utf-8"))
+            merged = data.get("branches_merged", 0)
+            found = data.get("branches_found", 0)
+            conflicts = data.get("branches_conflicted", 0)
+            review = data.get("review_branch", "N/A")
+            tasks = data.get("dispatcher_reports", [])
+            tasks_done = sum(1 for t in tasks if t.get("status") == "done")
+
+            parts = [f"Branches: {merged}/{found} merged"]
+            if conflicts:
+                parts.append(f"{conflicts} conflicts")
+            if tasks:
+                parts.append(f"Tasks: {tasks_done}/{len(tasks)} done")
+            if review and merged > 0:
+                parts.append(f"Review: `{review}`")
+
+            return " | ".join(parts)
+        except (json.JSONDecodeError, OSError):
+            return "Consolidation JSON exists but unreadable."
+
+    return "No consolidation report today."
 
 
 # -- GitHub source checking ---------------------------------------------------
@@ -298,8 +341,11 @@ Keep total response under 300 words. Do not fabricate updates."""
 Source updates:
 {source_context}
 
-Overnight results:
+Overnight research:
 {overnight}
+
+Autonomous work (dispatcher + consolidation):
+{consolidation}
 
 TELOS goals context:
 {telos_summary}
@@ -311,13 +357,19 @@ If source updates are thin today, suggest 1 idea based on overnight results or c
     else:
         proposals = call_claude(user_prompt, system_prompt)
 
-    # 6. Assemble combined message
+    # 6. Consolidation summary (dispatcher + branch merges)
+    consolidation = get_consolidation_summary()
+
+    # 7. Assemble combined message
     lines = [
         f"*Jarvis Morning Briefing -- {today}*",
         "",
         f"*Vitals:* {vitals}",
         "",
-        f"*Overnight:* {overnight[:200]}",
+        f"*Autonomous Work:*",
+        consolidation,
+        "",
+        f"*Research:* {overnight[:200]}",
         "",
         "*Today's Proposals:*",
         proposals,

@@ -70,6 +70,36 @@ ISC_ALLOWED_COMMANDS = frozenset({
     "head", "tail", "find", "diff", "stat", "file", "echo",
 })
 
+# -- Git Bash resolution (avoid WSL interception) ---------------------------
+
+_GIT_BASH_CANDIDATES = [
+    r"C:\Program Files\Git\bin\bash.exe",
+    r"C:\Program Files\Git\usr\bin\bash.exe",
+    r"C:\Program Files (x86)\Git\bin\bash.exe",
+]
+
+
+def _find_git_bash() -> str:
+    """Find Git Bash, avoiding WSL's bash.exe in System32.
+
+    Task Scheduler PATH puts System32 before Git, so shutil.which("bash")
+    returns C:\\Windows\\System32\\bash.exe (WSL wrapper) which fails with
+    'execvpe(/bin/bash) failed' when WSL has no distro installed.
+    """
+    # 1. Check known Git Bash install paths
+    for candidate in _GIT_BASH_CANDIDATES:
+        if os.path.isfile(candidate):
+            return candidate
+
+    # 2. Fallback: shutil.which, but reject System32 (WSL wrapper)
+    found = shutil.which("bash")
+    if found and "System32" not in found and "system32" not in found:
+        return found
+
+    # 3. Last resort -- will likely fail but gives a clear error
+    return _GIT_BASH_CANDIDATES[0]
+
+
 # Protected paths that context_files must never reference
 CONTEXT_FILES_BLOCKED = re.compile(
     r"(?:^|[/\\])\.env(?:[/\\]|$)"
@@ -281,12 +311,18 @@ def select_next_task(backlog: list[dict]) -> Optional[dict]:
             continue
         # Validate all ISC commands upfront
         isc_valid = True
+        verifiable_count = 0
         for isc in t.get("isc", []):
-            if "| Verify:" in isc and sanitize_isc_command(isc) is None:
-                isc_valid = False
-                break
+            if "| Verify:" in isc:
+                if sanitize_isc_command(isc) is None:
+                    isc_valid = False
+                    break
+                verifiable_count += 1
         if not isc_valid:
             print(f"  Skipping {t['id']}: ISC verify command failed sanitization")
+            continue
+        if verifiable_count == 0:
+            print(f"  Skipping {t['id']}: no verifiable ISC (need >= 1 with '| Verify:')")
             continue
         candidates.append(t)
 
@@ -513,16 +549,13 @@ def verify_isc(task: dict, wt_path: Path) -> list[dict]:
             continue
 
         try:
-            # Use Git Bash on Windows (WSL bash fails without WSL installed).
-            # Git Bash provides find, grep, test, etc. natively.
+            # Use Git Bash on Windows. shutil.which("bash") may return
+            # C:\Windows\System32\bash.exe (WSL wrapper) in Task Scheduler
+            # context where System32 precedes Git on PATH. Prefer known
+            # Git Bash paths to avoid WSL interception.
             if os.name == "nt":
-                git_bash = shutil.which("bash")
-                if git_bash and "Git" in git_bash:
-                    shell_cmd = [git_bash, "-c", cmd]
-                else:
-                    # Fallback: try common Git Bash path
-                    git_bash_path = r"C:\Program Files\Git\bin\bash.exe"
-                    shell_cmd = [git_bash_path, "-c", cmd]
+                git_bash_path = _find_git_bash()
+                shell_cmd = [git_bash_path, "-c", cmd]
             else:
                 shell_cmd = ["bash", "-c", cmd]
             result = subprocess.run(
@@ -702,12 +735,15 @@ def dispatch(dry_run: bool = False) -> None:
         except Exception:
             pass
     finally:
-        # Cleanup
+        # Release lock but KEEP worktree + branch for consolidation.
+        # The consolidation script (run after all overnight jobs finish)
+        # merges completed branches into jarvis/review-YYYY-MM-DD and
+        # cleans up worktrees + stale branches.
         release_lock()
         if wt_path and not dry_run:
+            # Only remove the worktree checkout (frees disk), branch stays.
+            # Consolidation script can still read the branch commits.
             worktree_cleanup(worktree_dir=WORKTREE_DIR)
-        # Clean up old dispatch branches
-        cleanup_old_branches(prefix="jarvis/auto", days=14)
 
 
 # -- Self-test --------------------------------------------------------------
@@ -848,6 +884,29 @@ def self_test() -> bool:
         assert "NEVER run git push" in prompt
         assert "NEVER read .env" in prompt
         print("  PASS: Prompt includes goal_context and security rules")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 10: Tasks with no verifiable ISC are rejected
+    print("Test 10: Reject tasks with no verifiable ISC...")
+    try:
+        no_isc_tasks = [
+            {"id": "no-isc", "description": "No ISC", "tier": 0, "status": "pending",
+             "autonomous_safe": True, "priority": 1, "created": "2026-01-01",
+             "isc": ["Something without verify method"], "context_files": []},
+        ]
+        selected = select_next_task(no_isc_tasks)
+        assert selected is None, f"Should reject task with no verifiable ISC, got {selected}"
+
+        has_isc_tasks = [
+            {"id": "selftest-isc-ok", "description": "Has ISC", "tier": 0, "status": "pending",
+             "autonomous_safe": True, "priority": 1, "created": "2026-01-01",
+             "isc": ["Output exists | Verify: grep -c selftest /dev/null"], "context_files": []},
+        ]
+        selected = select_next_task(has_isc_tasks)
+        assert selected is not None, "Should accept task with verifiable ISC"
+        print("  PASS: ISC minimum requirement enforced")
     except Exception as exc:
         print(f"  FAIL: {exc}")
         ok = False
