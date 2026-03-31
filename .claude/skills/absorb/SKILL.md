@@ -102,6 +102,7 @@ Based on the depth flag:
 **--deep:**
 - Run `/extract-wisdom` (full mode) on the fetched content
 - Run `/find-logical-fallacies` on the fetched content
+- Run `/analyze-claims` on the fetched content (claim inventory, evidence mapping, support ratings)
 - Additionally: read relevant TELOS files (BELIEFS.md, WISDOM.md, MODELS.md, FRAMES.md) and cross-reference analysis output with existing TELOS content to identify:
   - Reinforcements: insights that strengthen existing beliefs/models
   - Challenges: insights that contradict or complicate existing beliefs/models
@@ -158,6 +159,10 @@ signal_file: {signal filename}
 ## Fallacy Analysis
 
 {/find-logical-fallacies output, or "(skipped -- quick mode)" if --quick}
+
+## Claim Analysis
+
+{/analyze-claims output, or "(skipped -- deep mode only)" if --quick or --normal}
 
 ## TELOS Routing Proposals
 
@@ -279,7 +284,7 @@ signal_file: {signal filename}
 
 - **Follows:** (standalone -- any time Eric finds resonant content)
 - **Precedes:** `/telos-update` (if proposals reveal broader identity shifts), `/learning-capture` (session end)
-- **Composes:** `/extract-wisdom` + `/find-logical-fallacies` (analytical lenses)
+- **Composes:** `/extract-wisdom` + `/find-logical-fallacies` + `/analyze-claims` (analytical lenses; claims lens active in --deep only)
 - **Replaces:** `/voice-capture` (deprecated -- voice dumps go to #jarvis-voice)
 - **Escalate to:** `/delegation` if scope expands
 

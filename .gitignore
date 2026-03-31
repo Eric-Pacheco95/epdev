@@ -80,6 +80,7 @@ tmp/
 # TELOS identity files (user fills these in on first setup)
 memory/work/telos/*.md
 memory/work/telos/recordings/
+memory/work/telos/.snapshots/
 !memory/work/telos/README.md
 # Legacy flat TELOS files
 memory/work/TELOS.md
@@ -119,6 +120,7 @@ memory/learning/signals/*.md
 memory/learning/signals/processed/
 memory/learning/failures/*.md
 memory/learning/synthesis/*.md
+memory/learning/absorbed/*.md
 memory/learning/_signal_meta.json
 memory/learning/signal_lineage.jsonl
 
