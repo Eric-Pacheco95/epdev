@@ -542,7 +542,7 @@ def post_slack_summary(metrics: dict, run_dir: Path) -> bool:
     # Escalate to #general if contradictions or low coverage need attention
     sev = "critical" if (contradictions >= SIGNAL_THRESHOLD_CONTRADICTIONS
                          or coverage < SIGNAL_THRESHOLD_COVERAGE) else "routine"
-    return notify("\n".join(lines), severity=sev)
+    return notify("\n".join(lines), severity=sev, bypass_caps=True)
 
 
 # -- Main --------------------------------------------------------------------

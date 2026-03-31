@@ -367,7 +367,7 @@ def main() -> int:
     # Post to Slack
     try:
         from tools.scripts.slack_notify import notify
-        ok = notify(feed_content)
+        ok = notify(feed_content, bypass_caps=True)
         if ok:
             print("Posted to #epdev Slack")
         else:

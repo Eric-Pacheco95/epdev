@@ -496,7 +496,7 @@ def post_slack_summary(results: list[dict], quality: str, security: str,
     # Escalate if any dimension failed
     any_failed = any(r.get("status") in ("failed", "error") for r in results)
     sev = "critical" if any_failed else "routine"
-    return notify("\n".join(lines), severity=sev)
+    return notify("\n".join(lines), severity=sev, bypass_caps=True)
 
 
 # -- Main --------------------------------------------------------------------

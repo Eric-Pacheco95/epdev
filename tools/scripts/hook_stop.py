@@ -87,24 +87,22 @@ def main() -> None:
         except (subprocess.TimeoutExpired, OSError) as exc:
             print(f"Heartbeat skipped: {exc}", file=sys.stderr)
 
-    # Post session digest to #epdev — only for sessions longer than 10 minutes
-    # Short sessions (quick questions, typos, restarts) are noise
+    # Post session digest to #epdev — only if enough time has passed since last post.
+    # Old approach used signal file mtime as a session-duration proxy, but signals
+    # accumulate across sessions so every short restart looked like a long session.
+    # New approach: cooldown-based — skip if last session-end post was < 15 min ago.
+    _COOLDOWN_FILE = REPO_ROOT / "data" / ".last_session_end_post"
+    _COOLDOWN_SECONDS = 900  # 15 minutes
+
+    should_post_session = True
     try:
-        # Fall back to signal file timestamps as a proxy for session length
-        oldest_signal_today = None
-        if SIGNALS_DIR.is_dir():
-            today_str = now.strftime("%Y-%m-%d")
-            for p in SIGNALS_DIR.iterdir():
-                if p.is_file() and p.name.startswith(today_str):
-                    mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
-                    if oldest_signal_today is None or mtime < oldest_signal_today:
-                        oldest_signal_today = mtime
-        # Estimate session duration from oldest signal written today vs now
-        session_minutes = 0
-        if oldest_signal_today:
-            session_minutes = (now - oldest_signal_today).total_seconds() / 60
-    except Exception:
-        session_minutes = 0
+        if _COOLDOWN_FILE.is_file():
+            last_post_ts = float(_COOLDOWN_FILE.read_text(encoding="utf-8").strip())
+            elapsed = now.timestamp() - last_post_ts
+            if elapsed < _COOLDOWN_SECONDS:
+                should_post_session = False
+    except (ValueError, OSError):
+        pass  # corrupted file — allow post
 
     # Write session_costs row to manifest DB
     try:
@@ -113,7 +111,6 @@ def main() -> None:
             session_id=session_id,
             date=now.strftime("%Y-%m-%d"),
             session_type="interactive",
-            duration_seconds=session_minutes * 60 if session_minutes > 0 else None,
         )
     except Exception:
         pass  # graceful fallback
@@ -133,26 +130,23 @@ def main() -> None:
             if unchecked > 0:
                 incomplete_iscs[prd.parent.name] = unchecked
 
-    if session_minutes >= 10:
+    if should_post_session:
         ts = now.strftime("%Y-%m-%d %H:%M UTC")
-        msg = (
-            f":brain: *Jarvis session ended* -- {ts}\n"
-            f"Stop reason: `{stop_reason}` | Learning signals on file: `{count}`"
-            f" | ~{int(session_minutes)}min session"
-        )
+        msg = f":brain: *Jarvis session ended* -- {ts}\n"
+        msg += f"Stop reason: `{stop_reason}` | Learning signals on file: `{count}`"
         if count > 0:
             msg += "\n_Run `/learning-capture` to process signals._"
         if incomplete_iscs:
             isc_parts = [f"{proj}: {n} remaining" for proj, n in incomplete_iscs.items()]
             msg += f"\n:warning: *Incomplete ISCs:* {', '.join(isc_parts)}"
-        notify(msg)
-    elif incomplete_iscs:
-        # Short session but incomplete ISCs — still warn
-        isc_parts = [f"{proj}: {n} remaining" for proj, n in incomplete_iscs.items()]
-        notify(
-            f":warning: *Session ended with incomplete ISCs:* {', '.join(isc_parts)}"
-            f"\n_Resume with `/implement-prd` to continue._"
-        )
+        posted = notify(msg)
+        if posted:
+            # Record timestamp to enforce cooldown
+            try:
+                _COOLDOWN_FILE.parent.mkdir(parents=True, exist_ok=True)
+                _COOLDOWN_FILE.write_text(str(now.timestamp()), encoding="utf-8")
+            except OSError:
+                pass
 
     sys.exit(0)
 
