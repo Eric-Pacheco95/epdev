@@ -33,6 +33,8 @@ AUTONOMOUS_VALUE = REPO_ROOT / "data" / "autonomous_value.jsonl"
 AUTORESEARCH_DIR = REPO_ROOT / "memory" / "work" / "jarvis" / "autoresearch"
 SKILLS_DIR = REPO_ROOT / ".claude" / "skills"
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
+MORNING_FEED_DIR = REPO_ROOT / "memory" / "work" / "jarvis" / "morning_feed"
+EVENTS_DIR = REPO_ROOT / "history" / "events"
 OUTPUT_FILE = REPO_ROOT / "data" / "vitals_latest.json"
 
 
@@ -358,6 +360,328 @@ def collect_unmerged_branches() -> list[str]:
     return []
 
 
+def collect_morning_feed() -> dict | None:
+    """Read the latest morning_feed file and extract proposals as action items."""
+    import re
+    if not MORNING_FEED_DIR.is_dir():
+        return None
+    feed_files = sorted(MORNING_FEED_DIR.glob("*.md"), reverse=True)
+    if not feed_files:
+        return None
+    latest = feed_files[0]
+    try:
+        content = latest.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+    # Extract numbered proposals: only parse after "Proposals:" heading
+    proposals = []
+    lines = content.splitlines()
+    # Find the proposals section start
+    i = 0
+    while i < len(lines):
+        if "Proposals:" in lines[i] or "RATINGS:" in lines[i]:
+            i += 1
+            break
+        i += 1
+    # Skip RATINGS line if it comes right after Proposals
+    if i < len(lines) and lines[i].strip().startswith("RATINGS:"):
+        i += 1
+    # Skip blank lines
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    # Now parse numbered proposals
+    while i < len(lines):
+        m = re.match(r"^(\d+)\.\s+(.+)", lines[i])
+        if m:
+            title = m.group(2).strip()
+            # Collect description lines until next proposal or end
+            desc_lines = []
+            telos_tag = ""
+            i += 1
+            while i < len(lines) and not re.match(r"^\d+\.\s+", lines[i]):
+                line = lines[i].strip()
+                if line.startswith("TELOS:"):
+                    telos_tag = line.replace("TELOS:", "").strip()
+                elif line:
+                    desc_lines.append(line)
+                i += 1
+            proposals.append({
+                "rank": int(m.group(1)),
+                "title": title,
+                "telos": telos_tag,
+                "description": " ".join(desc_lines)[:300],
+            })
+        else:
+            i += 1
+
+    return {
+        "date": latest.stem,
+        "file": str(latest.relative_to(REPO_ROOT)),
+        "proposal_count": len(proposals),
+        "proposals": proposals[:5],
+    }
+
+
+def collect_session_usage() -> dict | None:
+    """Aggregate session counts and Gemini usage from event JSONL files."""
+    if not EVENTS_DIR.is_dir():
+        return None
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today_dt = datetime.now(timezone.utc).date()
+
+    daily_counts: dict[str, int] = {}
+    total_sessions = 0
+    session_spans: dict[str, list[str]] = {}  # session_id -> [timestamps]
+
+    # Gemini usage tracking
+    gemini_calls = 0
+    gemini_tokens = 0
+    gemini_daily: dict[str, dict] = {}  # date -> {calls, tokens}
+
+    for f in sorted(EVENTS_DIR.glob("*.jsonl")):
+        try:
+            for line in f.read_text(encoding="utf-8").strip().splitlines():
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                rec_type = rec.get("type", "")
+                date_key = rec.get("ts", "")[:10]
+                if not date_key:
+                    continue
+                if rec_type == "session_cost":
+                    daily_counts[date_key] = daily_counts.get(date_key, 0) + 1
+                    total_sessions += 1
+                    sid = rec.get("session_id", "")
+                    ts = rec.get("ts", "")
+                    if sid and ts:
+                        session_spans.setdefault(sid, []).append(ts)
+                elif rec_type == "gemini_usage":
+                    gemini_calls += 1
+                    t = rec.get("total_tokens") or 0
+                    gemini_tokens += t
+                    if date_key not in gemini_daily:
+                        gemini_daily[date_key] = {"calls": 0, "tokens": 0}
+                    gemini_daily[date_key]["calls"] += 1
+                    gemini_daily[date_key]["tokens"] += t
+        except OSError:
+            continue
+
+    # Compute unique session count and average duration from timestamp spans
+    unique_sessions = len(session_spans)
+    durations = []
+    for sid, timestamps in session_spans.items():
+        if len(timestamps) >= 2:
+            timestamps.sort()
+            try:
+                t0 = datetime.fromisoformat(timestamps[0].replace("Z", "+00:00"))
+                t1 = datetime.fromisoformat(timestamps[-1].replace("Z", "+00:00"))
+                dur = (t1 - t0).total_seconds()
+                if 0 < dur < 86400:  # sanity: under 24h
+                    durations.append(dur)
+            except (ValueError, TypeError):
+                pass
+    avg_duration_min = round(sum(durations) / len(durations) / 60, 1) if durations else None
+
+    # Compute weekly and monthly rollups
+    week_sessions = sum(
+        v for k, v in daily_counts.items()
+        if k >= (today_dt - timedelta(days=7)).isoformat()
+    )
+    month_sessions = sum(
+        v for k, v in daily_counts.items()
+        if k >= (today_dt - timedelta(days=30)).isoformat()
+    )
+
+    # Gemini weekly/monthly
+    gemini_week = {"calls": 0, "tokens": 0}
+    gemini_month = {"calls": 0, "tokens": 0}
+    for k, v in gemini_daily.items():
+        if k >= (today_dt - timedelta(days=7)).isoformat():
+            gemini_week["calls"] += v["calls"]
+            gemini_week["tokens"] += v["tokens"]
+        if k >= (today_dt - timedelta(days=30)).isoformat():
+            gemini_month["calls"] += v["calls"]
+            gemini_month["tokens"] += v["tokens"]
+
+    # Last 7 days as a sparkline-ready array
+    last_7 = []
+    for i in range(6, -1, -1):
+        d = (today_dt - timedelta(days=i)).isoformat()
+        last_7.append({"date": d, "sessions": daily_counts.get(d, 0)})
+
+    return {
+        "claude": {
+            "events_today": daily_counts.get(today, 0),
+            "events_week": week_sessions,
+            "events_month": month_sessions,
+            "events_total": total_sessions,
+            "unique_sessions": unique_sessions,
+            "avg_duration_min": avg_duration_min,
+            "daily_trend": last_7,
+            "days_tracked": len(daily_counts),
+        },
+        "gemini": {
+            "total_calls": gemini_calls,
+            "total_tokens": gemini_tokens,
+            "week": gemini_week,
+            "month": gemini_month,
+            "today": gemini_daily.get(today, {"calls": 0, "tokens": 0}),
+        },
+    }
+
+
+def collect_overnight_streak() -> list[dict]:
+    """Compute 7-day overnight run streak from log files."""
+    logs_dir = REPO_ROOT / "data" / "logs"
+    today_dt = datetime.now(timezone.utc).date()
+    streak = []
+    for i in range(6, -1, -1):
+        d = today_dt - timedelta(days=i)
+        date_str = d.isoformat()
+        # Check for overnight log file for this date
+        log_pattern = f"overnight_*{date_str}*"
+        found = list(logs_dir.glob(log_pattern)) if logs_dir.is_dir() else []
+        if found:
+            # Check if any log indicates failure
+            has_fail = False
+            for lf in found:
+                try:
+                    content = lf.read_text(encoding="utf-8", errors="replace")[:500]
+                    if "FAIL" in content or "ERROR" in content:
+                        has_fail = True
+                        break
+                except OSError:
+                    pass
+            streak.append({"date": date_str, "status": "failed" if has_fail else "ran"})
+        else:
+            streak.append({"date": date_str, "status": "skipped"})
+    return streak
+
+
+def collect_external_monitoring_structured(overnight_deep_dive: dict | None) -> list[dict] | None:
+    """Pre-parse external monitoring markdown into structured sections.
+
+    Reads the raw markdown string from overnight_deep_dive.external_monitoring
+    and extracts ### headings with their bullet items into structured data.
+    """
+    import re
+    if not overnight_deep_dive:
+        return None
+    raw_md = overnight_deep_dive.get("external_monitoring")
+    if not raw_md or not isinstance(raw_md, str):
+        return None
+
+    # Parse sections: ### headings contain source names, bullets contain findings
+    sections = []
+    current_section = None
+    current_items: list[str] = []
+
+    for line in raw_md.splitlines():
+        heading_match = re.match(r"^#{2,3}\s+(.+)", line)
+        if heading_match:
+            heading = heading_match.group(1).strip()
+            # Skip meta headings (Summary, Tier labels)
+            if any(skip in heading.lower() for skip in ["summary", "tier 1", "tier 2", "tier 3", "overnight run"]):
+                # Flush current section if any
+                if current_section and current_items:
+                    sections.append({
+                        "category": current_section,
+                        "items": current_items,
+                    })
+                    current_section = None
+                    current_items = []
+                continue
+            if current_section and current_items:
+                sections.append({
+                    "category": current_section,
+                    "items": current_items,
+                })
+            current_section = heading
+            current_items = []
+        elif line.strip().startswith("- **") or line.strip().startswith("- "):
+            item = line.strip().lstrip("- ").strip()
+            if item and current_section:
+                current_items.append(item)
+
+    if current_section and current_items:
+        sections.append({
+            "category": current_section,
+            "items": current_items,
+        })
+
+    return sections if sections else None
+
+
+def collect_contradictions_structured(overnight_deep_dive: dict | None) -> list[dict] | None:
+    """Pre-parse autoresearch contradictions markdown into structured data."""
+    import re
+    if not overnight_deep_dive:
+        return None
+    raw_md = overnight_deep_dive.get("autoresearch_contradictions")
+    if not raw_md or not isinstance(raw_md, str):
+        return None
+
+    contradictions = []
+    current: dict = {}
+
+    for line in raw_md.splitlines():
+        line = line.strip()
+        if line.startswith("- TELOS claim:") or line.startswith("- **TELOS claim"):
+            if current:
+                contradictions.append(current)
+            current = {"claim": line.lstrip("- ").replace("TELOS claim:", "").replace("**TELOS claim**:", "").strip().strip('"')}
+        elif line.startswith("- Signal evidence:") or line.startswith("- **Signal evidence"):
+            current["evidence"] = line.lstrip("- ").replace("Signal evidence:", "").replace("**Signal evidence**:", "").strip()
+        elif line.startswith("- Severity:") or line.startswith("- **Severity"):
+            sev = line.split(":")[-1].strip().upper()
+            current["severity"] = sev if sev in ("HIGH", "MEDIUM", "LOW") else "MEDIUM"
+
+    if current and current.get("claim"):
+        contradictions.append(current)
+
+    # Ensure all entries have all fields
+    for c in contradictions:
+        c.setdefault("evidence", "")
+        c.setdefault("severity", "MEDIUM")
+
+    return contradictions if contradictions else None
+
+
+def collect_proposals_structured(overnight_deep_dive: dict | None) -> list[dict] | None:
+    """Pre-parse autoresearch proposals markdown into structured data."""
+    import re
+    if not overnight_deep_dive:
+        return None
+    raw_md = overnight_deep_dive.get("autoresearch_proposals")
+    if not raw_md or not isinstance(raw_md, str):
+        return None
+
+    proposals = []
+    current: dict = {}
+
+    for line in raw_md.splitlines():
+        line = line.strip()
+        if line.startswith("- File:") or line.startswith("- **File"):
+            if current:
+                proposals.append(current)
+            current = {"file": line.split(":", 1)[-1].strip()}
+        elif line.startswith("- Change:") or line.startswith("- **Change"):
+            current["change"] = line.split(":", 1)[-1].strip()
+        elif line.startswith("- Evidence:") or line.startswith("- **Evidence"):
+            current["evidence"] = line.split(":", 1)[-1].strip()
+
+    if current and current.get("file"):
+        proposals.append(current)
+
+    for p in proposals:
+        p.setdefault("change", "")
+        p.setdefault("evidence", "")
+
+    return proposals if proposals else None
+
+
 def collect_git_hash() -> str:
     """Get current git commit hash for provenance."""
     try:
@@ -422,6 +746,19 @@ def main() -> None:
 
     unmerged_branches = collect_unmerged_branches()
 
+    morning_feed = collect_morning_feed()
+    if morning_feed:
+        files_scanned.append(str(MORNING_FEED_DIR))
+
+    session_usage = collect_session_usage()
+    if session_usage:
+        files_scanned.append(str(EVENTS_DIR))
+
+    overnight_streak = collect_overnight_streak()
+    external_monitoring_structured = collect_external_monitoring_structured(overnight_deep_dive)
+    contradictions_structured = collect_contradictions_structured(overnight_deep_dive)
+    proposals_structured = collect_proposals_structured(overnight_deep_dive)
+
     elapsed_ms = round((time.time() - start_time) * 1000)
 
     # Build output
@@ -452,6 +789,12 @@ def main() -> None:
         "skill_evolution": skill_evolution,
         "unmerged_branches": unmerged_branches,
         "overnight_deep_dive": overnight_deep_dive,
+        "morning_feed": morning_feed,
+        "session_usage": session_usage,
+        "overnight_streak": overnight_streak,
+        "external_monitoring_structured": external_monitoring_structured,
+        "contradictions_structured": contradictions_structured,
+        "proposals_structured": proposals_structured,
         "errors": errors,
     }
 

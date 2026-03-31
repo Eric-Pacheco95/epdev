@@ -33,13 +33,13 @@
 - [x] **4E-S4: Retention layer** — `compress_signals.py` scheduled monthly (gzip processed signals >180d). `rotate_heartbeat.py` scheduled monthly (30d raw, monthly summary). `autonomous_signal_rate` collector live (0.29/day). `signal_volume` collector reads manifest (284 signals). `producer_health` collector wired. Gate: PASSED — all growing datasets have rotation. (2026-03-30)
 - [x] **4E-S5: Consumer migration** — 3 collectors migrated to manifest DB (signal_count, signal_velocity, autonomous_signal_rate). Trend averages computed from heartbeat_history (5 metrics: isc_ratio, signal_velocity, signal_count, autonomous_signal_rate, tool_failure_rate). JSON contract documented at `tools/schemas/vitals_v1_contract.md`. Schema updated. Gate: PASSED — no consumer scans directories for data available in manifest. (2026-03-30)
 - [x] **5-pre: Evaluate MCPorter for MCP→CLI** — ABSORB-IDEA. No current `claude -p` task is MCP-only; all require LLM reasoning. Slack already uses direct API. Absorbed pattern: JSON-RPC stdio wrapper if batch MCP calls emerge. Decision: `history/decisions/2026-03-31_mcporter-eval-absorb.md`. (2026-03-31)
-- [ ] **5-pre: Context efficiency audit** — Review sub-agent, fresh-agent, and `claude -p` session context loading. Map what each agent type actually needs vs what it loads. Goal: minimal required context per invocation type. Blocked by: 4E-S5 + MCPorter eval. Target: after 4E complete.
+- [x] **5-pre: Context efficiency audit** — Audit complete. All `claude -p` calls appropriately load CLAUDE.md for steering. MCP tools already deferred, memory on-demand. No changes needed. Audit doc: `memory/work/observability/context_efficiency_audit.md`. (2026-03-31)
 
 ### Tier 3: Additive Improvements (Useful but don't compound)
 
-- [ ] **3C-5: Tailscale + SSH** — Mobile CLI access. Enables Phase 5 gate item (remote terminal Layer 3)
+- [x] **3C-5: Tailscale + SSH** — COMPLETE. Terminal working via SSH + Tailscale + Blink. Mobile CLI access live. (2026-03-31)
 - [ ] **Notion auto-write** — Auto-push Reports/TELOS Mirror. Nice-to-have, not blocking anything
-- [ ] **4B: Interleaved thinking** — Enable on `/delegation`, `/workflow-engine`, `/spawn-agent`. Improves multi-step orchestration
+- [x] **4B: Interleaved thinking** — Already enabled by default on Opus 4.6/Sonnet 4.6 via adaptive thinking. No beta header or config needed. The `interleaved-thinking-2025-05-14` header was for older models. Tuning: `Alt+T`, `/effort`, `CLAUDE_CODE_EFFORT_LEVEL`. (2026-03-31)
 - [ ] **4B: Tool Search API** — Implement when skill/tool count exceeds 50. Not yet at threshold
 - [x] **4E: Signal retention policy** — Handled by compress_signals.py (180d gzip) + rotate_heartbeat.py (30d raw). Scheduled monthly. (2026-03-30)
 - [x] **4E: FTS index validation** — Jarvis-IndexUpdate runs daily 3am. FTS resilience verified in 4E-S1. (2026-03-29)
@@ -70,7 +70,7 @@
 | 3D | COMPLETE | 0 |
 | 3E | COMPLETE | 0 |
 | 4A | COMPLETE | 0 |
-| 4B | Near-complete | 3 (source review, interleaved thinking, tool search) |
+| 4B | Near-complete | 1 (tool search -- deferred until skill count > 50) |
 | 4C | **COMPLETE** | 0 |
 | 4D | **COMPLETE** | 0 |
 | 4E | **COMPLETE** | 5/5 steps done |
@@ -81,7 +81,7 @@
 |---------|--------|--------|-------|-------------|
 | epdev-jarvis-setup | active | green | epdev | Phase 4 COMPLETE, Phase 4→5 gate PASSED — Phase 5A next |
 | crypto-bot | active | yellow | epdev | Paper trading → production gate — see `memory/work/crypto_trading_bot/project_state.md` |
-| jarvis-app | active | green | epdev | Sprint 1+2 COMPLETE (app shell, vitals, drill-down) — see `memory/work/jarvis-app/PRD.md` |
+| jarvis-app | active | green | epdev | Sprint 1+2+3 COMPLETE (app shell, vitals, drill-down, tab restructure) — see `memory/work/jarvis-app/PRD.md` |
 
 ## Phase 1: Foundation Tasks (COMPLETE)
 
@@ -312,7 +312,7 @@
 - [ ] **Human source review ritual** — After first research run, ask Eric: "What other sources should be added? (YouTube channels, blogs, GitHub repos, newsletters)" — capture answers in sources.yaml and `history/decisions/`
 - [x] **Research runner** — `tools/scripts/morning_feed.py` running daily at 9am via Task Scheduler. Output validated in `memory/work/jarvis/morning_feed/2026-03-29.md`. Slack posting rate-limited by design. (2026-03-29)
 - [x] **Cowork vs scheduler split** — Documented in PRD_autonomous_learning.md: overnight = Task Scheduler + claude -p (separate calls per dimension); morning feed = Task Scheduler + Python (Anthropic API direct); interactive = Claude Code session. (2026-03-28)
-- [ ] **Interleaved thinking for orchestration skills** — Enable interleaved thinking on `/delegation`, `/workflow-engine`, and `/spawn-agent`: think→tool→think→tool pattern dramatically improves multi-step research and agent composition. Configure via `interleaved-thinking-2025-05-14` header on Claude API calls inside these skills. Do alongside research runner — this is where it pays off most.
+- [x] **Interleaved thinking for orchestration skills** — Already enabled by default on Opus 4.6 via adaptive thinking. Beta header approach obsolete. (2026-03-31)
 - [ ] **Tool Search API** — When skill/tool count exceeds 50, implement Tool Search to prevent token explosion in orchestration loops. Evaluate as part of research runner architecture — autonomous research will eventually need to query 100+ tools by description without loading all schemas upfront.
 
 ### Phase 4C — Slack notifications by severity (COMPLETE)
