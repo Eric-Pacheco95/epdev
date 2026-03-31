@@ -59,9 +59,10 @@ VERIFY
 
 # STEPS
 
-- Read `orchestration/tasklist.md` and extract every `[x]` checked item, grouped by phase
-- Read all decision log entries in `history/decisions/` to build a coverage map of which phases and tasks have documented rationale
-- For each checked item, evaluate four dimensions:
+- Run `python tools/scripts/quality_gate_check.py --check-files` to get the deterministic report: tasklist stats, open items, decision log coverage, and file reference validation. If a `--phase` argument was provided, pass it through: `python tools/scripts/quality_gate_check.py --check-files --phase <PHASE>`
+- If a PRD is being gated, also run `python tools/scripts/quality_gate_check.py --prd <path>` to validate ISC items (verify methods present, minimum count, completion percentage)
+- Parse the report output — the script handles all file counting, cross-referencing, and existence checks deterministically. You only need to interpret the findings
+- For each checked item in the tasklist (use `python tools/scripts/tasklist_parser.py --status checked --json` for structured data), evaluate four dimensions:
   - **THINK-before-BUILD**: Was a THINK artifact (PRD, decision log, spec, design doc, or research brief) produced before or alongside the BUILD artifact? Check `memory/work/*/PRD.md`, `memory/work/*/research_brief.md`, `history/decisions/`, and any spec files referenced in the task description
   - **Intent match**: Does the actual deliverable match the original intent described in the task text and phase header? Look for scope drift, silent reductions, or "pending" qualifiers embedded inside checked items
   - **Decision log**: Is there an entry in `history/decisions/` that explains why this approach was chosen over alternatives? Not every task needs one — focus on architectural choices, tool selections, and phase-level decisions

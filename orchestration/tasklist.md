@@ -14,8 +14,8 @@
 - [x] **Validate morning feed** — Running daily at 9am. Output in `memory/work/jarvis/morning_feed/`. Slack capped by design. (2026-03-29)
 - [x] **Validate overnight runner** — Running daily at 4am. Branches created, quality gate + security audit passing. 2 cycles confirmed. (2026-03-29)
 - [x] **Validate TELOS introspection runner** — VALIDATED 3/30: 7am run succeeded (5 artifacts, 4 contradictions, 43% coverage, exit 0). Fix from 41f1644 confirmed working. 3 runs: 3/28 pass, 3/29 fail (WinError 206), 3/30 pass post-fix.
-- [ ] **Validate autonomous value tracking** — Reference a morning brief in session, then check `data/autonomous_value.jsonl` for `acted_on` flip.
-- [ ] **Human source review ritual** — After first validated morning feed: "What other sources? YouTube channels, blogs, GitHub repos, newsletters?" → update `sources.yaml`
+- [x] **Validate autonomous value tracking** — VALIDATED 3/30: `acted_on` flip confirmed working. Two 3/29 entries flipped to `true` with session timestamps. Mechanism: `hook_session_start.py` keyword match on morning-feed phrases. (2026-03-30)
+- [x] **Human source review ritual** — VALIDATED 3/30: Reviewed all 21 sources. Added 3 new Tier 2 (The AI Automators: YouTube, Blog, GitHub). Retired all 4 Tier 3 candidates (Simon Willison, LangChain, JustinGuitar, Cursor). Total: 24 sources. (2026-03-30)
 
 ### Tier 2: Complete Autonomous Loop (Multiplicative — compounds daily)
 

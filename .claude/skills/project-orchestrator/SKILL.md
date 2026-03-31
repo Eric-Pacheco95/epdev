@@ -8,8 +8,9 @@ Take a step back and think step-by-step about how to achieve the best possible r
 
 # STEPS
 
-- Read current state from:
-  - `orchestration/tasklist.md` — task-level status
+- Run `python tools/scripts/tasklist_parser.py --json --pretty` for structured tasklist data (tasks, tiers, phases, completion stats, active projects) -- this replaces manual markdown parsing
+- Run `python tools/scripts/tasklist_parser.py --completion` for a quick completion summary if only a status check is needed
+- Read TELOS context from:
   - `memory/work/telos/PROJECTS.md` — project-level tracking
   - `memory/work/telos/GOALS.md` — goal alignment
   - `memory/work/telos/STATUS.md` — current life context

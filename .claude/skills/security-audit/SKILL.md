@@ -35,11 +35,13 @@ VERIFY
 
 ## Phase 1: Deterministic Scan
 
-1. Run `python tools/scripts/security_scan.py --pretty` to collect all scan data
+1. Run `python tools/scripts/security_scan.py --pretty --filter-fp --run-tests --audit-log` to collect all scan data with false positive filtering, defensive test execution, and automatic audit logging
 2. Validate the output:
    - Check `_schema_version` is `"1.0.0"` -- if mismatched, STOP and report: "Schema version mismatch -- security_scan.py and this skill are out of sync. Expected 1.0.0, got {version}."
    - Check `errors` array -- if non-empty, report each error inline with a [DEGRADED] marker
-3. Parse findings from the JSON output
+   - Check `defensive_tests.status` -- if "fail", report failing tests before proceeding
+   - Check `summary.real_findings` vs `summary.false_positives` -- the script pre-filters test fixtures and upstream vendored patterns
+3. Parse `real_findings` from the JSON output (false positives are already separated)
 
 ## Phase 2: LLM Triage
 
@@ -73,17 +75,13 @@ VERIFY
 
 ## Phase 5: Defensive Test Suite
 
-11. Run the defensive test suite as a health check:
-    ```
-    python -m pytest tests/defensive/test_security_scan.py -v
-    python tests/defensive/test_injection_detection.py
-    python tests/defensive/test_secret_scanner.py
-    ```
-12. If any defensive tests fail, invoke `/self-heal` on the failures
+11. The defensive tests already ran in Phase 1 via `--run-tests`. Check `defensive_tests` in the JSON output:
+    - If `status: pass` -- all tests passing, report count
+    - If `status: fail` -- invoke `/self-heal` on the failures listed in `output_tail`
 
 ## Phase 6: Report
 
-13. Write the audit log to `history/security/{date}_audit.md` using the AUDIT LOG FORMAT below
+13. The audit log was already written in Phase 1 via `--audit-log` to `history/security/{date}_audit.md`. If remediation was performed, re-run `python tools/scripts/security_scan.py --pretty --filter-fp --audit-log` to append the post-remediation results
 14. Report remediation loop metrics: N findings auto-fixed, M open, K defensive tests passed
 
 ## FALLBACK (if scanner script fails)

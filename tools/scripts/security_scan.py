@@ -279,11 +279,154 @@ def collect_git_hash() -> str:
     return "unknown"
 
 
+def run_defensive_tests() -> dict:
+    """Run pytest tests/defensive/ and return structured results."""
+    test_dir = REPO_ROOT / "tests" / "defensive"
+    if not test_dir.exists():
+        return {"status": "skipped", "reason": "tests/defensive/ not found", "passed": 0, "failed": 0}
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pytest", str(test_dir), "-v", "--tb=short", "-q"],
+            capture_output=True, text=True, timeout=120,
+            cwd=str(REPO_ROOT),
+        )
+        # Parse pytest output
+        output_lines = result.stdout.splitlines()
+        passed = failed = errors = 0
+        for line in output_lines:
+            if " passed" in line:
+                import re as _re
+                m = _re.search(r"(\d+) passed", line)
+                if m:
+                    passed = int(m.group(1))
+            if " failed" in line:
+                import re as _re
+                m = _re.search(r"(\d+) failed", line)
+                if m:
+                    failed = int(m.group(1))
+            if " error" in line:
+                import re as _re
+                m = _re.search(r"(\d+) error", line)
+                if m:
+                    errors = int(m.group(1))
+
+        return {
+            "status": "pass" if result.returncode == 0 else "fail",
+            "passed": passed,
+            "failed": failed,
+            "errors": errors,
+            "returncode": result.returncode,
+            "output_tail": "\n".join(output_lines[-10:]),
+        }
+    except subprocess.TimeoutExpired:
+        return {"status": "timeout", "passed": 0, "failed": 0, "errors": 0}
+    except Exception as exc:
+        return {"status": "error", "reason": str(exc), "passed": 0, "failed": 0}
+
+
+# Known false positive patterns -- findings matching these are tagged but not removed
+FALSE_POSITIVE_RULES = [
+    # Test fixtures contain intentional secret patterns
+    {"check": "secret_pattern", "path_contains": "tests/", "tag": "test_fixture"},
+    # Example/template files
+    {"check": "secret_pattern", "path_contains": "example", "tag": "example_file"},
+    {"check": "secret_pattern", "path_contains": "template", "tag": "template_file"},
+    # Fabric upstream patterns
+    {"check": "secret_pattern", "path_contains": "fabric-upstream", "tag": "upstream_vendored"},
+]
+
+
+def apply_false_positive_filter(findings: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Separate findings into real and false positives. Returns (real, false_positives)."""
+    real = []
+    false_positives = []
+
+    for f in findings:
+        is_fp = False
+        for rule in FALSE_POSITIVE_RULES:
+            match = True
+            if "check" in rule and f.get("check") != rule["check"]:
+                match = False
+            if "path_contains" in rule:
+                file_path = f.get("file", "") or f.get("path", "")
+                if rule["path_contains"] not in file_path:
+                    match = False
+            if match:
+                f["false_positive"] = True
+                f["fp_tag"] = rule["tag"]
+                false_positives.append(f)
+                is_fp = True
+                break
+        if not is_fp:
+            real.append(f)
+
+    return real, false_positives
+
+
+def write_audit_log(output: dict, test_results: dict | None = None) -> str:
+    """Write timestamped audit log to history/security/."""
+    audit_dir = REPO_ROOT / "history" / "security"
+    audit_dir.mkdir(parents=True, exist_ok=True)
+
+    now = datetime.now(timezone.utc)
+    filename = f"{now.strftime('%Y-%m-%d')}_audit.md"
+    filepath = audit_dir / filename
+
+    total = output["summary"]["total_findings"]
+    real_count = output["summary"].get("real_findings", total)
+    fp_count = output["summary"].get("false_positives", 0)
+
+    lines = [
+        f"# Security Audit - {now.strftime('%Y-%m-%d %H:%M UTC')}",
+        "",
+        f"- Scanner: security_scan.py v{SCHEMA_VERSION}",
+        f"- Git hash: {output['_provenance']['git_hash']}",
+        f"- Total findings: {total} ({real_count} real, {fp_count} false positives)",
+        f"- Execution time: {output['_provenance']['execution_time_ms']}ms",
+        "",
+    ]
+
+    if test_results:
+        status = test_results.get("status", "unknown")
+        lines.append(f"## Defensive Tests: {status.upper()}")
+        lines.append(f"- Passed: {test_results.get('passed', 0)}")
+        lines.append(f"- Failed: {test_results.get('failed', 0)}")
+        lines.append("")
+
+    if output.get("real_findings"):
+        lines.append("## Findings (Real)")
+        for f in output["real_findings"]:
+            check = f.get("check", "unknown")
+            detail = f.get("detail", f.get("pattern", ""))
+            file_ref = f.get("file", f.get("path", ""))
+            lines.append(f"- [{check}] {file_ref}: {detail}")
+        lines.append("")
+
+    if not output.get("real_findings") and not output.get("errors"):
+        lines.append("## Result: CLEAN")
+        lines.append("No actionable findings.")
+
+    content = "\n".join(lines) + "\n"
+
+    # Append if file exists (multiple runs per day), otherwise create
+    if filepath.exists():
+        with open(filepath, "a", encoding="utf-8") as fh:
+            fh.write("\n---\n\n" + content)
+    else:
+        filepath.write_text(content, encoding="utf-8")
+
+    return str(filepath)
+
+
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Deterministic security scanner")
     parser.add_argument("--file", action="store_true", help="Also write to data/security_scan_latest.json")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
+    parser.add_argument("--run-tests", action="store_true", help="Also run pytest tests/defensive/")
+    parser.add_argument("--audit-log", action="store_true", help="Write audit log to history/security/")
+    parser.add_argument("--filter-fp", action="store_true", help="Apply false positive filter")
     args = parser.parse_args()
 
     start_time = time.time()
@@ -310,6 +453,12 @@ def main() -> None:
 
     elapsed_ms = round((time.time() - start_time) * 1000)
 
+    # Apply false positive filter
+    real_findings = all_findings
+    fp_findings = []
+    if args.filter_fp:
+        real_findings, fp_findings = apply_false_positive_filter(all_findings)
+
     # Summary counts by check type
     by_check = {}
     for f in all_findings:
@@ -329,9 +478,21 @@ def main() -> None:
         "summary": {
             "total_findings": len(all_findings),
             "by_check": by_check,
+            "real_findings": len(real_findings),
+            "false_positives": len(fp_findings),
         },
         "errors": errors,
     }
+
+    if args.filter_fp:
+        output["real_findings"] = real_findings
+        output["false_positive_findings"] = fp_findings
+
+    # Run defensive tests
+    test_results = None
+    if args.run_tests:
+        test_results = run_defensive_tests()
+        output["defensive_tests"] = test_results
 
     indent = 2 if args.pretty else None
     json_str = json.dumps(output, indent=indent, ensure_ascii=True)
@@ -342,6 +503,11 @@ def main() -> None:
         OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
         OUTPUT_FILE.write_text(json_str, encoding="utf-8")
         print(f"Written to {OUTPUT_FILE}", file=sys.stderr)
+
+    # Write audit log
+    if args.audit_log:
+        log_path = write_audit_log(output, test_results)
+        print(f"Audit log: {log_path}", file=sys.stderr)
 
 
 if __name__ == "__main__":
