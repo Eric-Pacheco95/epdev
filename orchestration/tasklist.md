@@ -40,7 +40,7 @@
 - [x] **3C-5: Tailscale + SSH** — COMPLETE. Terminal working via SSH + Tailscale + Blink Shell. Mobile CLI access live. (2026-03-31)
 - [x] **Notion auto-write** — Auto-push to Notion wired into `/telos-report` (Jarvis Reports page) and `/telos-update` (TELOS Mirror page). (2026-03-31)
 - [x] **4B: Interleaved thinking** — Already enabled by default on Opus 4.6/Sonnet 4.6 via adaptive thinking. No beta header or config needed. The `interleaved-thinking-2025-05-14` header was for older models. Tuning: `Alt+T`, `/effort`, `CLAUDE_CODE_EFFORT_LEVEL`. (2026-03-31)
-- [ ] **4B: Tool Search API** — 41 skills + 150 MCP tools = 191 total. Threshold exceeded. Ready for implementation
+- [x] **4B: Tool Search API** — Solved natively by Claude Code's deferred ToolSearch mechanism. 191 tools (41 skills + 150 MCP) load as name-only stubs; schemas fetched on demand. No custom implementation needed. (2026-03-31)
 - [x] **4E: Signal retention policy** — Handled by compress_signals.py (180d gzip) + rotate_heartbeat.py (30d raw). Scheduled monthly. (2026-03-30)
 - [x] **4E: FTS index validation** — Jarvis-IndexUpdate runs daily 3am. FTS resilience verified in 4E-S1. (2026-03-29)
 - [x] **4E: Reporting dashboard data contract** — `tools/schemas/vitals_v1_contract.md` + updated `vitals_collector.v1.json`. (2026-03-30)
@@ -69,7 +69,7 @@
 | 3D | COMPLETE | 0 |
 | 3E | COMPLETE | 0 |
 | 4A | COMPLETE | 0 |
-| 4B | Near-complete | 1 (Tool Search API — threshold exceeded, ready to build) |
+| 4B | **COMPLETE** | 0 |
 | 4C | **COMPLETE** | 0 |
 | 4D | **COMPLETE** | 0 |
 | 4E | **COMPLETE** | 5/5 steps done |
@@ -315,7 +315,7 @@
 - [x] **Research runner** — `tools/scripts/morning_feed.py` running daily at 9am via Task Scheduler. Output validated in `memory/work/jarvis/morning_feed/2026-03-29.md`. Slack posting rate-limited by design. (2026-03-29)
 - [x] **Cowork vs scheduler split** — Documented in PRD_autonomous_learning.md: overnight = Task Scheduler + claude -p (separate calls per dimension); morning feed = Task Scheduler + Python (Anthropic API direct); interactive = Claude Code session. (2026-03-28)
 - [x] **Interleaved thinking for orchestration skills** — Already enabled by default on Opus 4.6 via adaptive thinking. Beta header approach obsolete. (2026-03-31)
-- [ ] **Tool Search API** — 41 skills + 150 MCP tools = 191 total (threshold exceeded). Implement Tool Search to prevent token explosion in orchestration loops. Autonomous research needs to query tools by description without loading all schemas upfront.
+- [x] **Tool Search API** — Solved natively by Claude Code's deferred ToolSearch. 191 tools load as name-only stubs; schemas fetched on demand. All `claude -p` jobs inherit this automatically. (2026-03-31)
 
 ### Phase 4C — Slack notifications by severity (COMPLETE)
 
@@ -408,8 +408,8 @@
 ### Phase 5B — Single-Repo Dispatcher + Worker (2-3 sessions)
 
 - [x] **Shared worktree library** — `tools/scripts/lib/worktree.py` extracted from overnight_runner. Worktree create/cleanup/branch/lock logic. Used by dispatcher + overnight runner. (2026-03-31)
-- [x] **Dispatcher script** — `tools/scripts/jarvis_dispatcher.py`: reads backlog, selects next task, creates worktree, invokes worker via `claude -p`, verifies ISC, notifies Slack. Lockfile mutex, task lifecycle state machine, Git Bash resolution, ISC sanitization, self-test suite (10 tests). (2026-03-31)
-- [ ] **Worker prompt template** — Task-specific prompt generation: loads minimal context profile, task description, ISC criteria, relevant project files. Uses stdin pattern (no WinError 206)
+- [x] **Dispatcher script** — `tools/scripts/jarvis_dispatcher.py`: reads backlog, selects next task, creates worktree, invokes worker via `claude -p`, verifies ISC, notifies Slack. Lockfile mutex, task lifecycle state machine, Git Bash resolution, ISC sanitization, self-test suite (12 tests). (2026-03-31)
+- [x] **Worker prompt template** — Tiered context assembly (Tier 0: ~2K tokens, Tier 1: ~4K). Skill instructions from `skill_autonomy_map.json`, context profile matching from `context_profiles.json`, goal_context injection, context file loading with truncation. 12/12 self-tests pass. (2026-03-31)
 - [x] **Task Scheduler wiring** — `\Jarvis\JarvisDispatcher` via `run_dispatcher.bat`. Scheduled alongside overnight runner (staggered). 1 task/night. (2026-03-31)
 - [ ] **Validation** — 3 tasks from backlog executed: branches created, ISC verified, Slack notifications sent, human merges successfully
 

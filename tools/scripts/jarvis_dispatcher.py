@@ -49,6 +49,8 @@ from tools.scripts.slack_notify import notify
 # -- Paths ------------------------------------------------------------------
 
 BACKLOG_FILE = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
+AUTONOMY_MAP = REPO_ROOT / "orchestration" / "skill_autonomy_map.json"
+CONTEXT_PROFILES = REPO_ROOT / "orchestration" / "context_profiles.json"
 LOCKFILE = REPO_ROOT / "data" / "dispatcher.lock"
 RUNS_DIR = REPO_ROOT / "data" / "dispatcher_runs"
 WORKTREE_DIR = REPO_ROOT.parent / "epdev-dispatch"
@@ -346,7 +348,57 @@ def resolve_model(task: dict) -> str:
     return TIER_DEFAULTS.get(task.get("tier", 1), "opus")
 
 
-# -- Context assembly (inline, no separate profiles) -----------------------
+# -- Worker prompt helpers ---------------------------------------------------
+
+def _load_autonomy_map() -> dict:
+    """Load skill autonomy map. Returns {} on failure."""
+    try:
+        if AUTONOMY_MAP.is_file():
+            data = json.loads(AUTONOMY_MAP.read_text(encoding="utf-8"))
+            data.pop("_meta", None)
+            return data
+    except (json.JSONDecodeError, OSError):
+        pass
+    return {}
+
+
+def _load_profile_context(task: dict) -> str:
+    """Match task skills to a context profile and return extra context guidance."""
+    try:
+        if not CONTEXT_PROFILES.is_file():
+            return ""
+        data = json.loads(CONTEXT_PROFILES.read_text(encoding="utf-8"))
+        profiles = data.get("profiles", {})
+    except (json.JSONDecodeError, OSError):
+        return ""
+
+    task_skills = set(task.get("skills", []))
+    if not task_skills:
+        return ""
+
+    # Find the best matching profile by skill overlap
+    best_match = None
+    best_overlap = 0
+    for name, profile in profiles.items():
+        profile_skills = set(profile.get("skills_used", []))
+        overlap = len(task_skills & profile_skills)
+        if overlap > best_overlap:
+            best_overlap = overlap
+            best_match = profile
+
+    if not best_match:
+        return ""
+
+    # Suggest additional context files from the profile
+    always = best_match.get("always_load", [])
+    if not always:
+        return ""
+
+    return "PROFILE CONTEXT (auto-loaded from context_profiles.json):\n" + \
+        "\n".join(f"  - {f}" for f in always)
+
+
+# -- Context assembly -------------------------------------------------------
 
 def assemble_context(task: dict) -> str:
     """Build the context section of the worker prompt.
@@ -385,12 +437,34 @@ def assemble_context(task: dict) -> str:
             "- No gold-plating -- implement exactly what ISC requires"
         )
 
+    # Skill instructions -- tell the worker which skills to invoke
+    task_skills = task.get("skills", [])
+    if task_skills:
+        autonomy_map = _load_autonomy_map()
+        safe_skills = []
+        for s in task_skills:
+            info = autonomy_map.get(s, {})
+            if info.get("autonomous_safe", False):
+                safe_skills.append(s)
+        if safe_skills:
+            skill_list = ", ".join(f"/{s}" for s in safe_skills)
+            sections.append(
+                f"SKILLS TO USE:\n"
+                f"Invoke these skills to complete this task: {skill_list}\n"
+                f"Run them via their slash command syntax. Follow each skill's output format."
+            )
+
+    # Context profile -- load additional context for this task type
+    profile_extras = _load_profile_context(task)
+    if profile_extras:
+        sections.append(profile_extras)
+
     # Goal context from task
     goal = task.get("goal_context")
     if goal:
         sections.append(f"WHY THIS TASK MATTERS:\n{goal}")
 
-    # Load context files
+    # Load context files (task-specific + profile-suggested)
     context_files = task.get("context_files", [])
     if context_files:
         file_contents = []
@@ -907,6 +981,35 @@ def self_test() -> bool:
         selected = select_next_task(has_isc_tasks)
         assert selected is not None, "Should accept task with verifiable ISC"
         print("  PASS: ISC minimum requirement enforced")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 11: Worker prompt includes skill instructions
+    print("Test 11: Worker prompt includes skill instructions...")
+    try:
+        t = {"id": "skill-prompt-test", "description": "Run security audit",
+             "project": "epdev", "tier": 0,
+             "isc": ["Audit done | Verify: test -f x"], "context_files": [],
+             "skills": ["security-audit", "review-code"],
+             "goal_context": "Regular security check"}
+        prompt = generate_worker_prompt(t, "jarvis/auto-skill-test")
+        assert "SKILLS TO USE" in prompt or "security-audit" in prompt
+        print("  PASS: Skill instructions in prompt")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 12: Autonomy map loads without error
+    print("Test 12: Autonomy map loads...")
+    try:
+        amap = _load_autonomy_map()
+        assert isinstance(amap, dict)
+        if AUTONOMY_MAP.is_file():
+            assert len(amap) > 0, "Map file exists but loaded empty"
+            assert "security-audit" in amap
+            assert amap["security-audit"]["autonomous_safe"] is True
+        print(f"  PASS: {len(amap)} skills loaded")
     except Exception as exc:
         print(f"  FAIL: {exc}")
         ok = False
