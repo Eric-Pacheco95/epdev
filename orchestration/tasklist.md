@@ -1,7 +1,7 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-03-28 (First-principles reorg: priority backlog by value/effort, parked items with enthusiasm filter)
+> Last updated: 2026-03-31 (Doc-sync: fixed stale checkboxes, completion summary, Phase 5A/5B items validated)
 
 ## Priority Backlog (ordered by value/effort)
 
@@ -66,7 +66,7 @@
 | 1-2 | COMPLETE | 0 |
 | 3A | COMPLETE | 0 |
 | 3B | Near-complete | 1 (Notion auto-write) |
-| 3C | Layers 1-2 complete | Layer 3 (Tailscale), Layer 4 (deferred) |
+| 3C | Layers 1-3 complete | Layer 4 (deferred to Phase 3F) |
 | 3D | COMPLETE | 0 |
 | 3E | COMPLETE | 0 |
 | 4A | COMPLETE | 0 |
@@ -74,6 +74,9 @@
 | 4C | **COMPLETE** | 0 |
 | 4D | **COMPLETE** | 0 |
 | 4E | **COMPLETE** | 5/5 steps done |
+| 4->5 | **GATE PASSED** | 0 |
+| 5A | Near-complete | 2 (skill audit, context profiles) |
+| 5B | In progress | 1 (validation -- 3 tasks executed successfully) |
 
 ## Active Projects
 
@@ -221,7 +224,7 @@
 
 #### Layer 3: Remote CLI Fallback
 
-- [ ] **3C-5: Tailscale + SSH setup** — Install Tailscale on desktop + iPhone; install Blink Shell (iOS); confirm full `claude` CLI session from iPhone over Tailscale. Document in `docs/EPDEV_JARVIS_BIBLE.md`.
+- [x] **3C-5: Tailscale + SSH setup** — COMPLETE. Terminal working via SSH + Tailscale + Blink. Mobile CLI access live. (2026-03-31)
 
 #### Layer 4: Conversational Voice Loop (DEFERRED → Phase 3F)
 
@@ -309,7 +312,7 @@
 ### Phase 4B — Autonomous research & pattern harvesting
 
 - [x] **Source allow-list** — `memory/work/jarvis/sources.yaml` created with 6 Tier 1, 6 Tier 2, 12 Tier 3 sources. Companion rationale doc at `sources_rationale.md`. (2026-03-28)
-- [ ] **Human source review ritual** — After first research run, ask Eric: "What other sources should be added? (YouTube channels, blogs, GitHub repos, newsletters)" — capture answers in sources.yaml and `history/decisions/`
+- [x] **Human source review ritual** — VALIDATED 3/30: Reviewed all 21 sources. Added 3 new Tier 2 (The AI Automators: YouTube, Blog, GitHub). Retired all 4 Tier 3 candidates. Total: 24 sources. (2026-03-30)
 - [x] **Research runner** — `tools/scripts/morning_feed.py` running daily at 9am via Task Scheduler. Output validated in `memory/work/jarvis/morning_feed/2026-03-29.md`. Slack posting rate-limited by design. (2026-03-29)
 - [x] **Cowork vs scheduler split** — Documented in PRD_autonomous_learning.md: overnight = Task Scheduler + claude -p (separate calls per dimension); morning feed = Task Scheduler + Python (Anthropic API direct); interactive = Claude Code session. (2026-03-28)
 - [x] **Interleaved thinking for orchestration skills** — Already enabled by default on Opus 4.6 via adaptive thinking. Beta header approach obsolete. (2026-03-31)
@@ -398,17 +401,17 @@
 ### Phase 5A — Design + Task Source (1-2 sessions)
 
 - [x] **PRD Phase 5** — `memory/work/jarvis/PRD_phase5.md` written with mission, architecture, capability tiers (0-3), SENSE/DECIDE/ACT layers, Phase 5A-5D breakdown. (2026-03-29)
-- [ ] **Machine-readable task backlog schema** — JSONL format: id, description, project, dependencies, isc, status, complexity, autonomous_safe. File: `orchestration/task_backlog.jsonl`
+- [x] **Machine-readable task backlog schema** — JSONL format: id, description, project, dependencies, isc, status, complexity, autonomous_safe. File: `orchestration/task_backlog.jsonl` (12 tasks seeded). (2026-03-31)
 - [ ] **Skill autonomous_safe audit** — Classify every skill: safe for unattended `claude -p` execution vs. requires human-in-loop. Add `autonomous_safe` field to skill metadata
 - [ ] **Context profiles per task type** — Define minimal context each worker invocation needs (vs. loading full CLAUDE.md). Measure current `claude -p` context costs
-- [ ] **Seed initial backlog** — Curate 10-15 tasks from tasklist.md that are safe for Tier 0-1 autonomous execution
+- [x] **Seed initial backlog** — 12 tasks seeded in `task_backlog.jsonl` from tasklist.md, classified by tier and autonomous_safe. (2026-03-31)
 
 ### Phase 5B — Single-Repo Dispatcher + Worker (2-3 sessions)
 
-- [ ] **Shared worktree library** — Extract worktree create/cleanup/branch logic from `overnight_runner.py` into `tools/scripts/lib/worktree.py`
-- [ ] **Dispatcher script** — `tools/scripts/jarvis_dispatcher.py`: reads backlog, selects next task (priority + dependencies + safety), creates worktree, invokes worker, verifies, notifies. Includes: lockfile mutex, task lifecycle state machine (pending -> claimed -> executing -> verifying -> done/failed), cleanup for partial failures
+- [x] **Shared worktree library** — `tools/scripts/lib/worktree.py` extracted from overnight_runner. Worktree create/cleanup/branch/lock logic. Used by dispatcher + overnight runner. (2026-03-31)
+- [x] **Dispatcher script** — `tools/scripts/jarvis_dispatcher.py`: reads backlog, selects next task, creates worktree, invokes worker via `claude -p`, verifies ISC, notifies Slack. Lockfile mutex, task lifecycle state machine, Git Bash resolution, ISC sanitization, self-test suite (10 tests). (2026-03-31)
 - [ ] **Worker prompt template** — Task-specific prompt generation: loads minimal context profile, task description, ISC criteria, relevant project files. Uses stdin pattern (no WinError 206)
-- [ ] **Task Scheduler wiring** — `\Jarvis\JarvisDispatcher` scheduled alongside overnight runner (staggered). Initially 1 task/night
+- [x] **Task Scheduler wiring** — `\Jarvis\JarvisDispatcher` via `run_dispatcher.bat`. Scheduled alongside overnight runner (staggered). 1 task/night. (2026-03-31)
 - [ ] **Validation** — 3 tasks from backlog executed: branches created, ISC verified, Slack notifications sent, human merges successfully
 
 ### Phase 5C — Cross-Project + Routines (2-3 sessions)
