@@ -37,6 +37,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+from tools.scripts.lib.worktree import acquire_claude_lock, release_claude_lock  # noqa: E402
+
 # Absolute path to claude CLI -- Task Scheduler doesn't have .local/bin on PATH
 _claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
 CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
@@ -664,7 +666,13 @@ def main() -> int:
         print("  Output dir: %s" % run_dir)
         return 0
 
-    # 3. Build prompts and call API
+    # 3. Acquire global claude -p mutex
+    if not acquire_claude_lock("autoresearch"):
+        print("ERROR: Another claude -p process is running. Aborting.",
+              file=sys.stderr)
+        return 1
+
+    # Build prompts and call API
     print("\nAnalyzing TELOS vs signal evidence...")
     system, user = build_analysis_prompt(inputs)
 
@@ -675,38 +683,41 @@ def main() -> int:
               "Consider reducing signal window." % total_chars,
               file=sys.stderr)
 
-    response = call_claude(user, system)
+    try:
+        response = call_claude(user, system)
 
-    if response.startswith("("):
-        print("\nERROR: %s" % response, file=sys.stderr)
-        return 1
+        if response.startswith("("):
+            print("\nERROR: %s" % response, file=sys.stderr)
+            return 1
 
-    # 4. Parse metrics
-    metrics = parse_metrics(response)
-    print("\nMetrics:")
-    print("  Contradictions: %d" % metrics["contradiction_count"])
-    print("  Open questions: %d" % metrics["open_questions"])
-    print("  Coverage score: %.0f%%" % metrics["coverage_score"])
-    print("  Staleness flags: %d" % metrics["staleness_flags"])
-    print("  Insights: %d" % metrics["insight_count"])
-    print("  Proposals: %d" % metrics["proposal_count"])
+        # 4. Parse metrics
+        metrics = parse_metrics(response)
+        print("\nMetrics:")
+        print("  Contradictions: %d" % metrics["contradiction_count"])
+        print("  Open questions: %d" % metrics["open_questions"])
+        print("  Coverage score: %.0f%%" % metrics["coverage_score"])
+        print("  Staleness flags: %d" % metrics["staleness_flags"])
+        print("  Insights: %d" % metrics["insight_count"])
+        print("  Proposals: %d" % metrics["proposal_count"])
 
-    # 5. Write run artifacts
-    print("\nWriting artifacts to %s ..." % run_dir)
-    write_run_artifacts(run_dir, response, metrics, scope)
+        # 5. Write run artifacts
+        print("\nWriting artifacts to %s ..." % run_dir)
+        write_run_artifacts(run_dir, response, metrics, scope)
 
-    # 6. Autonomous signal (if threshold crossed)
-    write_autonomous_signal(metrics, run_dir)
+        # 6. Autonomous signal (if threshold crossed)
+        write_autonomous_signal(metrics, run_dir)
 
-    # 7. Auto-apply safe TELOS updates (STATUS, LEARNED, CHALLENGES only)
-    auto_apply_telos(metrics, run_dir)
+        # 7. Auto-apply safe TELOS updates (STATUS, LEARNED, CHALLENGES only)
+        auto_apply_telos(metrics, run_dir)
 
-    # 8. Slack notification (if significant)
-    post_slack_summary(metrics, run_dir)
+        # 8. Slack notification (if significant)
+        post_slack_summary(metrics, run_dir)
 
-    print("\nIntrospection complete. Review proposals at:")
-    print("  %s" % (run_dir / "proposals.md"))
-    return 0
+        print("\nIntrospection complete. Review proposals at:")
+        print("  %s" % (run_dir / "proposals.md"))
+        return 0
+    finally:
+        release_claude_lock()
 
 
 # -- Self-test ---------------------------------------------------------------

@@ -1,8 +1,8 @@
 """Reusable git worktree library for Jarvis autonomous execution.
 
 Extracted from overnight_runner.py. Provides worktree create/cleanup,
-branch management, and memory symlink support. Used by both the
-overnight runner and the autonomous dispatcher.
+branch management, memory symlink support, and a global claude -p
+mutex to prevent subprocess contention between autonomous processes.
 
 All operations target a sibling directory so the main working tree is
 never touched -- no stash, no branch switch, no conflict with active
@@ -11,15 +11,72 @@ Claude Code sessions.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+
+# Global mutex for claude -p invocations. All autonomous processes
+# (dispatcher, overnight runner, autoresearch) must acquire this before
+# running claude -p to prevent subprocess contention and hangs.
+_CLAUDE_LOCK = REPO_ROOT / "data" / "claude_session.lock"
+_CLAUDE_LOCK_STALE_HOURS = 3
+
+
+def acquire_claude_lock(owner: str, timeout_hours: float = 3) -> bool:
+    """Acquire global claude -p mutex. Returns True if acquired.
+
+    Args:
+        owner: Identifier for the process acquiring the lock (e.g., "dispatcher", "overnight").
+        timeout_hours: How long before a lock is considered stale and auto-broken.
+
+    Uses atomic O_CREAT|O_EXCL to prevent races. Stale locks (older than
+    timeout_hours) are automatically broken -- handles crash recovery.
+    """
+    _CLAUDE_LOCK.parent.mkdir(parents=True, exist_ok=True)
+
+    # Check for stale lock
+    if _CLAUDE_LOCK.exists():
+        try:
+            lock_data = json.loads(_CLAUDE_LOCK.read_text(encoding="utf-8"))
+            locked_at = datetime.fromisoformat(lock_data.get("locked_at", ""))
+            age_hours = (datetime.now(timezone.utc) - locked_at).total_seconds() / 3600
+            if age_hours > timeout_hours:
+                print(f"  Breaking stale claude lock (owner={lock_data.get('owner')}, "
+                      f"age={age_hours:.1f}h)", file=sys.stderr)
+                _CLAUDE_LOCK.unlink(missing_ok=True)
+            else:
+                print(f"  Claude lock held by {lock_data.get('owner')} "
+                      f"({age_hours:.1f}h ago) -- skipping", file=sys.stderr)
+                return False
+        except (json.JSONDecodeError, OSError, ValueError):
+            # Corrupted lock file -- break it
+            _CLAUDE_LOCK.unlink(missing_ok=True)
+
+    # Atomic create
+    try:
+        fd = os.open(str(_CLAUDE_LOCK), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        lock_data = {
+            "owner": owner,
+            "locked_at": datetime.now(timezone.utc).isoformat(),
+            "pid": os.getpid(),
+        }
+        os.write(fd, json.dumps(lock_data).encode("utf-8"))
+        os.close(fd)
+        return True
+    except FileExistsError:
+        return False
+
+
+def release_claude_lock() -> None:
+    """Release global claude -p mutex."""
+    _CLAUDE_LOCK.unlink(missing_ok=True)
 
 # Directories to symlink from main repo into worktree.
 # Each tuple: (relative path from repo root, read-only flag for logging).

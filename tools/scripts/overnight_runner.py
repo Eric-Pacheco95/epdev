@@ -230,6 +230,8 @@ from tools.scripts.lib.worktree import (
     worktree_cleanup as _wt_cleanup,
     cleanup_old_branches as _cleanup_branches,
     git_diff_stat,
+    acquire_claude_lock,
+    release_claude_lock,
 )
 
 WORKTREE_DIR = REPO_ROOT.parent / "epdev-overnight"
@@ -565,6 +567,12 @@ def main() -> int:
         print("ERROR: Failed to create worktree. Aborting.", file=sys.stderr)
         return 1
 
+    # Acquire global claude -p mutex
+    if not acquire_claude_lock("overnight"):
+        print("ERROR: Another claude -p process is running. Aborting.", file=sys.stderr)
+        worktree_cleanup()
+        return 1
+
     results = []
     last_completed_dim = None
     start_time = time.monotonic()
@@ -632,7 +640,8 @@ def main() -> int:
         save_state(state)
 
     finally:
-        # 9. Always clean up worktree (safe even if it doesn't exist)
+        # 9. Release claude lock + clean up worktree
+        release_claude_lock()
         worktree_cleanup()
 
     total_kept = sum(r.get("kept", 0) for r in results)
