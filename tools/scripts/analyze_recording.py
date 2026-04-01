@@ -42,6 +42,34 @@ from google.genai import types
 # -- Constants --
 
 DEFAULT_MODEL = "gemini-3-flash-preview"
+EVENTS_DIR = Path(__file__).resolve().parents[2] / "history" / "events"
+
+
+def _log_gemini_usage(model: str, usage_metadata, context: str = "") -> None:
+    """Log Gemini API token usage to the event JSONL for cost tracking."""
+    try:
+        EVENTS_DIR.mkdir(parents=True, exist_ok=True)
+        today = datetime.date.today().isoformat()
+        event_file = EVENTS_DIR / f"{today}.jsonl"
+        record = {
+            "ts": datetime.datetime.now(datetime.timezone.utc).strftime(
+                "%Y-%m-%dT%H:%M:%SZ"
+            ),
+            "type": "gemini_usage",
+            "model": model,
+            "input_tokens": getattr(usage_metadata, "prompt_token_count", None),
+            "output_tokens": getattr(usage_metadata, "candidates_token_count", None),
+            "total_tokens": getattr(usage_metadata, "total_token_count", None),
+            "context": context,
+            "source": "analyze_recording.py",
+        }
+        import msvcrt
+        with open(event_file, "a", encoding="utf-8") as f:
+            msvcrt.locking(f.fileno(), msvcrt.LK_LOCK, 1)
+            f.write(json.dumps(record, ensure_ascii=True) + "\n")
+            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+    except Exception:
+        pass  # best-effort -- never break the main flow
 
 SUPPORTED_EXTS = {".mp3", ".wav", ".aiff", ".aac", ".ogg", ".flac", ".webm", ".mp4", ".m4a"}
 
@@ -335,6 +363,7 @@ def analyze_single(client, file_path, mode, model, system_prompt, show_prompt=Fa
 
     analysis_time = time.time() - start_analysis
     tokens = response.usage_metadata.total_token_count
+    _log_gemini_usage(model, response.usage_metadata, context="recording_analysis")
 
     # Cleanup
     deleted = cleanup_file(client, uploaded)
@@ -479,6 +508,7 @@ def run_batch(args):
     )
 
     synth_tokens = response.usage_metadata.total_token_count
+    _log_gemini_usage(args["model"], response.usage_metadata, context="batch_synthesis")
     total_tokens += synth_tokens
 
     print("=" * 60)

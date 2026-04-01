@@ -134,10 +134,10 @@ def detect_phases(text: str, items: list[dict]) -> list[dict]:
     normalized = _normalize_unicode(text)
     lines = normalized.splitlines()
 
-    # Find phase headers and their line numbers
+    # Find phase/sprint headers and their line numbers
     phase_headers = []
     for i, line in enumerate(lines, 1):
-        m = re.match(r"^#{2,4}\s+(?:Phase\s+)?(\d+|Anti)[:\s].*", line, re.IGNORECASE)
+        m = re.match(r"^#{2,4}\s+(?:(?:Phase|Sprint)\s+)?(\d+|Anti)[:\s].*", line, re.IGNORECASE)
         if m:
             phase_headers.append({"line": i, "name": line.strip().lstrip("#").strip()})
 

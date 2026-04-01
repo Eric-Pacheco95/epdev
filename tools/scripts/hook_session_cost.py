@@ -98,13 +98,22 @@ def build_cost_record(data: dict) -> dict:
 
 
 def write_cost_record(record: dict) -> Path:
-    """Write a cost record to the daily JSONL file. Returns the file path."""
+    """Write a cost record to the daily JSONL file with file locking. Returns the file path."""
     EVENTS_DIR.mkdir(parents=True, exist_ok=True)
     ts = record.get("ts", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     date_str = ts[:10]  # YYYY-MM-DD from ISO timestamp
     log_path = EVENTS_DIR / f"{date_str}.jsonl"
-    with log_path.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(record) + "\n")
+    line = json.dumps(record) + "\n"
+    try:
+        import msvcrt
+        with log_path.open("a", encoding="utf-8") as fh:
+            msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
+            fh.write(line)
+            msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+    except (ImportError, OSError):
+        # Fallback for non-Windows or locking failure
+        with log_path.open("a", encoding="utf-8") as fh:
+            fh.write(line)
     return log_path
 
 
