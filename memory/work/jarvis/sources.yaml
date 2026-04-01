@@ -1,14 +1,16 @@
 # Jarvis External Sources Registry
 # Format: parsed by tools/scripts/morning_feed.py (no pyyaml dependency)
 # Tiers: 1 = daily check, 2 = weekly, 3 = monthly
+# feed_url: RSS/Atom feed URL (preferred over scraping)
 # last_checked: ISO date of most recent monitoring pass
 
 # =============================================================================
-# Tier 1 -- Daily (core AI & security)
+# Tier 1 -- Daily (core AI engineering + community signal)
 # =============================================================================
 
 - name: "Anthropic Blog"
   url: "https://www.anthropic.com/news"
+  feed_url: ""
   type: ai_releases
   tier: 1
   frequency: daily
@@ -16,45 +18,67 @@
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
+  feed_url: "https://github.com/anthropics/claude-code/releases.atom"
   type: ai_releases
-  tier: 1
-  frequency: daily
-  last_checked: "2026-03-30"
-
-- name: "OpenAI Blog"
-  url: "https://openai.com/blog"
-  type: ai_releases
-  tier: 1
-  frequency: daily
-  last_checked: "2026-03-30"
-
-- name: "Krebs on Security"
-  url: "https://krebsonsecurity.com"
-  type: security
-  tier: 1
-  frequency: daily
-  last_checked: "2026-03-30"
-
-- name: "The Hacker News"
-  url: "https://thehackernews.com"
-  type: security
   tier: 1
   frequency: daily
   last_checked: "2026-03-30"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
+  feed_url: "https://simonwillison.net/atom/everything/"
   type: ai_engineering
   tier: 1
   frequency: daily
   last_checked: "2026-03-30"
 
+- name: "Daniel Miessler"
+  url: "https://danielmiessler.com/newsletter"
+  feed_url: "https://danielmiessler.com/feed"
+  type: ai_security
+  tier: 1
+  frequency: daily
+  last_checked: "2026-03-30"
+
+- name: "Hacker News"
+  url: "https://news.ycombinator.com"
+  feed_url: "https://news.ycombinator.com/rss"
+  type: community
+  tier: 1
+  frequency: daily
+  last_checked: "2026-03-30"
+
 # =============================================================================
-# Tier 2 -- Weekly (tools, frameworks, ecosystem)
+# Tier 2 -- Weekly (ecosystem, security, competitors, crypto)
 # =============================================================================
+
+- name: "OpenAI Blog"
+  url: "https://openai.com/blog"
+  feed_url: ""
+  type: ai_releases
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "Krebs on Security"
+  url: "https://krebsonsecurity.com"
+  feed_url: "https://krebsonsecurity.com/feed/"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "The Hacker News"
+  url: "https://thehackernews.com"
+  feed_url: "https://feeds.feedburner.com/TheHackersNews"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
 
 - name: "LangChain Blog"
   url: "https://blog.langchain.dev"
+  feed_url: "https://blog.langchain.dev/rss/"
   type: ai_engineering
   tier: 2
   frequency: weekly
@@ -62,6 +86,7 @@
 
 - name: "Hugging Face Blog"
   url: "https://huggingface.co/blog"
+  feed_url: "https://huggingface.co/blog/feed.xml"
   type: ai_releases
   tier: 2
   frequency: weekly
@@ -69,38 +94,59 @@
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
+  feed_url: ""
   type: security
-  tier: 2
-  frequency: weekly
-  last_checked: "2026-03-30"
-
-- name: "Daniel Miessler Unsupervised Learning"
-  url: "https://danielmiessler.com/newsletter"
-  type: ai_security
   tier: 2
   frequency: weekly
   last_checked: "2026-03-30"
 
 - name: "Fabric GitHub Releases"
   url: "https://github.com/danielmiessler/fabric/releases"
+  feed_url: "https://github.com/danielmiessler/fabric/releases.atom"
   type: ai_engineering
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "Latent Space Podcast"
+  url: "https://www.latent.space"
+  feed_url: "https://www.latent.space/feed"
+  type: ai_engineering
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "CoinDesk"
+  url: "https://www.coindesk.com"
+  feed_url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+  type: crypto
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-03-30"
+
+- name: "CoinTelegraph"
+  url: "https://cointelegraph.com"
+  feed_url: "https://cointelegraph.com/rss"
+  type: crypto
   tier: 2
   frequency: weekly
   last_checked: "2026-03-30"
 
 - name: "Andrej Karpathy YouTube"
   url: "https://www.youtube.com/@AndrejKarpathy"
+  feed_url: ""
   type: ai_education
   tier: 2
   frequency: weekly
   last_checked: "2026-03-30"
 
 # =============================================================================
-# Tier 3 -- Monthly (broader ecosystem, research, communities)
+# Tier 3 -- Monthly (broader ecosystem, research)
 # =============================================================================
 
 - name: "Google DeepMind Blog"
   url: "https://deepmind.google/discover/blog"
+  feed_url: ""
   type: ai_releases
   tier: 3
   frequency: monthly
@@ -108,6 +154,7 @@
 
 - name: "Meta AI Blog"
   url: "https://ai.meta.com/blog"
+  feed_url: ""
   type: ai_releases
   tier: 3
   frequency: monthly
@@ -115,6 +162,7 @@
 
 - name: "Microsoft AI Blog"
   url: "https://blogs.microsoft.com/ai"
+  feed_url: ""
   type: ai_releases
   tier: 3
   frequency: monthly
@@ -122,27 +170,15 @@
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
+  feed_url: "https://www.schneier.com/feed/"
   type: security
-  tier: 3
-  frequency: monthly
-  last_checked: "2026-03-30"
-
-- name: "CoinDesk"
-  url: "https://www.coindesk.com"
-  type: crypto
-  tier: 3
-  frequency: monthly
-  last_checked: "2026-03-30"
-
-- name: "CoinTelegraph"
-  url: "https://cointelegraph.com"
-  type: crypto
   tier: 3
   frequency: monthly
   last_checked: "2026-03-30"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
+  feed_url: "https://blog.python.org/feeds/posts/default"
   type: dev_tools
   tier: 3
   frequency: monthly
@@ -150,6 +186,7 @@
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
+  feed_url: "https://nodejs.org/en/feed/blog.xml"
   type: dev_tools
   tier: 3
   frequency: monthly
@@ -157,28 +194,16 @@
 
 - name: "GitHub Blog"
   url: "https://github.blog"
+  feed_url: "https://github.blog/feed/"
   type: dev_tools
-  tier: 3
-  frequency: monthly
-  last_checked: "2026-03-30"
-
-- name: "Hacker News"
-  url: "https://news.ycombinator.com"
-  type: community
   tier: 3
   frequency: monthly
   last_checked: "2026-03-30"
 
 - name: "AI Safety Newsletter (Zvi)"
   url: "https://thezvi.substack.com"
+  feed_url: "https://thezvi.substack.com/feed"
   type: ai_safety
-  tier: 3
-  frequency: monthly
-  last_checked: "2026-03-30"
-
-- name: "Latent Space Podcast"
-  url: "https://www.latent.space"
-  type: ai_engineering
   tier: 3
   frequency: monthly
   last_checked: "2026-03-30"
