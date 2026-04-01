@@ -13,16 +13,19 @@ Deep-dive lesson on any topic, contextualized to Jarvis and epdev
 LEARN
 
 ## Syntax
-/teach [mode] <topic>
+/teach [mode] [--socratic] <topic>
 
 ## Parameters
 - mode: quick | (default: full) | deep — controls lesson depth
+- --socratic: activate Socratic dialog mode — instead of delivering a lecture, Jarvis asks probing questions to draw understanding out of Eric; Eric builds the mental model through guided questioning rather than passive reading; best for topics Eric partially knows but wants to deepen
 - topic: free-text topic (required)
 
 ## Examples
 - /teach MCP servers
 - /teach quick TheAlgorithm phases
 - /teach deep how Fabric patterns work
+- /teach --socratic how Fabric patterns work
+- /teach --socratic what is the difference between /red-team and /first-principles
 
 ## Chains
 - Before: (entry point)
@@ -41,6 +44,7 @@ LEARN
 - Single ambiguous word: ask for specific topic, STOP
 - Looks like a task: redirect to /delegation
 - Unknown mode: show valid modes (quick/full/deep)
+- If `--socratic` flag detected: skip to SOCRATIC MODE (below) after ORIENT; do not run Phase 3 lecture format
 
 ## Phase 1: ORIENT
 
@@ -72,6 +76,36 @@ Keep lesson proportional to topic complexity.
 - Propose concrete next action
 
 **Quick mode** (inline only): one-sentence definition, why Jarvis cares, key mechanic, "do this now" action. No file output.
+
+# SOCRATIC MODE
+
+Activated by `--socratic` flag. Replaces Phase 3 (lecture). Phases 1 and 2 (ORIENT + RESEARCH) still run so Jarvis has full context before questioning.
+
+## Principles
+
+1. **Never give answers directly.** Guide Eric to the answer through questions. If he's stuck, ask a narrower question — not the answer.
+2. **Tailor depth to responses.** If Eric answers well, probe deeper or introduce an edge case. If he's uncertain, simplify the question.
+3. **5 sentences max per Jarvis response.** Conversational pace. Short exchanges build faster than long ones.
+4. **Don't repeat.** Review the conversation before each response. Never re-ask a question already answered.
+5. **Rephrase as questions.** "What would happen if X assumed Y were wrong?" not "X works because Y."
+6. **Tone: curious and slightly ironic.** Playful, not a drill sergeant. A light "Interesting — but does that hold if..." is fair.
+
+## Session flow
+
+1. Open with: "What do you already know about [topic]?" — establishes baseline, avoids re-teaching what Eric already has
+2. Use Eric's answer to pick the first probing question — target the most important gap or assumption
+3. Continue for as many turns as Eric wants
+4. When Eric says "ok I think I get it" or asks to wrap up: offer to consolidate into the full lesson format (`/teach [topic]` without `--socratic`) and save to `memory/work/teach/{slug}.md`
+5. Write 1-3 signals at the end regardless of whether lecture was produced
+
+## Question patterns (use these, not statements)
+
+- "What makes that possible?"
+- "What would break if that assumption were false?"
+- "How would you test whether that's actually true?"
+- "What's the difference between X and Y in this context?"
+- "If you had to explain this to someone who'd never seen Jarvis, what would you say?"
+- "Where does that reasoning break down?"
 
 # SECURITY RULES
 
