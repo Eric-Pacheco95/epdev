@@ -61,7 +61,7 @@ CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 
 # -- Config -----------------------------------------------------------------
 
-MAX_TIER = int(os.environ.get("JARVIS_MAX_TIER", "1"))
+MAX_TIER = int(os.environ.get("JARVIS_MAX_TIER", "2"))
 MAX_RETRIES = {0: 2, 1: 0, 2: 0}
 STALE_LOCK_HOURS = 4
 
