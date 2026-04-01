@@ -43,6 +43,8 @@ from tools.scripts.lib.worktree import (
     worktree_cleanup,
     cleanup_old_branches,
     git_diff_stat,
+    acquire_claude_lock,
+    release_claude_lock,
 )
 from tools.scripts.slack_notify import notify
 
@@ -61,7 +63,7 @@ CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 
 # -- Config -----------------------------------------------------------------
 
-MAX_TIER = int(os.environ.get("JARVIS_MAX_TIER", "1"))
+MAX_TIER = int(os.environ.get("JARVIS_MAX_TIER", "2"))
 MAX_RETRIES = {0: 2, 1: 0, 2: 0}
 STALE_LOCK_HOURS = 4
 
@@ -755,6 +757,13 @@ def dispatch(dry_run: bool = False) -> None:
                 write_backlog(backlog)
                 return
 
+        # Acquire global claude -p mutex (prevents contention with overnight/autoresearch)
+        if not dry_run and not acquire_claude_lock("dispatcher"):
+            print("  Another claude -p process is running -- aborting")
+            task["status"] = "pending"
+            write_backlog(backlog)
+            return
+
         # Execute
         task["status"] = "executing"
         write_backlog(backlog)
@@ -809,10 +818,11 @@ def dispatch(dry_run: bool = False) -> None:
         except Exception:
             pass
     finally:
-        # Release lock but KEEP worktree + branch for consolidation.
+        # Release locks but KEEP worktree + branch for consolidation.
         # The consolidation script (run after all overnight jobs finish)
         # merges completed branches into jarvis/review-YYYY-MM-DD and
         # cleans up worktrees + stale branches.
+        release_claude_lock()
         release_lock()
         if wt_path and not dry_run:
             # Only remove the worktree checkout (frees disk), branch stays.

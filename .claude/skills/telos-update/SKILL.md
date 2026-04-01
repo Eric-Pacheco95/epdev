@@ -69,6 +69,7 @@ All files live in `memory/work/telos/`:
 - For all other files, show proposed changes and wait for explicit "yes" / approval
 - After writing, output a one-line summary: "Updated N TELOS files: [list]"
 - If no meaningful updates are found, say so — don't force updates
+- After a monthly TELOS review (GOALS.md, CHALLENGES.md, or BELIEFS.md updated), suggest: "Run `/red-team --thinking` to surface blindspots in your current mental models and reasoning frames."
 - Never delete content from WRONG.md (append-only)
 - Convert relative dates to absolute dates (e.g., "last Thursday" → "2026-03-20")
 - When updating LEARNED.md, add entries at the top of the relevant section with date prefix

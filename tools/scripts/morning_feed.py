@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Jarvis Morning Feed -- combined briefing to Slack at 9am.
 
-Uses claude -p (Claude Max subscription, no API key needed) for proposal
-generation. Posts a single combined message to #epdev with: vitals snapshot,
-learning progress, overnight diff summary, and 1-3 research proposals.
+Uses RSS/Atom feeds (stdlib xml.etree) as primary source, with Tavily
+HTTP fallback for sources without feeds. Calls claude -p for proposal
+rating (S/A/B/C/D), source discovery, and research task generation.
+
+B+ rated items are routed through the task gate for autonomous research.
+Discovered sources are logged to data/source_candidates.jsonl for Eric
+to approve in a future session.
 
 Usage:
     python tools/scripts/morning_feed.py                # full run
@@ -12,9 +16,11 @@ Usage:
 
 Environment:
     SLACK_BOT_TOKEN    xoxb-... for Slack posting (required)
+    TAVILY_API_KEY     Tavily API key (optional, fallback for non-RSS sources)
 
 Outputs:
     memory/work/jarvis/morning_feed/YYYY-MM-DD.md   -- raw feed for audit
+    data/source_candidates.jsonl                     -- discovered source candidates
     Slack #epdev message                             -- combined briefing
 """
 
@@ -22,11 +28,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import urllib.error
 import urllib.request
-from datetime import datetime
+import xml.etree.ElementTree as ET
+from datetime import datetime, timedelta
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -42,6 +50,12 @@ FEED_DIR = REPO_ROOT / "memory" / "work" / "jarvis" / "morning_feed"
 HEARTBEAT_FILE = REPO_ROOT / "memory" / "work" / "isce" / "heartbeat_latest.json"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
 CONSOLIDATION_DIR = REPO_ROOT / "data" / "overnight_summary"
+CANDIDATES_FILE = REPO_ROOT / "data" / "source_candidates.jsonl"
+
+# RSS fetch settings
+RSS_TIMEOUT = 15  # seconds per feed
+RSS_MAX_ITEMS = 5  # items per source
+RSS_USER_AGENT = "Jarvis-MorningFeed/2.0"
 
 
 # -- Source loading -----------------------------------------------------------
@@ -72,6 +86,12 @@ def load_sources(tier: int = 1) -> list:
             if not current["url"].startswith("http"):
                 current["url"] = "https:" + stripped.split(":", 2)[2].strip().strip('"')
 
+        elif stripped.startswith("feed_url:") and current:
+            val = stripped.split(":", 1)[1].strip().strip('"')
+            if val and not val.startswith("http"):
+                val = "https:" + stripped.split(":", 2)[2].strip().strip('"')
+            current["feed_url"] = val if val else ""
+
         elif stripped.startswith("type:") and current:
             current["type"] = stripped.split(":", 1)[1].strip()
 
@@ -89,6 +109,201 @@ def load_sources(tier: int = 1) -> list:
         sources.append(current)
 
     return sources
+
+
+# -- RSS/Atom fetching --------------------------------------------------------
+
+def fetch_rss(feed_url: str, max_items: int = RSS_MAX_ITEMS) -> list[dict]:
+    """Fetch and parse an RSS or Atom feed. Returns list of items.
+
+    Each item: {title, link, published, summary}
+    Uses stdlib xml.etree -- no feedparser dependency.
+    """
+    if not feed_url:
+        return []
+
+    try:
+        req = urllib.request.Request(
+            feed_url,
+            headers={
+                "User-Agent": RSS_USER_AGENT,
+                "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=RSS_TIMEOUT) as resp:
+            raw = resp.read()
+    except Exception as exc:
+        print(f"  RSS fetch failed for {feed_url}: {exc}", file=sys.stderr)
+        return []
+
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError as exc:
+        print(f"  RSS parse failed for {feed_url}: {exc}", file=sys.stderr)
+        return []
+
+    items = []
+
+    # Detect feed type by root tag
+    tag = root.tag.lower()
+    # Strip namespace if present
+    if "}" in tag:
+        tag = tag.split("}", 1)[1]
+
+    if tag == "rss":
+        # RSS 2.0
+        channel = root.find("channel")
+        if channel is None:
+            return []
+        for item in channel.findall("item")[:max_items]:
+            items.append({
+                "title": _text(item, "title"),
+                "link": _text(item, "link"),
+                "published": _text(item, "pubDate"),
+                "summary": _clean_html(_text(item, "description"))[:300],
+            })
+    elif tag == "feed":
+        # Atom
+        ns = ""
+        if "{" in root.tag:
+            ns = root.tag.split("}")[0] + "}"
+        for entry in root.findall(f"{ns}entry")[:max_items]:
+            link = ""
+            link_el = entry.find(f"{ns}link")
+            if link_el is not None:
+                link = link_el.get("href", "")
+            items.append({
+                "title": _text(entry, f"{ns}title"),
+                "link": link,
+                "published": _text(entry, f"{ns}updated") or _text(entry, f"{ns}published"),
+                "summary": _clean_html(_text(entry, f"{ns}summary") or _text(entry, f"{ns}content"))[:300],
+            })
+
+    return items
+
+
+def _text(el: ET.Element, tag: str) -> str:
+    """Safely extract text from an XML element."""
+    child = el.find(tag)
+    return (child.text or "").strip() if child is not None else ""
+
+
+def _clean_html(text: str) -> str:
+    """Strip HTML tags from text (basic)."""
+    return re.sub(r"<[^>]+>", "", text).strip()
+
+
+# -- Tavily fallback ----------------------------------------------------------
+
+def fetch_tavily(url: str, max_items: int = 3) -> list[dict]:
+    """Fallback: use Tavily extract API when no RSS feed available.
+
+    Requires TAVILY_API_KEY in environment.
+    """
+    api_key = os.environ.get("TAVILY_API_KEY", "")
+    if not api_key:
+        return []
+
+    try:
+        payload = json.dumps({
+            "api_key": api_key,
+            "urls": [url],
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            "https://api.tavily.com/extract",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": RSS_USER_AGENT,
+            },
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read())
+
+        results = data.get("results", [])
+        items = []
+        for r in results[:max_items]:
+            raw = r.get("raw_content", "") or r.get("content", "")
+            items.append({
+                "title": url.split("/")[-1] or url,
+                "link": url,
+                "published": "",
+                "summary": raw[:300],
+            })
+        return items
+    except Exception as exc:
+        print(f"  Tavily fallback failed for {url}: {exc}", file=sys.stderr)
+        return []
+
+
+# -- GitHub API (kept for GitHub-type sources) --------------------------------
+
+def check_github_source(url: str) -> list[dict]:
+    """Check a GitHub repo for recent activity via API."""
+    m = re.match(r"https://github\.com/([^/]+)/([^/]+)", url)
+    if not m:
+        return []
+
+    owner, repo = m.group(1), m.group(2)
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=3"
+
+    try:
+        req = urllib.request.Request(
+            api_url,
+            headers={"Accept": "application/vnd.github.v3+json",
+                      "User-Agent": RSS_USER_AGENT},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            commits = json.loads(resp.read())
+            items = []
+            for c in commits[:3]:
+                date = c.get("commit", {}).get("committer", {}).get("date", "")[:10]
+                msg = c.get("commit", {}).get("message", "").split("\n")[0][:120]
+                items.append({
+                    "title": msg,
+                    "link": c.get("html_url", ""),
+                    "published": date,
+                    "summary": "",
+                })
+            return items
+    except Exception:
+        return []
+
+
+# -- Unified source fetcher ---------------------------------------------------
+
+def fetch_source_content(source: dict) -> list[dict]:
+    """Fetch content from a source using the best available method.
+
+    Priority: RSS/Atom feed > GitHub API > Tavily extract
+    """
+    name = source.get("name", "unknown")
+
+    # 1. Try RSS/Atom feed
+    feed_url = source.get("feed_url", "")
+    if feed_url:
+        items = fetch_rss(feed_url)
+        if items:
+            print(f"  [{name}] RSS: {len(items)} items")
+            return items
+
+    # 2. Try GitHub API for github-type sources
+    url = source.get("url", "")
+    if "github.com" in url:
+        items = check_github_source(url)
+        if items:
+            print(f"  [{name}] GitHub API: {len(items)} items")
+            return items
+
+    # 3. Tavily fallback
+    if url:
+        items = fetch_tavily(url)
+        if items:
+            print(f"  [{name}] Tavily: {len(items)} items")
+            return items
+
+    print(f"  [{name}] No content fetched")
+    return []
 
 
 # -- Vitals snapshot ----------------------------------------------------------
@@ -149,12 +364,10 @@ def get_overnight_summary() -> str:
     report_file = report_dir / "report.md"
     if report_file.is_file():
         text = report_file.read_text(encoding="utf-8")
-        # Return first 500 chars as summary
         if len(text) > 500:
             return text[:500] + "..."
         return text
 
-    # Check for raw logs
     logs = list(report_dir.glob("*_raw.log"))
     if logs:
         return f"Overnight ran ({len(logs)} dimensions logged) but no structured report."
@@ -165,10 +378,7 @@ def get_overnight_summary() -> str:
 # -- Consolidation report ----------------------------------------------------
 
 def get_consolidation_summary() -> str:
-    """Read the consolidation summary from the overnight consolidation script.
-
-    Returns the MD summary for today, or a fallback message.
-    """
+    """Read the consolidation summary from the overnight consolidation script."""
     today = datetime.now().strftime("%Y-%m-%d")
     md_path = CONSOLIDATION_DIR / f"{today}.md"
 
@@ -202,36 +412,6 @@ def get_consolidation_summary() -> str:
             return "Consolidation JSON exists but unreadable."
 
     return "No consolidation report today."
-
-
-# -- GitHub source checking ---------------------------------------------------
-
-def check_github_source(url: str) -> str:
-    """Check a GitHub repo for recent activity via API."""
-    # Extract owner/repo from URL
-    m = re.match(r"https://github\.com/([^/]+)/([^/]+)", url)
-    if not m:
-        return ""
-
-    owner, repo = m.group(1), m.group(2)
-    api_url = f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=3"
-
-    try:
-        req = urllib.request.Request(
-            api_url,
-            headers={"Accept": "application/vnd.github.v3+json",
-                      "User-Agent": "Jarvis-MorningFeed/1.0"},
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            commits = json.loads(resp.read())
-            if commits:
-                latest = commits[0]
-                date = latest.get("commit", {}).get("committer", {}).get("date", "")[:10]
-                msg = latest.get("commit", {}).get("message", "").split("\n")[0][:80]
-                return f"Latest commit ({date}): {msg}"
-    except Exception:
-        pass
-    return ""
 
 
 # -- Claude CLI call ----------------------------------------------------------
@@ -276,42 +456,193 @@ def call_claude(prompt: str, system: str = "") -> str:
         return "(claude -p failed: %s)" % exc
 
 
+# -- Source candidate tracking ------------------------------------------------
+
+def log_source_candidate(candidate: dict) -> None:
+    """Append a discovered source candidate to data/source_candidates.jsonl.
+
+    Each candidate: {name, url, type, discovered_from, discovered_date,
+                     reason, engagement_count}
+    Deduplicates by URL.
+    """
+    CANDIDATES_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    # Check for existing candidate with same URL
+    if CANDIDATES_FILE.is_file():
+        for line in CANDIDATES_FILE.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                existing = json.loads(line)
+                if existing.get("url") == candidate.get("url"):
+                    return  # Already tracked
+            except json.JSONDecodeError:
+                continue
+
+    entry = {
+        "name": candidate.get("name", ""),
+        "url": candidate.get("url", ""),
+        "type": candidate.get("type", "unknown"),
+        "feed_url": candidate.get("feed_url", ""),
+        "discovered_from": candidate.get("discovered_from", ""),
+        "discovered_date": datetime.now().strftime("%Y-%m-%d"),
+        "reason": candidate.get("reason", ""),
+        "engagement_count": 0,
+    }
+    with open(CANDIDATES_FILE, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def parse_discovered_sources(llm_response: str) -> list[dict]:
+    """Parse source candidates from the LLM discovery response.
+
+    Expected format in response:
+    DISCOVERED_SOURCES:
+    - name: "Source Name" | url: "https://..." | type: ai_engineering | reason: "why"
+    """
+    candidates = []
+    in_discovery = False
+
+    for line in llm_response.splitlines():
+        stripped = line.strip()
+        if "DISCOVERED_SOURCES:" in stripped:
+            in_discovery = True
+            continue
+        if in_discovery and stripped.startswith("- "):
+            parts = {}
+            for segment in stripped[2:].split("|"):
+                segment = segment.strip()
+                if ":" in segment:
+                    key, val = segment.split(":", 1)
+                    parts[key.strip()] = val.strip().strip('"')
+            if parts.get("url"):
+                candidates.append(parts)
+        elif in_discovery and not stripped.startswith("-"):
+            in_discovery = False
+
+    return candidates
+
+
+# -- Task gate integration ---------------------------------------------------
+
+def propose_research_tasks(proposals_text: str, dry_run: bool = False) -> int:
+    """Parse B+ rated proposals and route through the task gate.
+
+    Returns number of tasks proposed.
+    """
+    if dry_run:
+        return 0
+
+    try:
+        from tools.scripts.task_gate import propose_task
+    except ImportError:
+        print("  WARNING: task_gate not available, skipping research proposals",
+              file=sys.stderr)
+        return 0
+
+    # Parse numbered proposals from LLM output
+    # Look for lines like: 1. Title - description...
+    proposals = re.findall(
+        r"^\d+\.\s*\*?\*?(.+?)(?:\*?\*?)?\s*[-:](.+?)(?:\n|$)",
+        proposals_text,
+        re.MULTILINE,
+    )
+
+    count = 0
+    for title, body in proposals:
+        title = title.strip().strip("*")
+        body = body.strip()
+        description = f"Research: {title} -- {body[:200]}"
+
+        result = propose_task(
+            description=description,
+            skills=["research"],
+            isc=[
+                f"Research brief exists in memory/work/ for topic: {title}",
+                "At least 3 sources cited in the brief",
+                "Brief includes Jarvis integration notes or TELOS relevance",
+            ],
+            source="morning_feed",
+            model="sonnet",
+            notify_on_decision=False,
+        )
+        if result.route == "backlog":
+            count += 1
+            print(f"  -> Research task queued: {title[:60]}")
+
+    return count
+
+
 # -- Feed generation ---------------------------------------------------------
 
 def generate_feed(dry_run: bool = False) -> str:
     """Generate the full morning feed content."""
     today = datetime.now().strftime("%Y-%m-%d")
+    weekday = datetime.now().strftime("%A")
 
-    # 1. Vitals snapshot
+    # Determine which tiers to check today
+    tiers_to_check = [1]  # Always check Tier 1
+    day_of_week = datetime.now().weekday()  # 0=Monday
+    if day_of_week == 0:  # Monday: check weekly sources
+        tiers_to_check.append(2)
+    if datetime.now().day == 1:  # 1st of month: check monthly sources
+        tiers_to_check.append(3)
+
+    # 1. Fetch content from all relevant sources
+    print(f"Checking tiers: {tiers_to_check}")
+    all_updates = []
+    sources_checked = 0
+
+    for tier in tiers_to_check:
+        sources = load_sources(tier=tier)
+        for src in sources:
+            sources_checked += 1
+            items = fetch_source_content(src)
+            for item in items:
+                all_updates.append({
+                    "source": src["name"],
+                    "source_type": src.get("type", "unknown"),
+                    "tier": tier,
+                    **item,
+                })
+
+    print(f"Fetched {len(all_updates)} items from {sources_checked} sources")
+
+    # 2. Vitals snapshot
     vitals = get_vitals_snapshot()
 
-    # 2. Overnight summary
+    # 3. Overnight + consolidation summaries
     overnight = get_overnight_summary()
+    consolidation = get_consolidation_summary()
 
-    # 3. Check Tier 1 sources for recent activity
-    sources = load_sources(tier=1)
-    source_updates = []
-    for src in sources:
-        if src.get("type") == "github":
-            update = check_github_source(src.get("url", ""))
-            if update:
-                source_updates.append(f"- {src['name']}: {update}")
-
-    # 4. Build context for LLM to generate proposals
-    source_context = "\n".join(source_updates) if source_updates else "No new updates from sources."
+    # 4. Format source updates for LLM
+    if all_updates:
+        source_lines = []
+        for u in all_updates:
+            line = f"[{u['source']}] {u['title']}"
+            if u.get("summary"):
+                line += f" -- {u['summary'][:150]}"
+            if u.get("published"):
+                line += f" ({u['published']})"
+            source_lines.append(line)
+        source_context = "\n".join(source_lines)
+    else:
+        source_context = "No content fetched from any sources today."
 
     # Read TELOS goals for cross-referencing
     telos_file = REPO_ROOT / "memory" / "work" / "TELOS.md"
     telos_summary = ""
     if telos_file.is_file():
         telos_text = telos_file.read_text(encoding="utf-8")
-        # Extract just the goals section (first 500 chars)
         telos_summary = telos_text[:500]
 
-    # 5. Call Anthropic API to rate and generate proposals
+    # 5. Call claude -p to rate, propose, and discover
     system_prompt = """You are Jarvis, an AI assistant generating a morning briefing for Eric.
 
-TASK: Review source updates and overnight results. Rate each item, then propose 1-3 actionable ideas from the highest-rated items only.
+TASK: Review source updates and overnight results. Do three things:
+1. Rate each source update
+2. Generate proposals from the best items
+3. Discover new sources worth following
 
 RATING SYSTEM (apply to each source update):
 Rate each item S/A/B/C/D based on:
@@ -324,21 +655,37 @@ Rate each item S/A/B/C/D based on:
 QUALITY GATE: Only propose items rated B+ or higher (S, A, or B). Drop C and D entirely.
 
 OUTPUT FORMAT (plain text, no markdown headers or bold):
-First, the rating breakdown:
-RATINGS: [S] item1 | [A] item2 | [B+] item3 | [C] item4 (dropped) | ...
 
-Then 1-3 numbered proposals from B+ items only. Each proposal must have:
+RATINGS:
+[S] item1 (source)
+[A] item2 (source)
+[B] item3 (source)
+[C] item4 (source) -- dropped
+...
+
+PROPOSALS (from B+ items only, 1-3 numbered):
+Each proposal must have:
 - A title
 - Which TELOS goal it connects to
-- 2-3 sentences making the idea interesting and actionable (not just informational)
+- 2-3 sentences making the idea interesting and actionable
 
-If no items pass B+, say: "No high-signal items today. Sources checked: N"
+SOURCE DISCOVERY (0-2 new sources):
+Based on the content you read, identify 0-2 new sources that would be high-signal for Eric's goals. These must be specific URLs, not generic suggestions.
 
-Keep total response under 300 words. Do not fabricate updates."""
+DISCOVERED_SOURCES:
+- name: "Source Name" | url: "https://exact-url" | type: category | reason: "why this is valuable"
 
-    user_prompt = f"""Generate morning briefing proposals for {today}.
+If no new sources are worth adding, write:
+DISCOVERED_SOURCES:
+(none today)
 
-Source updates:
+If no items pass B+ for proposals, say: "No high-signal items today. Sources checked: N"
+
+Keep total response under 400 words. Do not fabricate updates or source URLs."""
+
+    user_prompt = f"""Generate morning briefing for {today} ({weekday}).
+
+Source updates ({len(all_updates)} items from {sources_checked} sources):
 {source_context}
 
 Overnight research:
@@ -353,14 +700,24 @@ TELOS goals context:
 If source updates are thin today, suggest 1 idea based on overnight results or current project gaps instead."""
 
     if dry_run:
-        proposals = f"[DRY RUN] Would call claude -p with {len(user_prompt)} char prompt"
+        proposals = f"[DRY RUN] Would call claude -p with {len(user_prompt)} char prompt ({len(all_updates)} source items)"
     else:
         proposals = call_claude(user_prompt, system_prompt)
 
-    # 6. Consolidation summary (dispatcher + branch merges)
-    consolidation = get_consolidation_summary()
+    # 6. Parse discovered sources and log candidates
+    if not dry_run:
+        candidates = parse_discovered_sources(proposals)
+        for c in candidates:
+            c["discovered_from"] = "morning_feed"
+            log_source_candidate(c)
+            print(f"  -> Source candidate logged: {c.get('name', '?')}")
 
-    # 7. Assemble combined message
+    # 7. Route B+ proposals through the task gate
+    tasks_proposed = propose_research_tasks(proposals, dry_run=dry_run)
+    if tasks_proposed:
+        print(f"  -> {tasks_proposed} research task(s) proposed to gate")
+
+    # 8. Assemble combined message
     lines = [
         f"*Jarvis Morning Briefing -- {today}*",
         "",
@@ -369,11 +726,14 @@ If source updates are thin today, suggest 1 idea based on overnight results or c
         f"*Autonomous Work:*",
         consolidation,
         "",
-        f"*Research:* {overnight[:200]}",
+        f"*Sources checked:* {sources_checked} (tiers: {', '.join(str(t) for t in tiers_to_check)}) | {len(all_updates)} items fetched",
         "",
         "*Today's Proposals:*",
         proposals,
     ]
+
+    if tasks_proposed:
+        lines.append(f"\n({tasks_proposed} research task(s) queued for autonomous execution)")
 
     return "\n".join(lines)
 
@@ -436,7 +796,6 @@ def main() -> int:
 
 def track_proposals(date: str, content: str) -> None:
     """Write proposal IDs to autonomous_value.jsonl for tracking."""
-    # Count numbered proposals in content
     proposals = re.findall(r"^\d+\.", content, re.MULTILINE)
     VALUE_FILE.parent.mkdir(parents=True, exist_ok=True)
 
@@ -472,23 +831,49 @@ def run_self_test() -> int:
 
     # Source loading
     sources = load_sources(tier=1)
-    check(len(sources) >= 5, f"Tier 1 sources >= 5 ({len(sources)} found)")
+    check(len(sources) >= 3, f"Tier 1 sources >= 3 ({len(sources)} found)")
 
     tier2 = load_sources(tier=2)
-    check(len(tier2) >= 3, f"Tier 2 sources >= 3 ({len(tier2)} found)")
+    check(len(tier2) >= 5, f"Tier 2 sources >= 5 ({len(tier2)} found)")
 
     # Source fields
     if sources:
         src = sources[0]
         check("name" in src, "Source has name field")
         check("url" in src, "Source has url field")
+        check("feed_url" in src, "Source has feed_url field")
         check("type" in src, "Source has type field")
+
+    # RSS fetch (live test -- Hacker News RSS is reliable)
+    hn_items = fetch_rss("https://news.ycombinator.com/rss", max_items=3)
+    check(len(hn_items) > 0, f"RSS fetch (HN): {len(hn_items)} items")
+    if hn_items:
+        check("title" in hn_items[0], "RSS item has title")
+        check("link" in hn_items[0], "RSS item has link")
+
+    # Atom fetch (GitHub releases)
+    atom_items = fetch_rss(
+        "https://github.com/anthropics/claude-code/releases.atom", max_items=2
+    )
+    check(len(atom_items) > 0, f"Atom fetch (Claude Code): {len(atom_items)} items")
+
+    # Source candidate parsing
+    test_response = """Some ratings here...
+DISCOVERED_SOURCES:
+- name: "Test Blog" | url: "https://test.example.com" | type: ai_engineering | reason: "testing"
+- name: "Another" | url: "https://another.example.com" | type: security | reason: "also testing"
+"""
+    candidates = parse_discovered_sources(test_response)
+    check(len(candidates) == 2, f"Parse discovered sources: {len(candidates)} found")
+    if candidates:
+        check(candidates[0].get("url") == "https://test.example.com",
+              "Candidate URL parsed correctly")
 
     # Vitals snapshot
     vitals = get_vitals_snapshot()
     check(len(vitals) > 0, "Vitals snapshot produces output")
 
-    # Feed directory
+    # File existence
     check(SOURCES_FILE.is_file(), "sources.yaml exists")
 
     print()

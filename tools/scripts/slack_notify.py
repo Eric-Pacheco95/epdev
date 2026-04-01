@@ -4,18 +4,21 @@
 Phase 4C: all Jarvis Slack traffic flows through this module.
 
 Usage (from other scripts):
-    from tools.scripts.slack_notify import notify, EPDEV, CRITICAL
+    from tools.scripts.slack_notify import notify, EPDEV, CRITICAL, DECISIONS
     notify("message text")                          # routine -> #epdev
     notify("message text", severity="critical")     # must-see -> #general
+    notify("message text", severity="decision")     # task gate -> #jarvis-decisions
     notify("message text", CRITICAL)                # legacy channel override
 
 Severity routing (per slack-routing.md):
-    "routine"  -> #epdev   (C0ANZKK12CD) — default
-    "critical" -> #general (C0AKR43PDA4) — auth failures, security, blocks
+    "routine"  -> #epdev             (C0ANZKK12CD) — default
+    "critical" -> #general           (C0AKR43PDA4) — auth failures, security, blocks
+    "decision" -> #jarvis-decisions  (C0APQ4X9EAK) — task gate escalations, no cap
 
 Daily caps (file-based, resets at midnight):
-    routine:  20 messages/day
-    critical:  5 messages/day
+    routine:  50 messages/day
+    critical: 15 messages/day
+    decision: unlimited
 
 Dedup: identical messages within 1hr are silently dropped.
 
@@ -37,6 +40,7 @@ from typing import Optional
 
 EPDEV = "C0ANZKK12CD"
 CRITICAL = "C0AKR43PDA4"
+DECISIONS = "C0APQ4X9EAK"
 
 _API = "https://slack.com/api/chat.postMessage"
 
@@ -44,12 +48,14 @@ _API = "https://slack.com/api/chat.postMessage"
 _SEVERITY_CHANNEL = {
     "routine": EPDEV,
     "critical": CRITICAL,
+    "decision": DECISIONS,
 }
 
-# Daily caps per severity
+# Daily caps per severity (0 = unlimited)
 _DAILY_CAPS = {
-    "routine": 20,
-    "critical": 5,
+    "routine": 50,
+    "critical": 15,
+    "decision": 0,
 }
 
 # Dedup window in seconds
@@ -176,7 +182,7 @@ def notify(
         # Daily cap check
         cap = _DAILY_CAPS.get(severity, 20)
         current = state["counts"].get(severity, 0)
-        if current >= cap:
+        if cap > 0 and current >= cap:
             print(f"slack_notify: daily {severity} cap reached ({cap}) -- skipped",
                   file=sys.stderr)
             return False

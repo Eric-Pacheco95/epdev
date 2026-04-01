@@ -76,6 +76,7 @@
 | 4->5 | **GATE PASSED** | 0 |
 | 5A | **COMPLETE** | 0 |
 | 5B | In progress | 1 (validation -- 3 tasks executed successfully) |
+| 5C | In progress | 3 of 5 done (task gate, heartbeat feeder, decisions channel) |
 
 ## Active Projects
 
@@ -417,7 +418,10 @@
 
 - [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources
 - [ ] **Routines engine** — Recurring tasks that re-enter backlog on schedule (weekly security audit, monthly steering review). Config-driven, not hardcoded
-- [ ] **Heartbeat -> task generation** — When ISC gaps detected by heartbeat, dispatcher can propose new tasks for human approval before execution
+- [x] **Task gate** — `tools/scripts/task_gate.py`: unified routing gate for all task producers. 3 deterministic checks (has ISC? Tier 0-2 skill? no arch keywords?). Pass → `task_backlog.jsonl`. Fail → `#jarvis-decisions` (uncapped Slack channel). Dedup, atomic writes, 8/8 self-tests. (2026-04-01)
+- [x] **Heartbeat -> task generation** — Heartbeat WARN/CRIT threshold crossings auto-propose remediation tasks via `remediation_map` in `heartbeat_config.json`. 4 metrics mapped (signal_velocity, learning_loop_health, cloud_audit_recency, tool_failure_rate). Routes through task gate. (2026-04-01)
+- [x] **#jarvis-decisions Slack channel** — `C0APQ4X9EAK`. Severity="decision" in `slack_notify.py`. No daily cap. Used exclusively for task gate escalations requiring Eric's input. Slack routing doc updated. (2026-04-01)
+- [x] **Dispatcher Tier 2** — `MAX_TIER` raised from 1 to 2 in dispatcher and gate. Tier 2 skills (synthesize-signals, security-audit, learning-capture, self-heal, absorb) now eligible for autonomous execution. (2026-04-01)
 - [ ] **Budget controls** — Max tasks/day, max `claude -p` time per task, daily aggregate time cap
 
 ### Phase 5D — Hardening + Quality (1-2 sessions)

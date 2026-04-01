@@ -15,15 +15,17 @@ Generate a product requirements document with ISC criteria
 PLAN
 
 ## Syntax
-/create-prd <description or research-brief-path>
+/create-prd [--user-stories] <description or research-brief-path>
 
 ## Parameters
 - description: free-text feature/product description (required for execution, omit for usage help)
 - research-brief-path: optional file path to a /research output for richer context
+- --user-stories: force user story generation even for single-actor tasks; useful for jarvis-app frontend features or crypto-bot multi-role flows
 
 ## Examples
 - /create-prd Build an autonomous task runner for Jarvis that executes safe tasks on a schedule
 - /create-prd memory/work/jarvis/research_brief.md
+- /create-prd --user-stories crypto-bot Slack approval flow with trader, approver, and dispatcher roles
 
 ## Chains
 - Before: /research (brief as input), /red-team (stress-test findings as input)
@@ -50,6 +52,15 @@ PLAN
 - If no research context found and topic seems complex:
   - Print: "No research brief found for this topic. The PRD will be based solely on your description. For a stronger foundation, run `/project-init` (full pipeline: research + analysis + PRD) or `/research <topic>` (research only). Proceed with standalone PRD anyway?"
 - Once input is validated, proceed to Step 1
+
+## Step 0.5: USER STORY CHECK (optional, auto-triggered)
+
+- Scan the input for multiple distinct actor types (e.g., "trader + Slack approver", "Eric + autonomous dispatcher + monitoring agent", "admin + end user")
+- If 2+ distinct actors are present AND the input does not already include user stories: generate user stories BEFORE writing requirements
+  - Format: `As a [actor] / I want [capability] / So that [outcome]` + 3-5 acceptance criteria bullets per story; plain, bulleted, no jargon
+  - Present stories to Eric and confirm before proceeding — stories define WHAT to build; requirements define HOW it should behave
+- If only 1 actor type (typical Jarvis task): skip this step silently
+- This step can be manually forced with `--user-stories` flag regardless of actor count
 
 ## Step 1: EXTRACT
 

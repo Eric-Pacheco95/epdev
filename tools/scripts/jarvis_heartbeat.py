@@ -329,6 +329,52 @@ metric: {metric}{isc_frontmatter}
     return True
 
 
+# ── Remediation via Task Gate ────────────────────────────────────────
+
+def _propose_remediation(change: dict, remediation_map: dict) -> int:
+    """Propose a remediation task through the task gate if a mapping exists.
+
+    Returns 1 if a task was proposed/routed, 0 otherwise.
+    """
+    metric = change["metric"]
+    severity = change["severity"]
+
+    mapping = remediation_map.get(metric)
+    if not mapping:
+        return 0
+
+    # Check minimum severity threshold
+    min_sev = mapping.get("min_severity", "WARN")
+    if SEVERITY_ORDER.get(severity, 0) < SEVERITY_ORDER.get(min_sev, 2):
+        return 0
+
+    try:
+        from tools.scripts.task_gate import propose_task
+
+        result = propose_task(
+            description=mapping["description"],
+            project="epdev",
+            goal_context=f"Heartbeat {severity}: {metric} crossed threshold "
+                         f"(current={change.get('current')}, "
+                         f"prev={change.get('previous')})",
+            skills=mapping.get("skills", []),
+            isc=mapping.get("isc", []),
+            context_files=mapping.get("context_files", []),
+            source="heartbeat",
+            model=mapping.get("model", "sonnet"),
+        )
+        if result.route in ("backlog", "decision"):
+            print(f"  Remediation for {metric}: {result.route}"
+                  f" ({result.task_id or result.reason})")
+            return 1
+        # "skipped" = duplicate already pending, don't count
+        return 0
+    except Exception as exc:
+        print(f"  WARNING: task gate failed for {metric}: {exc}",
+              file=sys.stderr)
+        return 0
+
+
 # ── Alert Routing ───────────────────────────────────────────────────
 
 def _load_alert_counts(snap_dir: Path) -> dict:
@@ -542,6 +588,8 @@ def main() -> None:
     snap_dir = root_dir / cfg.get("snapshot_dir", "memory/work/isce")
     cooldown_state = _load_cooldown_state(snap_dir)
     signals_written = 0
+    tasks_proposed = 0
+    remediation_map = cfg.get("remediation_map", {})
     for change in changes:
         if change["severity"] in ("WARN", "CRIT") and change.get("delta", 0) != 0:
             min_d = min_delta_map.get(change["metric"], 1)
@@ -549,8 +597,14 @@ def main() -> None:
                 continue
             if write_auto_signal(change, cfg, root_dir, cooldown_state):
                 signals_written += 1
+                # Propose remediation task through the gate
+                tasks_proposed += _propose_remediation(
+                    change, remediation_map
+                )
     if signals_written > 0:
         _save_cooldown_state(snap_dir, cooldown_state)
+    if tasks_proposed > 0:
+        print(f"  {tasks_proposed} remediation task(s) proposed via gate")
 
     # Output
     if args.json:

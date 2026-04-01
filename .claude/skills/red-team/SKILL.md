@@ -15,17 +15,20 @@ Stress-test a plan, product, or idea for weaknesses and failure modes
 THINK
 
 ## Syntax
-/red-team [--stride] <plan, product description, or file path>
+/red-team [--stride] [--thinking] <plan, product description, or file path>
 
 ## Parameters
 - input: free-text description of the plan/product/policy to attack, or a file path to review (required for execution, omit for usage help)
 - --stride: activate STRIDE threat modeling mode (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege) -- produces a structured threat model alongside the adversarial analysis
+- --thinking: activate TELOS-aware personal reasoning attack mode -- reads memory/work/TELOS.md and attacks Eric's mental models, frames, and reasoning patterns rather than a system; produces BLINDSPOTS (8 bullets) and RED-TEAM THINKING (4 bullets + fixes); input is optional (defaults to TELOS + any question provided)
 
 ## Examples
 - /red-team memory/work/jarvis/PRD.md
 - /red-team Our crypto bot uses a simple moving average crossover strategy
 - /red-team The new auth flow stores session tokens in localStorage
 - /red-team --stride The Jarvis heartbeat system runs as a scheduled task with file-based state
+- /red-team --thinking Am I building the right things in Phase 5?
+- /red-team --thinking (no input -- attacks general reasoning patterns from TELOS)
 
 ## Chains
 - Before: /first-principles (decompose assumptions first)
@@ -51,7 +54,20 @@ THINK
   - Print: "For code-level security review, use /review-code. /red-team is for architectural and strategic analysis. Need both? Run /review-code first, then /red-team on the design."
 - Once input is validated, proceed to Step 1
 
-## Step 0.5: STRIDE MODE CHECK
+## Step 0.5a: THINKING MODE CHECK
+
+- If `--thinking` flag is present:
+  - Read `memory/work/TELOS.md` fully; this is the primary context
+  - If input (beyond the flag) is provided, treat it as the specific question or domain to focus on
+  - If no input beyond the flag, attack general reasoning patterns across the full TELOS
+  - Output two sections only:
+    - **BLINDSPOTS**: 8 bullets (max 16 words each) naming frames or models in Eric's thinking that could leave him exposed to error or risk — derived from patterns, assumptions, and stated beliefs in TELOS
+    - **RED-TEAM THINKING**: 4 bullets (max 16 words each) adversarially attacking specific reasoning patterns or conclusions visible in TELOS, followed by **FIXES**: numbered recommendations addressing each bullet
+  - Use plain markdown only; no bold/italic emphasis within bullets
+  - STOP after outputting these two sections; do not run Steps 1+ (system red-team)
+- If `--thinking` is NOT present, continue to Step 0.5b
+
+## Step 0.5b: STRIDE MODE CHECK
 
 - If `--stride` flag is present, activate STRIDE overlay:
   - After completing the standard red-team analysis (Steps 1+), add STRIDE-specific sections
@@ -65,6 +81,7 @@ THINK
   - Map STRIDE findings into the MITIGATIONS section alongside the standard red-team mitigations
   - Add TRUST BOUNDARIES AND DATA FLOWS and STRIDE ANALYSIS sections to the output (after DATA AND TRUST RISKS)
 - If `--stride` flag is NOT present, skip directly to Step 1
+- If `--thinking` and `--stride` are both present: run `--thinking` mode first, then append STRIDE analysis of Eric's reasoning frameworks as a bonus section
 
 ## Step 1: SUMMARIZE
 

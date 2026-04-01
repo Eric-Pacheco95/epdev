@@ -182,6 +182,48 @@
   "snapshot_dir": "memory/work/isce",
   "signal_output_dir": "memory/learning/signals",
   "cooldown_minutes": 60,
+  "remediation_map": {
+    "signal_velocity": {
+      "description": "Run /synthesize-signals to process accumulated learning signals",
+      "skills": ["synthesize-signals"],
+      "isc": [
+        "New synthesis doc exists in memory/learning/synthesis/ | Verify: find memory/learning/synthesis -name '*.md' -newer orchestration/task_backlog.jsonl"
+      ],
+      "context_files": ["memory/learning/signals/"],
+      "model": "opus",
+      "min_severity": "WARN"
+    },
+    "learning_loop_health": {
+      "description": "Run /synthesize-signals -- synthesis docs are stale",
+      "skills": ["synthesize-signals"],
+      "isc": [
+        "New synthesis doc exists in memory/learning/synthesis/ | Verify: find memory/learning/synthesis -name '*.md' -newer orchestration/task_backlog.jsonl"
+      ],
+      "context_files": ["memory/learning/signals/"],
+      "model": "opus",
+      "min_severity": "WARN"
+    },
+    "cloud_audit_recency": {
+      "description": "Run /security-audit to update security posture",
+      "skills": ["security-audit"],
+      "isc": [
+        "Security audit report exists in history/security/ | Verify: find history/security -name '*audit*' -newer orchestration/task_backlog.jsonl"
+      ],
+      "context_files": ["security/constitutional-rules.md"],
+      "model": "sonnet",
+      "min_severity": "WARN"
+    },
+    "tool_failure_rate": {
+      "description": "Review tool failure patterns and diagnose root cause",
+      "skills": ["review-code"],
+      "isc": [
+        "Failure analysis doc exists | Verify: find memory/learning/failures -name '*.md' -newer orchestration/task_backlog.jsonl"
+      ],
+      "context_files": [],
+      "model": "sonnet",
+      "min_severity": "CRIT"
+    }
+  },
   "daily_alert_caps": {
     "slack": 20,
     "_ntfy_retired": 0,

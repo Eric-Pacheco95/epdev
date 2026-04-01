@@ -15,17 +15,19 @@ Parallel multi-angle architecture analysis — first-principles + fallacies + re
 THINK
 
 ## Syntax
-/architecture-review [--stride] <proposal description or file path>
+/architecture-review [--stride] [--thinking] <proposal description or file path>
 
 ## Parameters
 - proposal: free-text description of the architecture/design decision, or a file path to a PRD/spec/design doc (required for execution, omit for usage help)
 - --stride: add STRIDE threat modeling to the red-team agent's analysis (default: red-team runs without STRIDE)
+- --thinking: add a 4th parallel agent that runs /red-team --thinking against TELOS to surface blindspots in how Eric is framing the decision BEFORE the other 3 agents analyze the proposal; most useful when the decision feels hard or the right framing is unclear
 
 ## Examples
 - /architecture-review Should we integrate task dispatch into the heartbeat or keep it separate?
 - /architecture-review memory/work/jarvis-dashboard/PRD.md
 - /architecture-review --stride The autonomous dispatcher will spawn claude -p agents in git worktrees with file system access
 - /architecture-review We want to add a settings editor to the dashboard that writes directly to config files
+- /architecture-review --thinking Should we build a custom crypto execution engine or extend the current bot?
 
 ## Chains
 - Before: /research (provides context for the proposal)
@@ -60,7 +62,7 @@ THINK
 - Present the framing to Eric for confirmation before launching agents:
   > **Architecture Decision:** {one sentence}
   > **Alternatives:** {2-3 options}
-  > **Launching:** /first-principles + /find-logical-fallacies + /red-team {+ STRIDE if applicable}
+  > **Launching:** /first-principles + /find-logical-fallacies + /red-team {+ STRIDE if applicable} {+ Reasoning Blindspot Check if --thinking}
   > Proceed?
 
 ## Step 2: LAUNCH PARALLEL AGENTS
@@ -85,6 +87,13 @@ THINK
   - Include full proposal context in the prompt
   - Always runs. Add STRIDE framework analysis when --stride flag is present or proposal involves system boundaries
   - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/red-team.md` before returning**
+
+  **Agent 4 (only if --thinking flag): Reasoning Blindspot Check**
+  - Scope: Read `memory/work/TELOS.md` and attack Eric's framing of this specific decision — are there blindspots, favored-option bias, or mental model flaws that color how the problem is stated?
+  - Focus on the decision framing, not the proposal content (Agents 1-3 handle the content)
+  - Output: 8 blindspot bullets + 4 red-team-thinking bullets with fixes, focused on this decision context
+  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/thinking.md` before returning**
+  - This agent runs first; its output can reshape how the synthesis interprets the other agents' findings
 
 - All agents run in background simultaneously. Do NOT duplicate their work in the main thread while waiting
 - Each agent writes to disk as its LAST action — this ensures findings survive context compaction even if the synthesis happens in a later session or after compaction
