@@ -49,13 +49,13 @@ ABSORBED_DIR = REPO_ROOT / "memory" / "learning" / "absorbed"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
 
 # Dynamic synthesis threshold:
-#   >= 20 signals: always trigger (hard ceiling)
-#   >= 10 signals AND >= 48h since last synthesis: enough data + time
-#   >= 8 signals AND >= 72h since last synthesis: stale signals lose context
-SYNTHESIS_HARD_CEILING = 20
+#   >= 35 signals: always trigger (hard ceiling; raised from 20 for auto-signal producers)
+#   >= 15 signals AND >= 48h since last synthesis: enough data + time
+#   >= 10 signals AND >= 72h since last synthesis: stale signals lose context
+SYNTHESIS_HARD_CEILING = 35
 SYNTHESIS_TIERS = [
-    (10, 48),  # (min_signals, min_hours_since_last_synthesis)
-    (8, 72),
+    (15, 48),  # (min_signals, min_hours_since_last_synthesis)
+    (10, 72),
 ]
 
 

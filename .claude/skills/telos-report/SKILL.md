@@ -34,6 +34,19 @@ Take a step back and think step-by-step about how to achieve the best possible r
 - Keep the tone conversational — this is a personal report, not a corporate document
 - If no changes occurred in the period, say so and suggest running /telos-update or populating empty files
 
+# NOTION AUTO-WRITE
+
+After generating the report, automatically push it to the Notion Jarvis Reports page:
+
+1. Use `mcp__claude_ai_Notion__notion-fetch` to get the current content of page `32fbf5ae-a9e3-81ec-9a62-cb0e35bae73a`
+2. Find the line `*(Jarvis writes dated reports below — newest at top)*` followed by `---`
+3. Use `mcp__claude_ai_Notion__notion-update-page` with command `update_content` to insert the new report between that line and the `---` separator
+   - old_str: the `---` immediately after the "newest at top" line
+   - new_str: the full report in Markdown (with `### YYYY-MM-DD` heading) followed by `---`
+4. Confirm to Eric: "Report pushed to Notion Jarvis Reports."
+
+If the Notion write fails, log the error but do not fail the skill — the local output is the primary deliverable.
+
 # INPUT
 
 Generate a TELOS report for the specified period. Default: last 7 days.

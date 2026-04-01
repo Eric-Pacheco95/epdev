@@ -498,6 +498,75 @@ def write_autonomous_signal(metrics: dict, run_dir: Path) -> bool:
     return True
 
 
+# -- Auto-apply safe TELOS updates -------------------------------------------
+
+TELOS_AUTO_SAFE_FILES = {"STATUS.md", "LEARNED.md", "CHALLENGES.md"}
+
+def auto_apply_telos(metrics: dict, run_dir: Path) -> bool:
+    """Auto-apply TELOS updates for safe-tier files when thresholds are crossed.
+
+    Only touches STATUS.md, LEARNED.md, CHALLENGES.md (the auto-update tier
+    from /telos-update). Higher-sensitivity files (MISSION.md, BELIEFS.md)
+    require interactive human approval.
+
+    Returns True if updates were applied.
+    """
+    contradictions = metrics.get("contradiction_count", 0)
+    coverage = metrics.get("coverage_score", 100)
+
+    if (contradictions < SIGNAL_THRESHOLD_CONTRADICTIONS
+            and coverage >= SIGNAL_THRESHOLD_COVERAGE):
+        print("  TELOS auto-apply: skipped (thresholds not crossed)")
+        return False
+
+    proposals_path = run_dir / "proposals.md"
+    if not proposals_path.is_file():
+        print("  TELOS auto-apply: skipped (no proposals.md)")
+        return False
+
+    proposals = proposals_path.read_text(encoding="utf-8").strip()
+    if not proposals:
+        print("  TELOS auto-apply: skipped (proposals.md empty)")
+        return False
+
+    # Build a focused prompt for safe-tier TELOS updates only
+    telos_context = []
+    for fname in sorted(TELOS_AUTO_SAFE_FILES):
+        fpath = TELOS_DIR / fname
+        if fpath.is_file():
+            telos_context.append("=== %s ===\n%s" % (
+                fname, fpath.read_text(encoding="utf-8")))
+
+    if not telos_context:
+        print("  TELOS auto-apply: skipped (no safe-tier TELOS files found)")
+        return False
+
+    prompt = (
+        "You are updating TELOS identity files based on autoresearch findings.\n\n"
+        "RULES:\n"
+        "- ONLY modify these files: %s\n"
+        "- Use the Edit tool for surgical updates -- never overwrite entire files\n"
+        "- Each edit must be supported by evidence from the proposals below\n"
+        "- Do NOT touch MISSION.md, BELIEFS.md, GOALS.md, or any other files\n"
+        "- Log each change to history/changes/ with source: autonomous-autoresearch\n"
+        "- If no changes are warranted, do nothing -- silence is valid\n\n"
+        "CURRENT TELOS FILES:\n%s\n\n"
+        "AUTORESEARCH PROPOSALS:\n%s\n\n"
+        "Apply only well-evidenced updates to the safe-tier files listed above."
+    ) % (", ".join(sorted(TELOS_AUTO_SAFE_FILES)),
+         "\n\n".join(telos_context), proposals)
+
+    print("  TELOS auto-apply: invoking claude -p for safe-tier updates...")
+    result = call_claude(prompt)
+
+    if result.startswith("("):
+        print("  TELOS auto-apply: failed -- %s" % result, file=sys.stderr)
+        return False
+
+    print("  TELOS auto-apply: complete")
+    return True
+
+
 # -- Slack notification ------------------------------------------------------
 
 def post_slack_summary(metrics: dict, run_dir: Path) -> bool:
@@ -629,7 +698,10 @@ def main() -> int:
     # 6. Autonomous signal (if threshold crossed)
     write_autonomous_signal(metrics, run_dir)
 
-    # 7. Slack notification (if significant)
+    # 7. Auto-apply safe TELOS updates (STATUS, LEARNED, CHALLENGES only)
+    auto_apply_telos(metrics, run_dir)
+
+    # 8. Slack notification (if significant)
     post_slack_summary(metrics, run_dir)
 
     print("\nIntrospection complete. Review proposals at:")

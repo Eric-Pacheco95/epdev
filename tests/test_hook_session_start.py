@@ -14,7 +14,7 @@ from pathlib import Path
 # --- Copied pure functions from tools/scripts/hook_session_start.py ---
 # These have zero I/O side effects and can be tested in isolation.
 
-SYNTHESIS_HARD_CEILING = 20
+SYNTHESIS_HARD_CEILING = 35
 SYNTHESIS_TIERS = [
     (10, 48),
     (8, 72),

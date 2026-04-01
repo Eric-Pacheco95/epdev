@@ -19,14 +19,16 @@
       "type": "file_count",
       "path": "memory/learning/failures",
       "ext": ".md",
-      "thresholds": { "warn_above": 10, "crit_above": 20 }
+      "thresholds": { "warn_above": 10, "crit_above": 20 },
+      "min_delta": 3
     },
     {
       "name": "security_event_count",
       "type": "file_count",
       "path": "history/security",
       "ext": ".md",
-      "thresholds": { "warn_above": 3, "crit_above": 10 }
+      "thresholds": { "warn_above": 3, "crit_above": 10 },
+      "min_delta": 3
     },
     {
       "name": "open_task_count",

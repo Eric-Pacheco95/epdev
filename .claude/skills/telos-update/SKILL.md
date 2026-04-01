@@ -73,6 +73,20 @@ All files live in `memory/work/telos/`:
 - Convert relative dates to absolute dates (e.g., "last Thursday" → "2026-03-20")
 - When updating LEARNED.md, add entries at the top of the relevant section with date prefix
 
+# NOTION AUTO-WRITE (TELOS Mirror)
+
+After all TELOS file updates are written, automatically sync the TELOS Mirror page in Notion:
+
+1. Read the current state of key TELOS files: `MISSION.md`, `GOALS.md`, `STATUS.md`, `BELIEFS.md`, `PROJECTS.md`, `LEARNED.md`
+2. Use `mcp__claude_ai_Notion__notion-fetch` to get the current content of page `32fbf5ae-a9e3-81dd-afaf-f94608fa0153`
+3. Use `mcp__claude_ai_Notion__notion-update-page` with command `replace_content` to replace the entire page content with an updated mirror:
+   - Keep the intro paragraph and "This is a mirror" note
+   - Rebuild sections: Mission, Top Goals (with percentages), Current Focus, Key Beliefs, Active Projects (table), Who Eric Is
+   - Update `*Last synced by Jarvis: YYYY-MM-DD*` at the bottom
+4. Confirm to Eric: "TELOS Mirror synced to Notion."
+
+If the Notion write fails, log the error but do not fail the skill — the local TELOS files are the primary deliverable.
+
 # INPUT
 
 Analyze the current session (or provided input) and propose TELOS updates.

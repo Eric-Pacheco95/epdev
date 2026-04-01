@@ -531,11 +531,22 @@ def main() -> None:
     save_snapshot(snap, latest_path, history_path)
 
     # Auto-signal writing for WARN/CRIT
+    # min_delta per metric: suppress noise from single-count increments on
+    # cumulative counters (failure_count, security_event_count).
+    # scheduled_tasks_unhealthy only signals on 0->N transition.
+    min_delta_map = {}
+    for entry in cfg.get("collectors", []):
+        if "min_delta" in entry:
+            min_delta_map[entry["name"]] = entry["min_delta"]
+
     snap_dir = root_dir / cfg.get("snapshot_dir", "memory/work/isce")
     cooldown_state = _load_cooldown_state(snap_dir)
     signals_written = 0
     for change in changes:
         if change["severity"] in ("WARN", "CRIT") and change.get("delta", 0) != 0:
+            min_d = min_delta_map.get(change["metric"], 1)
+            if abs(change.get("delta", 0)) < min_d:
+                continue
             if write_auto_signal(change, cfg, root_dir, cooldown_state):
                 signals_written += 1
     if signals_written > 0:
