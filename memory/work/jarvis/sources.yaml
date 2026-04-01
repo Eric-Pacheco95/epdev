@@ -48,6 +48,22 @@
   frequency: daily
   last_checked: "2026-03-30"
 
+- name: "MLOps YouTube"
+  url: "https://www.youtube.com/@MLOps"
+  feed_url: ""
+  type: ai_engineering
+  tier: 1
+  frequency: daily
+  last_checked: "2026-04-01"
+
+- name: "Andrej Karpathy YouTube"
+  url: "https://www.youtube.com/@AndrejKarpathy"
+  feed_url: ""
+  type: ai_education
+  tier: 1
+  frequency: daily
+  last_checked: "2026-04-01"
+
 # =============================================================================
 # Tier 2 -- Weekly (ecosystem, security, competitors, crypto)
 # =============================================================================
@@ -128,14 +144,6 @@
   url: "https://cointelegraph.com"
   feed_url: "https://cointelegraph.com/rss"
   type: crypto
-  tier: 2
-  frequency: weekly
-  last_checked: "2026-03-30"
-
-- name: "Andrej Karpathy YouTube"
-  url: "https://www.youtube.com/@AndrejKarpathy"
-  feed_url: ""
-  type: ai_education
   tier: 2
   frequency: weekly
   last_checked: "2026-03-30"
