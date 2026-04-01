@@ -1,0 +1,54 @@
+{
+  "_meta": {
+    "description": "Autonomous safety classification for all active Jarvis skills",
+    "last_audited": "2026-03-31",
+    "tiers": {
+      "0": "Safe for fully autonomous claude -p (read-only analysis, no external writes)",
+      "1": "Safe for autonomous with local file output only",
+      "2": "Requires gating -- modifies git, TELOS, or external systems",
+      "3": "Human-in-loop required -- interactive confirmations, identity changes"
+    }
+  },
+  "analyze-claims":        { "autonomous_safe": true,  "tier": 0, "notes": "Pure analysis, no side effects" },
+  "architecture-review":   { "autonomous_safe": true,  "tier": 0, "notes": "Spawns parallel agents but read-only" },
+  "extract-wisdom":        { "autonomous_safe": true,  "tier": 0, "notes": "Content extraction only" },
+  "find-logical-fallacies":{ "autonomous_safe": true,  "tier": 0, "notes": "Pure analysis" },
+  "first-principles":      { "autonomous_safe": true,  "tier": 0, "notes": "Pure analysis" },
+  "improve-prompt":        { "autonomous_safe": true,  "tier": 0, "notes": "Prompt rewrite, no file output" },
+  "jarvis-help":           { "autonomous_safe": true,  "tier": 0, "notes": "Registry display only" },
+  "quality-gate":          { "autonomous_safe": true,  "tier": 0, "notes": "Audit check, no modifications" },
+  "red-team":              { "autonomous_safe": true,  "tier": 0, "notes": "Adversarial analysis only" },
+  "research":              { "autonomous_safe": true,  "tier": 0, "notes": "Web search + synthesis, reads only" },
+  "review-code":           { "autonomous_safe": true,  "tier": 0, "notes": "Code review, no modifications" },
+  "spawn-agent":           { "autonomous_safe": true,  "tier": 0, "notes": "Outputs prompt text, no execution" },
+  "telos-report":          { "autonomous_safe": true,  "tier": 0, "notes": "Read-only TELOS analysis" },
+
+  "create-image":          { "autonomous_safe": true,  "tier": 1, "notes": "Writes image files locally via Gemini" },
+  "create-prd":            { "autonomous_safe": true,  "tier": 1, "notes": "Writes PRD to memory/work/" },
+  "project-init":          { "autonomous_safe": true,  "tier": 1, "notes": "Chains research->PRD, local files only" },
+  "teach":                 { "autonomous_safe": true,  "tier": 1, "notes": "Writes lesson files, may write signals" },
+  "visualize":             { "autonomous_safe": true,  "tier": 1, "notes": "Writes diagram files locally" },
+  "write-essay":           { "autonomous_safe": true,  "tier": 1, "notes": "Writes essay files locally" },
+
+  "absorb":                { "autonomous_safe": true,  "tier": 2, "notes": "--quick mode safe; --deep queues TELOS proposals as PENDING" },
+  "autoresearch":          { "autonomous_safe": true,  "tier": 2, "notes": "Creates branches, commits in worktree -- controlled loop" },
+  "deep-audit":            { "autonomous_safe": true,  "tier": 2, "notes": "--evaluate is read-only; --onboard may auto-fix Tier 1 findings" },
+  "learning-capture":      { "autonomous_safe": true,  "tier": 2, "notes": "Writes signal/failure files, updates meta" },
+  "security-audit":        { "autonomous_safe": true,  "tier": 2, "notes": "May git rm --cached or add .gitignore entries" },
+  "self-heal":             { "autonomous_safe": true,  "tier": 2, "notes": "Max 3 heal cycles, reverts if unresolved" },
+  "synthesize-signals":    { "autonomous_safe": true,  "tier": 2, "notes": "Writes synthesis docs, moves signal files" },
+
+  "capture-recording":     { "autonomous_safe": false, "tier": 3, "notes": "Uploads to Gemini API, modifies MUSIC.md" },
+  "commit":                { "autonomous_safe": false, "tier": 3, "notes": "Modifies git state, requires message approval" },
+  "create-keynote":        { "autonomous_safe": false, "tier": 3, "notes": "Uploads to Google Drive" },
+  "create-pattern":        { "autonomous_safe": false, "tier": 3, "notes": "Creates new skills, updates CLAUDE.md registry" },
+  "delegation":            { "autonomous_safe": false, "tier": 3, "notes": "Interactive session routing -- dispatcher IS the autonomous equivalent" },
+  "extract-harness":       { "autonomous_safe": false, "tier": 3, "notes": "Creates target repo structure" },
+  "implement-prd":         { "autonomous_safe": false, "tier": 3, "notes": "Builds code with multiple approval gates" },
+  "notion-sync":           { "autonomous_safe": false, "tier": 3, "notes": "Writes to external Notion database" },
+  "project-orchestrator":  { "autonomous_safe": false, "tier": 3, "notes": "Interactive session orchestration -- dispatcher handles autonomous task routing" },
+  "telos-update":          { "autonomous_safe": false, "tier": 3, "notes": "Modifies identity files, requires approval" },
+  "update-steering-rules": { "autonomous_safe": false, "tier": 3, "notes": "Proposes CLAUDE.md changes, requires review" },
+  "vitals":                { "autonomous_safe": false, "tier": 3, "notes": "Posts to Slack #epdev" },
+  "workflow-engine":       { "autonomous_safe": false, "tier": 3, "notes": "Interactive skill chaining -- dispatcher worker prompt + ISC is the autonomous equivalent" }
+}

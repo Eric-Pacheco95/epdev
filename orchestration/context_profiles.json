@@ -1,0 +1,54 @@
+{
+  "_meta": {
+    "description": "Minimal context profiles for claude -p worker invocations by task type",
+    "last_audited": "2026-03-31",
+    "notes": "CLAUDE.md auto-loads for all claude -p calls from repo root. These profiles define ADDITIONAL context_files per task type. Goal: load only what's needed to reduce token waste."
+  },
+  "profiles": {
+    "security-review": {
+      "description": "Security audit or code review tasks",
+      "always_load": ["security/constitutional-rules.md"],
+      "optional_load": ["security/validators/validate_tool_use.py"],
+      "skills_used": ["security-audit", "review-code", "red-team"],
+      "estimated_context_tokens": 3000
+    },
+    "synthesis": {
+      "description": "Signal synthesis, learning capture, steering rule updates",
+      "always_load": ["memory/learning/signals/", "memory/learning/synthesis/"],
+      "optional_load": [],
+      "skills_used": ["synthesize-signals", "learning-capture", "update-steering-rules"],
+      "estimated_context_tokens": 5000,
+      "notes": "Signal directory scan -- token cost scales with signal count"
+    },
+    "code-improvement": {
+      "description": "Refactoring, test writing, lint fixes, quality improvements",
+      "always_load": [],
+      "optional_load": [],
+      "skills_used": ["review-code", "autoresearch", "self-heal"],
+      "estimated_context_tokens": 2000,
+      "notes": "Task-specific context_files in backlog.jsonl point to target files"
+    },
+    "research-analysis": {
+      "description": "Research briefs, architecture reviews, first-principles analysis",
+      "always_load": [],
+      "optional_load": ["memory/work/jarvis/sources.yaml"],
+      "skills_used": ["research", "architecture-review", "first-principles", "analyze-claims"],
+      "estimated_context_tokens": 2000
+    },
+    "observability": {
+      "description": "Heartbeat collectors, vitals, monitoring additions",
+      "always_load": ["heartbeat_config.json", "tools/schemas/vitals_v1_contract.md"],
+      "optional_load": ["tools/scripts/collectors/core.py"],
+      "skills_used": ["vitals"],
+      "estimated_context_tokens": 4000
+    },
+    "prd-creation": {
+      "description": "PRD writing, project scoping, task decomposition",
+      "always_load": ["orchestration/tasklist.md"],
+      "optional_load": [],
+      "skills_used": ["create-prd", "project-init"],
+      "estimated_context_tokens": 6000,
+      "notes": "Tasklist needed for dependency awareness"
+    }
+  }
+}

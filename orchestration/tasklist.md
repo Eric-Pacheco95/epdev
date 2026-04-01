@@ -37,14 +37,13 @@
 
 ### Tier 3: Additive Improvements (Useful but don't compound)
 
-- [x] **3C-5: Tailscale + SSH** — COMPLETE. Terminal working via SSH + Tailscale + Blink. Mobile CLI access live. (2026-03-31)
-- [ ] **Notion auto-write** — Auto-push Reports/TELOS Mirror. Nice-to-have, not blocking anything
+- [x] **3C-5: Tailscale + SSH** — COMPLETE. Terminal working via SSH + Tailscale + Blink Shell. Mobile CLI access live. (2026-03-31)
+- [x] **Notion auto-write** — Auto-push to Notion wired into `/telos-report` (Jarvis Reports page) and `/telos-update` (TELOS Mirror page). (2026-03-31)
 - [x] **4B: Interleaved thinking** — Already enabled by default on Opus 4.6/Sonnet 4.6 via adaptive thinking. No beta header or config needed. The `interleaved-thinking-2025-05-14` header was for older models. Tuning: `Alt+T`, `/effort`, `CLAUDE_CODE_EFFORT_LEVEL`. (2026-03-31)
-- [ ] **4B: Tool Search API** — Implement when skill/tool count exceeds 50. Not yet at threshold
+- [ ] **4B: Tool Search API** — 41 skills + 150 MCP tools = 191 total. Threshold exceeded. Ready for implementation
 - [x] **4E: Signal retention policy** — Handled by compress_signals.py (180d gzip) + rotate_heartbeat.py (30d raw). Scheduled monthly. (2026-03-30)
 - [x] **4E: FTS index validation** — Jarvis-IndexUpdate runs daily 3am. FTS resilience verified in 4E-S1. (2026-03-29)
 - [x] **4E: Reporting dashboard data contract** — `tools/schemas/vitals_v1_contract.md` + updated `vitals_collector.v1.json`. (2026-03-30)
-- [ ] **Voice signals in heartbeat** — `voice_session_count` metric. Low priority until voice is daily habit
 
 ### New Skills
 
@@ -65,17 +64,17 @@
 |-------|--------|-----------|
 | 1-2 | COMPLETE | 0 |
 | 3A | COMPLETE | 0 |
-| 3B | Near-complete | 1 (Notion auto-write) |
-| 3C | Layers 1-3 complete | Layer 4 (deferred to Phase 3F) |
+| 3B | **COMPLETE** | 0 |
+| 3C | Layers 1-3 COMPLETE | Layer 4 (voice loop) deferred to Phase 6 |
 | 3D | COMPLETE | 0 |
 | 3E | COMPLETE | 0 |
 | 4A | COMPLETE | 0 |
-| 4B | Near-complete | 1 (tool search -- deferred until skill count > 50) |
+| 4B | Near-complete | 1 (Tool Search API — threshold exceeded, ready to build) |
 | 4C | **COMPLETE** | 0 |
 | 4D | **COMPLETE** | 0 |
 | 4E | **COMPLETE** | 5/5 steps done |
 | 4->5 | **GATE PASSED** | 0 |
-| 5A | Near-complete | 2 (skill audit, context profiles) |
+| 5A | **COMPLETE** | 0 |
 | 5B | In progress | 1 (validation -- 3 tasks executed successfully) |
 
 ## Active Projects
@@ -185,7 +184,7 @@
 > **Miessler / PAI alignment:** Prefer **PAI-shaped** wiring: MCP for external tools, **hooks** as nervous system, **Fabric** patterns, **structured events** — see PAI’s observability direction (e.g. `pai-observability-server` / event capture in the PAI repo). Use **Langfuse or similar** only if you want hosted LLM tracing and it fits deployment better than PAI-style telemetry.
 
 - [x] **Notion (MCP)** — Jarvis Brain structure created (Inbox, Journal, Goals & Growth, Ideas, Music, Jarvis Reports, TELOS Mirror). Page registry at `memory/work/notion_brain.md`. Session-start hook reads Notion on load.
-- [ ] **Notion auto-write** — Auto-push Reports/TELOS Mirror to Notion (split from MCP setup; was "pending" inside checked item since Phase 3E)
+- [x] **Notion auto-write** — Auto-push to Notion wired into `/telos-report` and `/telos-update` skills. (2026-03-31)
 - [x] **Slack (MCP)** — `#epdev` routine traffic via ClaudeActivities app confirmed working; stop hook posts session-end summaries. Full MCP read/write integration deferred — current posting flow meets needs.
 - [x] **Calendar (MCP)** — `@cocal/google-calendar-mcp` working. OAuth via `gcp-oauth.keys.json`. 3 calendars loading (primary, Family, Holidays). Validated 2026-03-27.
 - [x] **Gmail (MCP)** — `@gongrzhe/server-gmail-autoauth-mcp` working. Web app OAuth client (separate from calendar Desktop client). Credentials at `~/.gmail-mcp/credentials.json`. Scopes: `gmail.modify` + `gmail.settings.basic`. Validated 2026-03-27. **Note**: requires new session to load tools.
@@ -226,17 +225,17 @@
 
 - [x] **3C-5: Tailscale + SSH setup** — COMPLETE. Terminal working via SSH + Tailscale + Blink. Mobile CLI access live. (2026-03-31)
 
-#### Layer 4: Conversational Voice Loop (DEFERRED → Phase 3F)
+#### Layer 4: Conversational Voice Loop (DEFERRED → Phase 6)
 
 - ~~**3C-6: `jarvis_voice_server.py`**~~ **SUPERSEDED** by Slack mobile hub (3C-Slack-2). HTTP voice server no longer needed.
 - ~~**3C-7: iOS Shortcut → POST to voice server**~~ **SUPERSEDED** by native Slack dictation.
-- [ ] **3C-8: Whisper STT integration** — **DEFERRED to Phase 3F** — native iOS dictation sufficient for Phase 1.
-- [ ] **3C-9: ElevenLabs TTS integration** — **DEFERRED to Phase 3F** — read Slack replies on mobile.
-- [ ] **3C-10: End-to-end voice session test** — **DEFERRED to Phase 3F** — reframed as full TTS loop test.
+- [ ] **3C-8: Whisper STT integration** — **DEFERRED to Phase 6** — native iOS dictation sufficient. Voice not current focus.
+- [ ] **3C-9: ElevenLabs TTS integration** — **DEFERRED to Phase 6** — read Slack replies aloud on mobile.
+- [ ] **3C-10: End-to-end voice session test** — **DEFERRED to Phase 6** — full TTS loop test.
 
-#### Phase 3E-Slack: Slack Bot Socket Mode (FUTURE)
+#### Phase 3E-Slack: Slack Bot Socket Mode (PAUSED — crypto-bot rescoping)
 
-> Full slash commands + Block Kit buttons. Specced after Phase 3D session.
+> Full slash commands + Block Kit buttons. Paused pending crypto-bot rescope by separate agent.
 > PRD to be created: `memory/work/slack_bot/PRD.md`
 
 - [ ] Slack Bot Socket Mode setup — slash commands: `/status`, `/positions`, `/approve`, `/pause`
@@ -245,7 +244,7 @@
 
 #### Cross-cutting
 
-- [ ] **Voice signals tracked in heartbeat** — Add `voice_session_count` metric to heartbeat; alert in `#epdev` when no voice sessions in 7 days (behavioral gap signal for Phase 5)
+- [ ] **Voice signals tracked in heartbeat** — DEFERRED to Phase 6. Add `voice_session_count` metric to heartbeat. Revisit when voice becomes daily habit.
 - [x] **Dashboard UI** — Replaced by jarvis-app project (standalone repo). Phase 3.5 vitals route will serve as the dashboard. See `memory/work/jarvis_brain_map/PRD.md`.
 
 ### Phase 3D: Visual system of record & ideal-state workflow (COMPLETE)
@@ -316,7 +315,7 @@
 - [x] **Research runner** — `tools/scripts/morning_feed.py` running daily at 9am via Task Scheduler. Output validated in `memory/work/jarvis/morning_feed/2026-03-29.md`. Slack posting rate-limited by design. (2026-03-29)
 - [x] **Cowork vs scheduler split** — Documented in PRD_autonomous_learning.md: overnight = Task Scheduler + claude -p (separate calls per dimension); morning feed = Task Scheduler + Python (Anthropic API direct); interactive = Claude Code session. (2026-03-28)
 - [x] **Interleaved thinking for orchestration skills** — Already enabled by default on Opus 4.6 via adaptive thinking. Beta header approach obsolete. (2026-03-31)
-- [ ] **Tool Search API** — When skill/tool count exceeds 50, implement Tool Search to prevent token explosion in orchestration loops. Evaluate as part of research runner architecture — autonomous research will eventually need to query 100+ tools by description without loading all schemas upfront.
+- [ ] **Tool Search API** — 41 skills + 150 MCP tools = 191 total (threshold exceeded). Implement Tool Search to prevent token explosion in orchestration loops. Autonomous research needs to query tools by description without loading all schemas upfront.
 
 ### Phase 4C — Slack notifications by severity (COMPLETE)
 
@@ -402,8 +401,8 @@
 
 - [x] **PRD Phase 5** — `memory/work/jarvis/PRD_phase5.md` written with mission, architecture, capability tiers (0-3), SENSE/DECIDE/ACT layers, Phase 5A-5D breakdown. (2026-03-29)
 - [x] **Machine-readable task backlog schema** — JSONL format: id, description, project, dependencies, isc, status, complexity, autonomous_safe. File: `orchestration/task_backlog.jsonl` (12 tasks seeded). (2026-03-31)
-- [ ] **Skill autonomous_safe audit** — Classify every skill: safe for unattended `claude -p` execution vs. requires human-in-loop. Add `autonomous_safe` field to skill metadata
-- [ ] **Context profiles per task type** — Define minimal context each worker invocation needs (vs. loading full CLAUDE.md). Measure current `claude -p` context costs
+- [x] **Skill autonomous_safe audit** — 39 skills classified into 4 tiers (0: read-only, 1: local files, 2: gated, 3: human-required). Map at `orchestration/skill_autonomy_map.json`. 13 Tier 0, 6 Tier 1, 7 Tier 2, 13 Tier 3. (2026-03-31)
+- [x] **Context profiles per task type** — 6 profiles defined (security-review, synthesis, code-improvement, research-analysis, observability, prd-creation) with always_load/optional_load and token estimates. File: `orchestration/context_profiles.json`. (2026-03-31)
 - [x] **Seed initial backlog** — 12 tasks seeded in `task_backlog.jsonl` from tasklist.md, classified by tier and autonomous_safe. (2026-03-31)
 
 ### Phase 5B — Single-Repo Dispatcher + Worker (2-3 sessions)

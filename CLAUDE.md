@@ -119,8 +119,9 @@ Load documentation on-demand, not upfront:
 - Autonomous capabilities must follow the three-layer pattern: SENSE (read-only monitoring), DECIDE (dispatcher logic), ACT (worker execution in isolated worktrees) — never combine sensing and acting in the same component
 - Any scheduled or background process that mutates git state must operate in a git worktree, never in the main working tree — worktrees with self-healing cleanup (auto-prune stale worktrees on next run) eliminate dirty-tree bugs entirely
 - Autonomous job outputs follow the "Idle Is Success" doctrine — generating zero proposals, zero signals, or zero tasks is a valid outcome when thresholds are not met; silence means the system is healthy
-- Heartbeat auto-signals must require non-zero delta — do not emit WARN/CRIT signals when the metric value has not changed since the last snapshot
-- Synthesis threshold should scale with signal velocity — raise the hard ceiling from 20 to 30 when auto-signal producers are active; lower to 15 when velocity drops below 3/day
+- Heartbeat auto-signals must require non-zero delta and meet min_delta thresholds — cumulative counters (failure_count, security_event_count) need delta >= 3 to avoid noise from single-count increments; use `min_delta` field in heartbeat_config.json
+- Every verification/audit layer must emit its own health signal — if the verifier itself fails to execute, it must produce a louder alert than a verification failure; silent verifier failures create false confidence and are worse than no verification
+- Synthesis threshold is set to 35 (hard ceiling) with tiers at 15/48h and 10/72h — auto-signal producers generate volume that would trigger synthesis too frequently at lower thresholds; lower ceiling to 15 when velocity drops below 3/day
 - New agent definitions must use Six-Section anatomy (Identity, Mission, Critical Rules, Deliverables, Workflow, Success Metrics) — validate with `python tools/scripts/validate_agents.py`
 - After any production failure involving an agent role, promote the failure pattern to that agent's Critical Rules section as a "Never X because Y" entry
 - Model routing is about correctness, not cost — select the model whose strengths match the task: Opus for judgment/security/architecture, Sonnet for code generation/refactoring/bulk work, Haiku for extraction/classification/formatting
