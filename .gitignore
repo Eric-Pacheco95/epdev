@@ -138,6 +138,7 @@ history/events/
 .claude/prompt_ts.json
 data/
 tools/scripts/.notify_state/
+_worker_prompt.txt
 
 # ------------------------------------------------------------------------------
 # Fabric upstream patterns (large dependency, cloned locally — not part of repo)
