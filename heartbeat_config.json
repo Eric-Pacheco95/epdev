@@ -182,6 +182,10 @@
   "snapshot_dir": "memory/work/isce",
   "signal_output_dir": "memory/learning/signals",
   "cooldown_minutes": 60,
+  "metric_overrides": {
+    "_collector_health": {"cooldown_minutes": 360, "min_delta": 2},
+    "signal_velocity":   {"cooldown_minutes": 1440}
+  },
   "remediation_map": {
     "signal_velocity": {
       "description": "Run /synthesize-signals to process accumulated learning signals",

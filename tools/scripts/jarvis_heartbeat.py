@@ -258,7 +258,8 @@ def write_auto_signal(change: dict, cfg: dict, root_dir: Path,
     """Write a learning signal for a threshold crossing. Returns True if written."""
     metric = change["metric"]
     severity = change["severity"]
-    cooldown_min = cfg.get("cooldown_minutes", 60)
+    overrides = cfg.get("metric_overrides", {}).get(metric, {})
+    cooldown_min = overrides.get("cooldown_minutes", cfg.get("cooldown_minutes", 60))
 
     if not _is_cooled_down(metric, cooldown_state, cooldown_min):
         return False
@@ -584,6 +585,10 @@ def main() -> None:
     for entry in cfg.get("collectors", []):
         if "min_delta" in entry:
             min_delta_map[entry["name"]] = entry["min_delta"]
+    # metric_overrides can also supply min_delta for synthetic metrics (e.g. _collector_health)
+    for metric_name, overrides in cfg.get("metric_overrides", {}).items():
+        if "min_delta" in overrides:
+            min_delta_map[metric_name] = overrides["min_delta"]
 
     snap_dir = root_dir / cfg.get("snapshot_dir", "memory/work/isce")
     cooldown_state = _load_cooldown_state(snap_dir)
