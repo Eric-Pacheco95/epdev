@@ -129,12 +129,14 @@ Load documentation on-demand, not upfront:
 - Dispatcher must resolve model from task `model` field first, then tier defaults, then Opus as fallback — never hardcode a single model for all autonomous tasks
 - Track review catch rate per external model — if Codex review catches zero issues over 20+ tasks, either the routing is wrong or the primary model is sufficient; adjust or remove
 - After any autonomous /absorb run (Slack poller Tier 1), verify the output chain: signal file exists, TELOS update is appropriate, audit trail is complete — autonomous ingestion without quality verification risks corrupting identity files
+- Any execution gate with both "safely skippable" and "dangerous/rejected" outcomes must use three explicit states — never collapse to binary pass/fail; use `executable` (run it), `manual_required` (safe skip, route to human checklist), `blocked` (security rejection — flag, do not fail the gate); binary gates conflate correct security blocks with test failures
 - When adding any new data source to autonomous worker prompt assembly, apply this checklist before BUILD: (1) sanitize content before injection (cap length, strip injection patterns + override verbs), (2) validate content at load time against INJECTION_SUBSTRINGS and security contradictions, (3) write-protect the source file in `validate_tool_use.py` for autonomous sessions, (4) gate auto-generated content through a staging file requiring human review before promotion to active — two Sprint 2 criticals were prevented by this pattern (anti-pattern messages, context profiles)
 
 ### Research & External Patterns
 
 - For financial, geopolitical, or any current-events research, always use direct WebSearch — sub-agents may have a stale knowledge cutoff and return no useful data for live topics
 - /research auto-detects topic type (market/technical/live) and confirms with Eric before searching; use --market, --technical, --live flags to override
+- Before committing to any new product idea competing with major platform incumbents (Google, Apple, Amazon, Microsoft), run `/research` first targeting "don't build" signals — filter: (1) is AI/intelligence being bundled free by incumbents?, (2) are there structural moats before scale matters?, (3) does WTP survive bundling pressure?; "no" to any = valid kill-signal that saves months of misdirected build
 - Before proposing any new tool, MCP server, or dependency: (1) identify the specific root cause, (2) test all existing configured tools against it, (3) if existing tools cannot solve it, run `/architecture-review` on the adoption decision — default posture is absorb ideas over adopt dependencies; only adopt when implementation is genuinely hard (>1 day) AND the dependency is mature
 - When evaluating external AI orchestration patterns, filter through "is this solving a team coordination problem?" — if yes, it likely doesn't apply to Jarvis; Jarvis is skill-first, not agent-first; wire improvements into skills, not agent layers
 - Fabric upstream patterns live at `tools/fabric-upstream/data/patterns/{name}/system.md` — Fabric CLI requires interactive `fabric --setup` before any pattern execution
@@ -163,7 +165,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 
 **Full build chain: `/research` -> `/create-prd` -> `/implement-prd` -> `/quality-gate` -> `/learning-capture`**
 
-**39 active skills available.** Skills are auto-discovered at session start. Run `/jarvis-help` for the full registry.
+**40 active skills available.** Skills are auto-discovered at session start. Run `/jarvis-help` for the full registry.
 
 ## Directory Structure
 

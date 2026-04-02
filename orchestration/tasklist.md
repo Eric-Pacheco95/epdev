@@ -439,6 +439,7 @@
 > **Concept:** Miessler's "Daemon" project targets behavioral change — not system improvement but *human behavior*. Phase 6 closes the loop from AI-augmented capability to actual life change: guitar practice, health systems, financial momentum, self-discovery. Runs ON the Phase 5 autonomous execution infrastructure.
 
 - [ ] TBD — defined after Phase 5 completion gate passes
+- [ ] **Local embedding + vector search for memory** — DEFERRED from Phase 5. Add semantic retrieval layer (nomic-embed-text + numpy/cosine, no ChromaDB) alongside grep. Triggers: file count > 400 OR 5+ documented grep retrieval failures. Research: `memory/work/local-embeddings/research_brief.md`. Architecture review: `memory/work/_arch-review-20260402b/`. Decision: premature at 126 files; grep + Claude's native semantic reasoning is sufficient at current scale.
 
 ---
 
