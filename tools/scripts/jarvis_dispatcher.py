@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Jarvis Autonomous Dispatcher -- Phase 5B Sprint 1.
+"""Jarvis Autonomous Dispatcher -- Phase 5B Sprint 2.
 
 Reads task_backlog.jsonl, selects the next eligible task, creates a git
 worktree, invokes claude -p with a generated worker prompt, verifies ISC

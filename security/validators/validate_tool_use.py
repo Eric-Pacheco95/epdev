@@ -267,6 +267,13 @@ TELOS_PATH_PATTERN = re.compile(
     r"memory[/\\]work[/\\]telos[/\\]", re.IGNORECASE
 )
 
+# Context profiles are read by the dispatcher at prompt-assembly time.
+# Workers must never modify them -- a compromised profile is a persistent
+# prompt injection vector that poisons every future worker in that tier.
+CONTEXT_PROFILES_PATH_PATTERN = re.compile(
+    r"orchestration[/\\]context_profiles[/\\]", re.IGNORECASE
+)
+
 # Secrets patterns for Read tool blocking (autonomous sessions)
 _SECRET_FILE_PATTERNS = re.compile(
     r"(?:^|[/\\])\.env(?:[/\\]|$)"
@@ -280,7 +287,7 @@ _SECRET_FILE_PATTERNS = re.compile(
 
 
 def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None:
-    """Block Write/Edit to memory/work/telos/ in autonomous sessions.
+    """Block Write/Edit to memory/work/telos/ or context_profiles/ in autonomous sessions.
 
     Returns a block result if the write should be blocked, None otherwise.
     """
@@ -291,6 +298,15 @@ def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None
         return None
 
     file_path = str(inp.get("file_path", "") or "")
+
+    if CONTEXT_PROFILES_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to orchestration/context_profiles/. "
+            f"Profile poisoning is a persistent prompt injection vector. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
     if TELOS_PATH_PATTERN.search(file_path):
         return _result(
             "block",
