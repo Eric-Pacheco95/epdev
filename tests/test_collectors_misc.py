@@ -37,8 +37,10 @@ def test_dir_size_mb_nested():
 def test_reset_query_cache():
     import tools.scripts.collectors.core as mod
     mod._query_events_cache = {"fake": "data"}
+    mod._backlog_health_cache = [{"fake": "metric"}]
     reset_query_cache()
     assert mod._query_events_cache is None
+    assert mod._backlog_health_cache is None
 
 
 def test_collector_types_registry():
@@ -50,7 +52,7 @@ def test_collector_types_registry():
         "scheduled_tasks", "auth_health", "signal_volume",
         "manifest_signal_count", "manifest_signal_velocity",
         "autonomous_signal_rate", "manifest_autonomous_signal_rate",
-        "producer_health",
+        "producer_health", "backlog_health_metric",
     }
     assert set(COLLECTOR_TYPES.keys()) == expected
 

@@ -167,6 +167,24 @@
       "type": "signal_volume",
       "thresholds": { "warn_above": 500, "crit_above": 1000 },
       "isc_ref": "PRD-P4E:ISC-S4 retention layer prevents unbounded growth"
+    },
+    {
+      "name": "backlog_pending_count",
+      "type": "backlog_health_metric",
+      "metric": "backlog_pending_count",
+      "thresholds": { "warn_above": 10, "crit_above": 20 }
+    },
+    {
+      "name": "backlog_failed_count",
+      "type": "backlog_health_metric",
+      "metric": "backlog_failed_count",
+      "thresholds": { "warn_above": 3, "crit_above": 5 }
+    },
+    {
+      "name": "backlog_success_rate",
+      "type": "backlog_health_metric",
+      "metric": "backlog_success_rate",
+      "thresholds": { "warn_below": 0.8, "crit_below": 0.5 }
     }
   ],
   "alert_routing": {

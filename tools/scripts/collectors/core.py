@@ -645,6 +645,52 @@ def collect_producer_health(cfg: dict, root_dir: Path, _prev: dict = None) -> di
         return _result(name, None, "count", "producer_health error: %s" % exc)
 
 
+# ── backlog_health ─────────────────────────────────────────────────
+
+# Cache for backlog_health results to avoid repeated file reads in a single snapshot
+_backlog_health_cache: dict | None = None
+
+
+def _get_backlog_health_data(root_dir: Path) -> list[dict]:
+    """Call backlog_health.collect_backlog_health() once and cache results."""
+    global _backlog_health_cache
+    if _backlog_health_cache is not None:
+        return _backlog_health_cache
+    try:
+        sys.path.insert(0, str(root_dir))
+        from tools.scripts.collectors.backlog_health import collect_backlog_health
+        metrics = collect_backlog_health(None)  # Uses default path
+        _backlog_health_cache = metrics
+        return metrics
+    except Exception as exc:
+        # Return error results for all 5 metrics
+        _backlog_health_cache = [
+            _result("backlog_pending_count", None, "count", f"backlog_health error: {exc}"),
+            _result("backlog_failed_count", None, "count", f"backlog_health error: {exc}"),
+            _result("backlog_done_count", None, "count", f"backlog_health error: {exc}"),
+            _result("backlog_success_rate", None, "ratio", f"backlog_health error: {exc}"),
+            _result("backlog_total_count", None, "count", f"backlog_health error: {exc}"),
+        ]
+        return _backlog_health_cache
+
+
+def collect_backlog_health_metric(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Extract a single metric from backlog_health output by name."""
+    metric_name = cfg.get("metric", "")
+    if not metric_name:
+        return _result(cfg.get("name", "backlog_unknown"), None, "unknown",
+                      "backlog_health_metric: no 'metric' field in config")
+
+    all_metrics = _get_backlog_health_data(root_dir)
+    for metric in all_metrics:
+        if metric["name"] == metric_name:
+            return metric
+
+    # Metric not found in backlog results
+    return _result(metric_name, None, "unknown",
+                  f"metric '{metric_name}' not found in backlog_health output")
+
+
 # ── Dispatcher ──────────────────────────────────────────────────────
 
 COLLECTOR_TYPES = {
@@ -667,6 +713,7 @@ COLLECTOR_TYPES = {
     "manifest_signal_count": collect_manifest_signal_count,
     "manifest_signal_velocity": collect_manifest_signal_velocity,
     "manifest_autonomous_signal_rate": collect_manifest_autonomous_signal_rate,
+    "backlog_health_metric": collect_backlog_health_metric,
 }
 
 
@@ -684,6 +731,7 @@ def run_collector(cfg: dict, root_dir: Path, prev_metrics: dict = None,
 
 
 def reset_query_cache():
-    """Clear the query_events subprocess cache between runs."""
-    global _query_events_cache
+    """Clear the query_events and backlog_health subprocess caches between runs."""
+    global _query_events_cache, _backlog_health_cache
     _query_events_cache = None
+    _backlog_health_cache = None
