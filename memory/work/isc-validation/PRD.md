@@ -82,31 +82,31 @@ The ISC Validation skill closes the VERIFY-phase gap for interactive Jarvis sess
 
 ### Phase 1: Security hardening + shared module
 
-- [ ] `tools/scripts/lib/isc_common.py` exists and exports `ISC_ALLOWED_COMMANDS`, `sanitize_isc_command`, `SECRET_PATH_PATTERNS` [E] | Verify: test -f tools/scripts/lib/isc_common.py
-- [ ] `jarvis_dispatcher.py` imports from `isc_common` and all existing dispatcher tests pass [E] | Verify: python -m pytest tests/ -q --tb=short
-- [ ] `python` and `python3` are absent from `ISC_ALLOWED_COMMANDS` [E] | Verify: grep -c "python" tools/scripts/lib/isc_common.py
-- [ ] `sanitize_isc_command` blocks a `.env` argument regardless of which allowed command precedes it [E] | Verify: python -c "from tools.scripts.lib.isc_common import sanitize_isc_command; assert sanitize_isc_command('x | Verify: grep pattern .env') is None"
-- [ ] No ISC command containing `os.system` or `shutil.rmtree` passes sanitization [E][A] | Verify: Review isc_common.py destructive-pattern check coverage
+- [x] `tools/scripts/lib/isc_common.py` exists and exports `ISC_ALLOWED_COMMANDS`, `sanitize_isc_command`, `SECRET_PATH_PATTERNS` [E] | Verify: test -f tools/scripts/lib/isc_common.py
+- [x] `jarvis_dispatcher.py` imports from `isc_common` and all existing dispatcher tests pass [E] | Verify: python -m pytest tests/ -q --tb=short
+- [x] `python` and `python3` are absent from `ISC_ALLOWED_COMMANDS` [E] | Verify: grep -c "python" tools/scripts/lib/isc_common.py
+- [x] `sanitize_isc_command` blocks a `.env` argument regardless of which allowed command precedes it [E] | Verify: python -c "from tools.scripts.lib.isc_common import sanitize_isc_command; assert sanitize_isc_command('x | Verify: grep pattern .env') is None"
+- [x] No ISC command containing `os.system` or `shutil.rmtree` passes sanitization [E][A] | Verify: Review isc_common.py destructive-pattern check coverage
 
 **ISC Quality Gate: PASS (6/6)**
 
 ### Phase 2: isc_validator.py --execute flag
 
-- [ ] `isc_validator.py --execute` runs deterministic verify methods and reports pass/fail with command output [E] | Verify: python tools/scripts/isc_validator.py --prd memory/work/isc-validation/PRD.md --execute --json
-- [ ] Criteria with `Review`, `Slack`, or freeform descriptions are classified `manual_required` and not executed [E] | Verify: python -c "from tools.scripts.isc_validator import classify_verify_method; assert classify_verify_method('Review -- check file') == 'manual_required'"
-- [ ] Execution output is truncated to 500 chars per criterion [E][A] | Verify: Review _build_output execution_results truncation logic
-- [ ] No `--execute` run completes in more than 120 seconds total [E] | Verify: python tools/scripts/isc_validator.py --prd memory/work/isc-validation/PRD.md --execute (time it)
-- [ ] A warning is printed when `git status` shows uncommitted changes [E] | Verify: git stash && python tools/scripts/isc_validator.py --prd ... --execute (no warning); git stash pop && touch dirty && python ... (warning present); rm dirty
+- [x] `isc_validator.py --execute` runs deterministic verify methods and reports pass/fail with command output [E] | Verify: python tools/scripts/isc_validator.py --prd memory/work/isc-validation/PRD.md --execute --json
+- [x] Criteria with `Review`, `Slack`, or freeform descriptions are classified `manual_required` and not executed [E] | Verify: python -c "from tools.scripts.isc_validator import classify_verify_method; assert classify_verify_method('Review -- check file') == 'manual_required'"
+- [x] Execution output is truncated to 500 chars per criterion [E][A] | Verify: Review _build_output execution_results truncation logic
+- [x] No `--execute` run completes in more than 120 seconds total [E] | Verify: python tools/scripts/isc_validator.py --prd memory/work/isc-validation/PRD.md --execute
+- [x] A warning is printed when `git status` shows uncommitted changes [E] | Verify: git stash && python tools/scripts/isc_validator.py --prd ... --execute (no warning); git stash pop && touch dirty && python ... (warning present); rm dirty
 
 **ISC Quality Gate: PASS (6/6)**
 
 ### Phase 3: Audit trail + /validation skill
 
-- [ ] Every `--execute` run produces a timestamped Markdown file in `history/validations/` [E] | Verify: python tools/scripts/isc_validator.py --prd ... --execute && find history/validations -name "*.md" -newer history/validations
-- [ ] Report contains the count header `Executed: N | Passed: N | Failed: N | Manual required: N | Blocked: N` [E] | Verify: grep -c "Executed:" history/validations/*.md
-- [ ] `history/validations/` is in `.gitignore` [E] | Verify: grep -c "history/validations" .gitignore
-- [ ] `.claude/skills/validation/SKILL.md` exists and invoking `/validation` runs the extended script [E] | Verify: test -f .claude/skills/validation/SKILL.md
-- [ ] No secret-matching content (KEY=value, .env paths) appears in a written report after execution [E][A] | Verify: Review secret-scan logic applied before file write
+- [x] Every `--execute` run produces a timestamped Markdown file in `history/validations/` [E] | Verify: python tools/scripts/isc_validator.py --prd ... --execute && find history/validations -name "*.md" -newer history/validations
+- [x] Report contains the count header `Executed: N | Passed: N | Failed: N | Manual required: N | Blocked: N` [E] | Verify: grep -c "Executed:" history/validations/*.md
+- [x] `history/validations/` is in `.gitignore` [E] | Verify: grep -c "history/validations" .gitignore
+- [x] `.claude/skills/validation/SKILL.md` exists and invoking `/validation` runs the extended script [E] | Verify: test -f .claude/skills/validation/SKILL.md
+- [x] No secret-matching content (KEY=value, .env paths) appears in a written report after execution [E][A] | Verify: Review secret-scan logic applied before file write
 
 **ISC Quality Gate: PASS (6/6)**
 

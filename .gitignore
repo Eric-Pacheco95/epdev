@@ -148,3 +148,6 @@ tools/fabric-upstream/
 # Large reference repos (cloned locally, not committed)
 /refs/
 .mcp.json
+
+# ISC validation audit reports (may contain command output; secret-scanned but gitignored)
+history/validations/

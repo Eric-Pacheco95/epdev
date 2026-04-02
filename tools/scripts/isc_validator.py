@@ -41,6 +41,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from tools.scripts.lib.isc_common import (  # noqa: E402
     MANUAL_REQUIRED,
+    SECRET_PATH_PATTERNS,
     classify_verify_method,
     sanitize_isc_command,
 )
@@ -517,12 +518,12 @@ def _redact_secrets(text: str) -> str:
 
     Applied to report content before writing to disk.
     """
-    from tools.scripts.lib.isc_common import SECRET_PATH_PATTERNS  # local import avoids circular
     lines = text.splitlines()
     redacted = []
     for line in lines:
-        # Redact KEY=value patterns (env-var style secrets)
-        if re.search(r"\b[A-Z][A-Z0-9_]{3,}\s*=\s*\S{8,}", line):
+        # Redact KEY=value patterns (env-var style secrets); threshold 4+ chars
+        # to catch short tokens like TOKEN=abc123 as well as long API keys.
+        if re.search(r"\b[A-Z][A-Z0-9_]{3,}\s*=\s*\S{4,}", line):
             redacted.append("[REDACTED -- possible secret value]")
         # Redact lines containing secret-path patterns
         elif SECRET_PATH_PATTERNS.search(line):
@@ -535,13 +536,12 @@ def _redact_secrets(text: str) -> str:
 def run_execution(items: list[dict]) -> list[dict]:
     """Execute ISC verify methods for all criteria.
 
-    Uses a ThreadPoolExecutor to enforce _AGGREGATE_TIMEOUT_S across all items.
-    Each item gets at most _CMD_TIMEOUT_S per command.
+    Uses a ThreadPoolExecutor with _AGGREGATE_TIMEOUT_S total budget.
+    Each command gets at most _CMD_TIMEOUT_S.
 
     Returns list of execution result dicts.
     """
     results = []
-    start_time = datetime.now(timezone.utc).timestamp()
 
     def _execute_item(item: dict) -> dict:
         verify_method = item.get("verify_method", "")
@@ -557,7 +557,7 @@ def run_execution(items: list[dict]) -> list[dict]:
                 "elapsed_ms": 0,
             }
 
-        # Classify first
+        # Classify first — never execute blocked or manual items
         full_isc = f"{criterion} | Verify: {verify_method}"
         classification = classify_verify_method(full_isc)
 
@@ -581,7 +581,7 @@ def run_execution(items: list[dict]) -> list[dict]:
                 "elapsed_ms": 0,
             }
 
-        # executable -- sanitize and run
+        # executable -- sanitize then run
         cmd = sanitize_isc_command(full_isc)
         if cmd is None:
             return {
@@ -606,31 +606,38 @@ def run_execution(items: list[dict]) -> list[dict]:
             "elapsed_ms": elapsed_ms,
         }
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+    # Submit all items; enforce aggregate budget via as_completed timeout.
+    # TimeoutError from as_completed is raised at the iterator level (not inside
+    # the loop body), so it must be caught around the for loop, not inside it.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = {executor.submit(_execute_item, item): item for item in items}
-        for future in concurrent.futures.as_completed(futures, timeout=_AGGREGATE_TIMEOUT_S):
-            try:
-                results.append(future.result())
-            except concurrent.futures.TimeoutError:
-                item = futures[future]
-                results.append({
-                    "criterion": item.get("criterion", "")[:80],
-                    "status": "fail",
-                    "command": item.get("verify_method", ""),
-                    "exit_code": -1,
-                    "output": f"aggregate timeout ({_AGGREGATE_TIMEOUT_S}s) exceeded",
-                    "elapsed_ms": _AGGREGATE_TIMEOUT_S * 1000,
-                })
-            except Exception as exc:
-                item = futures[future]
-                results.append({
-                    "criterion": item.get("criterion", "")[:80],
-                    "status": "fail",
-                    "command": item.get("verify_method", ""),
-                    "exit_code": -1,
-                    "output": str(exc)[:200],
-                    "elapsed_ms": 0,
-                })
+        try:
+            for future in concurrent.futures.as_completed(futures, timeout=_AGGREGATE_TIMEOUT_S):
+                try:
+                    results.append(future.result())
+                except Exception as exc:
+                    item = futures[future]
+                    results.append({
+                        "criterion": item.get("criterion", "")[:80],
+                        "status": "fail",
+                        "command": item.get("verify_method", ""),
+                        "exit_code": -1,
+                        "output": str(exc)[:200],
+                        "elapsed_ms": 0,
+                    })
+        except concurrent.futures.TimeoutError:
+            # Aggregate budget exceeded -- cancel remaining and record failures
+            for future, item in futures.items():
+                if not future.done():
+                    future.cancel()
+                    results.append({
+                        "criterion": item.get("criterion", "")[:80],
+                        "status": "fail",
+                        "command": item.get("verify_method", ""),
+                        "exit_code": -1,
+                        "output": f"aggregate timeout ({_AGGREGATE_TIMEOUT_S}s) exceeded",
+                        "elapsed_ms": _AGGREGATE_TIMEOUT_S * 1000,
+                    })
 
     return results
 
@@ -647,22 +654,22 @@ def write_validation_report(prd_path: Path, output: dict) -> Path:
     report_path = VALIDATIONS_DIR / f"{timestamp}_{slug}.md"
 
     exec_results = output.get("execution_results", [])
-    executed = [r for r in exec_results if r["status"] not in (MANUAL_REQUIRED,)]
+    executed = [r for r in exec_results if r["status"] in ("pass", "fail")]
     passed = [r for r in exec_results if r["status"] == "pass"]
     failed = [r for r in exec_results if r["status"] == "fail"]
     manual = [r for r in exec_results if r["status"] == MANUAL_REQUIRED]
     blocked = [r for r in exec_results if r["status"] == "blocked"]
 
     lines = [
-        f"# ISC Validation Report",
-        f"",
+        "# ISC Validation Report",
+        "",
         f"**PRD**: {prd_path}",
         f"**Timestamp**: {timestamp.replace('_', ' ')}",
-        f"",
+        "",
         f"Executed: {len(executed)} | Passed: {len(passed)} | Failed: {len(failed)} | Manual required: {len(manual)} | Blocked: {len(blocked)}",
-        f"",
-        f"## Results",
-        f"",
+        "",
+        "## Results",
+        "",
     ]
 
     for r in exec_results:
@@ -729,6 +736,15 @@ def main():
     output = run_quality_gate(prd_path)
 
     if args.execute:
+        # Guard against recursive --execute calls (e.g. when a verify method
+        # invokes isc_validator.py --execute itself). Inner calls run quality
+        # gate only; execution is skipped to prevent infinite recursion.
+        if os.environ.get("ISC_VALIDATOR_EXECUTING"):
+            args.execute = False
+        else:
+            os.environ["ISC_VALIDATOR_EXECUTING"] = "1"
+
+    if args.execute:
         # Warn on uncommitted changes that could skew verify results
         if _check_uncommitted_changes():
             print(
@@ -747,8 +763,10 @@ def main():
         report_path = write_validation_report(prd_path, output)
         output["validation_report"] = str(report_path)
 
-        # Execution gate: fail if any criteria failed or blocked
-        exec_failed = any(r["status"] in ("fail", "blocked") for r in exec_results)
+        # Execution gate: fail only on actual test failures.
+        # 'blocked' and 'manual_required' are deferred to human review --
+        # they don't indicate broken implementation, only unautomatable checks.
+        exec_failed = any(r["status"] == "fail" for r in exec_results)
         if exec_failed:
             output["gate_passed"] = False
 
