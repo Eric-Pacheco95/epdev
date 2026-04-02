@@ -35,6 +35,9 @@ VERIFY
 - Output: review report (CONTEXT, SUMMARY, SECURITY FINDINGS, RELIABILITY, MAINTAINABILITY, TESTING GAPS, RECOMMENDATIONS, OPEN QUESTIONS)
 - Side effects: none (pure analysis, no file modifications)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)

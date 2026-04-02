@@ -6,6 +6,9 @@ Adapted from Daniel Miessler's `create_investigation_visualization` pattern. Opt
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # STEPS
 
 1. **Fully understand the input** — read it completely before starting the diagram.

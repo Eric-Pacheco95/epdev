@@ -35,6 +35,9 @@ BUILD
 - Output: implementation report (PRD SUMMARY, ISC CHECKLIST, IMPLEMENTATION LOG, REVIEW FINDINGS, VERIFY RESULTS, QUALITY GATE, COMPLETION STATUS)
 - Side effects: creates/modifies source files, marks ISC checkboxes, updates tasklist, writes decision record, invokes /review-code and /quality-gate
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)

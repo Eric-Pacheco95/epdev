@@ -40,6 +40,9 @@ THINK
 - Output: adversarial analysis (SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE/ABUSE, DATA/TRUST RISKS, RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS)
 - Side effects: none (pure analysis, no file output)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)

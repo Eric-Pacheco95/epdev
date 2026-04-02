@@ -36,6 +36,9 @@ BUILD
 - Output: publish-ready essay with TELOS signal note
 - Side effects: none (pure text output)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

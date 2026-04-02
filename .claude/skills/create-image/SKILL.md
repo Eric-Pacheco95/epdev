@@ -35,6 +35,9 @@ BUILD
 - Output: generated image file saved to output/images/ or specified path
 - Side effects: writes image file to disk, may create conversation session
 
+## autonomous_safe
+false
+
 # AVAILABLE TOOLS
 
 | Tool | When to use |

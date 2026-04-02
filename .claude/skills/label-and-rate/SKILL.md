@@ -10,6 +10,9 @@ Adapted from Daniel Miessler's `label_and_rate` pattern with themes calibrated t
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+true
+
 # STEPS
 
 1. **Read the content fully** before labeling or rating.

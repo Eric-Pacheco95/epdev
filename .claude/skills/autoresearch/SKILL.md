@@ -37,6 +37,9 @@ BUILD
 - Output: run report (GOAL, BASELINE, ITERATIONS, RUN LOG, FINAL METRIC, SUMMARY)
 - Side effects: creates git branch, modifies scoped files, writes report to memory/work/jarvis/autoresearch/
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

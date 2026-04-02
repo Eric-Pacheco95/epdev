@@ -36,6 +36,9 @@ LEARN
 - Output: structured lesson (CONCEPT, WHY IT MATTERS, HOW IT WORKS, JARVIS EXAMPLE, COMMON MISTAKES, NEXT STEPS)
 - Side effects: saves lesson to memory/work/teach/{slug}.md (full/deep), writes 1-3 signals
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

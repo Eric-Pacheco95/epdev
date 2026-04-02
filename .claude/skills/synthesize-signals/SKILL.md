@@ -36,6 +36,9 @@ LEARN
 - Output: synthesis document + stdout summary (themes found, actions proposed)
 - Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends data/signal_lineage.jsonl, mirrors lineage to SQLite manifest
 
+## autonomous_safe
+true
+
 # STEPS
 
 - Run `python tools/scripts/compress_signals.py --stats --json` to get signal counts, velocity, and synthesis metadata -- this tells you if synthesis is even needed (check unprocessed count and velocity)

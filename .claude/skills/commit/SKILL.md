@@ -35,6 +35,9 @@ ORCHESTRATE
 - Output: git commit with conventional format (emoji + type + scope + description)
 - Side effects: stages files, creates git commit, optionally logs to history/changes/
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)

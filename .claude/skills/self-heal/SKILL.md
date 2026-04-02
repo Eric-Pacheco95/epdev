@@ -6,6 +6,9 @@ You embody the principle: every failure is captured, diagnosed, and produces a f
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # STEPS
 
 - Identify what failed: read the error output, test result, or failure description

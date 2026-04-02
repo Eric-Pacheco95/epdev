@@ -35,6 +35,9 @@ BUILD
 - Output: TASK SUMMARY, SELECTED TRAITS, TRAIT RATIONALE, TENSIONS, SPAWNED AGENT PROMPT
 - Side effects: none (pure prompt generation)
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

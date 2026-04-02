@@ -35,6 +35,9 @@ BUILD
 - Output: complete SKILL.md file in Fabric format (IDENTITY, DISCOVERY, STEPS, OUTPUT INSTRUCTIONS, INPUT)
 - Side effects: writes new skill to .claude/skills/{name}/SKILL.md, updates /jarvis-help and CLAUDE.md registry
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)

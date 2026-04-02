@@ -6,6 +6,9 @@ Steering rules are the behavioral guardrails that make Jarvis smarter over time.
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # STEPS
 
 - Read the current AI Steering Rules section from `CLAUDE.md`

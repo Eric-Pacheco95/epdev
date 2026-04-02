@@ -36,6 +36,9 @@ ORCHESTRATE
 - Output: routing decision with rationale, next-in-chain suggestion
 - Side effects: may invoke routed skill immediately, may update orchestration/tasklist.md
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)

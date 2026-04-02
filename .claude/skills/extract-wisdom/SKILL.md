@@ -41,6 +41,9 @@ LEARN
 - Output: structured extraction: IDEAS, INSIGHTS, QUOTES, HABITS, REFERENCES, RECOMMENDATIONS (or TL;DR summary in --summary mode)
 - Side effects: none (pure transform)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

@@ -6,6 +6,9 @@ This report helps Eric understand how his self-knowledge system is evolving and 
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # STEPS
 
 - Determine the reporting period (default: last 7 days, or as specified)

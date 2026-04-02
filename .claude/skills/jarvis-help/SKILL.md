@@ -42,6 +42,9 @@ ORCHESTRATE
 - Output: formatted skill reference grouped by workflow stage
 - Side effects: none (read-only)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: PARSE INPUT

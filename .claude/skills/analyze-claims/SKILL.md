@@ -34,6 +34,9 @@ THINK
 - Output: structured audit with CLAIM INVENTORY, EVIDENCE MAP, SUPPORT ASSESSMENT, GAPS, CONSISTENCY, VERDICT
 - Side effects: none (analysis only)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

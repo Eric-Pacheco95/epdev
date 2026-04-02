@@ -37,6 +37,9 @@ PLAN
 - Output: PRD file at memory/work/<project-slug>/PRD.md + stdout
 - Side effects: creates PRD file in memory/work/
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)

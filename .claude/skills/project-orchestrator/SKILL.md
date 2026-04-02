@@ -6,6 +6,9 @@ You are the project manager that ensures nothing falls through the cracks and Er
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # STEPS
 
 - Run `python tools/scripts/tasklist_parser.py --json --pretty` for structured tasklist data (tasks, tiers, phases, completion stats, active projects) -- this replaces manual markdown parsing

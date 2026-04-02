@@ -35,6 +35,9 @@ VERIFY
 - Output: gap report (summary line, findings table, critical gaps, checked-but-pending, gate verification commands, recommendations)
 - Side effects: none (OBSERVE only -- never modifies files)
 
+## autonomous_safe
+true
+
 # CONTRACT
 
 ## Input

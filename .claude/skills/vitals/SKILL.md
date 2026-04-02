@@ -30,6 +30,9 @@ OBSERVE
 - Output: ASCII dashboard to stdout + comprehensive Slack report to #epdev
 - Side effects: writes data/vitals_latest.json, posts to Slack
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Phase 1: Collect Data

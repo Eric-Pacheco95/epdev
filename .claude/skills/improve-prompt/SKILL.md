@@ -34,6 +34,9 @@ BUILD
 - Output: DIAGNOSIS, IMPROVED PROMPT, OPTIONAL ADDITIONS, CHECKLIST FOR THE USER
 - Side effects: none (pure transform)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

@@ -36,6 +36,9 @@ OBSERVE
 - Output: tiered audit report with mode-specific sections
 - Side effects: none for --evaluate; potential fixes for --onboard/--cherry-pick Tier 1 blockers
 
+## autonomous_safe
+true
+
 # STEPS
 
 1. Accept repo path or GitHub URL. Clone if URL.

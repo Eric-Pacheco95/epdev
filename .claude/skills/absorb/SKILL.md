@@ -41,6 +41,9 @@ OBSERVE
 - Output: analysis markdown in memory/learning/absorbed/, learning signal in memory/learning/signals/, TELOS proposals (queued or immediate)
 - Side effects: TELOS file modifications (only after human approval with snapshot-before-write)
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: MODE CHECK

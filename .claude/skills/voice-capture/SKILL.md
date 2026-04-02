@@ -48,6 +48,9 @@ LEARN
 - Output: processing summary with signal count, ratings, TELOS queue, routing
 - Side effects: writes signals to memory/learning/signals/, routes content in Notion, updates signal meta
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

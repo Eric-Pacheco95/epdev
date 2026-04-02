@@ -37,6 +37,9 @@ BUILD
 - Output: clean repo with extracted skills, CLAUDE.md, security rules, README
 - Side effects: creates/updates target repo directory, optionally pushes to GitHub
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

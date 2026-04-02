@@ -31,6 +31,9 @@ VERIFY
 - Output: audit report with severity-rated findings + remediation
 - Side effects: writes audit log to history/security/, may auto-fix Critical/High gitignore/tracking issues
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Phase 1: Deterministic Scan

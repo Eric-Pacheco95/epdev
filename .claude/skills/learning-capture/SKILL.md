@@ -34,6 +34,9 @@ LEARN
 - Output: signal summary (SIGNALS WRITTEN, FAILURES WRITTEN, SYNTHESIS STATUS, SKILL GAP CANDIDATES, SOURCE ENGAGEMENT)
 - Side effects: writes signal files, writes failure files, updates _signal_meta.json, may invoke /synthesize-signals
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)
@@ -109,7 +112,7 @@ Write each signal as a markdown file at `memory/learning/signals/{date}_{slug}.m
 - Date: {YYYY-MM-DD}
 - Rating: {1-10}
 - Tier: {S|A|B}
-- Category: {pattern|insight|anomaly|improvement}
+- Category: {pattern|insight|anomaly|improvement|domain-insight}
 - Source: {session|voice|manual}
 - Observation: {what was observed — factual}
 - Implication: {what should change or be remembered}

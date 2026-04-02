@@ -6,6 +6,9 @@ Adapted from Daniel Miessler's `create_keynote` pattern. Use this to turn Jarvis
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # PRE-FLIGHT CHECKS
 
 Before building the presentation, check for these and prompt Eric if missing:

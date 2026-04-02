@@ -8,6 +8,9 @@ Your purpose is to make the TELOS system a living, evolving representation of wh
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # STEPS
 
 - Read the current state of relevant TELOS files (load only what you need based on the input)

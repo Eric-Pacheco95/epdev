@@ -36,6 +36,9 @@ VERIFY
 - Output: combined format gate + execution report (per-criterion verdict table, summary line, next-action message)
 - Side effects: writes timestamped Markdown report to history/validations/ (secret-scanned before write)
 
+## autonomous_safe
+true
+
 # CRITICAL RULES
 
 - Never mark a task complete based on this skill's output alone -- MANUAL items still require human verification

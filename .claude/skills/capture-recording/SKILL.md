@@ -35,6 +35,9 @@ BUILD
 - Output: analysis markdown, MUSIC.md updated, token_log.jsonl entry
 - Side effects: Gemini Files API upload (deleted immediately after)
 
+## autonomous_safe
+false
+
 ## Supported Formats
 mp3, wav, aiff, aac, ogg, flac, webm, mp4, m4a
 

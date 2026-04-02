@@ -34,6 +34,9 @@ THINK
 - Output: OVERVIEW, FALLACY FINDINGS, NON-FALLACIOUS STRENGTHS, RECOMMENDED FIXES
 - Side effects: none (analysis only)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

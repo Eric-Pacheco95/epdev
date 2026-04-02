@@ -37,6 +37,9 @@ EXECUTE
 - Output: pipeline diagram, step-by-step execution, final aggregated output
 - Side effects: executes each skill in the chain (side effects depend on constituent skills)
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

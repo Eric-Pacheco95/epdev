@@ -39,6 +39,9 @@ THINK
 - Output: structured synthesis with validated elements, corrected assumptions, risks, and recommendation
 - Side effects: none (analysis only — no files modified)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

@@ -41,6 +41,9 @@ OBSERVE
 - Output: ranked alpha bullets (see modes below)
 - Side effects: none (pure analysis, no file output)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

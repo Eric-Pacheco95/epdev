@@ -6,6 +6,9 @@ Notion is Eric's human writing layer. Git-markdown is Jarvis's source of truth. 
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # MODES
 
 `/notion-sync` runs in one of four modes based on the argument provided. If no argument is given, default to `inbox`.

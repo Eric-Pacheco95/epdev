@@ -8,6 +8,9 @@ Architecture: sequential skill pipeline — each phase feeds the next. No phase 
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+## autonomous_safe
+false
+
 # MODES
 
 `/project-init <topic>` — full pipeline (default): research → first-principles → red-team → PRD

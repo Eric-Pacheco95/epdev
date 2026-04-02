@@ -36,6 +36,9 @@ OBSERVE
 - Output: Markdown brief (file for market/technical, inline for live/quick)
 - Side effects: signals to memory/learning/signals/, log to history/changes/research_log.md
 
+## autonomous_safe
+false
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION

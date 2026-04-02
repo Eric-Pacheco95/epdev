@@ -35,6 +35,9 @@ THINK
 - Output: structured analysis (PROBLEM, KNOWN/UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION)
 - Side effects: none (pure analysis, no file output)
 
+## autonomous_safe
+true
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)
