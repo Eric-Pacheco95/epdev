@@ -84,8 +84,8 @@ class TestConstants:
         assert _SEVERITY_CHANNEL["critical"] == CRITICAL
 
     def test_daily_caps_defined(self):
-        assert _DAILY_CAPS["routine"] == 20
-        assert _DAILY_CAPS["critical"] == 5
+        assert _DAILY_CAPS["routine"] == 50
+        assert _DAILY_CAPS["critical"] == 15
 
     def test_dedup_window(self):
         assert _DEDUP_WINDOW_S == 3600
