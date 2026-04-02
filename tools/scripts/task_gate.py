@@ -4,6 +4,9 @@
 Phase 5C: all task proposals flow through this gate before entering
 the dispatcher backlog or escalating to Slack for human input.
 
+Routing decides WHERE (backlog vs Slack escalation).
+backlog_append() handles HOW (validation, dedup, atomic write).
+
 Usage (from other scripts):
     from tools.scripts.task_gate import propose_task
 
@@ -16,7 +19,7 @@ Usage (from other scripts):
         context_files=["security/constitutional-rules.md"],
         source="heartbeat",          # which producer proposed this
     )
-    # result.route = "backlog" | "decision"
+    # result.route = "backlog" | "decision" | "skipped"
     # result.reason = why it was routed this way
     # result.task_id = assigned ID if routed to backlog
 
@@ -40,8 +43,12 @@ from typing import Any, Optional
 # -- Paths ------------------------------------------------------------------
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 BACKLOG_FILE = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
 AUTONOMY_MAP = REPO_ROOT / "orchestration" / "skill_autonomy_map.json"
+
+# -- Unified backlog write backend ------------------------------------------
+from tools.scripts.lib.backlog import backlog_append
 
 # Max tier for autonomous routing (matches dispatcher)
 MAX_AUTONOMOUS_TIER = 2
@@ -53,11 +60,8 @@ _ARCH_KEYWORDS = re.compile(
     re.IGNORECASE,
 )
 
-# ISC verify command allowlist (must match dispatcher's allowlist)
-_ISC_ALLOWED_COMMANDS = frozenset({
-    "test", "grep", "jq", "python", "python3", "cat", "ls", "wc",
-    "head", "tail", "find", "diff", "stat", "file", "echo",
-})
+
+
 
 
 # -- Result type ------------------------------------------------------------
@@ -93,15 +97,17 @@ def _load_autonomy_map() -> dict:
 # -- ISC validation ----------------------------------------------------------
 
 def _has_verifiable_isc(isc_list: list[str]) -> bool:
-    """Check that at least one ISC has a Verify: command using an allowed command."""
+    """Check that at least one ISC has a Verify: tag with a command.
+
+    This is a lightweight routing check (does the task HAVE verifiable ISC?).
+    Full command-level validation is handled downstream by backlog_append()
+    via isc_common.classify_verify_method().
+    """
     for criterion in isc_list:
         if "| Verify:" not in criterion and "|Verify:" not in criterion:
             continue
         verify_part = criterion.split("Verify:")[-1].strip()
-        if not verify_part:
-            continue
-        first_word = verify_part.split()[0] if verify_part.split() else ""
-        if first_word in _ISC_ALLOWED_COMMANDS:
+        if verify_part:
             return True
     return False
 
@@ -145,21 +151,7 @@ def _check_no_arch_keywords(description: str, goal_context: str) -> tuple[bool, 
     return True, "No architectural keywords detected"
 
 
-# -- ID generation -----------------------------------------------------------
-
-def _next_task_id(tasks: list[dict]) -> str:
-    """Generate next task ID based on existing backlog."""
-    max_num = 0
-    for t in tasks:
-        tid = t.get("id", "")
-        # Match pattern like "5b-NNN" or "auto-NNN"
-        m = re.search(r"-(\d+)$", tid)
-        if m:
-            max_num = max(max_num, int(m.group(1)))
-    return f"auto-{max_num + 1:03d}"
-
-
-# -- Backlog I/O (reuses dispatcher's atomic pattern) -----------------------
+# -- Backlog I/O (read-only, for dedup + test cleanup) ----------------------
 
 def _read_backlog() -> list[dict]:
     """Read all tasks from JSONL backlog."""
@@ -171,25 +163,6 @@ def _read_backlog() -> list[dict]:
         if line:
             tasks.append(json.loads(line))
     return tasks
-
-
-def _write_backlog(tasks: list[dict]) -> None:
-    """Write backlog atomically: temp file + rename."""
-    BACKLOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_path = tempfile.mkstemp(
-        dir=str(BACKLOG_FILE.parent), suffix=".tmp", prefix="backlog_"
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            for task in tasks:
-                f.write(json.dumps(task, ensure_ascii=False) + "\n")
-        os.replace(tmp_path, str(BACKLOG_FILE))
-    except Exception:
-        try:
-            os.unlink(tmp_path)
-        except OSError:
-            pass
-        raise
 
 
 # -- Dedup check -------------------------------------------------------------
@@ -254,9 +227,9 @@ def propose_task(
         )
 
     # -- All checks passed: route to backlog --
-    backlog = _read_backlog()
 
-    # Dedup: don't add if identical pending task exists
+    # Description-based dedup (heartbeat tasks don't have routine_id)
+    backlog = _read_backlog()
     if _is_duplicate(description, backlog):
         return GateResult(
             route="skipped",
@@ -272,39 +245,42 @@ def propose_task(
             default=0,
         )
 
-    task_id = _next_task_id(backlog)
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
+    # Build task dict -- backlog_append() handles: ID generation, auto-fill
+    # optional fields, ISC validation, atomic write
     task = {
-        "id": task_id,
         "description": description,
         "project": project,
         "repo_path": str(REPO_ROOT) if project == "epdev" else "",
         "tier": tier,
         "priority": 2,  # default medium; dispatcher sorts by priority
-        "dependencies": [],
-        "parent_id": None,
         "goal_context": goal_context,
         "isc": isc,
         "context_files": context_files,
         "skills": skills,
         "model": model,
-        "review_model": None,
-        "status": "pending",
         "autonomous_safe": True,
-        "created": now,
-        "completed": None,
-        "branch": None,
-        "run_report": None,
-        "failure_reason": None,
         "notes": f"Auto-proposed by {source}",
-        "retry_count": 0,
         "source": source,
     }
 
-    backlog.append(task)
-    _write_backlog(backlog)
+    try:
+        result = backlog_append(task, backlog_path=BACKLOG_FILE)
+    except ValueError as exc:
+        # backlog_append validation failed -- escalate to human
+        return _route_decision(
+            description, f"Validation failed: {exc}",
+            checks, source, notify_on_decision,
+        )
 
+    if result is None:
+        # Deduped by backlog_append (routine_id collision)
+        return GateResult(
+            route="skipped",
+            reason="Deduped by backlog_append (routine_id)",
+            check_results=checks,
+        )
+
+    task_id = result["id"]
     print(f"task_gate: {task_id} -> backlog (source={source})", file=sys.stderr)
 
     return GateResult(
@@ -479,7 +455,21 @@ def self_test() -> bool:
     backlog = _read_backlog()
     cleaned = [t for t in backlog if t.get("source") != "self-test"]
     if len(cleaned) < len(backlog):
-        _write_backlog(cleaned)
+        BACKLOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(BACKLOG_FILE.parent), suffix=".tmp", prefix="backlog_"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                for t in cleaned:
+                    f.write(json.dumps(t, ensure_ascii=False) + "\n")
+            os.replace(tmp_path, str(BACKLOG_FILE))
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
         print(f"\nCleaned up {len(backlog) - len(cleaned)} self-test tasks from backlog.")
 
     print(f"\n{'ALL TESTS PASSED' if ok else 'SOME TESTS FAILED'}")
