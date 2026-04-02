@@ -75,7 +75,7 @@
 | 4E | **COMPLETE** | 5/5 steps done |
 | 4->5 | **GATE PASSED** | 0 |
 | 5A | **COMPLETE** | 0 |
-| 5B | In progress | 1 (validation -- 3 tasks executed successfully) |
+| 5B | **COMPLETE** | 0 |
 | 5C | In progress | 3 of 5 done (task gate, heartbeat feeder, decisions channel) |
 
 ## Active Projects
@@ -412,7 +412,7 @@
 - [x] **Dispatcher script** — `tools/scripts/jarvis_dispatcher.py`: reads backlog, selects next task, creates worktree, invokes worker via `claude -p`, verifies ISC, notifies Slack. Lockfile mutex, task lifecycle state machine, Git Bash resolution, ISC sanitization, self-test suite (12 tests). (2026-03-31)
 - [x] **Worker prompt template** — Tiered context assembly (Tier 0: ~2K tokens, Tier 1: ~4K). Skill instructions from `skill_autonomy_map.json`, context profile matching from `context_profiles.json`, goal_context injection, context file loading with truncation. 12/12 self-tests pass. (2026-03-31)
 - [x] **Task Scheduler wiring** — `\Jarvis\JarvisDispatcher` via `run_dispatcher.bat`. Scheduled alongside overnight runner (staggered). 1 task/night. (2026-03-31)
-- [ ] **Validation** — 3 tasks from backlog executed: branches created, ISC verified, Slack notifications sent, human merges successfully
+- [x] **Validation** — 3 tasks from backlog executed: branches created, ISC verified, Slack notifications sent, human merges successfully (2026-04-02, gate report: history/validations/2026-04-02_5B-dispatcher-gate.md)
 
 ### Phase 5C — Cross-Project + Routines (2-3 sessions)
 
