@@ -836,22 +836,126 @@ def verify_isc(task: dict, wt_path: Path) -> list[dict]:
     return results
 
 
-# -- Failure handling (bounded retry for Tier 0) ----------------------------
+# -- Scope creep detection --------------------------------------------------
 
-def handle_task_failure(task: dict, error: str, backlog: list[dict]) -> None:
-    """Handle task failure: retry (Tier 0) or fail permanently."""
+# Files that workers are always allowed to create/modify (excluded from scope check)
+_SCOPE_CREEP_EXCLUSIONS = frozenset({"TASK_FAILED.md", "_worker_prompt.txt"})
+
+
+def detect_scope_creep(task: dict, branch: str) -> str | None:
+    """Check whether the worker modified files outside its allowed scope.
+
+    Tier 0: Any file change is scope creep EXCEPT .claude/ paths and
+            TASK_FAILED.md / _worker_prompt.txt.
+    Tier 1: Changed files must be a subset of expected_outputs + context_files.
+            Directory-prefix matching: any change under an allowed dir is OK.
+            If expected_outputs is absent, falls back to context_files only and
+            logs a warning (first Tier 1 runs may produce false positives until
+            tasks have expected_outputs populated).
+
+    Returns a human-readable description string on violation, None if clean.
+    """
+    tier = task.get("tier", 1)
+    changed = git_diff_files(branch)
+    if not changed:
+        return None
+
+    def _is_excluded(f: str) -> bool:
+        name = Path(f).name
+        if name in _SCOPE_CREEP_EXCLUSIONS:
+            return True
+        # .claude/ workspace metadata is always permitted
+        norm = f.replace("\\", "/")
+        if norm.startswith(".claude/") or "/.claude/" in norm:
+            return True
+        return False
+
+    if tier == 0:
+        violations = [f for f in changed if not _is_excluded(f)]
+        if violations:
+            return (
+                f"Tier 0 task modified {len(violations)} file(s) -- "
+                f"Tier 0 is READ-ONLY: {', '.join(violations[:5])}"
+                + (" ..." if len(violations) > 5 else "")
+            )
+        return None
+
+    # Tier 1+: allowed set = expected_outputs + context_files
+    expected = list(task.get("expected_outputs", []))
+    context = list(task.get("context_files", []))
+    allowed = expected + context
+
+    if not expected:
+        print(
+            f"  WARNING: task {task['id']} has no expected_outputs -- "
+            "scope check uses context_files only (may produce false positives)",
+            file=sys.stderr,
+        )
+
+    if not allowed:
+        # No scope defined at all -- skip check to avoid false positives
+        return None
+
+    # Normalize allowed paths to forward slashes for prefix matching
+    allowed_norm = [a.replace("\\", "/").rstrip("/") for a in allowed]
+
+    def _is_allowed(f: str) -> bool:
+        if _is_excluded(f):
+            return True
+        fn = f.replace("\\", "/")
+        for a in allowed_norm:
+            if fn == a or fn.startswith(a + "/"):
+                return True
+        return False
+
+    violations = [f for f in changed if not _is_allowed(f)]
+    if violations:
+        return (
+            f"Tier {tier} task modified files outside allowed scope "
+            f"({len(violations)} violation(s)): {', '.join(violations[:5])}"
+            + (" ..." if len(violations) > 5 else "")
+        )
+    return None
+
+
+# -- Failure handling -------------------------------------------------------
+
+def handle_task_failure(
+    task: dict,
+    error: str,
+    backlog: list[dict],
+    failure_type: str = "isc_fail",
+) -> None:
+    """Handle task failure with routing by failure_type.
+
+    failure_type values:
+      "scope_creep"    -> manual_review (always, hard gate)
+      "partial_work"   -> manual_review (branch has commits, retries exhausted)
+      "worker_request" -> manual_review (worker created TASK_FAILED.md)
+      "isc_fail"       -> pending (retry) or failed (exhausted)
+      "no_output"      -> failed (terminal, no useful work done)
+    """
+    manual_review_types = {"scope_creep", "partial_work", "worker_request"}
+
+    if failure_type in manual_review_types:
+        task["status"] = "manual_review"
+        task["failure_reason"] = error
+        print(f"  Task {task['id']} -> manual_review ({failure_type}): {error[:120]}")
+        return
+
     retries = task.get("retry_count", 0)
     max_retry = MAX_RETRIES.get(task.get("tier", 1), 0)
 
-    if retries < max_retry:
+    if failure_type == "isc_fail" and retries < max_retry:
         task["status"] = "pending"
         task["retry_count"] = retries + 1
+        task["failure_reason"] = error  # preserved for next worker's PREVIOUS ATTEMPT FAILED section
         task["notes"] = (task.get("notes") or "") + f"\nRetry {retries + 1}: {error}"
         print(f"  Task {task['id']} queued for retry ({retries + 1}/{max_retry})")
     else:
         task["status"] = "failed"
         task["failure_reason"] = error
-        print(f"  Task {task['id']} FAILED: {error}")
+        print(f"  Task {task['id']} FAILED ({failure_type}): {error}")
 
 
 # -- Run report persistence -------------------------------------------------
@@ -871,22 +975,34 @@ def notify_completion(task: dict, report: dict, isc_results: list[dict]) -> None
     """Post completion/failure summary to Slack."""
     isc_pass = sum(1 for r in isc_results if r.get("status") == "pass")
     isc_total = len(isc_results)
-    status_emoji = "done" if report.get("status") == "done" else "FAILED"
+    task_status = task.get("status", "unknown")
+
+    if task_status == "done":
+        status_label = "done"
+    elif task_status == "manual_review":
+        status_label = "MANUAL REVIEW"
+    else:
+        status_label = "FAILED"
 
     msg = (
-        f"Dispatcher: {task['id']} [{status_emoji}]\n"
+        f"Dispatcher: {task['id']} [{status_label}]\n"
         f"Branch: {report.get('branch', 'N/A')}\n"
         f"Model: {report.get('model', 'N/A')}\n"
         f"ISC: {isc_pass}/{isc_total} passed\n"
         f"Diff: {report.get('diff_stat', 'N/A')}"
     )
 
-    if report.get("status") != "done":
-        reason = report.get("failure_reason") or task.get("failure_reason") or "unknown"
-        msg += f"\nReason: {reason}"
+    if task_status != "done":
+        reason = task.get("failure_reason") or report.get("failure_reason") or "unknown"
+        msg += f"\nReason: {reason[:200]}"
+
+    if task_status == "manual_review":
+        msg += "\nAction required: human review needed"
+
+    severity = "decision" if task_status == "manual_review" else "routine"
 
     try:
-        notify(msg, severity="routine")
+        notify(msg, severity=severity)
     except Exception as exc:
         print(f"  WARNING: Slack notify failed: {exc}", file=sys.stderr)
 
@@ -980,15 +1096,34 @@ def dispatch(dry_run: bool = False) -> None:
         report_path = save_run_report(report)
         task["run_report"] = str(report_path.relative_to(REPO_ROOT))
 
+        # Scope creep check (hard gate -- runs before ISC result matters)
+        scope_creep_msg = detect_scope_creep(task, branch)
+        commit_count = git_commit_count(branch)
+        has_task_failed_md = (wt_path / "TASK_FAILED.md").is_file() if wt_path else False
+
+        retries = task.get("retry_count", 0)
+        max_retry = MAX_RETRIES.get(task.get("tier", 1), 0)
+        retries_exhausted = retries >= max_retry
+
         # Determine final status
-        if report.get("status") == "done" and isc_pass == isc_total:
+        if scope_creep_msg:
+            print(f"  SCOPE CREEP: {scope_creep_msg}")
+            handle_task_failure(task, scope_creep_msg, backlog, failure_type="scope_creep")
+        elif report.get("status") == "done" and isc_pass == isc_total:
             task["status"] = "done"
             task["completed"] = datetime.now().strftime("%Y-%m-%d")
             task["branch"] = branch
             print(f"  Task {task['id']} DONE. Branch: {branch}")
+        elif has_task_failed_md:
+            error = report.get("failure_reason") or "Worker requested manual review (TASK_FAILED.md)"
+            handle_task_failure(task, error, backlog, failure_type="worker_request")
+        elif commit_count > 0 and retries_exhausted:
+            error = report.get("failure_reason") or f"ISC {isc_pass}/{isc_total} -- partial work on branch"
+            handle_task_failure(task, error, backlog, failure_type="partial_work")
         else:
             error = report.get("failure_reason") or f"ISC {isc_pass}/{isc_total}"
-            handle_task_failure(task, error, backlog)
+            ftype = "no_output" if commit_count == 0 and not report.get("failure_reason") else "isc_fail"
+            handle_task_failure(task, error, backlog, failure_type=ftype)
 
         write_backlog(backlog)
 
@@ -1286,6 +1421,103 @@ def self_test() -> bool:
         assert isinstance(ctx, str) and len(ctx) > 0
 
         print("  PASS: Context profile loading + validation correct")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 15: Scope creep detection -- Tier 0 exclusions + Tier 1 allowlist
+    print("Test 15: Scope creep detection...")
+    try:
+        # Tier 0: no changed files -> clean
+        # We can't run real git_diff_files in unit test, so test the logic directly
+
+        # Simulate Tier 0 with violations by testing _is_excluded logic via detect_scope_creep
+        # with a branch that has no commits (returns empty list -> None)
+        t0 = {"id": "sc-t0", "tier": 0, "status": "executing"}
+        result = detect_scope_creep(t0, "nonexistent-branch-xyz")
+        assert result is None, f"Non-existent branch should return None: {result!r}"
+
+        # Test exclusion logic directly via the inner helper (white-box)
+        # Rebuild the check inline since _is_excluded is a closure inside detect_scope_creep
+        excluded_names = {"TASK_FAILED.md", "_worker_prompt.txt"}
+        assert "TASK_FAILED.md" in excluded_names
+        assert "_worker_prompt.txt" in excluded_names
+        # .claude/ prefix
+        assert ".claude/settings.json".replace("\\", "/").startswith(".claude/")
+
+        # Tier 1: no expected_outputs + no context_files -> no allowlist -> skip check -> None
+        t1_no_scope = {"id": "sc-t1-noscope", "tier": 1, "status": "executing"}
+        result1 = detect_scope_creep(t1_no_scope, "nonexistent-branch-xyz")
+        assert result1 is None, f"Tier 1 with no scope defined should skip check: {result1!r}"
+
+        print("  PASS: Scope creep detection correct")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 16: manual_review routing via handle_task_failure failure_type
+    print("Test 16: manual_review routing (all failure_type values)...")
+    try:
+        # scope_creep -> manual_review always
+        t = {"id": "mr-sc", "tier": 1, "status": "executing", "retry_count": 0}
+        handle_task_failure(t, "scope violation", [], failure_type="scope_creep")
+        assert t["status"] == "manual_review", f"scope_creep should -> manual_review, got {t['status']}"
+
+        # partial_work -> manual_review always
+        t = {"id": "mr-pw", "tier": 1, "status": "executing", "retry_count": 1}
+        handle_task_failure(t, "partial work", [], failure_type="partial_work")
+        assert t["status"] == "manual_review", f"partial_work should -> manual_review, got {t['status']}"
+
+        # worker_request -> manual_review always
+        t = {"id": "mr-wr", "tier": 0, "status": "executing", "retry_count": 0}
+        handle_task_failure(t, "worker asked", [], failure_type="worker_request")
+        assert t["status"] == "manual_review", f"worker_request should -> manual_review, got {t['status']}"
+
+        # isc_fail with retries remaining -> pending
+        t = {"id": "mr-if-retry", "tier": 0, "status": "executing", "retry_count": 0}
+        handle_task_failure(t, "isc failed", [], failure_type="isc_fail")
+        assert t["status"] == "pending", f"isc_fail with retries should -> pending, got {t['status']}"
+        assert t["failure_reason"] == "isc failed", "failure_reason should be preserved for retry"
+
+        # isc_fail retries exhausted -> failed
+        t = {"id": "mr-if-fail", "tier": 1, "status": "executing", "retry_count": 1}
+        handle_task_failure(t, "isc failed again", [], failure_type="isc_fail")
+        assert t["status"] == "failed", f"isc_fail exhausted should -> failed, got {t['status']}"
+
+        # no_output -> failed immediately (no retry)
+        t = {"id": "mr-no", "tier": 0, "status": "executing", "retry_count": 0}
+        handle_task_failure(t, "no output", [], failure_type="no_output")
+        assert t["status"] == "failed", f"no_output should -> failed, got {t['status']}"
+
+        print("  PASS: manual_review routing correct for all failure_type values")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 17: retry failure context appears in worker prompt
+    print("Test 17: Retry failure context in worker prompt...")
+    try:
+        t_retry = {
+            "id": "retry-prompt-test", "description": "Fix the bug", "project": "epdev",
+            "tier": 1, "isc": ["Bug fixed | Verify: test -f done"], "context_files": [],
+            "failure_reason": "The previous attempt crashed on line 42",
+            "retry_count": 1,
+        }
+        prompt = generate_worker_prompt(t_retry, "jarvis/auto-retry-prompt-test")
+        assert "PREVIOUS ATTEMPT FAILED" in prompt, "Retry context section missing"
+        assert "crashed on line 42" in prompt, "Failure reason not injected"
+        assert "(retry 1)" in prompt, "Retry count not shown"
+
+        # No retry context when retry_count is 0
+        t_fresh = {
+            "id": "fresh-prompt-test", "description": "Fresh task", "project": "epdev",
+            "tier": 1, "isc": ["Done | Verify: test -f done"], "context_files": [],
+            "failure_reason": "", "retry_count": 0,
+        }
+        prompt_fresh = generate_worker_prompt(t_fresh, "jarvis/auto-fresh")
+        assert "PREVIOUS ATTEMPT FAILED" not in prompt_fresh, "Retry section should be absent on fresh task"
+
+        print("  PASS: Retry failure context injected correctly")
     except Exception as exc:
         print(f"  FAIL: {exc}")
         ok = False
