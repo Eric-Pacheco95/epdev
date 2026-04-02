@@ -9,6 +9,7 @@ from __future__ import annotations
 import io
 import json
 import re
+import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -273,6 +274,67 @@ def _count_pending_absorb_proposals() -> int:
 _PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
 
 
+# -- Git safety for parallel sessions ----------------------------------------
+
+def _git_safety_check() -> list[str]:
+    """Detect parallel Claude sessions and uncommitted changes.
+
+    Returns warning lines (empty list = nothing to warn about).
+    """
+    warnings: list[str] = []
+
+    # 1. Count parallel claude.exe processes (excluding this hook's ancestry)
+    try:
+        result = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq claude.exe", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, encoding="utf-8", timeout=5,
+        )
+        if result.returncode == 0:
+            # Each running claude.exe produces a CSV line
+            sessions = [
+                ln for ln in result.stdout.strip().splitlines()
+                if "claude.exe" in ln.lower()
+            ]
+            if len(sessions) >= 2:
+                warnings.append(
+                    f"  >>> {len(sessions)} Claude sessions detected -- "
+                    "risk of conflicting edits on the same files"
+                )
+                warnings.append(
+                    "      TIP: consider working on separate branches "
+                    "(git checkout -b feature/xxx) per terminal"
+                )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+    # 2. Check for uncommitted changes
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, encoding="utf-8",
+            timeout=5, cwd=str(REPO_ROOT),
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            changed = [
+                ln.strip() for ln in result.stdout.strip().splitlines()
+                if ln.strip()
+            ]
+            n_changed = len(changed)
+            if n_changed > 0:
+                warnings.append(
+                    f"  >>> {n_changed} uncommitted change(s) in working tree"
+                )
+                # Show up to 5 changed files
+                for ln in changed[:5]:
+                    warnings.append(f"      {ln}")
+                if n_changed > 5:
+                    warnings.append(f"      ... and {n_changed - 5} more")
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+    return warnings
+
+
 def _stamp_prompt_ts() -> None:
     """Write current UTC timestamp so hook_notification.py can gate on elapsed time."""
     import time
@@ -311,6 +373,15 @@ def main() -> None:
     print(f"  {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     print("=" * 60)
     print()
+
+    # Git safety check (parallel sessions + uncommitted changes)
+    git_warnings = _git_safety_check()
+    if git_warnings:
+        print("Git Safety")
+        print("-" * 40)
+        for w in git_warnings:
+            print(_ascii_safe(w))
+        print()
 
     # TELOS context (focus only — mood/energy omitted to save context)
     print("TELOS Status")
