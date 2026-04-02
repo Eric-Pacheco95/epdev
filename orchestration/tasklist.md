@@ -427,7 +427,7 @@
 - [x] **Lightweight validation tier** — `isc_validator.py --task/--task-inline` mode: 10 structural checks for backlog tasks (vs `--prd` heavyweight 6-check ISC quality gate). (2026-04-02)
 
 **5C-1: Two-stage quality gate convergence**
-- [ ] **Converge task_gate.py + backlog_append()** — task_gate.py has routing logic (backlog vs #jarvis-decisions) that backlog_append() lacks; backlog_append() has dedup + atomic write that task_gate.py reimplements. Merge: task_gate uses backlog_append() as write backend, adds routing decision layer on top
+- [x] **Converge task_gate.py + backlog_append()** — Done in 5C-3: task_gate keeps routing logic, delegates writes to backlog_append(). Stale ISC allowlist removed.
 - [ ] **Stage 2 dispatch gate hardening** — `select_next_task()` already checks autonomous_safe, deps, context_files, ISC commands. Add: injection scanning on task metadata (P1 from red-team), JARVIS_SESSION_TYPE assertion, .claude/settings.json write protection in autonomous sessions
 
 **5C-2: Routines engine (first new intake source)**
@@ -436,7 +436,7 @@
 - [x] **Routine state tracking** — `data/routine_state.json`: last_run timestamps per routine. Prevents re-injection on every dispatch cycle
 
 **5C-3: Heartbeat intake convergence (refactor existing source)**
-- [ ] **Wire heartbeat auto-propose through backlog_append()** — Replace direct JSONL write in heartbeat remediation with backlog_append() call. Eliminates first intake silo
+- [x] **Wire heartbeat auto-propose through backlog_append()** — Refactored task_gate.py to use backlog_append() as write backend; heartbeat -> task_gate -> backlog_append chain validated (8/8 gate tests + 17/17 dispatcher tests pass)
 
 **5C-4: Session task capture (interactive intake)**
 - [ ] **Session -> backlog pathway** — Lightweight way to backlog ad-hoc ideas from chat without disrupting interactive flow. Async write, dispatcher picks up later
