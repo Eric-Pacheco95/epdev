@@ -50,6 +50,7 @@ from tools.scripts.lib.worktree import (
 )
 from tools.scripts.backlog_archive import archive_tasks
 from tools.scripts.slack_notify import notify
+from tools.scripts.lib.backlog import backlog_append
 
 # -- Paths ------------------------------------------------------------------
 
@@ -61,6 +62,8 @@ ANTI_PATTERNS_PENDING = REPO_ROOT / "orchestration" / "task_anti_patterns_pendin
 LOCKFILE = REPO_ROOT / "data" / "dispatcher.lock"
 RUNS_DIR = REPO_ROOT / "data" / "dispatcher_runs"
 WORKTREE_DIR = REPO_ROOT.parent / "epdev-dispatch"
+ROUTINES_FILE = REPO_ROOT / "orchestration" / "routines.json"
+ROUTINE_STATE_FILE = REPO_ROOT / "data" / "routine_state.json"
 
 # Absolute path to claude CLI
 _claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
@@ -987,6 +990,99 @@ def notify_completion(task: dict, report: dict, isc_results: list[dict]) -> None
         print(f"  WARNING: Slack notify failed: {exc}", file=sys.stderr)
 
 
+# -- Routines engine ---------------------------------------------------------
+
+def inject_routines() -> int:
+    """Check routines.json for due routines and inject them into the backlog.
+
+    A routine is due when (today - last_injected) >= interval_days.
+    Uses backlog_append() with routine_id dedup -- safe to call every dispatch cycle.
+
+    Returns the number of routines injected (0 = idle is success).
+    """
+    from datetime import date
+
+    if not ROUTINES_FILE.exists():
+        return 0
+
+    try:
+        with open(ROUTINES_FILE, encoding="utf-8") as f:
+            config = json.load(f)
+    except Exception as exc:
+        print(f"  WARNING: inject_routines -- failed to load routines.json: {exc}", file=sys.stderr)
+        return 0
+
+    # Load state (last_injected per routine_id)
+    state: dict = {}
+    if ROUTINE_STATE_FILE.exists():
+        try:
+            with open(ROUTINE_STATE_FILE, encoding="utf-8") as f:
+                raw = json.load(f)
+            state = raw.get("routines", {})
+        except Exception as exc:
+            print(f"  WARNING: inject_routines -- failed to load routine_state.json: {exc}", file=sys.stderr)
+
+    today = date.today()
+    injected_count = 0
+
+    for routine in config.get("routines", []):
+        if not routine.get("enabled", True):
+            continue
+
+        routine_id = routine.get("routine_id")
+        if not routine_id:
+            continue
+
+        interval_days = routine.get("schedule", {}).get("interval_days", 7)
+        last_injected_str = state.get(routine_id)
+
+        if last_injected_str:
+            try:
+                last_injected = date.fromisoformat(last_injected_str)
+                if (today - last_injected).days < interval_days:
+                    continue  # Not due yet
+            except ValueError:
+                pass  # Malformed date -- treat as never injected
+
+        # Build task dict from template + routine_id
+        task = dict(routine.get("task_template", {}))
+        task["routine_id"] = routine_id
+        task["source"] = "routine"
+
+        try:
+            result = backlog_append(task, backlog_path=BACKLOG_FILE)
+            if result is not None:
+                print(f"  Routine injected: {routine_id}")
+                injected_count += 1
+            else:
+                print(f"  Routine skipped (already active): {routine_id}")
+        except ValueError as exc:
+            print(f"  WARNING: inject_routines -- validation failed for {routine_id}: {exc}", file=sys.stderr)
+            continue
+
+        # Update last_injected regardless of dedup (prevents re-checking every cycle)
+        state[routine_id] = today.isoformat()
+
+    # Persist updated state
+    try:
+        ROUTINE_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp_fd, tmp_path = tempfile.mkstemp(dir=ROUTINE_STATE_FILE.parent, suffix=".tmp")
+        try:
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+                json.dump({"_comment": "Routine engine state -- last_injected timestamps per routine_id.", "routines": state}, f, indent=2)
+            os.replace(tmp_path, ROUTINE_STATE_FILE)
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
+            raise
+    except Exception as exc:
+        print(f"  WARNING: inject_routines -- failed to write routine_state.json: {exc}", file=sys.stderr)
+
+    return injected_count
+
+
 # -- Main dispatch loop -----------------------------------------------------
 
 def dispatch(dry_run: bool = False) -> None:
@@ -1008,6 +1104,14 @@ def dispatch(dry_run: bool = False) -> None:
             backlog = read_backlog()
     except Exception as exc:
         print(f"  WARNING: archive_tasks failed: {exc}", file=sys.stderr)
+
+    # Inject due routines before task selection
+    try:
+        injected = inject_routines()
+        if injected > 0:
+            backlog = read_backlog()
+    except Exception as exc:
+        print(f"  WARNING: inject_routines failed: {exc}", file=sys.stderr)
 
     print(f"  Backlog: {len(backlog)} tasks")
 

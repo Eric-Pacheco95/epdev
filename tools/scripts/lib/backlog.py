@@ -183,7 +183,10 @@ def backlog_append(
 
     # -- Auto-generate id if absent --
     if "id" not in task or not task.get("id"):
-        ts = int(datetime.now(timezone.utc).timestamp())
+        import time as _time
+        # Use microsecond-resolution float to avoid collisions when multiple
+        # tasks are appended within the same second (e.g. batch routine injection)
+        ts = int(_time.time() * 1_000_000)
         task["id"] = f"task-{ts}"
 
     # -- Auto-fill created if absent --
