@@ -13,10 +13,12 @@ Usage:
     python tools/scripts/isc_validator.py --prd PATH              # table output
     python tools/scripts/isc_validator.py --prd PATH --json       # JSON output
     python tools/scripts/isc_validator.py --prd PATH --pretty     # indented JSON
+    python tools/scripts/isc_validator.py --prd PATH --execute    # run verify methods
+    python tools/scripts/isc_validator.py --prd PATH --execute --json
 
 Exit codes:
-    0 = all quality gate checks pass
-    1 = one or more checks fail, or no criteria found
+    0 = all quality gate checks pass (and, with --execute, all executed criteria pass)
+    1 = one or more checks fail, or no criteria found, or executed criteria fail
 
 Output: Structured validation report. Zero LLM tokens consumed.
 """
@@ -24,15 +26,41 @@ Output: Structured validation report. Zero LLM tokens consumed.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT_VERSION = "1.0.0"
+sys.path.insert(0, str(REPO_ROOT))
+
+from tools.scripts.lib.isc_common import (  # noqa: E402
+    MANUAL_REQUIRED,
+    classify_verify_method,
+    sanitize_isc_command,
+)
+
+SCRIPT_VERSION = "1.1.0"
+
+# Where execution audit reports are written
+VALIDATIONS_DIR = REPO_ROOT / "history" / "validations"
+
+# Git Bash candidates (Windows -- avoid WSL interception from System32)
+_GIT_BASH_CANDIDATES = [
+    r"C:\Program Files\Git\bin\bash.exe",
+    r"C:\Program Files\Git\usr\bin\bash.exe",
+    r"C:\Program Files (x86)\Git\bin\bash.exe",
+]
+
+# Per-command timeout (seconds)
+_CMD_TIMEOUT_S = 30
+# Aggregate timeout for all --execute verify commands combined
+_AGGREGATE_TIMEOUT_S = 120
 
 # Action verbs that suggest "do X" rather than "X is true"
 # Used as a heuristic for the state-not-action check (warning, not hard fail)
@@ -433,11 +461,265 @@ def format_table(output: dict) -> str:
     return "\n".join(lines)
 
 
+# -- Execution engine (--execute mode) ----------------------------------------
+
+def _find_git_bash() -> str:
+    """Return path to Git Bash, avoiding WSL's bash.exe on Windows."""
+    for candidate in _GIT_BASH_CANDIDATES:
+        if os.path.isfile(candidate):
+            return candidate
+    found = shutil.which("bash")
+    if found and "System32" not in found and "system32" not in found:
+        return found
+    return _GIT_BASH_CANDIDATES[0]
+
+
+def _check_uncommitted_changes() -> bool:
+    """Return True if working tree has uncommitted changes."""
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, timeout=10,
+            cwd=str(REPO_ROOT),
+        )
+        return bool(result.stdout.strip())
+    except Exception:
+        return False
+
+
+def _run_single_cmd(cmd: str) -> dict:
+    """Execute one verify command and return a result dict."""
+    try:
+        if os.name == "nt":
+            shell_cmd = [_find_git_bash(), "-c", cmd]
+        else:
+            shell_cmd = ["bash", "-c", cmd]
+        result = subprocess.run(
+            shell_cmd,
+            capture_output=True, text=True, encoding="utf-8",
+            cwd=str(REPO_ROOT),
+            timeout=_CMD_TIMEOUT_S,
+        )
+        output = (result.stdout + result.stderr)[:500]
+        return {
+            "status": "pass" if result.returncode == 0 else "fail",
+            "exit_code": result.returncode,
+            "output": output,
+        }
+    except subprocess.TimeoutExpired:
+        return {"status": "fail", "exit_code": -1, "output": f"timeout after {_CMD_TIMEOUT_S}s"}
+    except Exception as exc:
+        return {"status": "fail", "exit_code": -1, "output": str(exc)[:200]}
+
+
+def _redact_secrets(text: str) -> str:
+    """Redact lines that look like secret key-value pairs or secret paths.
+
+    Applied to report content before writing to disk.
+    """
+    from tools.scripts.lib.isc_common import SECRET_PATH_PATTERNS  # local import avoids circular
+    lines = text.splitlines()
+    redacted = []
+    for line in lines:
+        # Redact KEY=value patterns (env-var style secrets)
+        if re.search(r"\b[A-Z][A-Z0-9_]{3,}\s*=\s*\S{8,}", line):
+            redacted.append("[REDACTED -- possible secret value]")
+        # Redact lines containing secret-path patterns
+        elif SECRET_PATH_PATTERNS.search(line):
+            redacted.append("[REDACTED -- protected path]")
+        else:
+            redacted.append(line)
+    return "\n".join(redacted)
+
+
+def run_execution(items: list[dict]) -> list[dict]:
+    """Execute ISC verify methods for all criteria.
+
+    Uses a ThreadPoolExecutor to enforce _AGGREGATE_TIMEOUT_S across all items.
+    Each item gets at most _CMD_TIMEOUT_S per command.
+
+    Returns list of execution result dicts.
+    """
+    results = []
+    start_time = datetime.now(timezone.utc).timestamp()
+
+    def _execute_item(item: dict) -> dict:
+        verify_method = item.get("verify_method", "")
+        criterion = item.get("criterion", "")[:80]
+
+        if not verify_method:
+            return {
+                "criterion": criterion,
+                "status": MANUAL_REQUIRED,
+                "command": None,
+                "exit_code": None,
+                "output": "no verify method",
+                "elapsed_ms": 0,
+            }
+
+        # Classify first
+        full_isc = f"{criterion} | Verify: {verify_method}"
+        classification = classify_verify_method(full_isc)
+
+        if classification == MANUAL_REQUIRED:
+            return {
+                "criterion": criterion,
+                "status": MANUAL_REQUIRED,
+                "command": None,
+                "exit_code": None,
+                "output": "requires human or LLM judgment",
+                "elapsed_ms": 0,
+            }
+
+        if classification == "blocked":
+            return {
+                "criterion": criterion,
+                "status": "blocked",
+                "command": verify_method,
+                "exit_code": None,
+                "output": "blocked: dangerous command pattern",
+                "elapsed_ms": 0,
+            }
+
+        # executable -- sanitize and run
+        cmd = sanitize_isc_command(full_isc)
+        if cmd is None:
+            return {
+                "criterion": criterion,
+                "status": "blocked",
+                "command": verify_method,
+                "exit_code": None,
+                "output": "blocked: failed sanitization",
+                "elapsed_ms": 0,
+            }
+
+        t0 = datetime.now(timezone.utc).timestamp()
+        run_result = _run_single_cmd(cmd)
+        elapsed_ms = int((datetime.now(timezone.utc).timestamp() - t0) * 1000)
+
+        return {
+            "criterion": criterion,
+            "status": run_result["status"],
+            "command": cmd,
+            "exit_code": run_result["exit_code"],
+            "output": run_result["output"],
+            "elapsed_ms": elapsed_ms,
+        }
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        futures = {executor.submit(_execute_item, item): item for item in items}
+        for future in concurrent.futures.as_completed(futures, timeout=_AGGREGATE_TIMEOUT_S):
+            try:
+                results.append(future.result())
+            except concurrent.futures.TimeoutError:
+                item = futures[future]
+                results.append({
+                    "criterion": item.get("criterion", "")[:80],
+                    "status": "fail",
+                    "command": item.get("verify_method", ""),
+                    "exit_code": -1,
+                    "output": f"aggregate timeout ({_AGGREGATE_TIMEOUT_S}s) exceeded",
+                    "elapsed_ms": _AGGREGATE_TIMEOUT_S * 1000,
+                })
+            except Exception as exc:
+                item = futures[future]
+                results.append({
+                    "criterion": item.get("criterion", "")[:80],
+                    "status": "fail",
+                    "command": item.get("verify_method", ""),
+                    "exit_code": -1,
+                    "output": str(exc)[:200],
+                    "elapsed_ms": 0,
+                })
+
+    return results
+
+
+def write_validation_report(prd_path: Path, output: dict) -> Path:
+    """Write a timestamped Markdown report to history/validations/.
+
+    Secret-scans output before writing. Returns the report path.
+    """
+    VALIDATIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    slug = prd_path.parent.name
+    report_path = VALIDATIONS_DIR / f"{timestamp}_{slug}.md"
+
+    exec_results = output.get("execution_results", [])
+    executed = [r for r in exec_results if r["status"] not in (MANUAL_REQUIRED,)]
+    passed = [r for r in exec_results if r["status"] == "pass"]
+    failed = [r for r in exec_results if r["status"] == "fail"]
+    manual = [r for r in exec_results if r["status"] == MANUAL_REQUIRED]
+    blocked = [r for r in exec_results if r["status"] == "blocked"]
+
+    lines = [
+        f"# ISC Validation Report",
+        f"",
+        f"**PRD**: {prd_path}",
+        f"**Timestamp**: {timestamp.replace('_', ' ')}",
+        f"",
+        f"Executed: {len(executed)} | Passed: {len(passed)} | Failed: {len(failed)} | Manual required: {len(manual)} | Blocked: {len(blocked)}",
+        f"",
+        f"## Results",
+        f"",
+    ]
+
+    for r in exec_results:
+        status = r["status"].upper()
+        cmd_str = f"`{r['command']}`" if r["command"] else "_none_"
+        output_str = r.get("output", "") or ""
+        lines.append(f"### [{status}] {r['criterion']}")
+        lines.append(f"- Command: {cmd_str}")
+        if r.get("exit_code") is not None:
+            lines.append(f"- Exit code: {r['exit_code']}")
+        if output_str:
+            lines.append(f"- Output: `{output_str[:200]}`")
+        lines.append("")
+
+    content = "\n".join(lines)
+    content = _redact_secrets(content)
+    report_path.write_text(content, encoding="utf-8")
+    return report_path
+
+
+def format_execution_table(exec_results: list[dict]) -> str:
+    """Format execution results as ASCII table."""
+    lines = []
+    counts = {
+        "pass": sum(1 for r in exec_results if r["status"] == "pass"),
+        "fail": sum(1 for r in exec_results if r["status"] == "fail"),
+        MANUAL_REQUIRED: sum(1 for r in exec_results if r["status"] == MANUAL_REQUIRED),
+        "blocked": sum(1 for r in exec_results if r["status"] == "blocked"),
+    }
+    executed = counts["pass"] + counts["fail"] + counts["blocked"]
+    lines.append(
+        f"Executed: {executed} | Passed: {counts['pass']} | "
+        f"Failed: {counts['fail']} | "
+        f"Manual required: {counts[MANUAL_REQUIRED]} | "
+        f"Blocked: {counts['blocked']}"
+    )
+    lines.append("")
+    for r in exec_results:
+        sym = {"pass": "[PASS]", "fail": "[FAIL]", MANUAL_REQUIRED: "[MANUAL]", "blocked": "[BLOCKED]"}.get(
+            r["status"], f"[{r['status'].upper()}]"
+        )
+        crit = r["criterion"][:60]
+        lines.append(f"  {sym} {crit}")
+        if r["status"] in ("fail", "blocked") and r.get("output"):
+            lines.append(f"         {r['output'][:80]}")
+    return "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(description="ISC Validator -- quality gate for PRD criteria")
     parser.add_argument("--prd", type=str, required=True, help="Path to PRD file")
     parser.add_argument("--json", action="store_true", help="JSON output")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON")
+    parser.add_argument(
+        "--execute", action="store_true",
+        help="Execute verify methods after quality gate; write audit report to history/validations/",
+    )
     args = parser.parse_args()
 
     prd_path = Path(args.prd)
@@ -446,11 +728,42 @@ def main():
 
     output = run_quality_gate(prd_path)
 
+    if args.execute:
+        # Warn on uncommitted changes that could skew verify results
+        if _check_uncommitted_changes():
+            print(
+                _sanitize_ascii(
+                    "WARNING: working tree has uncommitted changes -- "
+                    "verify results may not reflect committed state"
+                ),
+                file=sys.stderr,
+            )
+
+        items = output.get("criteria", [])
+        exec_results = run_execution(items)
+        output["execution_results"] = exec_results
+
+        # Write audit report (secret-scanned)
+        report_path = write_validation_report(prd_path, output)
+        output["validation_report"] = str(report_path)
+
+        # Execution gate: fail if any criteria failed or blocked
+        exec_failed = any(r["status"] in ("fail", "blocked") for r in exec_results)
+        if exec_failed:
+            output["gate_passed"] = False
+
     if args.json or args.pretty:
         indent = 2 if args.pretty else None
         print(json.dumps(output, indent=indent, default=str))
     else:
-        print(_sanitize_ascii(format_table(output)))
+        table = format_table(output)
+        if args.execute:
+            exec_results = output.get("execution_results", [])
+            table += "\n\nExecution Results:\n" + format_execution_table(exec_results)
+            report = output.get("validation_report", "")
+            if report:
+                table += f"\n\nReport: {report}"
+        print(_sanitize_ascii(table))
 
     sys.exit(0 if output["gate_passed"] else 1)
 

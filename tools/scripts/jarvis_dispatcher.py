@@ -72,12 +72,15 @@ MAX_TIER = int(os.environ.get("JARVIS_MAX_TIER", "2"))
 MAX_RETRIES = {0: 3, 1: 1, 2: 0}
 STALE_LOCK_HOURS = 4
 
-# ISC verify command allowlist -- only these commands may appear at the start
-# of ISC verify strings. Prevents arbitrary shell injection via backlog.
-ISC_ALLOWED_COMMANDS = frozenset({
-    "test", "grep", "jq", "python", "python3", "cat", "ls", "wc",
-    "head", "tail", "find", "diff", "stat", "file", "echo",
-})
+# ISC verify command allowlist and sanitization -- imported from shared module.
+# python/python3 and echo were removed from the allowlist in isc_common (see
+# history/decisions/ for rationale: python -c sandbox escape + echo trivial-pass).
+from tools.scripts.lib.isc_common import (
+    ISC_ALLOWED_COMMANDS,
+    MANUAL_REQUIRED,
+    classify_verify_method,
+    sanitize_isc_command,
+)
 
 # -- Git Bash resolution (avoid WSL interception) ---------------------------
 
@@ -265,39 +268,6 @@ def validate_context_files(task: dict) -> bool:
     return True
 
 
-def sanitize_isc_command(verify_str: str) -> Optional[str]:
-    """Extract and validate the verify command from an ISC string.
-
-    Returns the sanitized command, or None if blocked.
-    Uses a strict approach: each pipeline segment's first word must be in
-    the allowlist. All other shell metacharacters are blocked entirely.
-    """
-    # ISC format: "criterion text | Verify: command"
-    parts = verify_str.split("| Verify:", 1)
-    if len(parts) < 2:
-        return None
-    cmd = parts[1].strip()
-    if not cmd:
-        return None
-
-    # Block ALL dangerous shell metacharacters (no exceptions)
-    # Backticks, $(), ;, &&, || can chain arbitrary commands
-    if re.search(r"`|\$\(|;|&&|\|\||>>?\s*/", cmd):
-        # Allow "|| echo" as a common safe fallback pattern in ISC
-        if not re.fullmatch(r"[^;`$&]*\|\|\s*echo\s+\S*", cmd):
-            print(f"  BLOCKED ISC command: shell metacharacter in: {cmd}")
-            return None
-
-    # Split on pipe and validate each segment
-    segments = [s.strip() for s in cmd.split("|") if s.strip()]
-    for seg in segments:
-        first_word = seg.split()[0].split("/")[-1]
-        if first_word not in ISC_ALLOWED_COMMANDS:
-            print(f"  BLOCKED ISC command: '{first_word}' not in allowlist")
-            return None
-
-    return cmd
-
 
 def select_next_task(backlog: list[dict]) -> Optional[dict]:
     """Select the highest-priority eligible task."""
@@ -318,20 +288,30 @@ def select_next_task(backlog: list[dict]) -> Optional[dict]:
             continue
         if not validate_context_files(t):
             continue
-        # Validate all ISC commands upfront
+        # Validate all ISC commands upfront using classify_verify_method so that
+        # manual_required criteria (Review, echo, freeform) don't block the task --
+        # only 'blocked' dangerous commands cause the task to be skipped.
         isc_valid = True
         verifiable_count = 0
         for isc in t.get("isc", []):
             if "| Verify:" in isc:
-                if sanitize_isc_command(isc) is None:
+                classification = classify_verify_method(isc)
+                if classification == "blocked":
+                    print(f"  Skipping {t['id']}: ISC verify command blocked (dangerous): {isc[:80]}")
                     isc_valid = False
                     break
-                verifiable_count += 1
+                if classification == "executable":
+                    if sanitize_isc_command(isc) is None:
+                        print(f"  Skipping {t['id']}: ISC verify command failed sanitization: {isc[:80]}")
+                        isc_valid = False
+                        break
+                    verifiable_count += 1
+                # MANUAL_REQUIRED: not executable but not dangerous -- skip criterion,
+                # do not count toward verifiable_count, do not fail the task
         if not isc_valid:
-            print(f"  Skipping {t['id']}: ISC verify command failed sanitization")
             continue
         if verifiable_count == 0:
-            print(f"  Skipping {t['id']}: no verifiable ISC (need >= 1 with '| Verify:')")
+            print(f"  Skipping {t['id']}: no verifiable ISC (need >= 1 executable '| Verify:')")
             continue
         candidates.append(t)
 
