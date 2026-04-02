@@ -129,6 +129,7 @@ Load documentation on-demand, not upfront:
 - Dispatcher must resolve model from task `model` field first, then tier defaults, then Opus as fallback — never hardcode a single model for all autonomous tasks
 - Track review catch rate per external model — if Codex review catches zero issues over 20+ tasks, either the routing is wrong or the primary model is sufficient; adjust or remove
 - After any autonomous /absorb run (Slack poller Tier 1), verify the output chain: signal file exists, TELOS update is appropriate, audit trail is complete — autonomous ingestion without quality verification risks corrupting identity files
+- When adding any new data source to autonomous worker prompt assembly, apply this checklist before BUILD: (1) sanitize content before injection (cap length, strip injection patterns + override verbs), (2) validate content at load time against INJECTION_SUBSTRINGS and security contradictions, (3) write-protect the source file in `validate_tool_use.py` for autonomous sessions, (4) gate auto-generated content through a staging file requiring human review before promotion to active — two Sprint 2 criticals were prevented by this pattern (anti-pattern messages, context profiles)
 
 ### Research & External Patterns
 
