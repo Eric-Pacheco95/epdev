@@ -665,9 +665,18 @@ def generate_worker_prompt(task: dict, branch: str) -> str:
 
     advisory_block = ("\n\n" + "\n\n".join(advisory_sections)) if advisory_sections else ""
 
+    # Sanitize description before prompt interpolation (red-team P1: session-
+    # originated descriptions could carry injection substrings if promoted)
+    safe_desc = task["description"]
+    desc_lower = safe_desc.lower()
+    for inj in _INJECTION_SUBSTRINGS:
+        if inj in desc_lower:
+            safe_desc = "[description redacted -- injection pattern detected]"
+            break
+
     prompt = f"""You are Jarvis, executing an autonomous task in an isolated git worktree.
 
-TASK: {task['description']}
+TASK: {safe_desc}
 TASK ID: {task['id']}
 BRANCH: {branch}
 PROJECT: {task.get('project', 'epdev')}

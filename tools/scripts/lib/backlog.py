@@ -24,7 +24,7 @@ DEFAULT_BACKLOG_PATH = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
 # Valid status values (mirrors dispatcher usage)
 VALID_STATUSES = frozenset({
     "pending", "executing", "verifying", "done", "failed",
-    "manual_review", "deferred", "claimed",
+    "manual_review", "deferred", "claimed", "pending_review",
 })
 
 # Statuses that count as "active" for dedup purposes
@@ -106,20 +106,24 @@ def validate_task(task: dict) -> list[str]:
     elif len(isc) == 0:
         errors.append("'isc' must have at least 1 item")
     else:
-        # At least one criterion must have an executable verify method
-        has_executable = False
-        for criterion in isc:
-            if not isinstance(criterion, str):
-                continue
-            if "| Verify:" in criterion:
-                classification = classify_verify_method(criterion)
-                if classification == "executable":
-                    has_executable = True
-                    break
-        if not has_executable:
-            errors.append(
-                "at least one ISC criterion must have an executable '| Verify:' method"
-            )
+        # At least one criterion must have an executable verify method --
+        # UNLESS the task is pending_review (session captures use Review-type
+        # ISC intentionally; they are not dispatcher-eligible)
+        is_pending_review = task.get("status") == "pending_review"
+        if not is_pending_review:
+            has_executable = False
+            for criterion in isc:
+                if not isinstance(criterion, str):
+                    continue
+                if "| Verify:" in criterion:
+                    classification = classify_verify_method(criterion)
+                    if classification == "executable":
+                        has_executable = True
+                        break
+            if not has_executable:
+                errors.append(
+                    "at least one ISC criterion must have an executable '| Verify:' method"
+                )
 
         # No ISC criterion may reference a secret path
         for criterion in isc:
