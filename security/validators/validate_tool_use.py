@@ -80,6 +80,15 @@ def _blocked_git_destructive(cmd: str) -> bool:
     # git restore . (discard all working tree changes)
     if re.search(r"\bgit\s+restore\s+\.\s*$", cmd):
         return True
+    # git commit --amend (rewrites history -- prevents scope creep bypass via revert-before-diff)
+    if re.search(r"\bgit\s+commit\b.*--amend\b", cmd):
+        return True
+    # git restore --source (reverts to arbitrary tree state -- bypasses diff-based scope check)
+    if re.search(r"\bgit\s+restore\b.*--source\b", cmd):
+        return True
+    # git show redirected to file (extracts content to overwrite arbitrary path)
+    if re.search(r"\bgit\s+show\b.*\s>", cmd):
+        return True
     return False
 
 

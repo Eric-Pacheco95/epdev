@@ -274,3 +274,35 @@ def git_diff_stat(cwd: Optional[str] = None) -> str:
         cwd=cwd or str(REPO_ROOT),
     )
     return result.stdout.strip() if result.returncode == 0 else "(no diff available)"
+
+
+def git_diff_files(branch: str, base: str = "main", cwd: Optional[str] = None) -> list[str]:
+    """Return list of files changed on branch vs base.
+
+    Uses the merge-base (three-dot diff) so only commits on the branch are
+    counted -- not unrelated changes on main that happened after the branch
+    was created.
+    """
+    result = subprocess.run(
+        ["git", "diff", "--name-only", f"{base}...{branch}"],
+        capture_output=True, text=True, encoding="utf-8",
+        cwd=cwd or str(REPO_ROOT),
+    )
+    if result.returncode != 0:
+        return []
+    return [f.strip() for f in result.stdout.splitlines() if f.strip()]
+
+
+def git_commit_count(branch: str, base: str = "main", cwd: Optional[str] = None) -> int:
+    """Return number of commits on branch ahead of base (merge-base)."""
+    result = subprocess.run(
+        ["git", "rev-list", "--count", f"{base}...{branch}"],
+        capture_output=True, text=True, encoding="utf-8",
+        cwd=cwd or str(REPO_ROOT),
+    )
+    if result.returncode != 0:
+        return 0
+    try:
+        return int(result.stdout.strip())
+    except ValueError:
+        return 0

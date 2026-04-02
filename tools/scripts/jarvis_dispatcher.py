@@ -43,16 +43,21 @@ from tools.scripts.lib.worktree import (
     worktree_cleanup,
     cleanup_old_branches,
     git_diff_stat,
+    git_diff_files,
+    git_commit_count,
     acquire_claude_lock,
     release_claude_lock,
 )
+from tools.scripts.backlog_archive import archive_tasks
 from tools.scripts.slack_notify import notify
 
 # -- Paths ------------------------------------------------------------------
 
 BACKLOG_FILE = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
 AUTONOMY_MAP = REPO_ROOT / "orchestration" / "skill_autonomy_map.json"
-CONTEXT_PROFILES = REPO_ROOT / "orchestration" / "context_profiles.json"
+CONTEXT_PROFILES_DIR = REPO_ROOT / "orchestration" / "context_profiles"
+ANTI_PATTERNS_FILE = REPO_ROOT / "orchestration" / "task_anti_patterns.jsonl"
+ANTI_PATTERNS_PENDING = REPO_ROOT / "orchestration" / "task_anti_patterns_pending.jsonl"
 LOCKFILE = REPO_ROOT / "data" / "dispatcher.lock"
 RUNS_DIR = REPO_ROOT / "data" / "dispatcher_runs"
 WORKTREE_DIR = REPO_ROOT.parent / "epdev-dispatch"
@@ -64,7 +69,7 @@ CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 # -- Config -----------------------------------------------------------------
 
 MAX_TIER = int(os.environ.get("JARVIS_MAX_TIER", "2"))
-MAX_RETRIES = {0: 2, 1: 0, 2: 0}
+MAX_RETRIES = {0: 3, 1: 1, 2: 0}
 STALE_LOCK_HOURS = 4
 
 # ISC verify command allowlist -- only these commands may appear at the start
@@ -367,9 +372,11 @@ def _load_autonomy_map() -> dict:
 def _load_profile_context(task: dict) -> str:
     """Match task skills to a context profile and return extra context guidance."""
     try:
-        if not CONTEXT_PROFILES.is_file():
+        # Legacy JSON profile lookup -- replaced by markdown profiles in Phase B
+        legacy_json = CONTEXT_PROFILES_DIR.parent / "context_profiles.json"
+        if not legacy_json.is_file():
             return ""
-        data = json.loads(CONTEXT_PROFILES.read_text(encoding="utf-8"))
+        data = json.loads(legacy_json.read_text(encoding="utf-8"))
         profiles = data.get("profiles", {})
     except (json.JSONDecodeError, OSError):
         return ""
@@ -723,6 +730,15 @@ def dispatch(dry_run: bool = False) -> None:
         print("  No tasks in backlog. Idle Is Success.")
         return
 
+    # Auto-archive done tasks older than 7 days before selection
+    try:
+        archived = archive_tasks(days=7, backlog_path=BACKLOG_FILE)
+        if archived > 0:
+            print(f"  Archived {archived} completed task(s) (>7 days old)")
+            backlog = read_backlog()
+    except Exception as exc:
+        print(f"  WARNING: archive_tasks failed: {exc}", file=sys.stderr)
+
     print(f"  Backlog: {len(backlog)} tasks")
 
     # Select next task
@@ -949,9 +965,22 @@ def self_test() -> bool:
         assert t0["status"] == "pending", f"Tier 0 should retry, got {t0['status']}"
         assert t0["retry_count"] == 1
 
-        t1 = {"id": "retry-t1", "tier": 1, "status": "executing"}
-        handle_task_failure(t1, "test error", [])
-        assert t1["status"] == "failed", f"Tier 1 should fail, got {t1['status']}"
+        # Tier 1 gets 1 retry (MAX_RETRIES[1] == 1)
+        t1_first = {"id": "retry-t1a", "tier": 1, "status": "executing"}
+        handle_task_failure(t1_first, "test error", [])
+        assert t1_first["status"] == "pending", f"Tier 1 first failure should retry, got {t1_first['status']}"
+        assert t1_first["retry_count"] == 1
+
+        # Tier 1 with retry_count already at max should fail
+        t1_max = {"id": "retry-t1b", "tier": 1, "status": "executing", "retry_count": 1}
+        handle_task_failure(t1_max, "test error", [])
+        assert t1_max["status"] == "failed", f"Tier 1 at max retries should fail, got {t1_max['status']}"
+
+        # Tier 2 always fails immediately
+        t2 = {"id": "retry-t2", "tier": 2, "status": "executing"}
+        handle_task_failure(t2, "test error", [])
+        assert t2["status"] == "failed", f"Tier 2 should always fail, got {t2['status']}"
+
         print("  PASS: Bounded retry correct")
     except Exception as exc:
         print(f"  FAIL: {exc}")
