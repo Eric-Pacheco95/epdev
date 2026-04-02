@@ -414,14 +414,35 @@
 - [x] **Task Scheduler wiring** — `\Jarvis\JarvisDispatcher` via `run_dispatcher.bat`. Scheduled alongside overnight runner (staggered). 1 task/night. (2026-03-31)
 - [x] **Validation** — 3 tasks from backlog executed: branches created, ISC verified, Slack notifications sent, human merges successfully (2026-04-02, gate report: history/validations/2026-04-02_5B-dispatcher-gate.md)
 
-### Phase 5C — Cross-Project + Routines (2-3 sessions)
+### Phase 5C — Unified Pipeline + Intake Convergence (3-4 sessions)
 
-- [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources
-- [ ] **Routines engine** — Recurring tasks that re-enter backlog on schedule (weekly security audit, monthly steering review). Config-driven, not hardcoded
-- [x] **Task gate** — `tools/scripts/task_gate.py`: unified routing gate for all task producers. 3 deterministic checks (has ISC? Tier 0-2 skill? no arch keywords?). Pass → `task_backlog.jsonl`. Fail → `#jarvis-decisions` (uncapped Slack channel). Dedup, atomic writes, 8/8 self-tests. (2026-04-01)
-- [x] **Heartbeat -> task generation** — Heartbeat WARN/CRIT threshold crossings auto-propose remediation tasks via `remediation_map` in `heartbeat_config.json`. 4 metrics mapped (signal_velocity, learning_loop_health, cloud_audit_recency, tool_failure_rate). Routes through task gate. (2026-04-01)
-- [x] **#jarvis-decisions Slack channel** — `C0APQ4X9EAK`. Severity="decision" in `slack_notify.py`. No daily cap. Used exclusively for task gate escalations requiring Eric's input. Slack routing doc updated. (2026-04-01)
-- [x] **Dispatcher Tier 2** — `MAX_TIER` raised from 1 to 2 in dispatcher and gate. Tier 2 skills (synthesize-signals, security-audit, learning-capture, self-heal, absorb) now eligible for autonomous execution. (2026-04-01)
+> **Vision:** All work from any source flows through one system: `source -> backlog_append() -> task_backlog.jsonl -> dispatch gate -> dispatcher -> execution -> learning`. No silos. Two gates catch bad tasks at write-time and dispatch-time. Architecture review: `memory/work/_arch-review-20260402c/`.
+
+**Previously completed (5C Sprint 1):**
+- [x] **Task gate** — `tools/scripts/task_gate.py`: routing gate for task producers. 3 deterministic checks (has ISC? Tier 0-2 skill? no arch keywords?). Pass -> backlog. Fail -> `#jarvis-decisions`. (2026-04-01)
+- [x] **Heartbeat -> task generation** — Heartbeat WARN/CRIT threshold crossings auto-propose remediation tasks via `remediation_map` in `heartbeat_config.json`. Routes through task gate. (2026-04-01)
+- [x] **#jarvis-decisions Slack channel** — `C0APQ4X9EAK`. Severity="decision" in `slack_notify.py`. For task gate escalations requiring Eric's input. (2026-04-01)
+- [x] **Dispatcher Tier 2** — `MAX_TIER` raised to 2. Tier 2 skills (synthesize-signals, security-audit, learning-capture, self-heal, absorb) eligible for autonomous execution. (2026-04-01)
+- [x] **backlog_append() library** — `tools/scripts/lib/backlog.py`: single write path for all task sources. 10 structural checks (Stage 1 gate), auto-fill 14 defaults, routine dedup, atomic write. 34 tests. (2026-04-02)
+- [x] **Lightweight validation tier** — `isc_validator.py --task/--task-inline` mode: 10 structural checks for backlog tasks (vs `--prd` heavyweight 6-check ISC quality gate). (2026-04-02)
+
+**5C-1: Two-stage quality gate convergence**
+- [ ] **Converge task_gate.py + backlog_append()** — task_gate.py has routing logic (backlog vs #jarvis-decisions) that backlog_append() lacks; backlog_append() has dedup + atomic write that task_gate.py reimplements. Merge: task_gate uses backlog_append() as write backend, adds routing decision layer on top
+- [ ] **Stage 2 dispatch gate hardening** — `select_next_task()` already checks autonomous_safe, deps, context_files, ISC commands. Add: injection scanning on task metadata (P1 from red-team), JARVIS_SESSION_TYPE assertion, .claude/settings.json write protection in autonomous sessions
+
+**5C-2: Routines engine (first new intake source)**
+- [ ] **Routines config** — `orchestration/routines.json`: schedule, task template, dedup key. Day-one routines: weekly security audit, weekly synthesis, monthly steering audit
+- [ ] **inject_routines() dispatcher pre-step** — Before task selection, check routines for due items, inject via backlog_append() with routine_id dedup. Cron-like schedule evaluation
+- [ ] **Routine state tracking** — `data/routine_state.json`: last_run timestamps per routine. Prevents re-injection on every dispatch cycle
+
+**5C-3: Heartbeat intake convergence (refactor existing source)**
+- [ ] **Wire heartbeat auto-propose through backlog_append()** — Replace direct JSONL write in heartbeat remediation with backlog_append() call. Eliminates first intake silo
+
+**5C-4: Session task capture (interactive intake)**
+- [ ] **Session -> backlog pathway** — Lightweight way to backlog ad-hoc ideas from chat without disrupting interactive flow. Async write, dispatcher picks up later
+
+**5C-5: Overnight runner state visibility (convergence, not merge)**
+- [ ] **Overnight runner reads/writes backlog for state** — Dimensions register as backlog tasks with status tracking. Keeps separate executor (different termination semantics) but unified visibility
 - [ ] **Budget controls** — Max tasks/day, max `claude -p` time per task, daily aggregate time cap
 
 ### Phase 5D — Hardening + Quality (1-2 sessions)
@@ -429,6 +450,7 @@
 - [ ] **Two-layer verification (optional)** — Second `claude -p` review of worker output if Tier 1 self-verification quality is insufficient. Aron's CEO-checks-worker pattern, adapted
 - [ ] **Worker prompt optimization** — Based on observed context efficiency and quality data
 - [ ] **Autonomous signal rate monitoring** — 4E item, now critical for Phase 5 safety
+- [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources (moved from 5C -- requires pipeline stability first)
 - [ ] **Phase 5 completion gate** — Dispatcher autonomously executes Tier 0-1 tasks with >=90% success rate over 14 days
 
 ---
