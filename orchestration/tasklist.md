@@ -439,7 +439,7 @@
 - [x] **Wire heartbeat auto-propose through backlog_append()** — Refactored task_gate.py to use backlog_append() as write backend; heartbeat -> task_gate -> backlog_append chain validated (8/8 gate tests + 17/17 dispatcher tests pass)
 
 **5C-4: Session task capture (interactive intake)**
-- [ ] **Session -> backlog pathway** — Lightweight way to backlog ad-hoc ideas from chat without disrupting interactive flow. Async write, dispatcher picks up later
+- [x] **Session -> backlog pathway** — /backlog skill: pending_review status + Review ISC + description injection hardening. Arch-reviewed by 3 agents.
 
 **5C-5: Overnight runner state visibility (convergence, not merge)**
 - [ ] **Overnight runner reads/writes backlog for state** — Dimensions register as backlog tasks with status tracking. Keeps separate executor (different termination semantics) but unified visibility
