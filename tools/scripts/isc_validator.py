@@ -9,12 +9,20 @@ Extracts ISC criteria from PRD files and runs the 6-check quality gate:
 5. Anti-criteria: at least one criterion states what must NOT happen
 6. Verify method: every criterion has a | Verify: suffix
 
+Also supports lightweight backlog task validation (--task mode):
+    Validates a single task JSON object against structural requirements
+    without the heavyweight PRD format gate.
+
 Usage:
     python tools/scripts/isc_validator.py --prd PATH              # table output
     python tools/scripts/isc_validator.py --prd PATH --json       # JSON output
     python tools/scripts/isc_validator.py --prd PATH --pretty     # indented JSON
     python tools/scripts/isc_validator.py --prd PATH --execute    # run verify methods
     python tools/scripts/isc_validator.py --prd PATH --execute --json
+    python tools/scripts/isc_validator.py --task PATH             # validate task JSON file
+    python tools/scripts/isc_validator.py --task-inline '{...}'   # validate task JSON string
+    python tools/scripts/isc_validator.py --task PATH --json      # JSON output
+    python tools/scripts/isc_validator.py --task PATH --pretty    # indented JSON
 
 Exit codes:
     0 = all quality gate checks pass (and, with --execute, all executed criteria pass)
@@ -718,9 +726,203 @@ def format_execution_table(exec_results: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def run_task_quality_gate(task: dict) -> dict:
+    """Run lightweight validation checks on a backlog task dict.
+
+    Validates structural requirements without the heavyweight PRD format gate.
+    Returns a structured output dict compatible with the --prd output format.
+    """
+    from tools.scripts.lib.backlog import validate_task
+
+    start_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    errors = validate_task(task)
+    elapsed_ms = int(datetime.now(timezone.utc).timestamp() * 1000) - start_ms
+
+    checks: list[dict] = []
+
+    # Map each known error prefix back to a named check for structured output
+    # validate_task returns plain error strings; we re-run individual checks
+    # here so the output has structured per-check results like --prd mode.
+
+    from tools.scripts.lib.isc_common import SECRET_PATH_PATTERNS, classify_verify_method
+
+    # check: id
+    task_id = task.get("id")
+    id_ok = task_id is None or (isinstance(task_id, str) and bool(task_id.strip()))
+    checks.append({
+        "check": "id",
+        "passed": id_ok,
+        "message": "ok" if id_ok else "'id' must be non-empty when provided",
+    })
+
+    # check: description
+    desc = task.get("description")
+    desc_ok = isinstance(desc, str) and bool(desc.strip())
+    checks.append({
+        "check": "description",
+        "passed": desc_ok,
+        "message": "ok" if desc_ok else "'description' is required and must be non-empty",
+    })
+
+    # check: tier
+    tier = task.get("tier")
+    tier_ok = isinstance(tier, int) and 0 <= tier <= 2
+    checks.append({
+        "check": "tier",
+        "passed": tier_ok,
+        "message": "ok" if tier_ok else f"'tier' must be integer 0-2; got {tier!r}",
+    })
+
+    # check: status
+    from tools.scripts.lib.backlog import VALID_STATUSES
+    status = task.get("status")
+    status_ok = status is None or status in VALID_STATUSES
+    checks.append({
+        "check": "status",
+        "passed": status_ok,
+        "message": "ok" if status_ok else (
+            f"'status' must be one of: {', '.join(sorted(VALID_STATUSES))}; got '{status}'"
+        ),
+    })
+
+    # check: autonomous_safe
+    auto_safe = task.get("autonomous_safe")
+    auto_safe_ok = isinstance(auto_safe, bool)
+    checks.append({
+        "check": "autonomous_safe",
+        "passed": auto_safe_ok,
+        "message": "ok" if auto_safe_ok else "'autonomous_safe' must be a boolean",
+    })
+
+    # check: isc present and non-empty
+    isc = task.get("isc")
+    isc_exists_ok = isinstance(isc, list) and len(isc) >= 1
+    checks.append({
+        "check": "isc_exists",
+        "passed": isc_exists_ok,
+        "message": "ok" if isc_exists_ok else "'isc' must be a list with at least 1 item",
+    })
+
+    # check: at least one executable verify method
+    has_executable = False
+    if isinstance(isc, list):
+        for criterion in isc:
+            if isinstance(criterion, str) and "| Verify:" in criterion:
+                if classify_verify_method(criterion) == "executable":
+                    has_executable = True
+                    break
+    checks.append({
+        "check": "isc_executable_verify",
+        "passed": has_executable,
+        "message": "ok" if has_executable else (
+            "at least one ISC criterion must have an executable '| Verify:' method"
+        ),
+    })
+
+    # check: no secret path in isc
+    secret_violations: list[str] = []
+    if isinstance(isc, list):
+        for criterion in isc:
+            if isinstance(criterion, str) and SECRET_PATH_PATTERNS.search(criterion):
+                secret_violations.append(criterion[:80])
+    isc_secret_ok = len(secret_violations) == 0
+    checks.append({
+        "check": "isc_no_secret_path",
+        "passed": isc_secret_ok,
+        "message": "ok" if isc_secret_ok else (
+            f"ISC references secret path(s): {'; '.join(secret_violations)}"
+        ),
+    })
+
+    # check: priority
+    priority = task.get("priority")
+    priority_ok = isinstance(priority, int)
+    checks.append({
+        "check": "priority",
+        "passed": priority_ok,
+        "message": "ok" if priority_ok else "'priority' must be an integer",
+    })
+
+    # check: created
+    created = task.get("created")
+    created_ok = created is None or (isinstance(created, str) and bool(created.strip()))
+    checks.append({
+        "check": "created",
+        "passed": created_ok,
+        "message": "ok" if created_ok else "'created' must be non-empty when provided",
+    })
+
+    hard_fails = [c for c in checks if not c["passed"]]
+    gate_passed = len(hard_fails) == 0
+
+    check_summary: dict[str, dict] = {}
+    for c in checks:
+        ctype = c["check"]
+        check_summary[ctype] = {
+            "total": 1,
+            "passed": 1 if c["passed"] else 0,
+            "failed": 0 if c["passed"] else 1,
+        }
+
+    return {
+        "_schema_version": "1.0.0",
+        "_provenance": {
+            "script": "tools/scripts/isc_validator.py",
+            "version": SCRIPT_VERSION,
+            "git_hash": collect_git_hash(),
+            "execution_time_ms": elapsed_ms,
+            "validated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        },
+        "mode": "task",
+        "task_id": task.get("id", "<no-id>"),
+        "checks": checks,
+        "check_summary": check_summary,
+        "hard_fails": len(hard_fails),
+        "warnings": 0,
+        "gate_passed": gate_passed,
+        "errors": errors,
+    }
+
+
+def format_task_table(output: dict) -> str:
+    """Format --task mode output as human-readable ASCII table."""
+    lines: list[str] = []
+    task_id = output.get("task_id", "<no-id>")
+    lines.append(f"ISC Validator (task mode) -- {task_id}")
+    lines.append("")
+
+    if output.get("errors"):
+        lines.append("Validation Errors:")
+        for err in output["errors"]:
+            lines.append(f"  - {err}")
+        lines.append("")
+
+    lines.append("Structural Checks:")
+    for check_name, stats in output.get("check_summary", {}).items():
+        status = "PASS" if stats["failed"] == 0 else "FAIL"
+        check_detail = ""
+        # Include failure message inline
+        for c in output.get("checks", []):
+            if c["check"] == check_name and not c["passed"]:
+                check_detail = f" -- {c['message']}"
+                break
+        lines.append(f"  [{status}] {check_name}{check_detail}")
+
+    lines.append("")
+    gate = "PASS" if output["gate_passed"] else "FAIL"
+    lines.append(f"Gate: {gate} | {output['hard_fails']} fails, {output['warnings']} warnings")
+    return "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(description="ISC Validator -- quality gate for PRD criteria")
-    parser.add_argument("--prd", type=str, required=True, help="Path to PRD file")
+    mode_group = parser.add_mutually_exclusive_group(required=True)
+    mode_group.add_argument("--prd", type=str, help="Path to PRD file (heavyweight mode)")
+    mode_group.add_argument("--task", type=str, help="Path to task JSON file (lightweight mode)")
+    mode_group.add_argument(
+        "--task-inline", type=str, metavar="JSON",
+        help="Task JSON string for inline lightweight validation",
+    )
     parser.add_argument("--json", action="store_true", help="JSON output")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON")
     parser.add_argument(
@@ -729,6 +931,44 @@ def main():
     )
     args = parser.parse_args()
 
+    # -- Task mode (lightweight) --
+    if args.task or args.task_inline:
+        if args.task_inline:
+            raw_json = args.task_inline
+        else:
+            task_path = Path(args.task)
+            if not task_path.is_absolute():
+                task_path = REPO_ROOT / task_path
+            if not task_path.exists():
+                print(f"ERROR: Task file not found: {task_path}", file=sys.stderr)
+                sys.exit(1)
+            try:
+                raw_json = task_path.read_text(encoding="utf-8")
+            except Exception as exc:
+                print(f"ERROR: Cannot read task file: {exc}", file=sys.stderr)
+                sys.exit(1)
+
+        try:
+            task_dict = json.loads(raw_json)
+        except json.JSONDecodeError as exc:
+            print(f"ERROR: Invalid JSON: {exc}", file=sys.stderr)
+            sys.exit(1)
+
+        if not isinstance(task_dict, dict):
+            print("ERROR: Task JSON must be a JSON object (dict)", file=sys.stderr)
+            sys.exit(1)
+
+        output = run_task_quality_gate(task_dict)
+
+        if args.json or args.pretty:
+            indent = 2 if args.pretty else None
+            print(json.dumps(output, indent=indent, default=str))
+        else:
+            print(_sanitize_ascii(format_task_table(output)))
+
+        sys.exit(0 if output["gate_passed"] else 1)
+
+    # -- PRD mode (heavyweight) --
     prd_path = Path(args.prd)
     if not prd_path.is_absolute():
         prd_path = REPO_ROOT / prd_path
