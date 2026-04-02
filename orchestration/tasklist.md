@@ -431,9 +431,9 @@
 - [ ] **Stage 2 dispatch gate hardening** — `select_next_task()` already checks autonomous_safe, deps, context_files, ISC commands. Add: injection scanning on task metadata (P1 from red-team), JARVIS_SESSION_TYPE assertion, .claude/settings.json write protection in autonomous sessions
 
 **5C-2: Routines engine (first new intake source)**
-- [ ] **Routines config** — `orchestration/routines.json`: schedule, task template, dedup key. Day-one routines: weekly security audit, weekly synthesis, monthly steering audit
-- [ ] **inject_routines() dispatcher pre-step** — Before task selection, check routines for due items, inject via backlog_append() with routine_id dedup. Cron-like schedule evaluation
-- [ ] **Routine state tracking** — `data/routine_state.json`: last_run timestamps per routine. Prevents re-injection on every dispatch cycle
+- [x] **Routines config** — `orchestration/routines.json`: schedule, task template, dedup key. Day-one routines: weekly security audit, weekly synthesis, monthly steering audit
+- [x] **inject_routines() dispatcher pre-step** — Before task selection, check routines for due items, inject via backlog_append() with routine_id dedup. Cron-like schedule evaluation
+- [x] **Routine state tracking** — `data/routine_state.json`: last_run timestamps per routine. Prevents re-injection on every dispatch cycle
 
 **5C-3: Heartbeat intake convergence (refactor existing source)**
 - [ ] **Wire heartbeat auto-propose through backlog_append()** — Replace direct JSONL write in heartbeat remediation with backlog_append() call. Eliminates first intake silo
