@@ -70,13 +70,13 @@
 
 ### Theme: Full skill development chain validated
 - Maturity: candidate
-- Confidence: 70%
+- Confidence: 75%
 - Anti-pattern: false
-- Supporting signals: 2026-04-03_full-skill-dev-chain-validated.md, 2026-04-03_llm-self-audit-impossible.md
+- Supporting signals: 2026-04-03_full-skill-dev-chain-validated.md, 2026-04-03_llm-self-audit-impossible.md, 2026-04-03_arch-review-overengineering-guard.md (cross-validates the /architecture-review step as essential), 2026-04-03_dont-build-for-theoretical-gaps.md (cross-validates the arch review -> scope reduction pattern)
 - Failure weight: 0
-- Pattern: First complete execution of /research -> /architecture-review -> /create-prd -> /implement-prd -> test -> /backlog -> capability track. The chain consumed one full context window. LLM self-audit was identified as architecturally impossible -- user-facing interrogation questions are the correct replacement. Self-reflection steps in skills should be replaced with adversarial agent patterns or user interrogation.
-- Implication: This is the reference pattern for building new skills. Budget one full context window per skill build. Run /learning-capture before test runs to avoid losing signals to compaction. The "LLM cannot audit itself" insight should be applied retroactively to any skill with a self-check step.
-- Action: Candidate -- needs 1-2 more skill builds to confirm the pattern holds. Audit existing skills for self-audit steps that should be replaced with interrogation questions.
+- Pattern: First complete execution of /research -> /architecture-review -> /create-prd -> /implement-prd -> test -> /backlog -> capability track. The chain consumed one full context window. Key sub-findings: (1) LLM self-audit was identified as architecturally impossible -- user-facing interrogation questions are the correct replacement, (2) /architecture-review consistently reduces scope (5 structural assumptions corrected for /make-prediction), (3) /create-prd with collaborative questions catches overengineering that /research misses. The chain's value comes from each step constraining the next.
+- Implication: This is the reference pattern for building new skills. Budget one full context window per skill build. Run /learning-capture before test runs to avoid losing signals to compaction. The "LLM cannot audit itself" insight should be applied retroactively to any skill with a self-check step. Mid-build commits (every 3-4 ISC items) create recovery points against context compaction.
+- Action: Confidence raised to 75% based on cross-validating signals from arch review sessions. Needs 1 more skill build to reach established. Audit existing skills for self-audit steps that should be replaced with interrogation questions.
 
 ---
 
