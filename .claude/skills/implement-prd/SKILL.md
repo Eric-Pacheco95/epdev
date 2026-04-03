@@ -120,10 +120,6 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 
 ### VERIFY PHASE: Full pass
 
-- **Ownership Check** (before running any verify methods): Reflect and document in the VERIFY RESULTS section:
-  1. What approach did I take?
-  2. What alternatives existed that I did not pursue?
-  3. Knowing what I know now, would I choose the same approach again? If not, note why — this feeds LEARN phase
 - Run the full VERIFY phase: execute every ISC verify method in sequence and record pass/fail for each
 - **Structured Evidence**: For each ISC item, record three fields in the VERIFY RESULTS table:
   - Evidence type: CLI output | test result | file exists | grep match | manual review
@@ -134,7 +130,7 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 - Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
 - Log a brief decision record to `history/decisions/` noting what was built, which ISC items passed, and any deferred items
 - **Final commit prompt**: Run `git status` — if there are uncommitted changes, prompt: "BUILD complete and verified. Ready to commit? Run /commit or I can stage and commit now." Do not auto-commit — wait for Eric's confirmation. If Eric declines, proceed to /learning-capture
-- Invoke `/learning-capture` to close the session with captured signals
+- Invoke `/learning-capture` to close the session with captured signals — include approach retrospective here (what approach was taken, what alternatives existed, whether the same path would be chosen again); retrospective belongs in LEARN, not self-judged in the same VERIFY pass that generated the output
 
 # OUTPUT INSTRUCTIONS
 
