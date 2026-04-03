@@ -1,0 +1,23 @@
+{
+  "provider": "ollama",
+  "model": "qwen2.5-coder:14b-instruct-q4_K_M",
+  "base_url": "http://127.0.0.1:11434",
+  "fallback_model": "claude-sonnet-4-6",
+  "fallback_on_error": true,
+  "max_response_wait_s": 120,
+  "auto_local_tasks": [
+    "isc_format_validation",
+    "output_structure_check",
+    "task_classification",
+    "signal_extraction",
+    "duplicate_detection",
+    "code_review_normal",
+    "summarization"
+  ],
+  "never_local_tags": [
+    "security",
+    "tier_0",
+    "architecture",
+    "identity"
+  ]
+}
