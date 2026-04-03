@@ -46,6 +46,7 @@ THINK
 - Input: question about the future + optional flags
 - Output: multi-outcome prediction with committed probabilities, signposts, and interrogation questions
 - Side effects: writes prediction record to data/predictions/ (default on; suppress with --no-track)
+- Context sources: reads domain priors from memory/knowledge/ when available
 
 ## autonomous_safe
 false
@@ -58,6 +59,11 @@ false
 - If input is fewer than 5 words: enter Step 0.5 (conversational clarification) to understand what Eric wants to predict
 - If --research flag is set: invoke /research on the topic first, then proceed with the research output as additional context
 - If the question clearly requires post-training-cutoff data and --research is not set: suggest "This prediction would benefit from current data. Run with --research flag, or run /research first?"
+- **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for entries relevant to the prediction topic. Use this domain mapping:
+  - crypto, trading, DeFi, blockchain, BTC, ETH, market cycles → `crypto`
+  - security, vulnerability, attack, defense, audit → `security`
+  - AI, LLM, infrastructure, orchestration, tooling → `ai-infra`
+  If relevant articles exist (up to 3 most recent), load them as background context for the prediction. These provide domain priors — accumulated research findings that should inform the reference class selection, scenario construction, and signpost identification. Note to Eric: "Loaded N domain knowledge articles as priors."
 - Once input is validated, proceed to Step 0.5
 
 ## Step 0.5: CONVERSATIONAL PARAMETER CLARIFICATION
@@ -86,6 +92,11 @@ Apply domain lens (auto-detected or from flag), then anchor the prediction:
 3. **Identify the reference class**: "Of N historical situations like this, what % resulted in outcome X?"
    - If a clear reference class exists, state the base rate
    - If no reference class exists, state: "No clear reference class — estimate is unanchored" and note this increases uncertainty
+3.5. **Check domain priors**: If domain knowledge articles were loaded in Step 0, scan them for:
+   - Prior research findings that refine or challenge the reference class base rate
+   - Known domain-specific factors that should weight scenario probabilities
+   - Open questions from prior research that this prediction might resolve
+   Reference specific prior findings when they inform the analysis (e.g., "Per prior research on DeFi lending (2026-04-03), Aave v3 dominates TVL — this affects scenario likelihood.")
 4. **State the starting probability anchor** from the reference class base rate
 
 ### Domain-Specific ORIENT

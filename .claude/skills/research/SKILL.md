@@ -34,7 +34,7 @@ OBSERVE
 ## Output Contract
 - Input: topic string + optional depth and type flags
 - Output: Markdown brief (file for market/technical, inline for live/quick)
-- Side effects: signals to memory/learning/signals/, log to history/changes/research_log.md
+- Side effects: signals to memory/learning/signals/, log to history/changes/research_log.md, domain knowledge article to memory/knowledge/{domain}/ (market/technical only)
 
 ## autonomous_safe
 false
@@ -66,9 +66,28 @@ false
 
 3. **Confirm** with Eric before proceeding (one-word confirmation is fine). If redirected, switch type.
 
+## Phase 0.5: PRIOR KNOWLEDGE SCAN
+
+Before generating sub-questions, check if Jarvis already has domain knowledge on this topic.
+
+1. **Read `memory/knowledge/index.md`** and scan for entries matching the detected domain (crypto, security, ai-infra) or topic keywords
+2. **If prior articles exist:**
+   - Surface the 2-3 most recent one-liners from the index
+   - Load the single most relevant prior article (by topic similarity) as additional context
+   - Tell Eric: "We have N prior articles on {domain}. Most recent: {title} ({date}). Loading as context."
+   - Sub-questions in Phase 1 should build on prior findings — do not re-research what's already known
+3. **If no prior articles exist:** proceed normally, note "No prior domain knowledge found — starting fresh"
+4. **Domain mapping** — map the auto-detected or explicit type to a knowledge domain:
+   - crypto, trading, DeFi, blockchain, BTC, ETH → `crypto`
+   - security, vulnerability, attack, defense, audit → `security`
+   - AI, LLM, infrastructure, orchestration, tooling → `ai-infra`
+   - If topic doesn't map to an existing domain, note the domain gap but proceed without scan
+
 ## Phase 1: PLAN — Generate sub-questions
 
 Generate sub-questions by type, display before searching so Eric can redirect:
+
+If Phase 0.5 loaded prior knowledge, tailor sub-questions to fill gaps rather than re-cover known ground. Reference specific prior findings when explaining why certain sub-questions are included.
 
 **Market** (5-7 questions): demand/users/size, competition/weaknesses, tech stack/APIs, business model/economics, risks/killers, prior art/lessons, entry point/MVP
 
@@ -113,6 +132,49 @@ Write brief using type-appropriate template below. File output rules:
 | quick depth | Inline only | 0 |
 
 After writing: propose next steps, auto-offer `/analyze-claims` if sources contain verifiable claims.
+
+## Phase 3.5: FILE TO KNOWLEDGE BASE
+
+After writing the research brief (market and technical types only — skip for live and quick depth):
+
+1. **Extract key findings** from the brief into a standalone domain knowledge article
+2. **Determine domain** using the same mapping from Phase 0.5
+3. **Write article** to `memory/knowledge/{domain}/YYYY-MM-DD_{slug}.md` with this format:
+
+   ```markdown
+   ---
+   domain: {domain}
+   source: /research
+   date: YYYY-MM-DD
+   topic: {topic title}
+   confidence: {1-10, based on source quality and coverage}
+   source_files:
+     - memory/work/{slug}/research_brief.md
+   tags: [{relevant keywords, 3-6 tags}]
+   ---
+
+   ## Key Findings
+   - {3-5 bullet points — the most important conclusions}
+
+   ## Context
+   {2-3 sentences of context for why this matters}
+
+   ## Open Questions
+   - {1-3 unresolved questions from the research}
+   ```
+
+4. **Append to `memory/knowledge/index.md`** under the appropriate domain heading:
+   ```
+   - YYYY-MM-DD | {topic title} | {one-line key finding} | memory/knowledge/{domain}/YYYY-MM-DD_{slug}.md
+   ```
+
+5. **Print:** "Domain knowledge filed: memory/knowledge/{domain}/YYYY-MM-DD_{slug}.md"
+
+**Rules:**
+- Keep articles under 500 words (embedding-chunk sized for future vector search)
+- Confidence rating: 8-10 = multiple high-quality sources agree; 5-7 = decent coverage but gaps; 1-4 = limited sources, speculative
+- source_files field is mandatory — provides provenance chain
+- If domain doesn't map to crypto/security/ai-infra, create a new domain directory and add a new section header in index.md
 
 Append to `history/changes/research_log.md`:
 ```
