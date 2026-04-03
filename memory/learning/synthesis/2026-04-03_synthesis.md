@@ -160,7 +160,7 @@
 
 1. **Signal velocity jumped dramatically.** From 0.86/day (prior synthesis) to 4.71/day. This is driven by two long, productive sessions (5C pipeline work + investment research + /make-prediction skill build) plus heartbeat auto-signals. The velocity will normalize. The synthesis threshold of 20 signals was correctly triggered.
 
-2. **Heartbeat auto-signals are low-information noise.** 3 of 27 signals (11%) are identical network_connections WARNs that add no insight. The min_delta threshold for network_connections should be raised, or the dedup window extended, to prevent polluting the synthesis pipeline with noise. Auto-signals are valuable when they surface real degradation; these were expected behavior from 14 concurrent Claude sessions.
+2. **Heartbeat auto-signals are low-information noise (confirmed and worsening).** Originally 3 of 27 signals (11%) were identical network_connections WARNs. Post-synthesis, 3 additional heartbeat WARNs arrived (2 more network_connections + 1 context_budget_proxy), making 6 of 30+ total signals (~20%) low-information noise. The noise ratio is increasing as heartbeat continues firing without threshold recalibration. This is now the highest-priority housekeeping item for the auto-signal producer.
 
 3. **Investment/domain signals are the highest quality.** The 5 investment research signals (avg rating 8.0) are significantly higher quality than system-health signals (avg rating 6.0). This makes sense -- domain insights from Eric's active work sessions carry more long-term learning value than transient system metrics. The learning system is doing its job when domain signals outnumber infrastructure signals.
 
