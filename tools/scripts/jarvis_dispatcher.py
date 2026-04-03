@@ -75,6 +75,12 @@ MAX_TIER = int(os.environ.get("JARVIS_MAX_TIER", "2"))
 MAX_RETRIES = {0: 3, 1: 1, 2: 0}
 STALE_LOCK_HOURS = 4
 
+# Budget controls -- prevent autonomous systems from exhausting Claude Max daily limit.
+# Derived from usage data: avg task ~3.3 min, max 10.4 min, overnight uses ~50 min.
+MAX_TASKS_PER_SOURCE_PER_DAY = 3   # per source (heartbeat, routine, overnight, session)
+MAX_WALL_TIME_PER_TASK_S = 900     # 15 min hard cap per task
+DAILY_AGGREGATE_CAP_S = 2700       # 45 min total dispatcher time per day
+
 # ISC verify command allowlist and sanitization -- imported from shared module.
 # python/python3 and echo were removed from the allowlist in isc_common (see
 # history/decisions/ for rationale: python -c sandbox escape + echo trivial-pass).
@@ -125,6 +131,51 @@ CONTEXT_FILES_BLOCKED = re.compile(
     r"|(?:^|[/\\])\.aws[/\\]",
     re.IGNORECASE,
 )
+
+
+# -- Budget enforcement -----------------------------------------------------
+
+def _today_runs() -> list[dict]:
+    """Load today's dispatcher run reports."""
+    today = datetime.now().strftime("%Y-%m-%d").replace("-", "")
+    runs = []
+    if not RUNS_DIR.is_dir():
+        return runs
+    for f in RUNS_DIR.iterdir():
+        if f.suffix == ".json" and today in f.name:
+            try:
+                runs.append(json.loads(f.read_text(encoding="utf-8")))
+            except (json.JSONDecodeError, OSError):
+                pass
+    return runs
+
+
+def check_budget(task: dict) -> Optional[str]:
+    """Check if executing this task would exceed budget limits.
+
+    Returns None if within budget, or a reason string if over budget.
+    """
+    runs = _today_runs()
+
+    # 1. Source-level daily cap
+    source = task.get("source", "unknown")
+    source_count = sum(1 for r in runs if r.get("source") == source)
+    if source_count >= MAX_TASKS_PER_SOURCE_PER_DAY:
+        return f"source '{source}' already ran {source_count} tasks today (max {MAX_TASKS_PER_SOURCE_PER_DAY})"
+
+    # 2. Daily aggregate time cap
+    total_s = 0.0
+    for r in runs:
+        try:
+            started = datetime.fromisoformat(r["started"])
+            completed = datetime.fromisoformat(r["completed"])
+            total_s += (completed - started).total_seconds()
+        except (KeyError, ValueError):
+            pass
+    if total_s >= DAILY_AGGREGATE_CAP_S:
+        return f"daily aggregate {total_s:.0f}s exceeds cap {DAILY_AGGREGATE_CAP_S}s ({DAILY_AGGREGATE_CAP_S // 60} min)"
+
+    return None
 
 
 # -- Backlog I/O (atomic writes) -------------------------------------------
@@ -713,6 +764,7 @@ def run_worker(task: dict, branch: str, wt_path: Path, dry_run: bool = False) ->
         "task_id": task["id"],
         "branch": branch,
         "model": model,
+        "source": task.get("source", "unknown"),
         "started": datetime.now().isoformat(),
         "prompt_tokens_approx": len(prompt) // 4,
     }
@@ -738,7 +790,7 @@ def run_worker(task: dict, branch: str, wt_path: Path, dry_run: bool = False) ->
             text=True,
             encoding="utf-8",
             cwd=str(wt_path),
-            timeout=1800,  # 30 min hard timeout
+            timeout=MAX_WALL_TIME_PER_TASK_S,
             env={
                 **os.environ,
                 "JARVIS_SESSION_TYPE": "autonomous",
@@ -749,23 +801,31 @@ def run_worker(task: dict, branch: str, wt_path: Path, dry_run: bool = False) ->
         report["stdout_tail"] = result.stdout[-2000:] if result.stdout else ""
         report["stderr_tail"] = result.stderr[-500:] if result.stderr else ""
 
-        # Parse TASK_RESULT line
-        for line in reversed(result.stdout.splitlines()):
-            if line.startswith("TASK_RESULT:"):
-                report["task_result_line"] = line
-                if "status=done" in line:
-                    report["status"] = "done"
-                else:
-                    report["status"] = "failed"
-                # Extract ISC pass count
-                m = re.search(r"isc_passed=(\d+)/(\d+)", line)
-                if m:
-                    report["isc_passed"] = int(m.group(1))
-                    report["isc_total"] = int(m.group(2))
-                break
+        # Detect rate limit before parsing results
+        stdout_lower = (result.stdout or "").lower()
+        if "hit your limit" in stdout_lower or ("resets" in stdout_lower and "limit" in stdout_lower):
+            report["status"] = "rate_limited"
+            report["failure_reason"] = "Claude Max usage limit hit"
+            print("  RATE LIMITED: claude -p returned usage limit message",
+                  file=sys.stderr)
         else:
-            report["status"] = "failed"
-            report["failure_reason"] = "No TASK_RESULT line in output"
+            # Parse TASK_RESULT line
+            for line in reversed(result.stdout.splitlines()):
+                if line.startswith("TASK_RESULT:"):
+                    report["task_result_line"] = line
+                    if "status=done" in line:
+                        report["status"] = "done"
+                    else:
+                        report["status"] = "failed"
+                    # Extract ISC pass count
+                    m = re.search(r"isc_passed=(\d+)/(\d+)", line)
+                    if m:
+                        report["isc_passed"] = int(m.group(1))
+                        report["isc_total"] = int(m.group(2))
+                    break
+            else:
+                report["status"] = "failed"
+                report["failure_reason"] = "No TASK_RESULT line in output"
 
     except subprocess.TimeoutExpired:
         report["status"] = "failed"
@@ -1135,6 +1195,14 @@ def dispatch(dry_run: bool = False) -> None:
     print(f"  Selected: {task['id']} (tier {task.get('tier', '?')}, priority {task.get('priority', '?')})")
     print(f"  Description: {task['description']}")
 
+    # Budget check -- abort before acquiring locks or creating worktrees
+    budget_reason = check_budget(task)
+    if budget_reason:
+        print(f"  BUDGET EXCEEDED: {budget_reason}")
+        print("  Deferring task execution. Idle Is Success.")
+        write_backlog(backlog)
+        return
+
     # Acquire lock
     if not acquire_lock(task["id"]):
         return
@@ -1172,6 +1240,15 @@ def dispatch(dry_run: bool = False) -> None:
         if dry_run:
             task["status"] = "pending"  # Reset for dry run
             write_backlog(backlog)
+            return
+
+        # Rate limit -- return task to pending, save report, skip verification
+        if report.get("status") == "rate_limited":
+            task["status"] = "pending"
+            task["notes"] = (task.get("notes") or "") + f"\nRate limited {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            write_backlog(backlog)
+            save_run_report(report)
+            print("  Task returned to pending -- will retry when limit resets")
             return
 
         # Verify ISC

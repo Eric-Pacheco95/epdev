@@ -354,20 +354,27 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
         output = proc.stdout or ""
         stderr = proc.stderr or ""
 
-        # Parse the OVERNIGHT_RESULT line from output
-        for line in output.splitlines():
-            if line.startswith("OVERNIGHT_RESULT:"):
-                parts = dict(kv.split("=", 1) for kv in line.split()
-                             if "=" in kv)
-                result["baseline"] = parts.get("baseline")
-                result["final"] = parts.get("final")
-                try:
-                    result["kept"] = int(parts.get("kept", 0))
-                    result["discarded"] = int(parts.get("discarded", 0))
-                except ValueError:
-                    pass
+        # Detect rate limit before parsing results
+        output_lower = output.lower()
+        if "hit your limit" in output_lower or "resets" in output_lower and "limit" in output_lower:
+            result["status"] = "rate_limited"
+            print(f"  RATE LIMITED: claude -p returned usage limit message",
+                  file=sys.stderr)
+        else:
+            # Parse the OVERNIGHT_RESULT line from output
+            for line in output.splitlines():
+                if line.startswith("OVERNIGHT_RESULT:"):
+                    parts = dict(kv.split("=", 1) for kv in line.split()
+                                 if "=" in kv)
+                    result["baseline"] = parts.get("baseline")
+                    result["final"] = parts.get("final")
+                    try:
+                        result["kept"] = int(parts.get("kept", 0))
+                        result["discarded"] = int(parts.get("discarded", 0))
+                    except ValueError:
+                        pass
 
-        result["status"] = "completed" if proc.returncode == 0 else "failed"
+            result["status"] = "completed" if proc.returncode == 0 else "failed"
 
         # Save raw output for debugging
         raw_log = report_dir / f"{dim_name}_raw.log"
@@ -604,6 +611,13 @@ def main() -> int:
 
             result = run_dimension(dim_name, dim_config, branch, cwd=wt_cwd)
             results.append(result)
+
+            # Abort all remaining dimensions on rate limit
+            if result.get("status") == "rate_limited":
+                print(f"\n  Claude Max usage limit hit. "
+                      f"Aborting remaining dimensions.")
+                break
+
             last_completed_dim = dim_name
 
             dim_elapsed = time.monotonic() - start_time - elapsed
@@ -718,11 +732,14 @@ def run_self_test() -> int:
     else:
         print(f"  SKIP: program.md not found at {PROGRAM_FILE}")
 
-    # State file I/O
+    # State file I/O (use temp file to avoid overwriting production state)
+    import tempfile
+    test_state_path = Path(tempfile.gettempdir()) / "overnight_state_test.json"
     test_state = {"test": True, "last_dimension": "scaffolding"}
-    save_state(test_state)
-    loaded = load_state()
+    test_state_path.write_text(json.dumps(test_state, indent=2), encoding="utf-8")
+    loaded = json.loads(test_state_path.read_text(encoding="utf-8"))
     check(loaded.get("test") is True, "State save/load roundtrip")
+    test_state_path.unlink(missing_ok=True)
 
     print()
     print(f"Results: {passed} passed, {failed} failed")

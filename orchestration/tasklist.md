@@ -441,9 +441,21 @@
 **5C-4: Session task capture (interactive intake)**
 - [x] **Session -> backlog pathway** — /backlog skill: pending_review status + Review ISC + description injection hardening. Arch-reviewed by 3 agents.
 
-**5C-5: Overnight runner state visibility (convergence, not merge)**
-- [ ] **Overnight runner reads/writes backlog for state** — Dimensions register as backlog tasks with status tracking. Keeps separate executor (different termination semantics) but unified visibility
-- [ ] **Budget controls** — Max tasks/day, max `claude -p` time per task, daily aggregate time cap
+**5C-5A: Fix overnight runner (prerequisite)**
+- [x] **Rate limit detection** — Detect "hit your limit" in claude -p output, abort remaining dimensions, log clearly
+- [x] **Self-test state isolation** — Self-test no longer overwrites production overnight_state.json
+- [ ] **Validate real production run** — Confirm next overnight run produces non-zero kept counts (requires limit headroom at 4am)
+
+**5C-5B: Dispatcher budget controls (independent)**
+- [x] **max_tasks_per_source_per_day** — 3 per source per day; checked via run report history before execution
+- [x] **max_wall_time_per_task_s** — 900s (15 min) hard cap; replaces hardcoded 30 min timeout
+- [x] **daily_aggregate_cap_s** — 2700s (45 min) total dispatcher time; checked before task selection
+- [x] **Rate limit detection** — Detect "hit your limit" in claude -p output; return task to pending, don't count as failure
+
+**5C-5C: Overnight producer interface (deferred until 3+ real production runs)**
+- [ ] **Overnight runner emits backlog task** — After iterations complete, emit single pending_review task with recommendations via backlog_append()
+- [ ] **ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs)
+- [ ] **Human review gate** — Overnight-sourced tasks require autonomous_safe: false until reviewed
 
 ### Phase 5D — Hardening + Quality (1-2 sessions)
 
