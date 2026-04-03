@@ -139,7 +139,8 @@
       "name": "context_budget_proxy",
       "type": "hook_output_size",
       "hook_script": "tools/scripts/hook_session_start.py",
-      "thresholds": { "warn_above": 3000, "crit_above": 5000 }
+      "thresholds": { "warn_above": 3500, "crit_above": 5000 },
+      "min_delta": 500
     },
     {
       "name": "auth_health",
@@ -189,8 +190,8 @@
     {
       "name": "network_connections",
       "type": "system_resources",
-      "thresholds": { "warn_above": 40, "crit_above": 70 },
-      "min_delta": 10
+      "thresholds": { "warn_above": 60, "crit_above": 100 },
+      "min_delta": 15
     }
   ],
   "alert_routing": {
