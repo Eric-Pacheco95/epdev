@@ -21,6 +21,17 @@ if str(_ROOT) not in sys.path:
 
 from security.validators.secret_scanner import line_has_secret
 
+# Lazy import -- path guard lives in tools/scripts which is not always importable.
+# We import it only when JARVIS_OVERNIGHT_DIMENSION is set to avoid adding a hard
+# dependency for non-overnight sessions.
+def _import_path_guard():
+    """Return validate_write_path and PathViolation, or (None, None) on import failure."""
+    try:
+        from tools.scripts.overnight_path_guard import validate_write_path, PathViolation
+        return validate_write_path, PathViolation
+    except ImportError:
+        return None, None
+
 
 def _result(decision: str, reason: str | None = None) -> dict[str, Any]:
     out: dict[str, Any] = {"decision": decision}
@@ -387,6 +398,49 @@ def _check_autonomous_file_containment(tool: str, inp: dict) -> dict[str, Any] |
     return None
 
 
+def _check_overnight_path_scope(tool: str, inp: dict) -> dict[str, Any] | None:
+    """Enforce dimension-scoped write rules for overnight autonomous sessions.
+
+    Active when JARVIS_OVERNIGHT_DIMENSION is set AND session type is autonomous.
+    Delegates to overnight_path_guard.validate_write_path() which encodes per-
+    dimension allowed directories and global BLOCKED_PATHS (including history/).
+
+    Returns a block result if the write should be blocked, None otherwise.
+    """
+    if os.environ.get("JARVIS_SESSION_TYPE") != "autonomous":
+        return None
+
+    dimension = os.environ.get("JARVIS_OVERNIGHT_DIMENSION")
+    if not dimension:
+        return None
+
+    if tool not in ("Write", "Edit"):
+        return None
+
+    file_path = str(inp.get("file_path", "") or "")
+    if not file_path:
+        return None
+
+    validate_write_path, PathViolation = _import_path_guard()
+    if validate_write_path is None:
+        # Guard unavailable -- fail open with a warning; do not silently allow
+        # writes when the guard itself cannot be loaded.
+        return _result(
+            "block",
+            f"OVERNIGHT PATH GUARD UNAVAILABLE: cannot import overnight_path_guard. "
+            f"Blocking {tool} to {file_path} to prevent unvalidated writes."
+        )
+
+    try:
+        validate_write_path(file_path, dimension=dimension)
+        return None  # allowed
+    except PathViolation as exc:
+        return _result(
+            "block",
+            f"Overnight path guard rejected write for dimension '{dimension}': {exc}"
+        )
+
+
 def main() -> None:
     try:
         data = json.load(sys.stdin)
@@ -405,6 +459,14 @@ def main() -> None:
     telos_block = _check_autonomous_telos_write(tool, inp)
     if telos_block:
         print(json.dumps(telos_block))
+        return
+
+    # Overnight dimension-scoped write protection (Write/Edit tools)
+    # Runs when JARVIS_OVERNIGHT_DIMENSION is set; enforces per-dimension allowed
+    # directories and global BLOCKED_PATHS including history/ immutability.
+    overnight_block = _check_overnight_path_scope(tool, inp)
+    if overnight_block:
+        print(json.dumps(overnight_block))
         return
 
     # Secret file read protection (Read tool)

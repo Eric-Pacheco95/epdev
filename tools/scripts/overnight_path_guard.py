@@ -30,6 +30,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # --- NEVER-WRITE paths (constitutional rules, non-negotiable) ---
 BLOCKED_PATHS = [
     REPO_ROOT / "memory" / "work" / "telos",
+    REPO_ROOT / "history",  # History is sacred -- immutable audit trail
     REPO_ROOT / "security" / "constitutional-rules.md",
     REPO_ROOT / "CLAUDE.md",
     REPO_ROOT / ".claude" / "settings.json",
@@ -57,6 +58,12 @@ DIMENSION_SCOPES = {
         REPO_ROOT / "memory" / "work" / "jarvis",
     ],
     "prompt_quality": [
+        REPO_ROOT / ".claude" / "skills",
+    ],
+    # algorithm_adherence merges into scaffolding scope (.claude/skills/).
+    # Kept as an explicit entry so dimension-level checks remain readable
+    # and any future split does not silently lose scope enforcement.
+    "algorithm_adherence": [
         REPO_ROOT / ".claude" / "skills",
     ],
     "cross_project": [
