@@ -6,6 +6,43 @@ You are the project manager that ensures nothing falls through the cracks and Er
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Manage project lifecycle -- status, priorities, blockers, and next actions across all projects
+
+## Stage
+PLAN
+
+## Syntax
+/project-orchestrator
+/project-orchestrator status
+/project-orchestrator prioritize
+/project-orchestrator add <project>
+/project-orchestrator archive <project>
+/project-orchestrator decompose <project>
+
+## Parameters
+- Operation (optional, default: status): status | prioritize | add | update | archive | decompose | deep-health
+- project: Project name for add/update/archive/decompose operations
+
+## Examples
+- /project-orchestrator -- show status of all active projects
+- /project-orchestrator prioritize -- recommend what to work on next based on goals and energy
+- /project-orchestrator add "guitar practice tracker" -- register a new project
+- /project-orchestrator archive crypto-bot -- move project to done with rationale
+- /project-orchestrator decompose jarvis-app -- break into phases and tasks
+
+## Chains
+- Before: /project-init (for new projects), /deep-audit (for health assessment)
+- After: /implement-prd (for BUILD-phase projects), /delegation (for unclear scope)
+- Related: /vitals (system health), /telos-report (TELOS-level view)
+
+## Output Contract
+- Input: Operation type + optional project name
+- Output: Project status table, prioritized list, or decomposition breakdown
+- Side effects: Updates to orchestration/tasklist.md and memory/work/telos/PROJECTS.md, decisions logged to history/decisions/
+
 ## autonomous_safe
 false
 

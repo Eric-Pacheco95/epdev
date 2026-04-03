@@ -6,6 +6,36 @@ This report helps Eric understand how his self-knowledge system is evolving and 
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Generate a "What has Jarvis learned about you?" report from TELOS changes and signals
+
+## Stage
+VERIFY
+
+## Syntax
+/telos-report
+/telos-report <period>
+
+## Parameters
+- period (optional, default: "7 days"): Reporting period -- e.g., "7 days", "30 days", "2026-03-01 to 2026-03-31"
+
+## Examples
+- /telos-report -- last 7 days (default)
+- /telos-report 30 days -- last 30 days
+- /telos-report "2026-03-01 to 2026-03-15" -- custom date range
+
+## Chains
+- Before: /telos-update (generates the changes this skill reports on), /learning-capture (generates signals)
+- After: /notion-sync push report (auto-pushes report to Notion Jarvis Reports page)
+- Related: /vitals (system health), /synthesize-signals (signal distillation)
+
+## Output Contract
+- Input: Optional period string
+- Output: Markdown report with sections: REPORT PERIOD, TELOS CHANGES, TOP LEARNINGS, SYSTEM HEALTH, RECOMMENDATIONS
+- Side effects: Report auto-pushed to Notion Jarvis Reports page (32fbf5ae-a9e3-81ec-9a62-cb0e35bae73a)
+
 ## autonomous_safe
 false
 

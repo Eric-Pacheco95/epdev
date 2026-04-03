@@ -98,30 +98,40 @@ def validate_write_path(filepath: str | Path, dimension: str = "unknown") -> Pat
     """
     p = Path(filepath).resolve()
 
-    # 1. Must be within repo root (path traversal prevention)
+    # In git worktrees, resolve() can follow junctions back to the main
+    # repo, making the resolved path appear outside the worktree root.
+    # Fall back to the absolute (non-resolved) path for containment checks
+    # when this happens.
+    p_check = p
     try:
-        p.relative_to(REPO_ROOT)
+        p_check.relative_to(REPO_ROOT)
     except ValueError:
-        raise PathViolation(
-            f"BLOCKED: path outside repo root: {p}"
-        )
+        # Try the absolute-but-unresolved path (worktree-safe)
+        p_abs = Path(filepath).absolute()
+        try:
+            p_abs.relative_to(REPO_ROOT)
+            p_check = p_abs
+        except ValueError:
+            raise PathViolation(
+                f"BLOCKED: path outside repo root: {p}"
+            )
 
     # 2. Check blocked paths (TELOS, constitutional rules, secrets)
     for blocked in BLOCKED_PATHS:
-        blocked_resolved = blocked.resolve()
-        if p == blocked_resolved or _is_under(p, blocked_resolved):
+        blocked_abs = Path(blocked).absolute()
+        if p_check == blocked_abs or _is_under(p_check, blocked_abs):
             raise PathViolation(
-                f"BLOCKED: write to protected path: {p} "
+                f"BLOCKED: write to protected path: {p_check} "
                 f"(matches: {blocked})"
             )
 
     # 3. Check blocked patterns
-    name_lower = p.name.lower()
+    name_lower = p_check.name.lower()
     for pattern in BLOCKED_PATTERNS:
         pat = pattern.lower().replace("*", "")
         if pat in name_lower:
             raise PathViolation(
-                f"BLOCKED: filename matches protected pattern: {p} "
+                f"BLOCKED: filename matches protected pattern: {p_check} "
                 f"(pattern: {pattern})"
             )
 
@@ -132,12 +142,12 @@ def validate_write_path(filepath: str | Path, dimension: str = "unknown") -> Pat
         allowed_dirs = ALWAYS_ALLOWED
 
     for allowed in allowed_dirs:
-        allowed_resolved = allowed.resolve()
-        if p == allowed_resolved or _is_under(p, allowed_resolved):
-            return p
+        allowed_abs = Path(allowed).absolute()
+        if p_check == allowed_abs or _is_under(p_check, allowed_abs):
+            return p_check
 
     raise PathViolation(
-        f"BLOCKED: path not in allowed scope for dimension '{dimension}': {p} "
+        f"BLOCKED: path not in allowed scope for dimension '{dimension}': {p_check} "
         f"(allowed: {[str(d) for d in allowed_dirs]})"
     )
 

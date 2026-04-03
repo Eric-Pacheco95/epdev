@@ -65,5 +65,6 @@ def test_settings_json_blocked():
 def test_dimension_scopes_keys_exist():
     """All documented dimensions have scope entries."""
     expected = {"scaffolding", "codebase_health", "knowledge_synthesis",
-                "external_monitoring", "prompt_quality", "cross_project"}
+                "external_monitoring", "prompt_quality", "cross_project",
+                "algorithm_adherence"}
     assert set(DIMENSION_SCOPES.keys()) == expected

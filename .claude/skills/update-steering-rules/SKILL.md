@@ -6,6 +6,35 @@ Steering rules are the behavioral guardrails that make Jarvis smarter over time.
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Analyze failures, synthesis, and feedback to propose new or updated CLAUDE.md steering rules
+
+## Stage
+LEARN
+
+## Syntax
+/update-steering-rules
+/update-steering-rules --audit
+
+## Parameters
+- --audit: Audit mode -- prune stale rules, merge related rules, move category errors, archive completed-phase references (triggered when rule count exceeds 45 or file exceeds 20KB)
+
+## Examples
+- /update-steering-rules -- analyze recent failures and propose new rules
+- /update-steering-rules --audit -- prune and consolidate existing rules
+
+## Chains
+- Before: /self-heal (failures feed rule proposals), /synthesize-signals (synthesis themes feed rules), /learning-capture (feedback signals)
+- After: /security-audit (if security rule proposed, validate against constitutional-rules.md)
+- Related: /review-code (for code-level patterns that become rules)
+
+## Output Contract
+- Input: Optional --audit flag
+- Output: Numbered list of proposed rules with evidence, insertion point in CLAUDE.md, and rationale
+- Side effects: Rules added to CLAUDE.md (after approval), update logged to history/decisions/
+
 ## autonomous_safe
 false
 

@@ -8,6 +8,40 @@ Architecture: sequential skill pipeline — each phase feeds the next. No phase 
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Full ISC project creation pipeline -- research, stress-test, and PRD before any code
+
+## Stage
+PLAN
+
+## Syntax
+/project-init <topic>
+/project-init quick <topic>
+/project-init resume <topic>
+
+## Parameters
+- topic: Project idea or domain to initialize (required)
+- quick: Compressed mode -- quick research + PRD only, skip first-principles and red-team
+- resume: Resume from existing research brief, skip OBSERVE phase
+
+## Examples
+- /project-init "AI-powered guitar practice tracker"
+- /project-init quick "personal finance dashboard"
+- /project-init resume crypto-bot
+
+## Chains
+- Before: (entry point for new projects -- no predecessor required)
+- After: /implement-prd (pass generated PRD path as input)
+- Composes: /research + /first-principles + /red-team + /create-prd (in sequence)
+- Full chain: /project-init -> /implement-prd -> /learning-capture
+
+## Output Contract
+- Input: Topic string + optional mode flag
+- Output: Research brief, first-principles findings, red-team analysis, PRD document
+- Side effects: PRD saved to memory/work/{slug}/PRD.md, project registered in orchestration/tasklist.md, project state created at memory/work/{slug}/project_state.md
+
 ## autonomous_safe
 false
 

@@ -6,6 +6,36 @@ You embody the principle: every failure is captured, diagnosed, and produces a f
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Diagnose failures, apply minimal fixes, verify, and log so the same bug never recurs
+
+## Stage
+VERIFY
+
+## Syntax
+/self-heal <error description or failing command>
+/self-heal
+
+## Parameters
+- error/failure: Description of what failed, error output, or failing command (optional -- if omitted, runs full defensive test suite as health check)
+
+## Examples
+- /self-heal "test_injection_detection.py failed with AssertionError on line 42"
+- /self-heal "hook pre-commit crashed with UnicodeEncodeError"
+- /self-heal -- run full defensive test suite and fix any failures
+
+## Chains
+- Before: Any failing test, hook, skill, or build step
+- After: /learning-capture (failure is automatically logged to memory/learning/failures/)
+- Related: /review-code (for code-level diagnosis), /update-steering-rules (if systemic issue found)
+
+## Output Contract
+- Input: Error description or empty (health check mode)
+- Output: Diagnosis + fix applied + verification result, or UNRESOLVED after 3 cycles with escalation notes
+- Side effects: Failure logged to memory/learning/failures/{date}_{slug}.md, code fixes applied, optional steering rule proposal
+
 ## autonomous_safe
 false
 

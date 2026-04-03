@@ -14,7 +14,7 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
@@ -22,7 +22,7 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
@@ -30,7 +30,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Daniel Miessler"
   url: "https://danielmiessler.com/newsletter"
@@ -38,7 +38,7 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Hacker News"
   url: "https://news.ycombinator.com"
@@ -46,7 +46,7 @@
   type: community
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "MLOps YouTube"
   url: "https://www.youtube.com/@MLOps"
@@ -54,7 +54,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-01"
+  last_checked: "2026-04-03"
 
 - name: "Andrej Karpathy YouTube"
   url: "https://www.youtube.com/@AndrejKarpathy"
@@ -62,7 +62,7 @@
   type: ai_education
   tier: 1
   frequency: daily
-  last_checked: "2026-04-01"
+  last_checked: "2026-04-03"
 
 # =============================================================================
 # Tier 2 -- Weekly (ecosystem, security, competitors, crypto)
@@ -74,7 +74,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Krebs on Security"
   url: "https://krebsonsecurity.com"
@@ -82,7 +82,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "The Hacker News"
   url: "https://thehackernews.com"
@@ -90,15 +90,15 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "LangChain Blog"
-  url: "https://blog.langchain.dev"
-  feed_url: "https://blog.langchain.dev/rss/"
+  url: "https://blog.langchain.com"
+  feed_url: "https://blog.langchain.com/rss/"
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Hugging Face Blog"
   url: "https://huggingface.co/blog"
@@ -106,7 +106,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
@@ -114,7 +114,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Fabric GitHub Releases"
   url: "https://github.com/danielmiessler/fabric/releases"
@@ -122,7 +122,7 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Latent Space Podcast"
   url: "https://www.latent.space"
@@ -130,7 +130,7 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "CoinDesk"
   url: "https://www.coindesk.com"
@@ -138,7 +138,7 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "CoinTelegraph"
   url: "https://cointelegraph.com"
@@ -146,7 +146,7 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 # =============================================================================
 # Tier 3 -- Monthly (broader ecosystem, research)
@@ -158,7 +158,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Meta AI Blog"
   url: "https://ai.meta.com/blog"
@@ -166,15 +166,15 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Microsoft AI Blog"
-  url: "https://blogs.microsoft.com/ai"
+  url: "https://news.microsoft.com/source/topics/ai/"
   feed_url: ""
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -182,7 +182,7 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
@@ -190,7 +190,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -198,7 +198,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
@@ -206,7 +206,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "AI Safety Newsletter (Zvi)"
   url: "https://thezvi.substack.com"
@@ -214,4 +214,4 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
