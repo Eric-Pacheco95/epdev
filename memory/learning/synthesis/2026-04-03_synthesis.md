@@ -98,9 +98,10 @@
 - Anti-pattern: false
 - Supporting signals: 2026-04-03_youtube-transcript-extraction-gap.md
 - Failure weight: 0
-- Pattern: tavily_extract, WebFetch, and tavily_search all fail to extract YouTube video transcripts. The workaround (search for corroborating coverage of the video topic) works but costs 2-3 extra tool calls.
-- Implication: For /absorb on YouTube, skip direct transcript extraction and go straight to corroborating source search. A YouTube transcript MCP server (yt-dlp based) would solve this but the workaround is adequate for now.
-- Action: Candidate only. If YouTube content frequency increases, evaluate yt-dlp MCP server. For now, document the workaround in /absorb or /research skill notes.
+- Staleness note: Single signal only. Workaround (search for corroborating coverage) is adequate. Archive this theme if no new YouTube extraction failures occur by 2026-04-17.
+- Pattern: tavily_extract, WebFetch, and tavily_search all fail to extract YouTube video transcripts. The workaround (search for corroborating coverage of the video topic) works but costs 2-3 extra tool calls. The /absorb skill should document this workaround as the default path for YouTube inputs.
+- Implication: For /absorb on YouTube, skip direct transcript extraction and go straight to corroborating source search. A YouTube transcript MCP server (yt-dlp based) would solve this but the workaround is adequate and the steering rule "absorb ideas over adopt dependencies" applies -- only adopt if YouTube frequency exceeds 3+ per week.
+- Action: Candidate only. Document workaround in /absorb skill notes. Set archive trigger: 2026-04-17 with no new signals.
 
 ---
 
