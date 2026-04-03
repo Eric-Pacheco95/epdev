@@ -69,6 +69,8 @@ def load_state() -> dict:
         "last_run_date": None,
         "run_count": 0,
         "dimensions": {},
+        "total_reviewed_by_human": 0,
+        "total_merged_to_main": 0,
     }
 
 
@@ -342,6 +344,9 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
 
     env = os.environ.copy()
     env["JARVIS_SESSION_TYPE"] = "autonomous"
+    # Tell the PreToolUse hook which dimension is running so it can enforce
+    # dimension-scoped write rules via overnight_path_guard.validate_write_path().
+    env["JARVIS_OVERNIGHT_DIMENSION"] = dim_name
     try:
         proc = subprocess.run(
             [CLAUDE_BIN, "-p", "--verbose", "-"],
@@ -356,7 +361,8 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
 
         # Detect rate limit before parsing results
         output_lower = output.lower()
-        if "hit your limit" in output_lower or "resets" in output_lower and "limit" in output_lower:
+        if ("hit your limit" in output_lower
+                or ("resets" in output_lower and "limit" in output_lower)):
             result["status"] = "rate_limited"
             print(f"  RATE LIMITED: claude -p returned usage limit message",
                   file=sys.stderr)
@@ -486,6 +492,21 @@ def post_slack_summary(results: list[dict], quality: str, security: str,
     total_discarded = sum(r.get("discarded", 0) for r in results)
     dim_names = [r.get("dimension", "?") for r in results]
 
+    # Detect rate-limit scenario: all dimensions are rate_limited
+    all_rate_limited = all(r.get("status") == "rate_limited" for r in results)
+    any_rate_limited = any(r.get("status") == "rate_limited" for r in results)
+
+    if all_rate_limited:
+        lines = [
+            "*Overnight Runner -- Rate Limited*",
+            ":warning: Claude Max usage limit hit before any work was done.",
+            f"Attempted dimension(s): {', '.join(dim_names)}",
+            f"Total: 0 kept, 0 discarded ({elapsed_min:.0f} min)",
+            f"Branch: `{branch}`",
+            "Action: No changes to review. Limit resets overnight.",
+        ]
+        return notify("\n".join(lines), severity="critical", bypass_caps=True)
+
     lines = [
         "*Overnight Self-Improvement Complete*",
         f"Dimensions: {', '.join(dim_names)} ({len(results)} of {len(DIMENSION_ORDER)})",
@@ -493,9 +514,12 @@ def post_slack_summary(results: list[dict], quality: str, security: str,
     ]
 
     for r in results:
-        status_icon = "+" if r.get("status") == "completed" else "!"
-        lines.append(f"  {status_icon} {r['dimension']}: {r.get('baseline', '?')} -> "
-                      f"{r.get('final', '?')} ({r.get('kept', 0)} kept)")
+        if r.get("status") == "rate_limited":
+            lines.append(f"  ! {r['dimension']}: RATE LIMITED -- no work done")
+        else:
+            status_icon = "+" if r.get("status") == "completed" else "!"
+            lines.append(f"  {status_icon} {r['dimension']}: {r.get('baseline', '?')} -> "
+                          f"{r.get('final', '?')} ({r.get('kept', 0)} kept)")
 
     lines.extend([
         f"Branch: `{branch}`",
@@ -503,9 +527,9 @@ def post_slack_summary(results: list[dict], quality: str, security: str,
         f"{security}",
     ])
 
-    # Escalate if any dimension failed
+    # Escalate if any dimension failed or was rate-limited
     any_failed = any(r.get("status") in ("failed", "error") for r in results)
-    sev = "critical" if any_failed else "routine"
+    sev = "critical" if (any_failed or any_rate_limited) else "routine"
     return notify("\n".join(lines), severity=sev, bypass_caps=True)
 
 
@@ -644,6 +668,11 @@ def main() -> int:
         state["last_run_date"] = today
         state["run_count"] = state.get("run_count", 0) + 1
         state["dimensions_per_run"] = len(results)
+        # Preserve feedback counters across runs (incremented manually by Eric)
+        if "total_reviewed_by_human" not in state:
+            state["total_reviewed_by_human"] = 0
+        if "total_merged_to_main" not in state:
+            state["total_merged_to_main"] = 0
 
         for result in results:
             dim_name = result.get("dimension", "unknown")
@@ -740,6 +769,46 @@ def run_self_test() -> int:
     loaded = json.loads(test_state_path.read_text(encoding="utf-8"))
     check(loaded.get("test") is True, "State save/load roundtrip")
     test_state_path.unlink(missing_ok=True)
+
+    # Default state includes feedback counters
+    default_state = load_state.__wrapped__() if hasattr(load_state, "__wrapped__") else {
+        "last_dimension": None,
+        "last_run_date": None,
+        "run_count": 0,
+        "dimensions": {},
+        "total_reviewed_by_human": 0,
+        "total_merged_to_main": 0,
+    }
+    check("total_reviewed_by_human" in default_state,
+          "Default state includes total_reviewed_by_human")
+    check("total_merged_to_main" in default_state,
+          "Default state includes total_merged_to_main")
+    check(default_state.get("total_reviewed_by_human") == 0,
+          "total_reviewed_by_human initializes to 0")
+    check(default_state.get("total_merged_to_main") == 0,
+          "total_merged_to_main initializes to 0")
+
+    # Rate limit detection logic
+    rl_phrases = [
+        "you've hit your limit",
+        "usage limit resets at midnight",
+        "your limit resets",
+    ]
+    non_rl_phrases = [
+        "no changes found",
+        "OVERNIGHT_RESULT: dim=scaffolding baseline=10 final=8 kept=2 discarded=1",
+        "",
+    ]
+    for phrase in rl_phrases:
+        lower = phrase.lower()
+        detected = ("hit your limit" in lower
+                    or ("resets" in lower and "limit" in lower))
+        check(detected, f"Rate limit detected in: '{phrase}'")
+    for phrase in non_rl_phrases:
+        lower = phrase.lower()
+        detected = ("hit your limit" in lower
+                    or ("resets" in lower and "limit" in lower))
+        check(not detected, f"Rate limit NOT falsely detected in: '{phrase}'")
 
     print()
     print(f"Results: {passed} passed, {failed} failed")
