@@ -307,7 +307,31 @@ def _git_safety_check() -> list[str]:
     except (OSError, subprocess.TimeoutExpired):
         pass
 
-    # 2. Check for uncommitted changes
+    # 2. Check HTTPS connection count (network impact from MCP servers)
+    try:
+        result = subprocess.run(
+            ["netstat", "-n"],
+            capture_output=True, text=True, encoding="utf-8", timeout=10,
+        )
+        if result.returncode == 0:
+            https_count = sum(
+                1 for ln in result.stdout.splitlines()
+                if "ESTABLISHED" in ln and ":443" in ln
+            )
+            if https_count >= 70:
+                warnings.append(
+                    f"  >>> {https_count} HTTPS connections active -- "
+                    "CRITICAL network impact; close idle Claude sessions immediately"
+                )
+            elif https_count >= 40:
+                warnings.append(
+                    f"  >>> {https_count} HTTPS connections active -- "
+                    "elevated network usage; consider closing idle sessions"
+                )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+    # 3. Check for uncommitted changes
     try:
         result = subprocess.run(
             ["git", "status", "--porcelain"],

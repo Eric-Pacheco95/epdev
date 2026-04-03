@@ -691,6 +691,67 @@ def collect_backlog_health_metric(cfg: dict, root_dir: Path, _prev: dict = None)
                   f"metric '{metric_name}' not found in backlog_health output")
 
 
+# ── system_resources ───────────────────────────────────────────────
+
+def collect_system_resources(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Count Claude/node processes and HTTPS connections.
+
+    Returns a composite score: total HTTPS connections.
+    Detail includes breakdown by process type.
+    """
+    name = cfg.get("name", "system_resources")
+
+    claude_count = 0
+    node_count = 0
+    https_connections = 0
+
+    # Count claude.exe processes
+    try:
+        result = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq claude.exe", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, encoding="utf-8", timeout=5,
+        )
+        if result.returncode == 0:
+            claude_count = sum(
+                1 for ln in result.stdout.strip().splitlines()
+                if "claude.exe" in ln.lower()
+            )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+    # Count node.exe processes
+    try:
+        result = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq node.exe", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, encoding="utf-8", timeout=5,
+        )
+        if result.returncode == 0:
+            node_count = sum(
+                1 for ln in result.stdout.strip().splitlines()
+                if "node.exe" in ln.lower()
+            )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+    # Count established HTTPS connections (port 443)
+    try:
+        result = subprocess.run(
+            ["netstat", "-n"],
+            capture_output=True, text=True, encoding="utf-8", timeout=10,
+        )
+        if result.returncode == 0:
+            for ln in result.stdout.splitlines():
+                if "ESTABLISHED" in ln and ":443" in ln:
+                    https_connections += 1
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+    detail = "claude=%d, node=%d, https_connections=%d" % (
+        claude_count, node_count, https_connections
+    )
+    return _result(name, https_connections, "count", detail)
+
+
 # ── Dispatcher ──────────────────────────────────────────────────────
 
 COLLECTOR_TYPES = {
@@ -714,6 +775,7 @@ COLLECTOR_TYPES = {
     "manifest_signal_velocity": collect_manifest_signal_velocity,
     "manifest_autonomous_signal_rate": collect_manifest_autonomous_signal_rate,
     "backlog_health_metric": collect_backlog_health_metric,
+    "system_resources": collect_system_resources,
 }
 
 

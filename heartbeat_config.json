@@ -185,6 +185,12 @@
       "type": "backlog_health_metric",
       "metric": "backlog_success_rate",
       "thresholds": { "warn_below": 0.8, "crit_below": 0.5 }
+    },
+    {
+      "name": "network_connections",
+      "type": "system_resources",
+      "thresholds": { "warn_above": 40, "crit_above": 70 },
+      "min_delta": 10
     }
   ],
   "alert_routing": {
