@@ -46,7 +46,20 @@ false
 - If description is too vague (under 10 words): print "Need more detail. Describe: who is the skill for, what does it do, what does it output? Example: /create-pattern a skill that generates changelog entries from git diff"
 - If a skill with similar name already exists: print "A similar skill already exists: /{existing}. Did you mean to update it, or is this genuinely different?"
 - If the task is a narrow sub-step of an existing skill: print "This sounds like a sub-step of /{parent}. Consider adding it there instead of creating a standalone skill."
-- Once input is validated, proceed to Step 1
+
+### Skill Lifecycle Gate (must pass before proceeding)
+
+Before creating any new skill, evaluate these 4 checks in order. If any check redirects, follow the redirect — do not proceed to Step 1.
+
+1. **Can this be a `--flag` on an existing skill?** Scan existing skills for overlapping domain or workflow. If the new behavior is a mode of an existing skill (e.g., outreach mode on /research), propose adding a `--flag` mode instead. Default posture: extend before create. Only create standalone when the workflow is genuinely independent of all existing skills.
+
+2. **Has `/architecture-review` been run?** Required if the skill touches external data (WebSearch, APIs), sends output to real people (email, Slack, notifications), or has security implications. If not run, recommend it before proceeding: "This skill [reason]. Run `/architecture-review` first to validate the design."
+
+3. **Is recurrence scored against base rate, not recency?** Ask: "How many times would this workflow realistically fire in the next 12 months?" If the answer is < 4, the recurrence is Low/Medium — a `--flag` mode or ad-hoc prompting may be sufficient. Guard against availability bias from a single satisfying session.
+
+4. **Is a promotion trigger defined?** Every new `--flag` mode should include a promotion trigger: "If used N+ times across M+ different contexts, evaluate promoting to standalone skill." Every new standalone skill should include a retirement trigger: "If unused for 6+ months, archive." Document both in the skill's constraints section.
+
+If all 4 checks pass (or the user explicitly overrides after seeing the recommendations), proceed to Step 1.
 
 ## Step 1: PARSE AND GENERATE
 
