@@ -158,7 +158,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Meta AI Blog"
   url: "https://ai.meta.com/blog"
@@ -166,7 +166,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Microsoft AI Blog"
   url: "https://blogs.microsoft.com/ai"
@@ -182,7 +182,7 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
