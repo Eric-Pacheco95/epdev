@@ -130,7 +130,7 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "CoinDesk"
   url: "https://www.coindesk.com"
@@ -138,7 +138,7 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "CoinTelegraph"
   url: "https://cointelegraph.com"
@@ -146,7 +146,7 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 # =============================================================================
 # Tier 3 -- Monthly (broader ecosystem, research)
