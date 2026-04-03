@@ -87,23 +87,6 @@ def main() -> None:
         except (subprocess.TimeoutExpired, OSError) as exc:
             print(f"Heartbeat skipped: {exc}", file=sys.stderr)
 
-    # Post session digest to #epdev — only if enough time has passed since last post.
-    # Old approach used signal file mtime as a session-duration proxy, but signals
-    # accumulate across sessions so every short restart looked like a long session.
-    # New approach: cooldown-based — skip if last session-end post was < 15 min ago.
-    _COOLDOWN_FILE = REPO_ROOT / "data" / ".last_session_end_post"
-    _COOLDOWN_SECONDS = 900  # 15 minutes
-
-    should_post_session = True
-    try:
-        if _COOLDOWN_FILE.is_file():
-            last_post_ts = float(_COOLDOWN_FILE.read_text(encoding="utf-8").strip())
-            elapsed = now.timestamp() - last_post_ts
-            if elapsed < _COOLDOWN_SECONDS:
-                should_post_session = False
-    except (ValueError, OSError):
-        pass  # corrupted file — allow post
-
     # Write session_costs row to manifest DB
     try:
         from tools.scripts.manifest_db import write_session_cost
@@ -115,38 +98,7 @@ def main() -> None:
     except Exception:
         pass  # graceful fallback
 
-    # Check for incomplete ISC items in active PRDs
-    incomplete_iscs: dict[str, int] = {}
-    if WORK_DIR.is_dir():
-        for prd in WORK_DIR.glob("*/PRD.md"):
-            try:
-                prd_text = prd.read_text(encoding="utf-8")
-            except OSError:
-                continue
-            unchecked = sum(
-                1 for line in prd_text.splitlines()
-                if re.match(r"^\s*-\s+\[ \]\s+", line)
-            )
-            if unchecked > 0:
-                incomplete_iscs[prd.parent.name] = unchecked
-
-    if should_post_session:
-        ts = now.strftime("%Y-%m-%d %H:%M UTC")
-        msg = f":brain: *Jarvis session ended* -- {ts}\n"
-        msg += f"Stop reason: `{stop_reason}` | Learning signals on file: `{count}`"
-        if count > 0:
-            msg += "\n_Run `/learning-capture` to process signals._"
-        if incomplete_iscs:
-            isc_parts = [f"{proj}: {n} remaining" for proj, n in incomplete_iscs.items()]
-            msg += f"\n:warning: *Incomplete ISCs:* {', '.join(isc_parts)}"
-        posted = notify(msg)
-        if posted:
-            # Record timestamp to enforce cooldown
-            try:
-                _COOLDOWN_FILE.parent.mkdir(parents=True, exist_ok=True)
-                _COOLDOWN_FILE.write_text(str(now.timestamp()), encoding="utf-8")
-            except OSError:
-                pass
+    # Session-end Slack notifications to #epdev are disabled (too noisy)
 
     sys.exit(0)
 
