@@ -6,6 +6,42 @@ Notion is Eric's human writing layer. Git-markdown is Jarvis's source of truth. 
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Bridge Notion workspace and Jarvis git-markdown -- pull signals in, push reports out
+
+## Stage
+OBSERVE (inbox/journal/goals modes), BUILD (push mode)
+
+## Syntax
+/notion-sync
+/notion-sync inbox
+/notion-sync journal
+/notion-sync goals
+/notion-sync push [report|telos]
+
+## Parameters
+- Mode (optional, default: inbox): inbox | journal | goals | push
+- push sub-arg (optional): report (push telos-report to Notion) | telos (push TELOS mirror)
+
+## Examples
+- /notion-sync -- check Inbox for new captures (default)
+- /notion-sync journal -- weekly: read Journal, extract signals, queue telos-update
+- /notion-sync goals -- monthly: compare Notion goals with TELOS GOALS.md
+- /notion-sync push report -- push latest telos-report to Notion Jarvis Reports page
+- /notion-sync push telos -- sync TELOS Mirror page in Notion
+
+## Chains
+- Before: /telos-report or /telos-update (for push mode)
+- After: /telos-update (if TELOS-relevant content found), /synthesize-signals (if signal count > 10)
+- Related: /absorb (for URL analysis), /extract-wisdom (used internally for journal analysis)
+
+## Output Contract
+- Input: Mode selection + optional sub-arguments
+- Output: Sync summary (pages read, signals written, TELOS queued status)
+- Side effects: Signals written to memory/learning/signals/, Notion pages updated (push mode), history/changes/notion_sync.md appended
+
 ## autonomous_safe
 false
 
