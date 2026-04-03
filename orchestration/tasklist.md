@@ -457,23 +457,63 @@
 - [ ] **ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs)
 - [ ] **Human review gate** — Overnight-sourced tasks require autonomous_safe: false until reviewed
 
-### Phase 5D — Hardening + Quality (1-2 sessions)
+### Phase 5D — Hardening + Quality (2-3 sessions, data-dependent)
 
-- [ ] **Two-layer verification (optional)** — Second `claude -p` review of worker output if Tier 1 self-verification quality is insufficient. Aron's CEO-checks-worker pattern, adapted
-- [ ] **Worker prompt optimization** — Based on observed context efficiency and quality data
-- [ ] **Autonomous signal rate monitoring** — 4E item, now critical for Phase 5 safety
+> **Prerequisite:** Let pipeline run organically. Collect 15+ tasks with diverse outcomes before optimizing.
+
+- [ ] **Branch lifecycle tracker** — Flag `jarvis/auto-*` and `jarvis/overnight-*` branches with no merge/discard decision after 7 days. Deterministic, zero LLM cost. Real gap found by arch review: 5 orphaned branches in production today
+- [ ] **Autonomous signal rate monitoring** — 4E item, now critical for Phase 5 safety. Alert on volume spikes from autonomous producers (heartbeat, overnight, dispatcher)
+- [ ] **Two-layer verification (data-gated)** — Second `claude -p` review of worker output if ISC quality proves insufficient. Only build after 15+ task outcomes show ISC-pass-but-bad-quality pattern. Aron's CEO-checks-worker pattern, adapted
+- [ ] **Worker prompt optimization (data-gated)** — Analyze run reports: what context did workers actually use vs ignore? Only build after 15+ runs provide calibration data
 - [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources (moved from 5C -- requires pipeline stability first)
-- [ ] **Phase 5 completion gate** — Dispatcher autonomously executes Tier 0-1 tasks with >=90% success rate over 14 days
+
+### Phase 5E — Self-Correcting Pipeline (after 5D + 15 diverse task outcomes including 3+ manual_review)
+
+> **Prerequisite:** 15+ dispatcher tasks with diverse outcomes (done, failed, manual_review, retried). Architecture review: `memory/work/_arch-review-20260403/` (3-agent convergence on design constraints).
+
+**5E-1: Deterministic follow-on (partial-ISC retry)**
+- [ ] **`generation` field in task schema** — Hard cap at 2 (parent -> G1 -> G2 -> terminal). Prevents runaway loops, scope drift, quality degradation simultaneously
+- [ ] **`_emit_followon()` in dispatcher** — DECIDE function after write_backlog(), before notify_completion(). Extracts failing ISC criteria from verify_isc() results. Never derives from worker output
+- [ ] **Root-source attribution** — Follow-on tasks trace budget to original producer source, not "dispatcher". Prevents budget circumvention
+- [ ] **Always `pending_review`** — Follow-on tasks never enter `pending` autonomously. Max 1 follow-on per dispatch run
+- [ ] **Slack notification includes follow-on task ID** — Eric knows what to review
+
+**5E-2: Pipeline lifecycle + observability**
+- [ ] **`pending_review` TTL** — 7-day TTL in archive sweep. Stale pending_review tasks escalate to Slack alert, then auto-fail
+- [ ] **Branch existence validation at selection time** — If task references parent_branch, verify it exists before claiming. Expired branch -> manual_review
+- [ ] **Follow-on ISC count must decrease per generation** — If G1 fails more ISC than parent, route to manual_review (evidence of scope expansion)
+
+**5E-3: LLM-assisted follow-on (deferred within 5E)**
+- [ ] **FOLLOW_UP staging gate** — Worker FOLLOW_UP lines go to `data/followon_pending/` staging file, not directly to backlog. Requires human review before promotion (CLAUDE.md data-source checklist)
+- [ ] **Description injection hardening** — Unicode normalization, protected-path scan on description field, not just ISC
+- [ ] **Overnight producer interface** — Moved from 5C-5C. Requires 3+ real overnight production runs + staging gate
+
+**Phase 5 Completion Gate**
+- [ ] **>=90% success rate over 14 days** — Dispatcher autonomously executes Tier 0-1 tasks. Measured after 5D is stable. 5E is not required for this gate but extends the pipeline beyond it
+
+---
+
+## Capability Tracks (dependency-triggered, not phase-sequenced)
+
+> Items below activate when their dependency triggers are met, not at a specific phase. They live in `task_backlog.jsonl` as `pending_review`. This section ensures visibility so they resurface at the right time.
+
+### Prediction Engine
+
+> **Skill:** `/make-prediction` (v1 live, 2026-04-03). **Goal:** 50+ tracked predictions for calibration learning, then autonomous backtesting.
+
+- [ ] **Prediction review scheduled task** — Weekly/monthly scan of `data/predictions/` for signposts approaching due dates. Surface due-for-review predictions in session start or Slack. Eric resolves interactively. **Trigger:** 10+ tracked predictions in `data/predictions/`. Backlog: `task-1775191309568356`
+- [ ] **Prediction backtesting pipeline** — Autonomous producer: select historical events, run `/make-prediction` constrained to historical knowledge, score against known outcomes. Requires seed list of 20+ historical events, knowledge-constraining prompt wrapper, scoring logic. **Trigger:** `/make-prediction` v1 validated + dispatcher operational + Phase 5 stable. Backlog: `task-1775191309566355`
+- [ ] **Prediction calibration feedback loop** — After 20+ resolved predictions, analyze accuracy patterns by domain. Write calibration adjustment file that `/make-prediction` reads at CALIBRATE step. **Trigger:** 20+ resolved predictions via `/review-prediction`. Backlog: `task-1775191309569355`
 
 ---
 
 ## Phase 6: Daemon-inspired behavioral change (future)
 
-> **Status:** deferred — requires Phase 5 autonomous execution as foundation.
+> **Status:** deferred — requires Phase 5 completion gate.
 > **Concept:** Miessler's "Daemon" project targets behavioral change — not system improvement but *human behavior*. Phase 6 closes the loop from AI-augmented capability to actual life change: guitar practice, health systems, financial momentum, self-discovery. Runs ON the Phase 5 autonomous execution infrastructure.
 
 - [ ] TBD — defined after Phase 5 completion gate passes
-- [ ] **Local embedding + vector search for memory** — DEFERRED from Phase 5. Add semantic retrieval layer (nomic-embed-text + numpy/cosine, no ChromaDB) alongside grep. Triggers: file count > 400 OR 5+ documented grep retrieval failures. Research: `memory/work/local-embeddings/research_brief.md`. Architecture review: `memory/work/_arch-review-20260402b/`. Decision: premature at 126 files; grep + Claude's native semantic reasoning is sufficient at current scale.
+- [ ] **Local embedding + vector search for memory** — DEFERRED from Phase 5. Add semantic retrieval layer (nomic-embed-text + numpy/cosine, no ChromaDB) alongside grep. Triggers: file count > 400 OR 5+ documented grep retrieval failures. Research: `memory/work/local-embeddings/research_brief.md`. Architecture review: `memory/work/_arch-review-20260402b/`. Decision: premature at 126 files; grep + Claude's native semantic reasoning is sufficient at current scale
 
 ---
 

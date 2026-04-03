@@ -35,6 +35,8 @@ OBSERVE
 - After: /analyze-claims (fact-check surprising claims before acting)
 - After: /red-team (stress-test a novel insight before committing to it)
 - Full (crypto): /extract-alpha --market > /analyze-claims > /red-team
+- Full (investment research): /absorb URL --normal > /extract-alpha --market > /analyze-claims > [HUMAN GATE: validate/pivot/kill thesis] > /research --market (parallel agents) > /learning-capture
+- Invalidation branch: if thesis is saturated/invalidated at the gate, re-run /extract-alpha --market on the same research looking for adjacent markets — the real alpha often lives at hop 4-6 of the causal chain, not hop 1-2
 
 ## Output Contract
 - Input: content (text, file path, URL)
