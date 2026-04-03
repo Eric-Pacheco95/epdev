@@ -1,6 +1,6 @@
 @echo off
 REM Jarvis Paradigm Health Monitor -- Task Scheduler wrapper
-REM Runs daily at 1:55pm ET (5 min before overnight runner at 2pm).
+REM Runs daily at 3:55am ET (5 min before overnight runner at 4am).
 REM SENSE layer: measures all 10 paradigm metrics, no LLM calls, <30 seconds.
 REM Posts to Slack #epdev only when alerts exist.
 
