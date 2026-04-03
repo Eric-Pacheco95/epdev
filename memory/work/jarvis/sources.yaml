@@ -14,7 +14,7 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
@@ -22,7 +22,7 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
