@@ -1,42 +1,60 @@
-# Overnight Run Report — knowledge_synthesis
-- Date: 2026-04-03
-- Branch: jarvis/overnight-2026-04-03
-- Dimension: knowledge_synthesis
-- Baseline metric: 0 (files with confidence <60% matching case-sensitive grep)
-- Final metric: 0
-- Iterations: 9
-- Kept: 9
-- Discarded: 0
+# Overnight Run Report: Scaffolding Dimension
+
+**Date**: 2026-04-03
+**Dimension**: scaffolding
+**Branch**: jarvis/overnight-2026-04-03
+**Goal**: Add DISCOVERY sections (One-liner, Stage, Syntax, Parameters, Examples, Chains, Output Contract) to skills that lack them
 
 ## Summary
 
-Reviewed both synthesis documents (2026-04-02, 2026-04-03) for low-confidence themes and stale evidence. Incorporated 3 new unprocessed heartbeat signals into the synthesis. Updated 6 themes across both documents with new evidence, cross-synthesis linkage, staleness annotations, and confidence adjustments.
+Phase 1 complete: all 45 skills now have DISCOVERY sections. Added sections to 10 skills that were missing them. Each DISCOVERY section includes all 7 required sub-sections (One-liner, Stage, Syntax, Parameters, Examples, Chains, Output Contract) with substantive content derived from reading each skill's full definition.
 
-### Key Changes
+**Baseline**: 35/45 skills with `## One-liner`
+**Final**: 45/45 skills with `## One-liner`
+**Kept**: 10 changes
+**Discarded**: 0 changes
+**Iterations**: 10
 
-1. **Heartbeat noise theme upgraded**: 50% → 65%, candidate → established. 6 signals across 2 metrics (network_connections, context_budget_proxy) confirm systemic noise pattern.
-2. **Producer health theme decayed**: 60% → 50% in decay table. Root cause confirmed as rate-limit exhaustion (not code defect). Archive trigger set for 2026-04-10.
-3. **YouTube extraction theme annotated**: Staleness note added, archive trigger set for 2026-04-17 (single signal, adequate workaround exists).
-4. **Skill dev chain strengthened**: 70% → 75% with 2 cross-validating signals from arch review sessions.
-5. **Cross-synthesis linkage added**: Silent diagnosis theme in 2026-04-02 synthesis linked to 2026-04-03 confidence upgrade and rate-limit-silent-success evidence.
-6. **Heartbeat noise meta-observation updated**: Noise ratio increased from 11% to 20% of total signals.
-7. **3 signals processed**: Moved from unprocessed to processed directory after incorporation.
+## Skills Updated
 
-### Metric Note
+1. `/create-keynote` -- BUILD stage, presentation builder with PPTX/image generation
+2. `/label-and-rate` -- DEPRECATED, classification absorbed into /learning-capture
+3. `/notion-sync` -- OBSERVE/BUILD stage, Notion-Jarvis bidirectional sync
+4. `/project-init` -- PLAN stage, full ISC project creation pipeline
+5. `/project-orchestrator` -- PLAN stage, project lifecycle management
+6. `/self-heal` -- VERIFY stage, failure diagnosis and fix engine
+7. `/telos-report` -- VERIFY stage, TELOS change reporting
+8. `/telos-update` -- LEARN stage, TELOS identity file updates
+9. `/update-steering-rules` -- LEARN stage, steering rule proposals from failures
+10. `/visualize` -- BUILD stage, Mermaid diagram generation
 
-The metric command (`grep -rl "confidence.*[0-5][0-9]%"`) uses case-sensitive matching while synthesis documents use `Confidence:` (uppercase). Baseline was already at optimal (0). All changes maintained the optimal value while making genuine quality improvements to synthesis documents.
+## Quality Notes
 
-## Run Log
+- All sections contain real content (not empty headers) -- verified via spot-check
+- Each One-liner is descriptive and unique to the skill
+- Chains sections accurately reflect skill dependencies from reading STEPS sections
+- Output Contract sections specify Input, Output, and Side effects
+- label-and-rate marked as DEPRECATED in its One-liner to match file header
+- No files outside `.claude/skills/*/SKILL.md` were modified
+- No protected files (CLAUDE.md, telos/, security/) were touched
 
-| Iteration | Commit Hash | Metric Value | Delta | Status | Description |
-|-----------|-------------|-------------|-------|--------|-------------|
-| 0 (baseline) | b9b8e44 | 0 | - | - | Baseline measurement |
-| 1 | 4b4cd74 | 0 | 0 | kept | Upgrade heartbeat noise theme 50%->65% with 3 new signals |
-| 2 | 8cea8cf | 0 | 0 | kept | Update confidence decay table (producer health, noise upgrade) |
-| 3 | d1efc0d | 0 | 0 | kept | Add staleness note and archive trigger to YouTube theme |
-| 4 | d530c1d | 0 | 0 | kept | Strengthen skill dev chain 70%->75% with cross-validating signals |
-| 5 | 6c34485 | 0 | 0 | kept | Add root-cause follow-up to producer health in 2026-04-02 |
-| 6 | 0a4ece7 | 0 | 0 | kept | Update meta-observation on heartbeat noise ratio (11%->20%) |
-| 7 | 7f118c7 | 0 | 0 | kept | Add cross-synthesis linkage to silent diagnosis theme |
-| 8 | 8b7d798 | 0 | 0 | kept | Move 3 processed heartbeat signals to processed directory |
-| 9 | 6cdeeae | 0 | 0 | kept | Update header signal count (30->33) |
+## Phase 2 Status
+
+Phase 1 metric has plateaued at full coverage (45/45). Phase 2 (VERIFY + LEARN steps) can begin in the next overnight run.
+
+## Run Log (TSV)
+
+```
+iteration	commit_hash	metric_value	delta	status	description
+0	(baseline)	35	0	baseline	Initial measurement
+1	ac8fe30	36	+1	kept	DISCOVERY section added to /create-keynote
+2	5eb4c7f	37	+1	kept	DISCOVERY section added to /label-and-rate (deprecated)
+3	893f47d	38	+1	kept	DISCOVERY section added to /notion-sync
+4	4ba9b76	39	+1	kept	DISCOVERY section added to /project-init
+5	aa563a4	40	+1	kept	DISCOVERY section added to /project-orchestrator
+6	8c8d33e	41	+1	kept	DISCOVERY section added to /self-heal
+7	067feb6	42	+1	kept	DISCOVERY section added to /telos-report
+8	350c991	43	+1	kept	DISCOVERY section added to /telos-update
+9	de205bf	44	+1	kept	DISCOVERY section added to /update-steering-rules
+10	7455892	45	+1	kept	DISCOVERY section added to /visualize
+```
