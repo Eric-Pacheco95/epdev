@@ -68,13 +68,14 @@
 # Tier 2 -- Weekly (ecosystem, security, competitors, crypto)
 # =============================================================================
 
-- name: "OpenAI Blog"
-  url: "https://openai.com/blog"
-  feed_url: ""
+- name: "The Batch (DeepLearning.AI)"
+  url: "https://www.deeplearning.ai/the-batch"
+  feed_url: "https://www.deeplearning.ai/the-batch/feed/"
   type: ai_releases
   tier: 2
   frequency: weekly
   last_checked: "2026-04-03"
+  note: "Replaces OpenAI Blog (403 blocked, no RSS). OpenAI coverage via HN + Zvi is sufficient. The Batch covers all major lab releases weekly including OpenAI."
 
 - name: "Krebs on Security"
   url: "https://krebsonsecurity.com"
@@ -132,13 +133,14 @@
   frequency: weekly
   last_checked: "2026-04-03"
 
-- name: "CoinDesk"
-  url: "https://www.coindesk.com"
-  feed_url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+- name: "Blockworks"
+  url: "https://blockworks.co"
+  feed_url: "https://blockworks.co/feed/"
   type: crypto
   tier: 2
   frequency: weekly
   last_checked: "2026-04-03"
+  note: "Replaces CoinDesk (RSS 403 blocked). Blockworks covers institutional/macro crypto (CoinDesk's strength) better than CoinTelegraph which skews retail."
 
 - name: "CoinTelegraph"
   url: "https://cointelegraph.com"
