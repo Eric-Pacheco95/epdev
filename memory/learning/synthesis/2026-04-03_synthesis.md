@@ -1,7 +1,8 @@
 # Signal Synthesis -- 2026-04-03
-- Signals processed: 30
+- Signals processed: 33 (30 original + 3 incorporated during overnight review)
 - Failures reviewed: 2
 - Period: 2026-04-02 to 2026-04-03
+- Overnight review: 2026-04-03 (confidence updates, decay review, cross-synthesis linkage)
 
 ---
 
