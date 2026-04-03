@@ -30,7 +30,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Daniel Miessler"
   url: "https://danielmiessler.com/newsletter"
@@ -38,7 +38,7 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Hacker News"
   url: "https://news.ycombinator.com"
