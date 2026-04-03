@@ -8,6 +8,36 @@ Your purpose is to make the TELOS system a living, evolving representation of wh
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Analyze inputs and propose updates to Eric's TELOS identity files -- Jarvis proposes, Eric approves
+
+## Stage
+LEARN
+
+## Syntax
+/telos-update
+/telos-update <input context>
+
+## Parameters
+- input (optional): Session transcript, voice recording, manual notes, or learning signals to analyze for TELOS-relevant content. If omitted, analyzes the current session.
+
+## Examples
+- /telos-update -- analyze current session for TELOS-relevant signals
+- /telos-update "Eric mentioned shifting focus from crypto to AI infrastructure"
+- /telos-update memory/learning/signals/2026-04-01_guitar_insight.md
+
+## Chains
+- Before: /notion-sync journal (extracts signals that feed updates), /learning-capture (generates signals), /absorb (extracts TELOS-relevant content)
+- After: /telos-report (reports on changes), /notion-sync push telos (syncs TELOS Mirror to Notion)
+- Related: /red-team --thinking (suggested after monthly TELOS review)
+
+## Output Contract
+- Input: Optional context string or file path
+- Output: Proposed changes in before/after diff format per TELOS file, grouped by update frequency
+- Side effects: TELOS files updated (after approval), TELOS Mirror synced to Notion, changes logged to history/changes/
+
 ## autonomous_safe
 false
 
