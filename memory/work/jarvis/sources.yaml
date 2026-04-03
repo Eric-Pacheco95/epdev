@@ -93,12 +93,12 @@
   last_checked: "2026-04-03"
 
 - name: "LangChain Blog"
-  url: "https://blog.langchain.dev"
-  feed_url: "https://blog.langchain.dev/rss/"
+  url: "https://blog.langchain.com"
+  feed_url: "https://blog.langchain.com/rss/"
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Hugging Face Blog"
   url: "https://huggingface.co/blog"
@@ -106,7 +106,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
@@ -114,7 +114,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Fabric GitHub Releases"
   url: "https://github.com/danielmiessler/fabric/releases"
@@ -122,7 +122,7 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Latent Space Podcast"
   url: "https://www.latent.space"
