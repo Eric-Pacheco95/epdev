@@ -246,15 +246,15 @@
 #### Cross-cutting
 
 - [ ] **Voice signals tracked in heartbeat** — DEFERRED to Phase 6. Add `voice_session_count` metric to heartbeat. Revisit when voice becomes daily habit.
-- [x] **Dashboard UI** — Replaced by jarvis-app project (standalone repo). Phase 3.5 vitals route will serve as the dashboard. See `memory/work/jarvis_brain_map/PRD.md`.
+- [x] **Dashboard UI** — Replaced by jarvis-app project (standalone repo). Phase 3.5 vitals route will serve as the dashboard. See `memory/work/jarvis-app/PRD.md`.
 
 ### Phase 3D: Visual system of record & ideal-state workflow (COMPLETE)
 
-> **Status:** Replaced by standalone `jarvis-app` project. PRD, research, architecture, and Phase 1 parser all complete. Remaining work tracked in `memory/work/jarvis_brain_map/PRD.md`.
+> **Status:** Replaced by standalone `jarvis-app` project. PRD, research, architecture, and Phase 1 parser all complete. Remaining work tracked in `memory/work/jarvis-app/PRD.md`.
 >
 > **Dependency note:** Phase 3E can now proceed — the “current vs ideal” vocabulary is defined by the jarvis-app node/edge taxonomy and ISC gap model.
 
-- [x] **Clarify requirements** — Completed via `/project-init` pipeline: `/research` → `/first-principles` → `/red-team` → `/create-prd`. Brain spec defined in `memory/work/jarvis_brain_map/PRD.md` — nodes = TELOS/Goal/Project/Phase/PRD/ISC/Task/Skill/Signal; edges = drives/defines/decomposes-into/gap/etc. Git-markdown is source of truth; jarvis-app is read-only through Phase 3.
+- [x] **Clarify requirements** — Completed via `/project-init` pipeline: `/research` → `/first-principles` → `/red-team` → `/create-prd`. Brain spec defined in `memory/work/jarvis-app/PRD.md` — nodes = TELOS/Goal/Project/Phase/PRD/ISC/Task/Skill/Signal; edges = drives/defines/decomposes-into/gap/etc. Git-markdown is source of truth; jarvis-app is read-only through Phase 3.
 - [x] **Survey tooling** — React Flow + Next.js + dagre chosen. Research brief at `memory/work/jarvis_brain_map/research_brief.md`. Compared Obsidian, Mermaid, custom dashboard. Decision: standalone `jarvis-app` repo at `C:\Users\ericp\Github\jarvis-app`.
 - [x] **Current vs ideal workflow** — **REOPENED then COMPLETED 2026-03-27**: Original ISC gap model was insufficient. Proper workflow spec now written from Eric's direct input at `memory/work/jarvis/3D_workflow_spec.md`. Covers: actual session patterns, ADHD-driven branching, mobile gap, life coach vision, operator familiarity gap (#1 pain point), measurement vocabulary beyond ISC checkboxes, and downstream requirements for 4D/5.
 - [x] **Claude Code analysis session** — Full repo scan + analysis done 2026-03-27. Parser expansion roadmap defined (Phase 2.5). Vitals dashboard scoped (Phase 3.5). Cross-project dependency mapped: jarvis-app 3.5 depends on epdev 3E.
@@ -521,4 +521,4 @@
 
 **Claude Code (Claude Max)** = All implementation. Skills, hooks, parsers, scripts — everything is built in Claude Code. Cursor is retired (2026-03-27).
 
-**jarvis-app repo** = Standalone project at `C:\Users\ericp\Github\jarvis-app`. React Flow + Next.js + TypeScript. Parser reads epdev markdown. Tracked separately in `memory/work/jarvis_brain_map/PRD.md`.
+**jarvis-app repo** = Standalone project at `C:\Users\ericp\Github\jarvis-app`. React Flow + Next.js + TypeScript. Parser reads epdev markdown. Tracked separately in `memory/work/jarvis-app/PRD.md`.

@@ -107,53 +107,59 @@ true
 ## Skills (by workflow stage)
 
 **OBSERVE** (gather context)
-  /research           -- Research any topic (market, technical, live)
-  /extract-wisdom     -- Pull ideas, insights, quotes from content (--summary for concise mode)
-  /deep-audit         -- Multi-axis codebase audit
-  /absorb             -- Absorb external content (URLs) with dual-lens analysis + TELOS routing
+  /research           -- Research any topic | --type --outreach
+  /extract-wisdom     -- Pull ideas, insights, quotes from content | --summary
+  /extract-alpha      -- Extract actionable alpha from content | --market --security --count
+  /deep-audit         -- Multi-axis codebase audit | --onboard --evaluate --cherry-pick
+  /absorb             -- Absorb external content (URLs) | --quick --normal --deep
 
 **THINK** (analyze and challenge)
   /first-principles   -- Break a problem to fundamentals
-  /red-team           -- Stress-test a plan for weaknesses (--stride for STRIDE threat model)
+  /red-team           -- Stress-test a plan for weaknesses | --stride --thinking
   /analyze-claims     -- Fact-check content for unsupported claims
   /find-logical-fallacies -- Detect reasoning errors
-  /architecture-review -- Parallel multi-angle architecture analysis (FP + fallacies + optional red-team)
+  /architecture-review -- Parallel multi-angle architecture analysis | --stride --thinking
+  /make-prediction    -- Probabilistic forecasting | --deep --geopolitics --market --planning --research --no-track
 
 **PLAN** (design and decide)
-  /create-prd         -- Generate product requirements document
+  /create-prd         -- Generate product requirements document | --user-stories
   /project-init       -- Full pipeline: research > FP > red-team > PRD
-  /improve-prompt     -- Make any prompt better (auto-fires in /spawn-agent, /create-pattern)
+  /improve-prompt     -- Make any prompt better
 
 **BUILD** (implement)
-  /implement-prd      -- Execute PRD: ISC extract, build, review, verify
+  /implement-prd      -- Execute PRD: ISC extract, build, review, verify | --items
   /create-pattern     -- Build a new skill (the meta-skill)
   /spawn-agent        -- Compose an AI agent for a specific task
   /workflow-engine    -- Chain skills into pipelines
+  /autoresearch       -- Automated metric-driven improvement | --metric --guard --iterations --scope --program
 
 **VERIFY** (test and review)
   /review-code        -- Security-focused code review
   /security-audit     -- Scan system for vulnerabilities
   /quality-gate       -- Audit completed phases for compliance
+  /validation         -- Validate PRD implementation | --prd --json --pretty --execute
   /self-heal          -- Auto-diagnose and fix failures
 
 **LEARN** (capture and grow)
-  /learning-capture   -- End-of-session knowledge capture (with built-in quality gate)
-  /synthesize-signals -- Distill signals into wisdom
+  /learning-capture   -- End-of-session knowledge capture
+  /synthesize-signals -- Distill signals into wisdom | --date-range --focus
   /telos-update       -- Update identity/self-knowledge
   /telos-report       -- Weekly self-knowledge report
   /update-steering-rules -- Propose new rules from failures
-  /teach              -- Deep-dive lesson on any topic
+  /teach              -- Deep-dive lesson on any topic | --socratic
 
 **CREATE** (produce output)
-  /write-essay        -- Publish-ready essay on any topic
+  /write-essay        -- Publish-ready essay on any topic | --style
   /create-keynote     -- TED-quality slide deck with speaker notes
-  /create-image       -- Generate/edit images via Gemini
-  /visualize          -- Mermaid diagrams of workflows/structure (auto-offered by /deep-audit, /project-init)
+  /create-image       -- Generate/edit images via Gemini | --flash --ratio
+  /capture-recording  -- Process music recordings | --solo --band --batch
+  /visualize          -- Mermaid diagrams of workflows/structure
   /label-and-rate     -- Classify and tier-rate content
 
 **ORCHESTRATE** (manage work)
   /delegation         -- Route any task to the right skill/pipeline
   /project-orchestrator -- Manage projects, prioritize, track
+  /extract-harness    -- Export Jarvis infra to other repos | --target --update --dry-run
   /notion-sync        -- Sync Notion Brain with Jarvis
   /commit             -- Clean conventional commits
   /jarvis-help        -- This help system
