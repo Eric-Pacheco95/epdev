@@ -131,8 +131,9 @@
 |-------|-------------------|--------------|------------------|--------|
 | Architecture-review gate validated | established (85%) | proven (95%) | 2026-04-03 | 3 new supporting signals across 2 sessions |
 | Grep failure blindness | candidate (70%) | candidate (65%) | 2026-04-02 | No new signals, slight confidence decay but within 90d |
-| Autonomous producer health degrading | candidate (60%) | candidate (55%) | 2026-04-03 | Heartbeat WARNs provide weak support; likely benign (14 sessions open) |
+| Autonomous producer health degrading | candidate (60%) | candidate (50%) | 2026-04-03 | Root cause identified as rate-limit exhaustion (not code defect); benign with 14 sessions open; decay to 50% -- will archive if no new degradation signals by 2026-04-10 |
 | System self-diagnosis fails silently | candidate (75%) | candidate (80%) | 2026-04-02 | Rate-limit-silent-success signal supports the pattern |
+| System health noise from heartbeat auto-signals | candidate (50%) | established (65%) | 2026-04-03 | 3 new signals (2 network_connections + 1 context_budget_proxy) confirm systemic noise pattern across 2 metrics |
 
 ---
 
