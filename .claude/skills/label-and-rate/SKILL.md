@@ -10,6 +10,33 @@ Adapted from Daniel Miessler's `label_and_rate` pattern with themes calibrated t
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+DEPRECATED -- classification and rating absorbed into /learning-capture
+
+## Stage
+OBSERVE
+
+## Syntax
+/label-and-rate <content>
+
+## Parameters
+- content: Text or content to classify and rate (required)
+
+## Examples
+- /label-and-rate (deprecated -- use /learning-capture instead)
+
+## Chains
+- Before: (standalone)
+- After: /extract-wisdom (S/A tier), /learning-capture (replacement skill)
+- Related: /learning-capture (absorbs this skill's logic)
+
+## Output Contract
+- Input: Text content
+- Output: JSON with labels, tier rating, quality score, and recommended jarvis-action
+- Side effects: None (classification only)
+
 ## autonomous_safe
 true
 
