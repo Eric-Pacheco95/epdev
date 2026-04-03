@@ -93,6 +93,7 @@ Load documentation on-demand, not upfront:
 - During `/implement-prd` runs with 4+ ISC items, commit after every 3-4 completed items — context compaction during long sessions can lose file writes; mid-build commits create recovery points
 - After completing a multi-phase build sprint (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifact existence, verify file paths match actual locations, verify counts and dates are current
 - When building a new skill, evaluate each step: does this step require intelligence (judgment, synthesis, natural language generation)? No -> implement as a deterministic script (default Python). Yes -> keep in SKILL.md. Apply retroactively only where sub-scripts already exist
+- Self-tests and smoke tests must use isolated paths for ALL stateful writes — not just the primary file under test, but every side-effect path (state files, backlogs, lock files); use tempfile or pass temp paths to every writer function; any `claude -p` consumer must check stdout for rate limit messages ("hit your limit") before treating exit code 0 as success — rate-limited runs return exit 0 with zero real work done
 
 ### Eric's Working Style
 
