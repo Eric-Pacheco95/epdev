@@ -6,6 +6,41 @@ Adapted from Daniel Miessler's `create_investigation_visualization` pattern. Opt
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Generate Mermaid diagrams from complex inputs -- projects, workflows, brain structure, investigations
+
+## Stage
+BUILD
+
+## Syntax
+/visualize <input>
+/visualize <type> <input>
+/visualize <input> --no-html
+
+## Parameters
+- type (optional, default: auto): brain | workflow | project | investigate | system | auto
+- input: Content to visualize -- project relationships, workflow descriptions, research findings, system architecture (required)
+- --no-html: Skip standalone HTML file generation and browser auto-open
+
+## Examples
+- /visualize brain -- generate Jarvis Brain node map (TELOS pillars, projects, skills, signals)
+- /visualize workflow "skill pipeline from /project-init to /implement-prd"
+- /visualize project crypto-bot -- project dependency and phase map
+- /visualize system "Jarvis architecture: hooks, MCP, skills, memory"
+- /visualize investigate memory/learning/synthesis/latest.md --no-html
+
+## Chains
+- Before: /project-init (for project diagrams), /research (for investigation visualizations), /deep-audit (for system architecture)
+- After: Save to memory/work/{project}/ or orchestration/workflows/ (after approval)
+- Related: /create-keynote (diagrams can feed presentations)
+
+## Output Contract
+- Input: Content or topic + optional type flag
+- Output: Markdown with embedded Mermaid diagram, ANALYSIS (8-10 bullets), CONCLUSION, GAPS, Next Action
+- Side effects: HTML viewer file generated and auto-opened in browser (unless --no-html), diagram saved to relevant directory after approval
+
 ## autonomous_safe
 false
 
