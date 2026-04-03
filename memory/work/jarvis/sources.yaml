@@ -74,7 +74,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Krebs on Security"
   url: "https://krebsonsecurity.com"
@@ -82,7 +82,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "The Hacker News"
   url: "https://thehackernews.com"
@@ -90,7 +90,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "LangChain Blog"
   url: "https://blog.langchain.dev"
