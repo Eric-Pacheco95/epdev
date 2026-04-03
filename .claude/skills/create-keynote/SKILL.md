@@ -6,6 +6,40 @@ Adapted from Daniel Miessler's `create_keynote` pattern. Use this to turn Jarvis
 
 Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
+# DISCOVERY
+
+## One-liner
+Turn any input into a TED-quality keynote deck with speaker notes, images, and PPTX export
+
+## Stage
+BUILD
+
+## Syntax
+/create-keynote <topic or input>
+/create-keynote <topic> --no-images
+/create-keynote <topic> --pptx
+
+## Parameters
+- topic/input: Topic description, research brief, PRD, or any content to turn into a presentation (required)
+- --no-images: Skip AI image generation for slides
+- --pptx: Generate a downloadable .pptx file (also prompted in pre-flight)
+- Audience modes: consumer | enterprise | technical | executive (prompted in pre-flight if not specified)
+
+## Examples
+- /create-keynote "Why AI agents need scaffolding more than intelligence"
+- /create-keynote memory/work/crypto-bot/research_brief.md --pptx
+- /create-keynote "Jarvis AI Brain overview" --no-images
+
+## Chains
+- Before: /research (for topic research), /create-prd (for product presentations)
+- After: /notion-sync push (share via Notion), Google Drive upload (auto)
+- Related: /create-image (used internally for slide images)
+
+## Output Contract
+- Input: Topic, brief, PRD, or free-form text + optional flags
+- Output: Markdown deck (10-20 slides with bullets, image descriptions, speaker notes), optional .pptx file, optional Google Drive upload
+- Side effects: Images saved to memory/work/{topic}/images/, PPTX saved to memory/work/{topic}/
+
 ## autonomous_safe
 false
 
