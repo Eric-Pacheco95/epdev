@@ -40,7 +40,19 @@ false
 
 # STEPS
 
-## Step 0: INPUT VALIDATION (Level 2 Discovery)
+## Step 0: MODEL ENFORCEMENT
+
+/commit always runs on Sonnet (code generation task, not judgment/architecture).
+
+Spawn a Sonnet sub-agent immediately using the Agent tool with model="sonnet" and pass it the full task:
+- Include the user's optional message/scope argument (if any)
+- Include the full STEPS below (Step 0 validation through Step 9 commit + log)
+- The sub-agent has access to all tools and should execute the entire commit workflow
+- Do NOT proceed past this step in the current session -- all commit work happens in the sub-agent
+
+After the sub-agent completes, relay its result to Eric verbatim.
+
+## Step 1: INPUT VALIDATION (Level 2 Discovery)
 
 - If no changes exist (nothing staged, nothing modified):
   - Print: "Nothing to commit -- working tree is clean. Make some changes first."
@@ -52,9 +64,9 @@ false
 - If .env, *.key, or credential files appear in staged or modified files:
   - Print: "WARNING: Potential secrets detected in staged files: {list}. These should NOT be committed. Remove them from staging with git reset HEAD {file}."
   - STOP and wait for user confirmation
-- Once input is validated, proceed to Step 1
+- Once input is validated, proceed to Step 2
 
-## Step 1: STATUS
+## Step 2: STATUS
 
 1. Run `python tools/scripts/commit_precheck.py` for the deterministic pre-check. This gives you: staged/unstaged/untracked file lists, diff stats, file type classification, secret detection, dangerous file warnings, and recent commit style — all without consuming LLM tokens.
 
