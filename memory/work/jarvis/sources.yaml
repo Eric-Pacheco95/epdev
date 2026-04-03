@@ -169,12 +169,12 @@
   last_checked: "2026-04-03"
 
 - name: "Microsoft AI Blog"
-  url: "https://blogs.microsoft.com/ai"
+  url: "https://news.microsoft.com/source/topics/ai/"
   feed_url: ""
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -190,7 +190,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -198,7 +198,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
@@ -206,7 +206,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
 
 - name: "AI Safety Newsletter (Zvi)"
   url: "https://thezvi.substack.com"
@@ -214,4 +214,4 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-03-30"
+  last_checked: "2026-04-03"
