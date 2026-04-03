@@ -445,7 +445,9 @@ def _load_profile_context(task: dict) -> str:
 
 # Imperative override verbs that must be stripped from injected messages
 _ANTI_PATTERN_OVERRIDE_VERBS = re.compile(
-    r"\b(?:ignore|skip|bypass|override|disable|forget)\b", re.IGNORECASE
+    r"\b(?:ignore|skip|bypass|override|disable|forget"
+    r"|disregard|suppress|omit|exclude|circumvent|abandon|drop|dismiss|negate)\b",
+    re.IGNORECASE,
 )
 
 # Injection substrings mirrored from validate_tool_use.py (avoid cross-import)
@@ -691,22 +693,48 @@ def generate_worker_prompt(task: dict, branch: str) -> str:
     # Build optional advisory sections (between context and RULES)
     advisory_sections = []
 
-    # Previous failure context for retries
+    # Previous failure context for retries (C1: sanitize failure_reason before injection)
     failure_reason = task.get("failure_reason", "")
+    failure_type = task.get("failure_type", "")
     retry_count = task.get("retry_count", 0)
     if failure_reason and retry_count > 0:
-        advisory_sections.append(
-            f"PREVIOUS ATTEMPT FAILED (retry {retry_count}):\n{failure_reason[:512]}"
-        )
+        safe_reason = _sanitize_anti_pattern_message(failure_reason) or "[failure reason redacted]"
 
-    # Anti-patterns for worker scope
+        # Type-specific retry guidance (Proposal 1 minimal)
+        if "timed out" in failure_reason.lower() or failure_type == "timeout":
+            guidance = (
+                "Adaptation: Previous attempt timed out. Prioritize ISC-1 only. "
+                "Produce a TASK_RESULT line even if remaining ISC are incomplete."
+            )
+        elif failure_type == "isc_fail":
+            guidance = (
+                "Adaptation: Previous attempt completed but failed ISC verification. "
+                "Review each ISC criterion carefully and run the verify command before finishing."
+            )
+        else:
+            guidance = ""
+
+        advisory = f"PREVIOUS ATTEMPT FAILED (retry {retry_count}, type={failure_type or 'unknown'}):\n{safe_reason}"
+        if guidance:
+            advisory += f"\n{guidance}"
+
+        # Pass TASK_FAILED.md content from prior run if available (gives specific diagnostic)
+        task_failed_md = task.get("_prior_task_failed_md", "")
+        if task_failed_md:
+            safe_md = _sanitize_anti_pattern_message(task_failed_md[:512]) or ""
+            if safe_md:
+                advisory += f"\n\nPrior agent's failure analysis:\n{safe_md}"
+
+        advisory_sections.append(advisory)
+
+    # Anti-patterns for worker scope (C2: sanitize pattern field)
     anti_patterns = [
         ap for ap in _load_anti_patterns(task)
         if ap.get("scope") == "worker"
     ]
     if anti_patterns:
         pitfall_lines = "\n".join(
-            f"  - [{ap.get('pattern', '?')}] {ap['message']}"
+            f"  - [{_sanitize_anti_pattern_message(ap.get('pattern', '?')) or '?'}] {ap['message']}"
             for ap in anti_patterns
         )
         advisory_sections.append(
@@ -988,6 +1016,9 @@ def handle_task_failure(
       "no_output"      -> failed (terminal, no useful work done)
     """
     manual_review_types = {"scope_creep", "partial_work", "worker_request"}
+
+    # Always store failure_type for structured retry advisory (Proposal 1)
+    task["failure_type"] = failure_type
 
     if failure_type in manual_review_types:
         task["status"] = "manual_review"
@@ -1286,6 +1317,13 @@ def dispatch(dry_run: bool = False) -> None:
             print(f"  Task {task['id']} DONE. Branch: {branch}")
         elif has_task_failed_md:
             error = report.get("failure_reason") or "Worker requested manual review (TASK_FAILED.md)"
+            # Capture TASK_FAILED.md content for retry advisory (Proposal 1)
+            try:
+                task["_prior_task_failed_md"] = (wt_path / "TASK_FAILED.md").read_text(
+                    encoding="utf-8", errors="replace"
+                )[:512]
+            except OSError:
+                pass
             handle_task_failure(task, error, backlog, failure_type="worker_request")
         elif commit_count > 0 and retries_exhausted:
             error = report.get("failure_reason") or f"ISC {isc_pass}/{isc_total} -- partial work on branch"
@@ -1293,7 +1331,18 @@ def dispatch(dry_run: bool = False) -> None:
         else:
             error = report.get("failure_reason") or f"ISC {isc_pass}/{isc_total}"
             ftype = "no_output" if commit_count == 0 and not report.get("failure_reason") else "isc_fail"
+            # Capture TASK_FAILED.md for ISC failures too (worker may explain why)
+            if has_task_failed_md:
+                try:
+                    task["_prior_task_failed_md"] = (wt_path / "TASK_FAILED.md").read_text(
+                        encoding="utf-8", errors="replace"
+                    )[:512]
+                except OSError:
+                    pass
             handle_task_failure(task, error, backlog, failure_type=ftype)
+
+        # Log failure_type to run report for auditability (red-team H3)
+        report["failure_type"] = task.get("failure_type", "")
 
         write_backlog(backlog)
 
@@ -1676,7 +1725,7 @@ def self_test() -> bool:
         prompt = generate_worker_prompt(t_retry, "jarvis/auto-retry-prompt-test")
         assert "PREVIOUS ATTEMPT FAILED" in prompt, "Retry context section missing"
         assert "crashed on line 42" in prompt, "Failure reason not injected"
-        assert "(retry 1)" in prompt, "Retry count not shown"
+        assert "(retry 1," in prompt, "Retry count not shown"
 
         # No retry context when retry_count is 0
         t_fresh = {
