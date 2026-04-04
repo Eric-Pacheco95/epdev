@@ -52,7 +52,7 @@
     "state_type": "file_mtime",
     "alert_threshold_hours": 2,
     "first_run_grace_until_utc": "2026-04-06T23:59:59Z",
-    "bat_wrapper": null,
-    "_note": "no BAT wrapper found -- suspend sentinel has no enforcement; slack_poller will continue running even when sentinel is written; fix by identifying invocation path and adding check_suspend call"
+    "bat_wrapper": "tools/start_jarvis.bat",
+    "_note": "suspend check is at startup only (long-running process); check_suspend.py runs in start_jarvis.bat before launching the poller -- cannot stop an already-running instance, only prevents new launches"
   }
 ]
