@@ -154,16 +154,38 @@ def is_static_due(topic: dict, state: dict) -> bool:
 # ---------------------------------------------------------------------------
 
 def _read_telos_goals() -> str:
-    """Return raw text of GOALS.md (and STATUS.md if present)."""
-    text = ""
-    for fname in ("GOALS.md", "STATUS.md", "PROJECTS.md"):
+    """Return GOALS.md text with challenged/deferred goals stripped out.
+
+    Reads structured goal table rows and excludes any goal whose Status column
+    is 'challenged' or 'deferred'. Returns lowercased text of active goals only.
+    """
+    goals_text = ""
+    goals_path = TELOS_DIR / "GOALS.md"
+    if goals_path.exists():
+        try:
+            raw = goals_path.read_text(encoding="utf-8")
+            active_lines = []
+            for line in raw.splitlines():
+                # Table row: | # | Goal | Weight | Status | Metric |
+                # Skip rows where status column is challenged or deferred
+                cols = [c.strip().lower() for c in line.split("|")]
+                if len(cols) >= 5:
+                    status_col = cols[4] if len(cols) > 4 else ""
+                    if status_col in ("challenged", "deferred"):
+                        continue
+                active_lines.append(line)
+            goals_text = "\n".join(active_lines) + "\n"
+        except OSError:
+            pass
+
+    for fname in ("STATUS.md", "PROJECTS.md"):
         p = TELOS_DIR / fname
         if p.exists():
             try:
-                text += p.read_text(encoding="utf-8") + "\n"
+                goals_text += p.read_text(encoding="utf-8") + "\n"
             except OSError:
                 pass
-    return text.lower()
+    return goals_text.lower()
 
 
 def scan_telos_gaps(state: dict) -> list[dict]:
@@ -252,21 +274,35 @@ _STOP_WORDS = frozenset({
     "this", "that", "it", "as", "at", "via", "per", "re", "new", "update",
     "signal", "session", "note", "learning", "capture", "jarvis", "phase",
     "add", "fix", "run", "check", "test", "build", "use", "set", "get",
+    # Operational Jarvis vocabulary -- these appear constantly in session signals
+    # but indicate ongoing work, NOT knowledge gaps. Must not trigger Source 3.
+    "claude", "agent", "mcp", "autonomous", "dispatcher", "heartbeat",
+    "overnight", "backbone", "worktree", "skill", "hook", "pipeline",
+    "workflow", "task", "backlog", "producer",
 })
 
 _DOMAIN_KEYWORDS: dict[str, str] = {
-    "claude": "ai-infra", "anthropic": "ai-infra", "llm": "ai-infra",
-    "agent": "ai-infra", "mcp": "ai-infra", "autonomous": "ai-infra",
+    # ai-infra: novel framework/library names only (not operational Jarvis vocabulary)
+    "anthropic": "ai-infra", "llm": "ai-infra",
     "langchain": "ai-infra", "langgraph": "ai-infra", "embedding": "ai-infra",
+    # crypto: market terms
     "bitcoin": "crypto", "ethereum": "crypto", "defi": "crypto",
     "trading": "crypto", "crypto": "crypto", "blockchain": "crypto",
+    # fintech
     "bank": "fintech", "fintech": "fintech", "payment": "fintech",
+    # security
     "security": "security", "injection": "security", "vulnerability": "security",
+    # general
     "guitar": "general", "music": "general", "health": "general", "gym": "general",
+    # prediction/forecasting
     "prediction": "ai-infra", "forecast": "ai-infra", "calibration": "ai-infra",
 }
 
-_MIN_SIGNAL_MENTIONS = 3   # keyword must appear in this many recent signal titles
+# Raised from 3 to 6: Jarvis operational signals are single-author, so a low threshold
+# conflates session bursts with genuine multi-day interest convergence. At current signal
+# velocity (~0.3/day), 6 mentions in 14 days requires sustained organic appearance across
+# multiple sessions, not just one productive build day.
+_MIN_SIGNAL_MENTIONS = 6
 _SIGNAL_WINDOW_DAYS  = 14  # look back window
 
 
@@ -405,6 +441,9 @@ def inject_topic(topic: dict, dry_run: bool = False) -> dict | None:
         ],
         "skills": ["research"],
         "model": "sonnet",
+        # Research tasks cap at 10 min (vs dispatcher's 15-min default) to leave
+        # budget headroom for higher-urgency operational tasks (security, synthesis).
+        "max_wall_time_s": 600,
         "routine_id": topic.get("routine_id", f"research_{slug}"),
         "source": "research_producer",
         "notes": _build_worker_notes(topic),

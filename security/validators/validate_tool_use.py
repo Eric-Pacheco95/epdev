@@ -285,6 +285,12 @@ CONTEXT_PROFILES_PATH_PATTERN = re.compile(
     r"orchestration[/\\]context_profiles[/\\]", re.IGNORECASE
 )
 
+# Static producer configs -- title field flows into worker prompt notes unsanitized.
+# A tampered title enables prompt injection into every worker spawned for that topic.
+RESEARCH_TOPICS_PATH_PATTERN = re.compile(
+    r"orchestration[/\\]research_topics\.json$", re.IGNORECASE
+)
+
 # Secrets patterns for Read tool blocking (autonomous sessions)
 _SECRET_FILE_PATTERNS = re.compile(
     r"(?:^|[/\\])\.env(?:[/\\]|$)"
@@ -323,6 +329,14 @@ def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None
             "block",
             f"Autonomous sessions MUST NOT write to memory/work/telos/. "
             f"TELOS proposals must be queued for interactive review. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if RESEARCH_TOPICS_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to orchestration/research_topics.json. "
+            f"Topic titles flow into worker prompt notes -- tampering enables prompt injection. "
             f"Blocked: {tool} to {file_path}"
         )
 
