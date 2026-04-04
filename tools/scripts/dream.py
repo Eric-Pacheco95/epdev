@@ -52,9 +52,31 @@ REPORT_FILE = DATA_DIR / "dream_last_report.md"
 SNAPSHOTS_DIR = DATA_DIR / "dream_snapshots"
 DREAM_LOG = REPO_ROOT / "history" / "changes" / "dream_log.md"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
+SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
 
 MEMORY_INDEX_MAX_LINES = 200
 LOCK_STALE_SECONDS = 7200  # 2 hours
+
+# Phase 2 promotion thresholds
+PROMOTION_MATURITY = "proven"        # must match exactly
+PROMOTION_MIN_CONFIDENCE = 90        # must be >= this %
+PROMOTION_MAX_SIMILARITY = 0.70      # theme must NOT already exist in auto-memory
+
+# Type inference keyword maps (checked against theme name + implication text)
+TYPE_SIGNALS = {
+    "project": [
+        "pipeline", "architecture", "phase", "sprint", "milestone", "roadmap",
+        "vision", "system", "dispatcher", "runner", "infrastructure", "deploy",
+    ],
+    "user": [
+        "eric", "adhd", "personality", "learning style", "preference", "behavior",
+        "session pattern", "mood", "energy", "tunnel vision",
+    ],
+    "reference": [
+        "tool", "resource", "external", "link", "source", "library", "framework",
+        "vendor", "api", "sdk",
+    ],
+}
 
 # Relative date patterns to absolutize
 RELATIVE_DATE_PATTERNS = [
@@ -304,6 +326,189 @@ def phase_consolidate(orientation: dict, findings: dict, dry_run: bool) -> list[
 
 # --- Phase 4: Prune & Index ---
 
+def _infer_memory_type(theme_name: str, implication: str) -> str:
+    """Infer auto-memory type from theme content. Defaults to 'feedback'."""
+    combined = (theme_name + " " + implication).lower()
+    for mem_type, keywords in TYPE_SIGNALS.items():
+        if any(kw in combined for kw in keywords):
+            return mem_type
+    return "feedback"
+
+
+def _slug_from_theme(theme_name: str) -> str:
+    """Convert theme name to a filesystem-safe slug."""
+    slug = re.sub(r"[^a-z0-9]+", "-", theme_name.lower()).strip("-")
+    return slug[:60]
+
+
+def _parse_synthesis_themes(fpath: Path) -> list[dict]:
+    """Extract qualifying themes from a synthesis file.
+
+    Returns list of dicts: {name, maturity, confidence, implication, source_file}
+    Only returns themes meeting PROMOTION_MATURITY + PROMOTION_MIN_CONFIDENCE.
+    """
+    themes = []
+    try:
+        text = fpath.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return themes
+
+    # Split on ### Theme: headings
+    blocks = re.split(r"^### Theme:", text, flags=re.MULTILINE)
+    for block in blocks[1:]:  # skip header block before first theme
+        lines = block.strip().split("\n")
+        name = lines[0].strip()
+
+        # Extract fields
+        maturity = ""
+        confidence_pct = 0
+        implication = ""
+        in_implication = False
+
+        for line in lines[1:]:
+            if line.startswith("- Maturity:"):
+                maturity = line.split(":", 1)[1].strip().lower()
+            elif line.startswith("- Confidence:"):
+                conf_str = line.split(":", 1)[1].strip().rstrip("%")
+                try:
+                    confidence_pct = int(conf_str)
+                except ValueError:
+                    pass
+            elif line.startswith("- Implication:"):
+                implication = line.split(":", 1)[1].strip()
+                in_implication = False  # single line
+            elif line.startswith("- Action:"):
+                in_implication = False
+
+        # Apply promotion filter
+        if maturity == PROMOTION_MATURITY and confidence_pct >= PROMOTION_MIN_CONFIDENCE:
+            themes.append({
+                "name": name,
+                "maturity": maturity,
+                "confidence": confidence_pct,
+                "implication": implication,
+                "source_file": str(fpath),
+            })
+
+    return themes
+
+
+def phase_promote(dry_run: bool) -> list[str]:
+    """Scan synthesis files for promotion candidates; write qualifying themes to auto-memory.
+
+    A theme qualifies if:
+    - maturity: proven AND confidence >= 90%
+    - No semantic equivalent already exists in auto-memory (similarity < 0.70)
+
+    Fully autonomous -- writes new auto-memory files, logs all actions.
+    """
+    actions = []
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    if not SYNTHESIS_DIR.exists():
+        return ["[PROMOTE] Synthesis dir not found -- skipping promotion scan"]
+
+    # Collect all qualifying themes from all synthesis files
+    all_themes = []
+    for syn_file in sorted(SYNTHESIS_DIR.glob("*.md")):
+        themes = _parse_synthesis_themes(syn_file)
+        all_themes.extend(themes)
+
+    if not all_themes:
+        actions.append("[PROMOTE] No promotion candidates (no proven/90%+ themes in synthesis)")
+        return actions
+
+    # Load embedding service for similarity check
+    try:
+        sys.path.insert(0, str(REPO_ROOT / "tools" / "scripts"))
+        import embedding_service as es
+    except ImportError:
+        actions.append("[PROMOTE] embedding_service unavailable -- skipping similarity check")
+        return actions
+
+    promoted = 0
+    skipped_similar = 0
+
+    for theme in all_themes:
+        # Check if semantically covered in auto-memory already
+        try:
+            hits = es.search(theme["implication"] or theme["name"], top_k=1)
+            top_score = hits[0]["score"] if hits else 0.0
+        except Exception:
+            top_score = 0.0
+
+        if top_score >= PROMOTION_MAX_SIMILARITY:
+            skipped_similar += 1
+            actions.append(
+                f"[PROMOTE] SKIP '{theme['name'][:50]}' "
+                f"(already covered: {hits[0]['file_name']} @ {top_score:.2f})"
+            )
+            continue
+
+        # Infer type and build slug
+        mem_type = _infer_memory_type(theme["name"], theme["implication"])
+        slug = _slug_from_theme(theme["name"])
+        out_file = MEMORY_DIR / f"{mem_type}_{slug}.md"
+
+        if out_file.exists():
+            actions.append(f"[PROMOTE] SKIP '{theme['name'][:50]}' (file already exists: {out_file.name})")
+            continue
+
+        # Build the memory file content
+        source_name = Path(theme["source_file"]).name
+        content = (
+            f"---\n"
+            f"name: {theme['name']}\n"
+            f"description: {theme['implication'][:120]}\n"
+            f"type: {mem_type}\n"
+            f"promoted: synthesis\n"
+            f"promoted_date: {today_str}\n"
+            f"source: {source_name}\n"
+            f"confidence: {theme['confidence']}%\n"
+            f"---\n\n"
+            f"{theme['implication']}\n\n"
+            f"**Why:** Promoted from synthesis theme '{theme['name']}' "
+            f"({theme['confidence']}% confidence, maturity: {theme['maturity']}) "
+            f"with no existing auto-memory counterpart (top similarity: {top_score:.2f}).\n\n"
+            f"**How to apply:** This pattern emerged from accumulated signals -- "
+            f"treat as validated behavioral guidance.\n"
+        )
+
+        action = (
+            f"[PROMOTE] '{theme['name'][:50]}' -> {out_file.name} "
+            f"(type={mem_type}, confidence={theme['confidence']}%, sim={top_score:.2f})"
+        )
+
+        if dry_run:
+            actions.append(f"[DRY-RUN] {action}")
+        else:
+            out_file.write_text(content, encoding="utf-8")
+            # Update embedding index for the new file
+            try:
+                es.update(str(out_file))
+            except Exception:
+                pass
+            # Update MEMORY.md index
+            _append_to_memory_index(out_file, theme["name"], theme["implication"])
+            promoted += 1
+            actions.append(action)
+
+    if not dry_run:
+        actions.append(f"[PROMOTE] Done: {promoted} promoted, {skipped_similar} skipped (already covered)")
+    return actions
+
+
+def _append_to_memory_index(fpath: Path, name: str, description: str) -> None:
+    """Append a new entry to MEMORY.md for a promoted memory file."""
+    if not MEMORY_INDEX.exists():
+        return
+    rel_name = fpath.name
+    hook = description[:100].replace("\n", " ")
+    entry = f"- [{name}]({rel_name}) -- {hook}\n"
+    with open(MEMORY_INDEX, "a", encoding="utf-8") as f:
+        f.write(entry)
+
+
 def phase_prune_and_index(orientation: dict, consolidate_actions: list[str], dry_run: bool) -> list[str]:
     """Rebuild MEMORY.md index, update embeddings, write log + signal."""
     actions = []
@@ -379,14 +584,12 @@ def phase_prune_and_index(orientation: dict, consolidate_actions: list[str], dry
 
 # --- Report ---
 
-def _write_report(orientation: dict, findings: dict, consolidate_actions: list[str], prune_actions: list[str], dry_run: bool, duration_s: float) -> str:
+def _write_report(orientation: dict, findings: dict, consolidate_actions: list[str], promote_actions: list[str], prune_actions: list[str], dry_run: bool, duration_s: float) -> str:
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     mode = "DRY RUN" if dry_run else "COMPLETED"
-    merges = sum(1 for a in consolidate_actions if "[MERGE" in a)
-    stale_removed = sum(1 for a in consolidate_actions if "[STALE" in a)
-    date_flags = sum(1 for a in consolidate_actions if "[DATES" in a)
     dupes_found = len(findings.get("duplicates", []))
     related_found = len(findings.get("related", []))
+    promoted_count = sum(1 for a in promote_actions if "[PROMOTE]" in a and "SKIP" not in a and "Done" not in a and "unavailable" not in a and "not found" not in a and "No promotion" not in a and "DRY" not in a)
 
     lines = [
         f"# /dream Report -- {now_str} ({mode})",
@@ -402,14 +605,16 @@ def _write_report(orientation: dict, findings: dict, consolidate_actions: list[s
         f"- Related pairs (0.82-0.91): {related_found} (no action)",
         f"- Stale MEMORY.md pointers: {len(findings.get('stale_pointers', []))}",
         f"- Files with relative dates: {len(findings.get('relative_date_files', []))}",
+        f"- Synthesis themes promoted: {promoted_count}",
         f"",
         f"## Actions Taken",
     ]
 
-    if not consolidate_actions and not prune_actions:
+    all_actions = consolidate_actions + promote_actions + prune_actions
+    if not any(a for a in all_actions if "[DRY" not in a or dry_run):
         lines.append("- No changes needed -- memory is clean")
     else:
-        for a in consolidate_actions + prune_actions:
+        for a in all_actions:
             for subline in a.split("\n"):
                 lines.append(f"- {subline}" if not subline.startswith("  ") else subline)
 
@@ -466,14 +671,21 @@ def run(dry_run: bool = False, autonomous: bool = False) -> int:
         if not autonomous:
             print(f"Phase 3: Consolidate -- {len(consolidate_actions)} action(s)")
 
+        # Phase 3B: Promotion scan (synthesis -> auto-memory)
+        promote_actions = phase_promote(dry_run)
+        if not autonomous:
+            promoted = sum(1 for a in promote_actions if "[PROMOTE]" in a and "SKIP" not in a and "DRY" not in a and "Done" not in a and "unavailable" not in a and "not found" not in a and "No promotion" not in a)
+            print(f"Phase 3B: Promote  -- {promoted} theme(s) promoted from synthesis")
+
         # Phase 4
-        prune_actions = phase_prune_and_index(orientation, consolidate_actions, dry_run)
+        all_consolidate = consolidate_actions + promote_actions
+        prune_actions = phase_prune_and_index(orientation, all_consolidate, dry_run)
         if not autonomous:
             print(f"Phase 4: Prune+Index -- {len(prune_actions)} action(s)")
 
         duration = round(time.time() - t0, 1)
         report = _write_report(
-            orientation, findings, consolidate_actions, prune_actions, dry_run, duration
+            orientation, findings, consolidate_actions, promote_actions, prune_actions, dry_run, duration
         )
 
         print("\n" + report)

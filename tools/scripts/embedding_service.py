@@ -52,6 +52,7 @@ AUTO_MEMORY_DIR = (
 FULL_SCOPE_DIRS = [
     AUTO_MEMORY_DIR,
     REPO_ROOT / "memory" / "learning" / "signals",
+    REPO_ROOT / "memory" / "learning" / "signals" / "processed",
     REPO_ROOT / "memory" / "learning" / "synthesis",
     REPO_ROOT / "history" / "decisions",
 ]
