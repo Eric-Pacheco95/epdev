@@ -158,36 +158,13 @@ The target CLAUDE.md MUST include steering rules that make Claude actively write
 - Sprint log: after completing deliverables, append to `context/sprint-log/{project}.md`
 - Lessons learned: after sprint/milestone completion, prompt user to add entry to `history/lessons-learned/`
 
-### CLAUDE.md adaptation checklist:
-- [ ] Remove all personal identity references
-- [ ] Remove TELOS section and references
-- [ ] Remove learning-capture from LEARN phase description
-- [ ] Remove autonomous system steering rules
-- [ ] Remove personal MCP steering rules (unless tools available in target)
-- [ ] Remove cross-project references (crypto-bot, brain-map, etc.)
-- [ ] Update skill count to match extraction
-- [ ] Update context routing table to match available directories
-- [ ] Keep: Algorithm, ISC Quality Gate, security rules, workflow discipline, platform rules
+### CLAUDE.md: Remove personal identity, TELOS, learning-capture, autonomous steering rules, personal MCP rules, cross-project references. Update skill count + context routing. Keep: Algorithm, ISC Quality Gate, security rules, workflow discipline, platform rules.
 
-### constitutional-rules.md adaptation:
-- [ ] Keep Layers 1-4 (input validation, secret protection, execution safety, audit)
-- [ ] Strip Layer 5 (subagent scoping) unless autonomous agents are included
-- [ ] Strip self-healing security rules
-- [ ] Keep prompt injection defense
-- [ ] Verify no personal data patterns in examples
+### constitutional-rules.md: Keep Layers 1-4 (input validation, secrets, execution, audit). Strip Layer 5 (subagent scoping) unless autonomous agents included. Strip self-healing rules. Keep prompt injection defense. Verify no personal data in examples.
 
-### settings.json:
-- [ ] Include only tools available in target environment
-- [ ] Default safe set: Read, Glob, Grep, WebFetch, WebSearch, Bash(git, python, npm, node, ls, mkdir, powershell)
-- [ ] Do not include MCP server configs — target environment configures their own
+### settings.json: Include only available tools. Default safe set: Read, Glob, Grep, WebFetch, WebSearch, Bash(git, python, npm, node, ls, mkdir, powershell). No MCP server configs.
 
-### README.md:
-- [ ] Quick start (clone, open Claude Code, try /delegation)
-- [ ] Skill table with stage and description
-- [ ] Built-in pipeline examples
-- [ ] Directory structure
-- [ ] "No Learning, No Autonomous Systems" section explaining stateless design
-- [ ] License
+### README.md: Quick start, skill table with stage+description, pipeline examples, directory structure, "No Learning, No Autonomous Systems" section, license.
 
 ## Step 3.5: EVOLVE (only if --evolve flag)
 
