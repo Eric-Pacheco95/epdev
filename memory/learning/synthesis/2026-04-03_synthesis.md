@@ -158,6 +158,30 @@
 
 ---
 
+### Theme: Revenue strategy converging on content-first hybrid path (NEW)
+- Maturity: candidate
+- Confidence: 70%
+- Anti-pattern: false
+- Supporting signals: 2026-04-04_content-education-lowest-conflict-revenue.md, 2026-04-04_banking-ai-consulting-market-validated.md, 2026-04-04_hybrid-strategy-convergent-validation.md, 2026-04-04_domain-workflows-are-the-moat.md, 2026-04-04_generalize-over-specialize-instinct.md, 2026-04-04_work-content-pipeline-termination-risk.md
+- Failure weight: 0
+- Pattern: A single 2026-04-04 session produced 6 signals that converge on a revenue strategy: (1) banking AI consulting is a real market but employment-gated for bank employees, (2) content/education is the lowest-conflict revenue path, (3) hybrid strategy (internal first, external at month 12 gate) validated by convergent analysis from both evolve and market research agents, (4) domain-specific workflow intelligence is the moat (not scaffolding), (5) Eric instinctively generalized from banking-specific to regulated-industries, (6) S-tier kill signal -- auto-generating content from work commits is a termination and regulatory risk (MNPI exposure). The S-tier signal is critical: it permanently closes the work-commit-to-content pipeline path.
+- Implication: The strategic direction is locked: internal validation first (zero risk, real problems), content pipeline from personal Jarvis work only (never work commits), external at month 12 gate with 15-20 user credential. The domain workflow moat (skills like /extract-requirements, /regulatory-impact) is the differentiation, not the framework. The content pipeline (Substack "Building Jarvis") feeds both paths simultaneously. Every session of daily Jarvis work produces three outputs: the work itself, the workbench improvement, and the content.
+- Action: Candidate -- needs 1-2 more sessions confirming strategy execution (not just planning) to reach established. Monitor for strategy drift signals. The work-content firewall (personal signals only, never work commits) is a non-negotiable safety constraint.
+
+---
+
+### Theme: Cross-domain alpha extraction from knowledge base (NEW)
+- Maturity: candidate
+- Confidence: 65%
+- Anti-pattern: false
+- Supporting signals: 2026-04-04_alpha-from-internal-knowledge.md, 2026-04-04_banking-ai-consulting-market-validated.md
+- Failure weight: 0
+- Pattern: Running /extract-alpha on Jarvis's accumulated knowledge corpus (16 articles across ai-infra, crypto, smart-home, automotive + TELOS goals + IDEAS backlog) produced 10 ranked alpha bullets, 3 immediately actionable. The "sleeper idea" (banking AI consulting) triggered a full /research --market run that validated the opportunity. The knowledge base has enough accumulated context to generate non-obvious cross-domain connections.
+- Implication: This is a repeatable workflow: periodically run /extract-alpha on the full knowledge corpus to surface ideas. This validates the knowledge article system -- articles written by /research are genuinely useful months later for cross-pollination. Consider scheduling this as a periodic autonomous task (monthly knowledge-base alpha extraction).
+- Action: Candidate -- needs 1-2 more extraction runs confirming the pattern produces actionable output. If confirmed, propose as a scheduled autonomous task.
+
+---
+
 ## Meta-Observations
 
 1. **Signal velocity jumped dramatically.** From 0.86/day (prior synthesis) to 4.71/day. This is driven by two long, productive sessions (5C pipeline work + investment research + /make-prediction skill build) plus heartbeat auto-signals. The velocity will normalize. The synthesis threshold of 20 signals was correctly triggered.
