@@ -573,6 +573,70 @@ def propose_research_tasks(proposals_text: str, dry_run: bool = False) -> int:
     return count
 
 
+# -- Research digest ----------------------------------------------------------
+
+def _build_research_digest() -> str:
+    """Build a short research status block for the morning brief.
+
+    Shows: articles filed this week, topics queued in backlog, next due dates.
+    Returns empty string if nothing to report (keeps brief clean on quiet days).
+    """
+    try:
+        import json as _json
+        from datetime import date as _date, timedelta as _timedelta
+        from pathlib import Path as _Path
+
+        repo = _Path(__file__).resolve().parents[2]
+        kb_index = repo / "memory" / "knowledge" / "index.md"
+        backlog_path = repo / "orchestration" / "task_backlog.jsonl"
+        cutoff = (_date.today() - _timedelta(days=7)).isoformat()
+
+        # Articles filed in last 7 days
+        recent_articles = []
+        if kb_index.exists():
+            for line in kb_index.read_text(encoding="utf-8").splitlines():
+                # Format: | YYYY-MM-DD | topic | finding | path |
+                parts = [p.strip() for p in line.split("|") if p.strip()]
+                if len(parts) >= 4 and len(parts[0]) == 10:
+                    try:
+                        _date.fromisoformat(parts[0])
+                        if parts[0] >= cutoff:
+                            recent_articles.append(f"{parts[0]} {parts[1][:50]}")
+                    except ValueError:
+                        pass
+
+        # Research tasks currently pending in backlog
+        queued = []
+        if backlog_path.exists():
+            for line in backlog_path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    t = _json.loads(line)
+                    if (t.get("source") == "research_producer"
+                            and t.get("status") in ("pending", "executing")):
+                        desc = t.get("description", "")
+                        # Strip "Research (type): " prefix for brevity
+                        desc = desc.split("): ", 1)[-1] if "): " in desc else desc
+                        queued.append(desc[:60])
+                except (_json.JSONDecodeError, KeyError):
+                    pass
+
+        if not recent_articles and not queued:
+            return ""
+
+        parts = ["*Research Digest:*"]
+        if recent_articles:
+            parts.append(f"  Filed this week ({len(recent_articles)}): " + " | ".join(recent_articles[:3]))
+        if queued:
+            parts.append(f"  Queued for research ({len(queued)}): " + ", ".join(queued[:3]))
+        return "\n".join(parts)
+
+    except Exception:
+        return ""
+
+
 # -- Feed generation ---------------------------------------------------------
 
 def generate_feed(dry_run: bool = False) -> str:
@@ -717,7 +781,10 @@ If source updates are thin today, suggest 1 idea based on overnight results or c
     if tasks_proposed:
         print(f"  -> {tasks_proposed} research task(s) proposed to gate")
 
-    # 8. Assemble combined message
+    # 8. Research digest -- articles filed this week + topics queued
+    research_digest = _build_research_digest()
+
+    # 9. Assemble combined message
     lines = [
         f"*Jarvis Morning Briefing -- {today}*",
         "",
@@ -734,6 +801,10 @@ If source updates are thin today, suggest 1 idea based on overnight results or c
 
     if tasks_proposed:
         lines.append(f"\n({tasks_proposed} research task(s) queued for autonomous execution)")
+
+    if research_digest:
+        lines.append("")
+        lines.append(research_digest)
 
     return "\n".join(lines)
 
