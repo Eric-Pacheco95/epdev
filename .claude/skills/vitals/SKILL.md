@@ -192,13 +192,6 @@ Proposals acted on: {n}/{total} ({rate}%)
 
 # CONTRACT
 
-## Input
-- **required:** none (auto-collects via vitals_collector.py)
-
-## Output
-- **produces:** ASCII dashboard (stdout) + Slack report (#epdev) + data/vitals_latest.json
-- **side-effects:** posts to Slack, writes JSON file
-
 ## Errors
 - **collector-failure:** vitals_collector.py fails or returns invalid JSON -> offer LLM fallback
 - **schema-mismatch:** version != 1.0.0 -> STOP and report

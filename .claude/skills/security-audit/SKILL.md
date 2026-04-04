@@ -134,19 +134,6 @@ Write to `history/security/{date}_audit.md`:
 
 # CONTRACT
 
-## Input
-- **optional:** audit scope
-  - type: text
-  - default: full audit (all checks)
-  - examples: "secrets-only", "post-commit", "gitignore"
-
-## Output
-- **produces:** security audit report
-  - format: structured-markdown
-  - sections: scanner results, triaged findings, remediation status, test results
-  - destination: stdout + history/security/{date}_audit.md
-- **side-effects:** writes audit log, may auto-fix Critical/High gitignore/tracking issues
-
 ## Errors
 - **scanner-failure:** security_scan.py fails or returns invalid JSON -> offer LLM fallback
 - **schema-mismatch:** version != 1.0.0 -> STOP and report

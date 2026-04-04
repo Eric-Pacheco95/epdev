@@ -1,8 +1,8 @@
 # Signal Synthesis -- 2026-04-03
-- Signals processed: 33 (30 original + 3 incorporated during overnight review)
+- Signals processed: 45 (30 original + 3 incorporated during 2026-04-03 overnight review + 12 from 2026-04-04 signals incorporated during 2026-04-04 overnight review)
 - Failures reviewed: 2
-- Period: 2026-04-02 to 2026-04-03
-- Overnight review: 2026-04-03 (confidence updates, decay review, cross-synthesis linkage)
+- Period: 2026-04-02 to 2026-04-04
+- Overnight reviews: 2026-04-03 (confidence updates, decay review, cross-synthesis linkage), 2026-04-04 (theme updates with new signals, decay refresh, archival evaluation)
 
 ---
 
@@ -10,14 +10,14 @@
 
 ### Theme: Architecture review is the proven overengineering guard
 - Maturity: proven
-- Confidence: 95%
+- Confidence: 97%
 - Anti-pattern: false
-- Supporting signals: 2026-04-02_arch-review-convergence-value.md, 2026-04-03_arch-review-overengineering-guard.md, 2026-04-02_status-as-execution-guard.md, 2026-04-03_dont-build-for-theoretical-gaps.md, 2026-04-03_real-gap-vs-theoretical-gap.md, 2026-04-03_feedback-loop-asymmetry.md
+- Supporting signals: 2026-04-02_arch-review-convergence-value.md, 2026-04-03_arch-review-overengineering-guard.md, 2026-04-02_status-as-execution-guard.md, 2026-04-03_dont-build-for-theoretical-gaps.md, 2026-04-03_real-gap-vs-theoretical-gap.md, 2026-04-03_feedback-loop-asymmetry.md, 2026-04-04_arch-review-as-idea-kill-mechanism.md, 2026-04-04_eric-rescopes-fast-on-killshots.md
 - Prior synthesis: "Architecture-review gate is validated and working" (established, 85%) -- UPGRADED
 - Failure weight: 0
-- Pattern: Across 4 separate architecture reviews (local embeddings, /backlog, /make-prediction, and dispatcher budget), the parallel 3-agent pattern consistently (a) caught overengineering, (b) converged on non-obvious structural findings, and (c) produced better architecture than the original proposal. The /make-prediction review corrected 5 structural assumptions (3 engines -> 2 layers, 6 steps -> 4, dropped BDM tables, dropped bias checklist, dropped /extract-alpha chain). The /backlog review caught a Goodhart violation and a flippable boolean guard. The convergence pattern (3 agents independently finding the same issue) is a high-confidence signal.
-- Implication: /architecture-review is no longer "validated" -- it is proven infrastructure. The research phase naturally proposes maximum complexity; arch review prunes to what works. This is especially important given Eric's ADHD build velocity.
-- Action: Upgrade steering rule confidence. No rule change needed -- existing rule is correct. Promote to proven maturity.
+- Pattern: Across 6 separate architecture reviews (local embeddings, /backlog, /make-prediction, dispatcher budget, content pipeline, enterprise workflow maximizer), the parallel 3-agent pattern consistently (a) caught overengineering, (b) converged on non-obvious structural findings, and (c) produced better architecture than the original proposal. The /make-prediction review corrected 5 structural assumptions (3 engines -> 2 layers, 6 steps -> 4, dropped BDM tables, dropped bias checklist, dropped /extract-alpha chain). The /backlog review caught a Goodhart violation and a flippable boolean guard. On 2026-04-04, two reviews in a single session both produced immediate direction changes: the content pipeline review killed "passive income" framing, and the project-init review identified 4 killshots causing complete re-scope from enterprise product to personal workflow tool. Eric re-scoped within minutes in both cases — convergent adversarial findings have earned definitive trust.
+- Implication: /architecture-review is proven infrastructure and the most effective idea validation tool in the skill library. The research phase naturally proposes maximum complexity; arch review prunes to what works. The convergence pattern (3 independent agents finding the same issue) creates signals Eric trusts immediately — the ADHD velocity check that prevents building the wrong thing fast.
+- Action: No rule change needed -- existing steering rule is correct. Theme at maximum maturity with 8 supporting signals across 6 reviews.
 
 ---
 
@@ -70,26 +70,26 @@
 ---
 
 ### Theme: Full skill development chain validated
-- Maturity: candidate
-- Confidence: 75%
+- Maturity: established
+- Confidence: 80%
 - Anti-pattern: false
-- Supporting signals: 2026-04-03_full-skill-dev-chain-validated.md, 2026-04-03_llm-self-audit-impossible.md, 2026-04-03_arch-review-overengineering-guard.md (cross-validates the /architecture-review step as essential), 2026-04-03_dont-build-for-theoretical-gaps.md (cross-validates the arch review -> scope reduction pattern)
+- Supporting signals: 2026-04-03_full-skill-dev-chain-validated.md, 2026-04-03_llm-self-audit-impossible.md, 2026-04-03_arch-review-overengineering-guard.md, 2026-04-03_dont-build-for-theoretical-gaps.md, 2026-04-03_arch-review-as-skill-gate.md, 2026-04-04_arch-review-as-idea-kill-mechanism.md
 - Failure weight: 0
-- Pattern: First complete execution of /research -> /architecture-review -> /create-prd -> /implement-prd -> test -> /backlog -> capability track. The chain consumed one full context window. Key sub-findings: (1) LLM self-audit was identified as architecturally impossible -- user-facing interrogation questions are the correct replacement, (2) /architecture-review consistently reduces scope (5 structural assumptions corrected for /make-prediction), (3) /create-prd with collaborative questions catches overengineering that /research misses. The chain's value comes from each step constraining the next.
-- Implication: This is the reference pattern for building new skills. Budget one full context window per skill build. Run /learning-capture before test runs to avoid losing signals to compaction. The "LLM cannot audit itself" insight should be applied retroactively to any skill with a self-check step. Mid-build commits (every 3-4 ISC items) create recovery points against context compaction.
-- Action: Confidence raised to 75% based on cross-validating signals from arch review sessions. Needs 1 more skill build to reach established. Audit existing skills for self-audit steps that should be replaced with interrogation questions.
+- Pattern: First complete execution of /research -> /architecture-review -> /create-prd -> /implement-prd -> test -> /backlog -> capability track. The chain consumed one full context window. Key sub-findings: (1) LLM self-audit was identified as architecturally impossible -- user-facing interrogation questions are the correct replacement, (2) /architecture-review consistently reduces scope (5 structural assumptions corrected for /make-prediction), (3) /create-prd with collaborative questions catches overengineering that /research misses. On 2026-04-03, /architecture-review was validated as a skill creation gate (prevented premature /vendor-outreach skill, redirected to /research --outreach extension). On 2026-04-04, two more arch reviews in a single session both caused immediate re-scopes, confirming the chain's constraining effect at scale.
+- Implication: This is the reference pattern for building new skills. Budget one full context window per skill build. Run /learning-capture before test runs to avoid losing signals to compaction. Mid-build commits (every 3-4 ISC items) create recovery points against context compaction. The arch review step is now the proven critical gate — it prevents building the wrong thing at every scale (individual skills, product proposals, architecture decisions).
+- Action: Upgraded to established maturity with 6 supporting signals. The arch-review-as-skill-gate signal (2026-04-03) provides the second skill build confirming the pattern. Audit existing skills for self-audit steps that should be replaced with interrogation questions.
 
 ---
 
 ### Theme: System health noise from heartbeat auto-signals
 - Maturity: established
-- Confidence: 65%
+- Confidence: 75%
 - Anti-pattern: false
-- Supporting signals: 2026-04-03_heartbeat-network_connections.md, 2026-04-03_heartbeat-network_connections_2.md, 2026-04-03_heartbeat-network_connections_3.md, 2026-04-03_heartbeat-network_connections.md (unprocessed, 73% spike), 2026-04-03_heartbeat-network_connections_2.md (unprocessed, 58% spike), 2026-04-03_heartbeat-context_budget_proxy.md (unprocessed, 9.8% increase)
+- Supporting signals: 2026-04-03_heartbeat-network_connections.md, 2026-04-03_heartbeat-network_connections_2.md, 2026-04-03_heartbeat-network_connections_3.md, 2026-04-03_heartbeat-network_connections.md (unprocessed, 73% spike), 2026-04-03_heartbeat-network_connections_2.md (unprocessed, 58% spike), 2026-04-03_heartbeat-context_budget_proxy.md (unprocessed, 9.8% increase), 2026-04-04_heartbeat-network_connections.md, 2026-04-04_heartbeat-network_connections_2.md
 - Failure weight: 4 (1 failure: autoresearch runner failed x4)
-- Pattern: 6 heartbeat auto-signals generated on 2026-04-03 alone -- 5 network_connections WARNs and 1 context_budget_proxy WARN. The network_connections signals report spikes of 55%, 73%, and 58% across multiple heartbeat windows, while context_budget_proxy reported a 9.8% increase. All are low-information: they confirm metrics changed but provide no root cause and suggest only "review and consider adjusting thresholds." The context_budget_proxy signal extends the pattern beyond network_connections to a second metric, confirming this is a systemic noise problem with the heartbeat auto-signal producer, not specific to one metric.
-- Implication: Heartbeat auto-signals need both deduplication and threshold recalibration. The "same metric, same direction" dedup rule should suppress repeats within 24h. Network connections increasing 55-73% with multiple concurrent Claude sessions is expected behavior and should not trigger WARN. The context_budget_proxy 9.8% increase is well within normal variance and should not trigger either. The auto-signal producer is generating noise that pollutes the synthesis pipeline -- 6 of the unprocessed signals today (100%) are low-information heartbeat WARNs.
-- Action: (1) Raise min_delta thresholds in heartbeat_config.json for network_connections (current threshold too low for multi-session workloads). (2) Add 24h same-metric dedup window. (3) Consider adding context correlation (session count) to suppress expected spikes. Upgraded to established: 6 signals across 2 metrics confirm the noise pattern.
+- Pattern: Heartbeat auto-signals continue accumulating: 8 signals across 2026-04-03 and 2026-04-04, all network_connections WARNs or context_budget_proxy. On 2026-04-04 alone, 2 more network_connections signals arrived despite the session-start banner showing 12 Claude sessions active (expected high connection count). All signals are low-information: they confirm metrics changed but provide no root cause and suggest only "review and consider adjusting thresholds."
+- Implication: This noise pattern is persistent and worsening -- the auto-signal producer is generating ~3-4 heartbeat WARNs per day that add no diagnostic value. Without threshold recalibration, heartbeat WARNs will increasingly dominate the signal pipeline and dilute synthesis quality. The noise ratio (heartbeat signals / total signals) has been ~30-40% across the last 2 days.
+- Action: (1) Raise min_delta thresholds in heartbeat_config.json for network_connections (current threshold too low for multi-session workloads). (2) Add 24h same-metric dedup window. (3) Consider adding context correlation (session count) to suppress expected spikes. Confidence raised to 75% -- pattern now confirmed across 3 consecutive days with 8+ supporting signals.
 
 ---
 
@@ -103,6 +103,18 @@
 - Pattern: tavily_extract, WebFetch, and tavily_search all fail to extract YouTube video transcripts. The workaround (search for corroborating coverage of the video topic) works but costs 2-3 extra tool calls. The /absorb skill should document this workaround as the default path for YouTube inputs.
 - Implication: For /absorb on YouTube, skip direct transcript extraction and go straight to corroborating source search. A YouTube transcript MCP server (yt-dlp based) would solve this but the workaround is adequate and the steering rule "absorb ideas over adopt dependencies" applies -- only adopt if YouTube frequency exceeds 3+ per week.
 - Action: Candidate only. Document workaround in /absorb skill notes. Set archive trigger: 2026-04-17 with no new signals.
+
+---
+
+### Theme: Active Context Population as stateless learning pattern (NEW)
+- Maturity: candidate
+- Confidence: 60%
+- Anti-pattern: false
+- Supporting signals: 2026-04-04_active-context-population-pattern.md
+- Failure weight: 0
+- Pattern: claude-workbench cannot use Jarvis's full learning loop (signals, synthesis, TELOS) because those systems contain personal data. The replacement pattern is "Active Context Population" -- steering rules in CLAUDE.md that direct Claude to write to memory directories during normal work: auto-append to glossary.md when new terms appear, load templates before generating artifacts, write ADRs after design decisions, prompt lessons-learned after milestones, inject regulatory NFRs when touching compliance work. This creates lightweight institutional knowledge accumulation without personal learning infrastructure.
+- Implication: This pattern is reusable for any stateless Claude Code deployment. The key insight: you do not need signals and synthesis to accumulate knowledge -- you need steering rules that tell Claude to write to the right places during normal work. This should be a standard step in /extract-harness (already added in 2026-04-04 session).
+- Action: Candidate -- single signal. Needs confirmation from at least 1 more deployment using this pattern. If confirmed, propose as a documented architectural pattern in the harness design.
 
 ---
 
@@ -125,17 +137,22 @@
 
 2. **STRATEGIES.md consideration**: The invalidate-and-pivot alpha method (/absorb > /extract-alpha > /analyze-claims > invalidate > re-extract) is a repeatable investment strategy that deserves documentation alongside other strategies.
 
+3. **GOALS.md consideration (from 2026-04-04 signals)**: Revenue strategy is converging on content-first hybrid path with month 12 gate. The financial independence goal should reference this concrete path: (a) content/education from personal Jarvis work (Substack "Building Jarvis"), (b) internal validation of claude-workbench with 15-20 users, (c) external at month 12 gate. The S-tier work-content firewall (never generate content from work commits) should be noted as a non-negotiable constraint.
+
+4. **BELIEFS.md consideration (from 2026-04-04 signals)**: "Domain-specific workflow intelligence is the moat, not scaffolding or governance" is a belief-level insight. Market research confirmed Anthropic/GitHub are commoditizing harness architecture. The differentiation is domain skills encoding institutional knowledge.
+
 ---
 
 ## Confidence Decay Review
 
 | Theme | Previous maturity | New maturity | Last signal date | Reason |
 |-------|-------------------|--------------|------------------|--------|
-| Architecture-review gate validated | established (85%) | proven (95%) | 2026-04-03 | 3 new supporting signals across 2 sessions |
-| Grep failure blindness | candidate (70%) | candidate (65%) | 2026-04-02 | No new signals, slight confidence decay but within 90d |
-| Autonomous producer health degrading | candidate (60%) | candidate (50%) | 2026-04-03 | Root cause identified as rate-limit exhaustion (not code defect); benign with 14 sessions open; decay to 50% -- will archive if no new degradation signals by 2026-04-10 |
-| System self-diagnosis fails silently | candidate (75%) | candidate (80%) | 2026-04-02 | Rate-limit-silent-success signal supports the pattern |
-| System health noise from heartbeat auto-signals | candidate (50%) | established (65%) | 2026-04-03 | 3 new signals (2 network_connections + 1 context_budget_proxy) confirm systemic noise pattern across 2 metrics |
+| Architecture-review gate validated | proven (95%) | proven (97%) | 2026-04-04 | 2 new signals from 2026-04-04 (idea kill mechanism + rescope behavior); 8 total across 6 reviews |
+| Grep failure blindness | candidate (70%) | candidate (60%) | 2026-04-02 | No new signals since 2026-04-02; 2-day decay; approaching archive threshold |
+| Autonomous producer health degrading | candidate (50%) | candidate (50%) | 2026-04-03 | No new signals; archive trigger 2026-04-10 stands; root cause was rate-limit cascade |
+| System self-diagnosis fails silently | candidate (80%) | candidate (80%) | 2026-04-02 | No new signals; steering rule about claude -p stdout checking already promoted |
+| System health noise from heartbeat auto-signals | established (65%) | established (75%) | 2026-04-04 | 2 more heartbeat signals on 2026-04-04; pattern confirmed across 3 consecutive days |
+| YouTube content extraction gap | candidate (60%) | candidate (60%) | 2026-04-03 | No new signals; archive trigger 2026-04-17 stands |
 
 ---
 
@@ -157,14 +174,40 @@
 
 ---
 
+### Theme: Revenue strategy converging on content-first hybrid path (NEW)
+- Maturity: candidate
+- Confidence: 70%
+- Anti-pattern: false
+- Supporting signals: 2026-04-04_content-education-lowest-conflict-revenue.md, 2026-04-04_banking-ai-consulting-market-validated.md, 2026-04-04_hybrid-strategy-convergent-validation.md, 2026-04-04_domain-workflows-are-the-moat.md, 2026-04-04_generalize-over-specialize-instinct.md, 2026-04-04_work-content-pipeline-termination-risk.md
+- Failure weight: 0
+- Pattern: A single 2026-04-04 session produced 6 signals that converge on a revenue strategy: (1) banking AI consulting is a real market but employment-gated for bank employees, (2) content/education is the lowest-conflict revenue path, (3) hybrid strategy (internal first, external at month 12 gate) validated by convergent analysis from both evolve and market research agents, (4) domain-specific workflow intelligence is the moat (not scaffolding), (5) Eric instinctively generalized from banking-specific to regulated-industries, (6) S-tier kill signal -- auto-generating content from work commits is a termination and regulatory risk (MNPI exposure). The S-tier signal is critical: it permanently closes the work-commit-to-content pipeline path.
+- Implication: The strategic direction is locked: internal validation first (zero risk, real problems), content pipeline from personal Jarvis work only (never work commits), external at month 12 gate with 15-20 user credential. The domain workflow moat (skills like /extract-requirements, /regulatory-impact) is the differentiation, not the framework. The content pipeline (Substack "Building Jarvis") feeds both paths simultaneously. Every session of daily Jarvis work produces three outputs: the work itself, the workbench improvement, and the content.
+- Action: Candidate -- needs 1-2 more sessions confirming strategy execution (not just planning) to reach established. Monitor for strategy drift signals. The work-content firewall (personal signals only, never work commits) is a non-negotiable safety constraint.
+
+---
+
+### Theme: Cross-domain alpha extraction from knowledge base (NEW)
+- Maturity: candidate
+- Confidence: 65%
+- Anti-pattern: false
+- Supporting signals: 2026-04-04_alpha-from-internal-knowledge.md, 2026-04-04_banking-ai-consulting-market-validated.md
+- Failure weight: 0
+- Pattern: Running /extract-alpha on Jarvis's accumulated knowledge corpus (16 articles across ai-infra, crypto, smart-home, automotive + TELOS goals + IDEAS backlog) produced 10 ranked alpha bullets, 3 immediately actionable. The "sleeper idea" (banking AI consulting) triggered a full /research --market run that validated the opportunity. The knowledge base has enough accumulated context to generate non-obvious cross-domain connections.
+- Implication: This is a repeatable workflow: periodically run /extract-alpha on the full knowledge corpus to surface ideas. This validates the knowledge article system -- articles written by /research are genuinely useful months later for cross-pollination. Consider scheduling this as a periodic autonomous task (monthly knowledge-base alpha extraction).
+- Action: Candidate -- needs 1-2 more extraction runs confirming the pattern produces actionable output. If confirmed, propose as a scheduled autonomous task.
+
+---
+
 ## Meta-Observations
 
-1. **Signal velocity jumped dramatically.** From 0.86/day (prior synthesis) to 4.71/day. This is driven by two long, productive sessions (5C pipeline work + investment research + /make-prediction skill build) plus heartbeat auto-signals. The velocity will normalize. The synthesis threshold of 20 signals was correctly triggered.
+1. **Signal velocity jumped dramatically.** From 0.86/day (prior synthesis) to 4.71/day (2026-04-03), then 12/day on 2026-04-04. This is driven by productive sessions (investment research, /project-init, content pipeline, /extract-harness) plus heartbeat auto-signals. The velocity will normalize once the intensive build sprint completes.
 
-2. **Heartbeat auto-signals are low-information noise (confirmed and worsening).** Originally 3 of 27 signals (11%) were identical network_connections WARNs. Post-synthesis, 3 additional heartbeat WARNs arrived (2 more network_connections + 1 context_budget_proxy), making 6 of 30+ total signals (~20%) low-information noise. The noise ratio is increasing as heartbeat continues firing without threshold recalibration. This is now the highest-priority housekeeping item for the auto-signal producer.
+2. **Heartbeat auto-signals are low-information noise (confirmed across 3 days).** Now 8 heartbeat WARNs across 2026-04-03 and 2026-04-04 (~30-40% of daily signal volume). The noise ratio is stable but unacceptable. Threshold recalibration remains the highest-priority housekeeping item.
 
-3. **Investment/domain signals are the highest quality.** The 5 investment research signals (avg rating 8.0) are significantly higher quality than system-health signals (avg rating 6.0). This makes sense -- domain insights from Eric's active work sessions carry more long-term learning value than transient system metrics. The learning system is doing its job when domain signals outnumber infrastructure signals.
+3. **Domain signals are the highest quality and now dominate.** The 2026-04-04 session produced 10 domain/strategy signals (avg rating 7.2) versus 2 heartbeat noise signals. Investment research, revenue strategy, and architectural insight signals consistently rate 7-9. The learning system works best when domain signals outnumber infrastructure signals.
 
-4. **Cross-session signal correlation is emerging.** The architecture review theme now spans 4 separate reviews across 3 sessions. The test isolation theme spans 3 bugs across 2 sessions. These multi-session patterns are exactly what synthesis is designed to detect -- individual signals that only become visible as a pattern when aggregated.
+4. **Cross-session signal correlation is strong.** Architecture review now spans 8 signals across 6 reviews in 4 sessions. Revenue strategy emerged from 6 signals in a single session. The synthesis system is detecting both slow-burn multi-session patterns and rapid single-session convergences.
 
-5. **First skill gap candidate detected.** The investment research pipeline (/absorb > /extract-alpha > /analyze-claims > invalidate > re-extract) scores High on all three criteria (recurrence, repeatability, value). This is the strongest skill gap candidate since /make-prediction itself.
+5. **Revenue strategy is the first identity-adjacent theme.** Unlike prior themes (infrastructure, tooling, process), the revenue/monetization cluster touches TELOS goals directly. This is a signal that the learning system is maturing beyond operational concerns into strategic territory.
+
+6. **First S-tier signal processed.** The work-content-pipeline termination risk (rating 9, Tier S) is the highest-severity signal in the learning system to date. It permanently closed a revenue path and established a non-negotiable safety constraint. S-tier signals should always trigger theme creation regardless of signal count.

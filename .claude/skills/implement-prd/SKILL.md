@@ -150,26 +150,6 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 
 # CONTRACT
 
-## Input
-- **required:** PRD file path
-  - type: file-path
-  - example: `memory/work/jarvis/PRD.md`
-- **optional:** specific ISC items to implement (subset)
-  - type: text
-  - default: all ISC items in the PRD
-
-## Output
-- **produces:** implementation report
-  - format: structured-markdown
-  - sections: PRD SUMMARY, ISC CHECKLIST, IMPLEMENTATION LOG, REVIEW FINDINGS, VERIFY RESULTS, QUALITY GATE, COMPLETION STATUS
-  - destination: stdout
-- **side-effects:**
-  - creates/modifies source files per PRD requirements
-  - marks ISC checkboxes in PRD file
-  - marks task complete in `orchestration/tasklist.md`
-  - writes decision record to `history/decisions/`
-  - invokes `/review-code` and `/quality-gate` as sub-skills
-
 ## Errors
 - **prd-not-found:** supplied file path does not exist
   - recover: check the path; PRDs are typically in `memory/work/<project>/PRD.md`

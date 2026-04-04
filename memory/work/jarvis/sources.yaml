@@ -14,7 +14,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Mar 31 — Australia/Anthropic MOU for AI safety research"
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
@@ -22,7 +23,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster; v2.1.89 (Apr 1) — Named subagents, defer permission hooks"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
@@ -30,7 +32,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 4 — Quoting Kyle Daigle (GitHub 275M commits/wk); Apr 3 — Vulnerability Research Is Cooked (AI changing exploit dev)"
 
 - name: "Daniel Miessler"
   url: "https://danielmiessler.com/newsletter"
@@ -38,7 +41,8 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Mar 28 — Most Important AI Ideas April 2026; We Are Confusing Two Types of AGI (Soft vs Hard AGI)"
 
 - name: "Hacker News"
   url: "https://news.ycombinator.com"
@@ -46,7 +50,8 @@
   type: community
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 4 — Anthropic removing OpenClaw support for Claude Code; OpenClaw CVE-2026-33579 privilege escalation; axios supply chain attack"
 
 - name: "MLOps YouTube"
   url: "https://www.youtube.com/@MLOps"
@@ -54,7 +59,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Andrej Karpathy YouTube"
   url: "https://www.youtube.com/@AndrejKarpathy"
@@ -62,7 +67,7 @@
   type: ai_education
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 # =============================================================================
 # Tier 2 -- Weekly (ecosystem, security, competitors, crypto)
@@ -74,7 +79,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
   note: "Replaces OpenAI Blog (403 blocked, no RSS). OpenAI coverage via HN + Zvi is sufficient. The Batch covers all major lab releases weekly including OpenAI."
 
 - name: "Krebs on Security"
@@ -83,7 +88,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Mar 23 — CanisterWorm wiper targets Iran. No new posts since Mar 23."
 
 - name: "The Hacker News"
   url: "https://thehackernews.com"
@@ -91,7 +97,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — UNC1069 (DPRK) axios npm supply chain attack; TA416 targets EU governments; PHP web shells via cookie channels"
 
 - name: "LangChain Blog"
   url: "https://blog.langchain.com"
@@ -99,7 +106,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — Self-healing agents in production (auto-PR on regression); Apr 2 — Open models crossing threshold on agent tasks"
 
 - name: "Hugging Face Blog"
   url: "https://huggingface.co/blog"
@@ -107,7 +115,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 2 — Gemma 4 multimodal (2B-31B, Apache 2.0); Apr 1 — Holo3 computer use frontier"
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
@@ -115,7 +124,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Fabric GitHub Releases"
   url: "https://github.com/danielmiessler/fabric/releases"
@@ -123,7 +132,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Mar 26 — v1.4.442 OAuth refactor; Mar 22 — Anthropic SDK bump v1.27.1"
 
 - name: "Latent Space Podcast"
   url: "https://www.latent.space"
@@ -131,16 +141,17 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — AINews Good Friday (Gemma 4 day); Marc Andreessen on death of browser + why this time is different"
 
 - name: "Blockworks"
-  url: "https://blockworks.co"
-  feed_url: "https://blockworks.co/feed/"
+  url: "https://blockworks.com"
+  feed_url: "https://blockworks.com/feed/"
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
-  note: "Replaces CoinDesk (RSS 403 blocked). Blockworks covers institutional/macro crypto (CoinDesk's strength) better than CoinTelegraph which skews retail."
+  last_checked: "2026-04-04"
+  note: "Replaces CoinDesk (RSS 403 blocked). URL updated: blockworks.co 308-redirects to blockworks.com. Feed stale in Jan 2026 — monitor for recovery."
 
 - name: "CoinTelegraph"
   url: "https://cointelegraph.com"
@@ -148,7 +159,28 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 4 — Tether mulling fundraise delay if demand < $500B valuation"
+
+- name: "Google Cloud Threat Intelligence"
+  url: "https://cloud.google.com/blog/topics/threat-intelligence"
+  feed_url: "https://cloud.google.com/blog/topics/threat-intelligence/rss"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — Attributed axios npm supply chain attack to North Korea UNC1069 (WAVESHAPER.V2 backdoor)"
+  note: "Added 2026-04-04 — Google Mandiant/GTIG primary attribution source; cited in axios compromise, APT reports"
+
+- name: "Microsoft Security Blog"
+  url: "https://www.microsoft.com/en-us/security/blog"
+  feed_url: "https://www.microsoft.com/en-us/security/blog/feed/"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-04"
+  last_notable: "Apr 1 — Mitigation guide for axios npm supply chain compromise (WAVESHAPER.V2)"
+  note: "Added 2026-04-04 — Microsoft MSRC + Defender research; key for supply chain mitigations and Patch Tuesday coverage"
 
 # =============================================================================
 # Tier 3 -- Monthly (broader ecosystem, research)
@@ -160,7 +192,8 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0)"
 
 - name: "Meta AI Blog"
   url: "https://ai.meta.com/blog"
@@ -168,7 +201,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Microsoft AI Blog"
   url: "https://news.microsoft.com/source/topics/ai/"
@@ -176,7 +209,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -184,7 +217,8 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — WebinarTV secretly recording Zoom meetings; Apr 2 — US bans all foreign-made consumer routers"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
@@ -192,7 +226,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -200,7 +234,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
@@ -208,7 +242,8 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 4 — 275M commits/week + 2.1B GitHub Actions minutes/week (Daigle via Willison)"
 
 - name: "AI Safety Newsletter (Zvi)"
   url: "https://thezvi.substack.com"
@@ -216,4 +251,4 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"

@@ -60,46 +60,7 @@ true
 
 1. Scan `.claude/skills/*/SKILL.md` to get the list of installed skills
 2. For skills that have a `# DISCOVERY` section, read the `## One-liner` and `## Stage` fields
-3. For skills without a DISCOVERY section, fall back to the CLAUDE.md Skill Registry table for descriptions and use this stage mapping:
-
-   | Skill | Stage |
-   |-------|-------|
-   | /research | OBSERVE |
-   | /extract-wisdom | OBSERVE |
-   | /deep-audit | OBSERVE |
-   | /absorb | OBSERVE |
-   | /first-principles | THINK |
-   | /red-team | THINK |
-   | /analyze-claims | THINK |
-   | /find-logical-fallacies | THINK |
-   | /architecture-review | THINK |
-   | /create-prd | PLAN |
-   | /project-init | PLAN |
-   | /improve-prompt | PLAN |
-   | /implement-prd | BUILD |
-   | /create-pattern | BUILD |
-   | /spawn-agent | BUILD |
-   | /workflow-engine | BUILD |
-   | /review-code | VERIFY |
-   | /security-audit | VERIFY |
-   | /quality-gate | VERIFY |
-   | /self-heal | VERIFY |
-   | /learning-capture | LEARN |
-   | /synthesize-signals | LEARN |
-   | /telos-update | LEARN |
-   | /telos-report | LEARN |
-   | /update-steering-rules | LEARN |
-   | /teach | LEARN |
-   | /write-essay | CREATE |
-   | /create-keynote | CREATE |
-   | /create-image | CREATE |
-   | /visualize | CREATE |
-   | /label-and-rate | CREATE |
-   | /delegation | ORCHESTRATE |
-   | /project-orchestrator | ORCHESTRATE |
-   | /notion-sync | ORCHESTRATE |
-   | /commit | ORCHESTRATE |
-   | /jarvis-help | ORCHESTRATE |
+3. For skills without a DISCOVERY section, derive stage from the CLAUDE.md Skill Registry or the formatted output in step 4.
 
 4. Print skills grouped under stage headers using this format:
 

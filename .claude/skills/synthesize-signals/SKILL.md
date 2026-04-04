@@ -155,24 +155,6 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 
 # CONTRACT
 
-## Input
-- **required:** unprocessed signals in memory/learning/signals/
-  - type: auto-read (directory scan)
-  - minimum: 3 signals required to run synthesis
-- **optional:** date range or category focus
-  - type: text flags
-  - default: all unprocessed signals
-
-## Output
-- **produces:** synthesis document
-  - format: structured-markdown
-  - sections: Themes, Proposed Steering Rules, Proposed TELOS Updates, Confidence Decay Review, Anti-Patterns, Meta-Observations
-  - destination: file (memory/learning/synthesis/{date}_synthesis.md) + stdout summary
-- **side-effects:**
-  - moves processed signals to memory/learning/signals/processed/
-  - updates memory/learning/_signal_meta.json
-  - appends to data/signal_lineage.jsonl + mirrors to SQLite lineage table
-
 ## Errors
 - **insufficient-signals:** fewer than 3 unprocessed signals
   - recover: skip synthesis, print count, wait for more signals
