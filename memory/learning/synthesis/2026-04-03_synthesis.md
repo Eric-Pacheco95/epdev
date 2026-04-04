@@ -10,14 +10,14 @@
 
 ### Theme: Architecture review is the proven overengineering guard
 - Maturity: proven
-- Confidence: 95%
+- Confidence: 97%
 - Anti-pattern: false
-- Supporting signals: 2026-04-02_arch-review-convergence-value.md, 2026-04-03_arch-review-overengineering-guard.md, 2026-04-02_status-as-execution-guard.md, 2026-04-03_dont-build-for-theoretical-gaps.md, 2026-04-03_real-gap-vs-theoretical-gap.md, 2026-04-03_feedback-loop-asymmetry.md
+- Supporting signals: 2026-04-02_arch-review-convergence-value.md, 2026-04-03_arch-review-overengineering-guard.md, 2026-04-02_status-as-execution-guard.md, 2026-04-03_dont-build-for-theoretical-gaps.md, 2026-04-03_real-gap-vs-theoretical-gap.md, 2026-04-03_feedback-loop-asymmetry.md, 2026-04-04_arch-review-as-idea-kill-mechanism.md, 2026-04-04_eric-rescopes-fast-on-killshots.md
 - Prior synthesis: "Architecture-review gate is validated and working" (established, 85%) -- UPGRADED
 - Failure weight: 0
-- Pattern: Across 4 separate architecture reviews (local embeddings, /backlog, /make-prediction, and dispatcher budget), the parallel 3-agent pattern consistently (a) caught overengineering, (b) converged on non-obvious structural findings, and (c) produced better architecture than the original proposal. The /make-prediction review corrected 5 structural assumptions (3 engines -> 2 layers, 6 steps -> 4, dropped BDM tables, dropped bias checklist, dropped /extract-alpha chain). The /backlog review caught a Goodhart violation and a flippable boolean guard. The convergence pattern (3 agents independently finding the same issue) is a high-confidence signal.
-- Implication: /architecture-review is no longer "validated" -- it is proven infrastructure. The research phase naturally proposes maximum complexity; arch review prunes to what works. This is especially important given Eric's ADHD build velocity.
-- Action: Upgrade steering rule confidence. No rule change needed -- existing rule is correct. Promote to proven maturity.
+- Pattern: Across 6 separate architecture reviews (local embeddings, /backlog, /make-prediction, dispatcher budget, content pipeline, enterprise workflow maximizer), the parallel 3-agent pattern consistently (a) caught overengineering, (b) converged on non-obvious structural findings, and (c) produced better architecture than the original proposal. The /make-prediction review corrected 5 structural assumptions (3 engines -> 2 layers, 6 steps -> 4, dropped BDM tables, dropped bias checklist, dropped /extract-alpha chain). The /backlog review caught a Goodhart violation and a flippable boolean guard. On 2026-04-04, two reviews in a single session both produced immediate direction changes: the content pipeline review killed "passive income" framing, and the project-init review identified 4 killshots causing complete re-scope from enterprise product to personal workflow tool. Eric re-scoped within minutes in both cases — convergent adversarial findings have earned definitive trust.
+- Implication: /architecture-review is proven infrastructure and the most effective idea validation tool in the skill library. The research phase naturally proposes maximum complexity; arch review prunes to what works. The convergence pattern (3 independent agents finding the same issue) creates signals Eric trusts immediately — the ADHD velocity check that prevents building the wrong thing fast.
+- Action: No rule change needed -- existing steering rule is correct. Theme at maximum maturity with 8 supporting signals across 6 reviews.
 
 ---
 
