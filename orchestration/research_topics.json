@@ -1,0 +1,93 @@
+{
+  "_comment": "Research topic watchlist for research_producer.py. Each topic is checked against the knowledge base; if no article exists within interval_days, a dispatcher task is injected.",
+  "_schema": {
+    "slug": "unique stable key -- used for dedup routine_id and output path (memory/work/{slug}/)",
+    "title": "human-readable description passed to /research as the topic",
+    "type": "technical | market | live -- passed as --type flag, skips interactive classification",
+    "domain": "knowledge base domain (ai-infra | fintech | crypto | security | general)",
+    "depth": "quick | default | deep -- passed as depth flag",
+    "interval_days": "minimum days between research runs for this topic",
+    "priority": "dispatcher priority 1-5 (lower = higher priority)",
+    "tags": "keywords for knowledge index matching in prior-knowledge scan",
+    "enabled": "set false to pause without deleting"
+  },
+  "topics": [
+    {
+      "slug": "ai-agent-frameworks",
+      "title": "Current state of AI agent frameworks -- LangGraph, CrewAI, AutoGen, Agentless patterns",
+      "type": "technical",
+      "domain": "ai-infra",
+      "depth": "default",
+      "interval_days": 14,
+      "priority": 2,
+      "tags": ["ai", "orchestration", "agents", "langraph", "crewai", "autogen"],
+      "enabled": true
+    },
+    {
+      "slug": "claude-api-updates",
+      "title": "Claude API and Anthropic product updates -- new models, SDK changes, pricing",
+      "type": "technical",
+      "domain": "ai-infra",
+      "depth": "quick",
+      "interval_days": 14,
+      "priority": 2,
+      "tags": ["claude", "anthropic", "api", "models", "sdk"],
+      "enabled": true
+    },
+    {
+      "slug": "fintech-ai-adoption",
+      "title": "Fintech and banking AI adoption -- enterprise deployments, vendor landscape, consulting demand",
+      "type": "market",
+      "domain": "fintech",
+      "depth": "default",
+      "interval_days": 30,
+      "priority": 3,
+      "tags": ["fintech", "banking", "ai", "enterprise", "consulting"],
+      "enabled": true
+    },
+    {
+      "slug": "prediction-market-mechanics",
+      "title": "Prediction market platforms and calibration mechanics -- Metaculus, Manifold, Polymarket",
+      "type": "technical",
+      "domain": "ai-infra",
+      "depth": "default",
+      "interval_days": 21,
+      "priority": 3,
+      "tags": ["prediction", "markets", "calibration", "metaculus", "manifold"],
+      "enabled": true
+    },
+    {
+      "slug": "crypto-defi-market-structure",
+      "title": "DeFi market structure, MEV, and algorithmic trading opportunities 2026",
+      "type": "market",
+      "domain": "crypto",
+      "depth": "default",
+      "interval_days": 21,
+      "priority": 3,
+      "tags": ["defi", "mev", "dex", "algo-trading", "market-structure"],
+      "enabled": true
+    },
+    {
+      "slug": "autonomous-coding-agents",
+      "title": "Autonomous coding agent capabilities -- Devin, SWE-agent, Claude Code, Cursor patterns",
+      "type": "technical",
+      "domain": "ai-infra",
+      "depth": "default",
+      "interval_days": 21,
+      "priority": 2,
+      "tags": ["coding-agents", "devin", "swe-agent", "autonomous", "benchmarks"],
+      "enabled": true
+    },
+    {
+      "slug": "security-ai-threats",
+      "title": "AI-specific security threats -- prompt injection, model poisoning, agentic attack surfaces",
+      "type": "technical",
+      "domain": "security",
+      "depth": "default",
+      "interval_days": 30,
+      "priority": 3,
+      "tags": ["security", "prompt-injection", "agentic", "attack-surface", "defense"],
+      "enabled": true
+    }
+  ]
+}
