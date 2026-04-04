@@ -7,19 +7,18 @@
 - **Baseline**: 47,868 words
 - **Final**: 44,498 words
 - **Delta**: -3,370 words (-7.0%)
-- **Iterations**: 15
-- **Kept**: 15
-- **Discarded**: 0
+- **Iterations**: 15 / 15 max
+- **Kept**: 15 | **Discarded**: 0
 
 ## Strategy
 
 Three primary reduction patterns applied:
 
-1. **CONTRACT section deduplication** (11 skills, -859 words): Skills had `## Input` and `## Output` sub-sections under `# CONTRACT` that fully duplicated their `# DISCOVERY > Output Contract` sections. Removed with zero information loss.
+1. **CONTRACT section deduplication** (11 skills, ~-859 words): Skills had `## Input` and `## Output` under `# CONTRACT` that fully duplicated their `# DISCOVERY > Output Contract`. Removed with zero information loss.
 
-2. **Deprecated skill cleanup** (2 skills, -1,605 words): `voice-capture` and `label-and-rate` retained full original skill content as "archived" text never loaded in active sessions. Stripped to deprecation notices only.
+2. **Deprecated skill cleanup** (2 skills, ~-1,605 words): `voice-capture` and `label-and-rate` retained full original skill bodies as "archived" text never loaded in active sessions. Stripped to deprecation notices only.
 
-3. **Prose tightening** (6 skills, -906 words): Verbose multi-line bullet lists condensed to compact single-line format in `make-prediction`, `extract-harness`, `research`, `absorb`, `jarvis-help`. All analytical content preserved.
+3. **Prose tightening** (6 skills, ~-906 words): Verbose multi-line bullet lists condensed to compact single-line format in `make-prediction`, `extract-harness`, `research`, `absorb`, `jarvis-help`. All analytical content preserved.
 
 ## TSV Run Log
 
@@ -34,8 +33,8 @@ baseline	3a9b46d	47868	--	--	pre-run baseline
 7	6cfe8f6	46722	-12	KEPT	research: condense OUTPUT FORMATS to table format
 8	c55f4b9	46641	-81	KEPT	research: condense outreach security constraints
 9	bf67093	46454	-187	KEPT	jarvis-help: remove redundant fallback stage-mapping table
-10	22f28ae	45431	-1023	KEPT	voice-capture: strip archived deprecated content (1023w)
-11	0d51385	44849	-582	KEPT	label-and-rate: strip archived deprecated content (582w)
+10	22f28ae	45431	-1023	KEPT	voice-capture: strip archived deprecated content
+11	0d51385	44849	-582	KEPT	label-and-rate: strip archived deprecated content
 12	719be46	44692	-157	KEPT	make-prediction: condense geopolitics analytical pillars
 13	5cfab6a	44618	-74	KEPT	absorb: condense SECURITY and ERROR HANDLING sections
 14	8e9129f	44594	-24	KEPT	make-prediction: condense SECURITY RULES to 2 bullets
@@ -43,16 +42,11 @@ baseline	3a9b46d	47868	--	--	pre-run baseline
 
 ## Quality Assessment
 
-All reductions preserved:
-- Every analytical framework (geopolitics/market lenses, all 4 pillars)
-- All security rules (condensed phrasing, same substance)
-- All workflow logic (step sequences, routing, validation gates)
-- All skill chains and output contracts
-- Zero novel content removed -- only redundancy and archived dead code
+All reductions preserved every analytical framework, security rule, workflow logic step, skill chain, and output contract. Zero novel content removed -- only redundancy and archived dead code.
 
 ## Remaining Opportunities (future runs)
 
-- make-prediction Step 5 TRACK: prediction record template is verbose (~150w)
-- absorb Steps 7-8: TELOS proposal review workflow has compressible prose
+- make-prediction Step 5 TRACK: prediction record template ~150w compressible
+- absorb Steps 7-8: TELOS proposal review workflow has dense prose
 - research Phase 4.3: Slack staging steps have redundant safety labels
 - learning-capture: signal format block + explanation ~100w of structural metadata
