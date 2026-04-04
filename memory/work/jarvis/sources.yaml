@@ -172,7 +172,8 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0)"
 
 - name: "Meta AI Blog"
   url: "https://ai.meta.com/blog"
@@ -180,7 +181,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Microsoft AI Blog"
   url: "https://news.microsoft.com/source/topics/ai/"
@@ -188,7 +189,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -196,7 +197,8 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — WebinarTV secretly recording Zoom meetings; Apr 2 — US bans all foreign-made consumer routers"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
@@ -204,7 +206,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -212,7 +214,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
@@ -220,7 +222,8 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 4 — 275M commits/week + 2.1B GitHub Actions minutes/week (Daigle via Willison)"
 
 - name: "AI Safety Newsletter (Zvi)"
   url: "https://thezvi.substack.com"
@@ -228,4 +231,4 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
