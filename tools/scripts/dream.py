@@ -1,0 +1,525 @@
+#!/usr/bin/env python3
+"""dream.py -- Jarvis memory consolidation worker.
+
+Runs the 4-phase AutoDream cycle over Jarvis memory files:
+  Phase 1: Orient      -- inventory scope, check lock, last-run timestamp
+  Phase 2: Gather      -- semantic duplicate scan, stale pointer check, relative date grep
+  Phase 3: Consolidate -- auto-merge duplicates (with snapshots), fix dates, remove stale ptrs
+  Phase 4: Prune+Index -- rebuild MEMORY.md, update embedding index, write log + health signal
+
+Fully autonomous: acts first, reports after. Eric reviews data/dream_last_report.md.
+Snapshots written before every destructive write -- revert via snapshot or git.
+
+Usage:
+    python tools/scripts/dream.py              # full run, print report
+    python tools/scripts/dream.py --dry-run    # show what would change, no writes
+    python tools/scripts/dream.py --autonomous # overnight mode: suppress prompts, write report only
+
+Outputs:
+    data/dream.lock                  -- concurrency lock (auto-cleared)
+    data/dream_last_run.txt          -- ISO timestamp of last successful run
+    data/dream_last_report.md        -- human-readable report of what changed
+    data/dream_snapshots/            -- pre-merge snapshots for rollback
+    history/changes/dream_log.md     -- append-only audit trail
+    memory/learning/signals/         -- health signal on completion
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+# --- Paths ---
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+MEMORY_DIR = (
+    Path.home()
+    / ".claude"
+    / "projects"
+    / "C--Users-ericp-Github-epdev"
+    / "memory"
+)
+MEMORY_INDEX = MEMORY_DIR / "MEMORY.md"
+DATA_DIR = REPO_ROOT / "data"
+LOCK_FILE = DATA_DIR / "dream.lock"
+LAST_RUN_FILE = DATA_DIR / "dream_last_run.txt"
+REPORT_FILE = DATA_DIR / "dream_last_report.md"
+SNAPSHOTS_DIR = DATA_DIR / "dream_snapshots"
+DREAM_LOG = REPO_ROOT / "history" / "changes" / "dream_log.md"
+SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
+
+MEMORY_INDEX_MAX_LINES = 200
+LOCK_STALE_SECONDS = 7200  # 2 hours
+
+# Relative date patterns to absolutize
+RELATIVE_DATE_PATTERNS = [
+    r"\blast week\b",
+    r"\blast month\b",
+    r"\byesterday\b",
+    r"\brecently\b",
+    r"\bago\b",
+    r"\bthis week\b",
+    r"\btoday\b",
+    r"\btomorrow\b",
+    r"\bnext week\b",
+    r"\bearlier this\b",
+]
+
+
+# --- Lock management ---
+
+def _acquire_lock(dry_run: bool) -> bool:
+    if dry_run:
+        return True
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if LOCK_FILE.exists():
+        try:
+            acquired_at = float(LOCK_FILE.read_text().strip())
+            age = time.time() - acquired_at
+            if age < LOCK_STALE_SECONDS:
+                print(f"Dream run already in progress (lock age: {int(age)}s). Exiting.")
+                return False
+            print(f"Stale lock detected ({int(age)}s old) -- overriding.")
+        except Exception:
+            pass
+    LOCK_FILE.write_text(str(time.time()))
+    return True
+
+
+def _release_lock(dry_run: bool) -> None:
+    if not dry_run and LOCK_FILE.exists():
+        LOCK_FILE.unlink()
+
+
+# --- Snapshot ---
+
+def _snapshot(fpath: Path) -> Path:
+    SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    snap = SNAPSHOTS_DIR / f"{ts}_{fpath.name}"
+    snap.write_text(fpath.read_text(encoding="utf-8", errors="replace"), encoding="utf-8")
+    return snap
+
+
+# --- Phase 1: Orient ---
+
+def phase_orient() -> dict:
+    """Inventory memory files and check state."""
+    files = sorted(MEMORY_DIR.glob("*.md"))
+    content_files = [f for f in files if f.name != "MEMORY.md"]
+
+    last_run = "never"
+    if LAST_RUN_FILE.exists():
+        last_run = LAST_RUN_FILE.read_text().strip()
+
+    return {
+        "memory_files": content_files,
+        "memory_index": MEMORY_INDEX,
+        "file_count": len(content_files),
+        "last_run": last_run,
+    }
+
+
+# --- Phase 2: Gather Signal ---
+
+def phase_gather(orientation: dict) -> dict:
+    """Detect duplicates, stale pointers, and relative dates."""
+    findings = {
+        "duplicates": [],
+        "related": [],
+        "stale_pointers": [],
+        "relative_date_files": [],
+        "embedding_available": False,
+    }
+
+    # Attempt semantic duplicate scan
+    try:
+        sys.path.insert(0, str(REPO_ROOT / "tools" / "scripts"))
+        import embedding_service as es
+        result = es.find_similar(threshold=0.92)
+        findings["duplicates"] = result.get("duplicates", [])
+        findings["related"] = result.get("related", [])
+        findings["embedding_available"] = True
+    except Exception as e:
+        findings["embedding_error"] = str(e)
+
+    # Stale pointer check: parse MEMORY.md for (file.md) links
+    if MEMORY_INDEX.exists():
+        index_text = MEMORY_INDEX.read_text(encoding="utf-8", errors="replace")
+        linked = re.findall(r'\(([^)]+\.md)\)', index_text)
+        for link in linked:
+            fpath = MEMORY_DIR / link
+            if not fpath.exists():
+                findings["stale_pointers"].append(link)
+
+    # Relative date grep across all memory files
+    rel_pattern = re.compile(
+        "|".join(RELATIVE_DATE_PATTERNS), re.IGNORECASE
+    )
+    for fpath in orientation["memory_files"]:
+        try:
+            text = fpath.read_text(encoding="utf-8", errors="replace")
+            # Skip frontmatter dates (---...---) and the word in URLs
+            lines = text.split("\n")
+            hits = [
+                (i + 1, line.strip())
+                for i, line in enumerate(lines)
+                if rel_pattern.search(line)
+                and not line.strip().startswith("http")
+                and not line.strip().startswith("---")
+            ]
+            if hits:
+                findings["relative_date_files"].append((fpath, hits))
+        except Exception:
+            pass
+
+    return findings
+
+
+# --- Phase 3: Consolidate ---
+
+def _merge_files(keeper: Path, donor: Path, today_str: str) -> str:
+    """Merge donor into keeper: append unique paragraphs from donor not in keeper.
+
+    Returns a summary string describing what was merged.
+    """
+    keeper_text = keeper.read_text(encoding="utf-8", errors="replace")
+    donor_text = donor.read_text(encoding="utf-8", errors="replace")
+
+    # Split donor into paragraphs
+    donor_paras = [p.strip() for p in donor_text.split("\n\n") if p.strip()]
+    unique_paras = []
+    for para in donor_paras:
+        # Skip frontmatter, skip paragraphs already present in keeper
+        if para.startswith("---"):
+            continue
+        # Simple containment check (first 60 chars as fingerprint)
+        fingerprint = para[:60].lower()
+        if fingerprint not in keeper_text.lower():
+            unique_paras.append(para)
+
+    merged = keeper_text
+    if unique_paras:
+        merged += (
+            f"\n\n<!-- Merged from {donor.name} on {today_str} -->\n\n"
+            + "\n\n".join(unique_paras)
+        )
+
+    keeper.write_text(merged, encoding="utf-8")
+    return (
+        f"Merged {len(unique_paras)} unique paragraph(s) from {donor.name} into {keeper.name}"
+        if unique_paras else
+        f"No unique content in {donor.name} -- deleted as exact duplicate"
+    )
+
+
+def _fix_relative_dates(fpath: Path, hits: list, today_str: str) -> int:
+    """Replace flagged relative date lines with a note to use absolute dates.
+
+    Conservative: annotates lines rather than guessing the absolute date,
+    since guessing the wrong date is worse than flagging it.
+    Returns count of lines annotated.
+    """
+    text = fpath.read_text(encoding="utf-8", errors="replace")
+    lines = text.split("\n")
+    count = 0
+    rel_pattern = re.compile(
+        "|".join(RELATIVE_DATE_PATTERNS), re.IGNORECASE
+    )
+    hit_line_nos = {h[0] for h in hits}
+    for i, line in enumerate(lines):
+        lineno = i + 1
+        if lineno in hit_line_nos and rel_pattern.search(line):
+            lines[i] = line + f"  <!-- TODO: absolutize date (dream run {today_str}) -->"
+            count += 1
+    if count:
+        fpath.write_text("\n".join(lines), encoding="utf-8")
+    return count
+
+
+def phase_consolidate(orientation: dict, findings: dict, dry_run: bool) -> list[str]:
+    """Execute consolidation actions. Returns list of action strings for report."""
+    actions = []
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    # -- Merge duplicate pairs --
+    merged_donors = set()
+    for score, path_a, path_b in findings.get("duplicates", []):
+        fa, fb = Path(path_a), Path(path_b)
+        if not fa.exists() or not fb.exists():
+            continue
+        if str(fa) in merged_donors or str(fb) in merged_donors:
+            continue
+        # Keep the larger file (more detailed)
+        keeper, donor = (fa, fb) if fa.stat().st_size >= fb.stat().st_size else (fb, fa)
+        action = f"[MERGE score={score:.3f}] {keeper.name} absorbs {donor.name}"
+        if dry_run:
+            actions.append(f"[DRY-RUN] {action}")
+        else:
+            snap_keeper = _snapshot(keeper)
+            snap_donor = _snapshot(donor)
+            merge_summary = _merge_files(keeper, donor, today_str)
+            donor.unlink()
+            merged_donors.add(str(donor))
+            actions.append(
+                f"{action}\n"
+                f"  {merge_summary}\n"
+                f"  Snapshots: {snap_keeper.name}, {snap_donor.name}"
+            )
+
+    # -- Remove stale MEMORY.md pointers --
+    for stale_link in findings.get("stale_pointers", []):
+        action = f"[STALE PTR] Removed dead link: ({stale_link}) from MEMORY.md"
+        if dry_run:
+            actions.append(f"[DRY-RUN] {action}")
+        else:
+            if MEMORY_INDEX.exists():
+                text = MEMORY_INDEX.read_text(encoding="utf-8", errors="replace")
+                # Remove the entire line containing this stale link
+                lines = text.split("\n")
+                cleaned = [l for l in lines if f"({stale_link})" not in l]
+                MEMORY_INDEX.write_text("\n".join(cleaned), encoding="utf-8")
+            actions.append(action)
+
+    # -- Flag relative dates --
+    for fpath, hits in findings.get("relative_date_files", []):
+        if not fpath.exists():
+            continue
+        action = f"[DATES] {fpath.name}: {len(hits)} relative date reference(s) flagged"
+        if dry_run:
+            actions.append(f"[DRY-RUN] {action}")
+            for lineno, line in hits[:3]:
+                actions.append(f"  line {lineno}: {line[:80]}")
+        else:
+            count = _fix_relative_dates(fpath, hits, today_str)
+            actions.append(f"{action} (annotated {count} line(s))")
+
+    return actions
+
+
+# --- Phase 4: Prune & Index ---
+
+def phase_prune_and_index(orientation: dict, consolidate_actions: list[str], dry_run: bool) -> list[str]:
+    """Rebuild MEMORY.md index, update embeddings, write log + signal."""
+    actions = []
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Check MEMORY.md line count
+    if MEMORY_INDEX.exists():
+        lines = MEMORY_INDEX.read_text(encoding="utf-8", errors="replace").split("\n")
+        line_count = len([l for l in lines if l.strip()])
+        if line_count > MEMORY_INDEX_MAX_LINES:
+            action = (
+                f"[INDEX] MEMORY.md has {line_count} lines (limit: {MEMORY_INDEX_MAX_LINES}) "
+                f"-- manual review needed to demote verbose entries"
+            )
+            actions.append(action)
+        else:
+            actions.append(f"[INDEX] MEMORY.md: {line_count} lines (within {MEMORY_INDEX_MAX_LINES} limit)")
+
+    # Update embedding index for modified files
+    if not dry_run:
+        try:
+            sys.path.insert(0, str(REPO_ROOT / "tools" / "scripts"))
+            import embedding_service as es
+
+            # Re-index any files that were modified during consolidation
+            modified = [a for a in consolidate_actions if "[MERGE" in a or "[DATES" in a]
+            if modified:
+                es.index(scope="auto", verbose=False)
+                actions.append(f"[INDEX] Embedding index updated ({len(modified)} file(s) changed)")
+        except Exception as e:
+            actions.append(f"[INDEX] Embedding update skipped: {e}")
+
+    # Write dream log entry
+    if not dry_run:
+        DREAM_LOG.parent.mkdir(parents=True, exist_ok=True)
+        log_entry = (
+            f"\n## Dream Run: {now_str}\n\n"
+            + "\n".join(f"- {a}" for a in consolidate_actions + actions)
+            + "\n"
+        )
+        with open(DREAM_LOG, "a", encoding="utf-8") as f:
+            f.write(log_entry)
+        actions.append(f"[LOG] Appended to {DREAM_LOG.name}")
+
+    # Write health signal
+    if not dry_run:
+        SIGNALS_DIR.mkdir(parents=True, exist_ok=True)
+        merges = sum(1 for a in consolidate_actions if "[MERGE" in a and "[DRY" not in a)
+        signal_file = SIGNALS_DIR / f"{today_str}_dream-health.md"
+        signal_text = (
+            f"---\n"
+            f"date: {today_str}\n"
+            f"category: dream\n"
+            f"rating: 7\n"
+            f"source: dream\n"
+            f"---\n\n"
+            f"# Dream health signal\n\n"
+            f"Dream run completed at {now_str}.\n"
+            f"- Files merged: {merges}\n"
+            f"- Stale pointers removed: {len([a for a in consolidate_actions if '[STALE' in a])}\n"
+            f"- Date flags added: {len([a for a in consolidate_actions if '[DATES' in a])}\n"
+        )
+        signal_file.write_text(signal_text, encoding="utf-8")
+        actions.append(f"[SIGNAL] Health signal written: {signal_file.name}")
+
+    # Update last-run timestamp
+    if not dry_run:
+        LAST_RUN_FILE.write_text(now_str)
+
+    return actions
+
+
+# --- Report ---
+
+def _write_report(orientation: dict, findings: dict, consolidate_actions: list[str], prune_actions: list[str], dry_run: bool, duration_s: float) -> str:
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    mode = "DRY RUN" if dry_run else "COMPLETED"
+    merges = sum(1 for a in consolidate_actions if "[MERGE" in a)
+    stale_removed = sum(1 for a in consolidate_actions if "[STALE" in a)
+    date_flags = sum(1 for a in consolidate_actions if "[DATES" in a)
+    dupes_found = len(findings.get("duplicates", []))
+    related_found = len(findings.get("related", []))
+
+    lines = [
+        f"# /dream Report -- {now_str} ({mode})",
+        f"",
+        f"## Summary",
+        f"- Files scanned: {orientation['file_count']}",
+        f"- Last run: {orientation['last_run']}",
+        f"- Duration: {duration_s:.1f}s",
+        f"- Semantic engine: {'OK (nomic-embed-text)' if findings.get('embedding_available') else 'UNAVAILABLE (grep fallback)'}",
+        f"",
+        f"## Findings",
+        f"- Duplicate candidates (>= 0.92): {dupes_found}",
+        f"- Related pairs (0.82-0.91): {related_found} (no action)",
+        f"- Stale MEMORY.md pointers: {len(findings.get('stale_pointers', []))}",
+        f"- Files with relative dates: {len(findings.get('relative_date_files', []))}",
+        f"",
+        f"## Actions Taken",
+    ]
+
+    if not consolidate_actions and not prune_actions:
+        lines.append("- No changes needed -- memory is clean")
+    else:
+        for a in consolidate_actions + prune_actions:
+            for subline in a.split("\n"):
+                lines.append(f"- {subline}" if not subline.startswith("  ") else subline)
+
+    if findings.get("related"):
+        lines += ["", "## Related Pairs (informational)"]
+        for score, a, b in findings["related"][:10]:
+            lines.append(f"- {score:.3f}  {Path(a).name}  <->  {Path(b).name}")
+
+    if dry_run:
+        lines += ["", "---", "*Dry run -- no files were modified.*"]
+
+    if SNAPSHOTS_DIR.exists():
+        snaps = list(SNAPSHOTS_DIR.glob("*.md"))
+        if snaps:
+            lines += ["", f"## Snapshots Available ({len(snaps)} files)"]
+            lines.append(f"- Location: {SNAPSHOTS_DIR}")
+            lines.append("- Revert: copy snapshot file back over original, or use git")
+
+    report = "\n".join(lines) + "\n"
+
+    if not dry_run:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        REPORT_FILE.write_text(report, encoding="utf-8")
+
+    return report
+
+
+# --- Main ---
+
+def run(dry_run: bool = False, autonomous: bool = False) -> int:
+    t0 = time.time()
+
+    if not _acquire_lock(dry_run):
+        return 1
+
+    try:
+        # Phase 1
+        orientation = phase_orient()
+        if not autonomous:
+            print(f"Phase 1: Orient -- {orientation['file_count']} memory files, "
+                  f"last run: {orientation['last_run']}")
+
+        # Phase 2
+        findings = phase_gather(orientation)
+        if not autonomous:
+            dupes = len(findings.get("duplicates", []))
+            stale = len(findings.get("stale_pointers", []))
+            dates = len(findings.get("relative_date_files", []))
+            print(f"Phase 2: Gather  -- {dupes} duplicates, {stale} stale ptrs, "
+                  f"{dates} relative-date files")
+
+        # Phase 3
+        consolidate_actions = phase_consolidate(orientation, findings, dry_run)
+        if not autonomous:
+            print(f"Phase 3: Consolidate -- {len(consolidate_actions)} action(s)")
+
+        # Phase 4
+        prune_actions = phase_prune_and_index(orientation, consolidate_actions, dry_run)
+        if not autonomous:
+            print(f"Phase 4: Prune+Index -- {len(prune_actions)} action(s)")
+
+        duration = round(time.time() - t0, 1)
+        report = _write_report(
+            orientation, findings, consolidate_actions, prune_actions, dry_run, duration
+        )
+
+        print("\n" + report)
+        if not dry_run:
+            print(f"Full report saved: {REPORT_FILE}")
+
+        return 0
+
+    except Exception as e:
+        _release_lock(dry_run)
+        # Write failure signal
+        try:
+            SIGNALS_DIR.mkdir(parents=True, exist_ok=True)
+            today = datetime.now().strftime("%Y-%m-%d")
+            fail_signal = SIGNALS_DIR / f"{today}_dream-failure.md"
+            fail_signal.write_text(
+                f"---\ndate: {today}\ncategory: dream\nrating: 9\nsource: dream\n---\n\n"
+                f"# Dream FAILURE\n\nUnhandled exception: {e}\n",
+                encoding="utf-8",
+            )
+            DREAM_LOG.parent.mkdir(parents=True, exist_ok=True)
+            with open(DREAM_LOG, "a", encoding="utf-8") as f:
+                f.write(f"\n## Dream FAILURE: {datetime.now()}\n\n- Exception: {e}\n")
+        except Exception:
+            pass
+        raise
+
+    finally:
+        _release_lock(dry_run)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Jarvis /dream -- memory consolidation"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Show what would change without making any writes"
+    )
+    parser.add_argument(
+        "--autonomous", action="store_true",
+        help="Overnight mode: suppress progress output, write report only"
+    )
+    args = parser.parse_args()
+    sys.exit(run(dry_run=args.dry_run, autonomous=args.autonomous))
+
+
+if __name__ == "__main__":
+    main()

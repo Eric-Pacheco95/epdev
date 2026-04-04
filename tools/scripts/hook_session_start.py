@@ -544,6 +544,22 @@ def main() -> None:
         print(f"  >>> {pending} TELOS proposal(s) pending from /absorb -- run `/absorb --review`")
         print()
 
+    # Pending /dream report
+    dream_report = REPO_ROOT / "data" / "dream_last_report.md"
+    dream_last_run = REPO_ROOT / "data" / "dream_last_run.txt"
+    if dream_report.exists():
+        try:
+            report_text = dream_report.read_text(encoding="utf-8", errors="replace")
+            # Surface only if there were actual changes (not just "memory is clean")
+            if any(k in report_text for k in ["[MERGE", "[STALE", "[DATES"]):
+                last_run = dream_last_run.read_text().strip() if dream_last_run.exists() else "unknown"
+                print("Dream consolidation report")
+                print("-" * 40)
+                print(f"  >>> /dream ran at {last_run} and made changes -- run `/dream --dry-run` to review")
+                print()
+        except Exception:
+            pass
+
     # Recent security events
     print("Recent security events (last 7 days)")
     print("-" * 40)
