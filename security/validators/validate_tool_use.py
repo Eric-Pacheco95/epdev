@@ -298,6 +298,13 @@ PRODUCERS_REGISTRY_PATH_PATTERN = re.compile(
     r"orchestration[/\\]producers\.json$", re.IGNORECASE
 )
 
+# Claude Code session settings -- controls allowed tools, hook commands, MCP servers.
+# A compromised worker rewriting settings.json could escalate its own permissions.
+# Guard is autonomous-session-only; interactive sessions are operator-controlled.
+SETTINGS_PATH_PATTERN = re.compile(
+    r"\.claude[/\\]settings\.json$", re.IGNORECASE
+)
+
 # Secrets patterns for Read tool blocking (autonomous sessions)
 _SECRET_FILE_PATTERNS = re.compile(
     r"(?:^|[/\\])\.env(?:[/\\]|$)"
@@ -353,6 +360,15 @@ def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None
             f"Autonomous sessions MUST NOT write to orchestration/producers.json. "
             f"This file controls which producers run and whether watchdog alerts fire -- "
             f"tampering can silently disable all producer monitoring. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if SETTINGS_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to .claude/settings.json. "
+            f"This file controls allowed tools, hook commands, and MCP servers -- "
+            f"a compromised worker rewriting it could escalate its own permissions. "
             f"Blocked: {tool} to {file_path}"
         )
 
