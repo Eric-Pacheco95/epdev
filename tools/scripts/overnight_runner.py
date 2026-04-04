@@ -767,6 +767,32 @@ def main() -> int:
         release_claude_lock()
         worktree_cleanup()
 
+    # 10. Run /dream memory consolidation (runs from main tree -- writes to ~/.claude/projects/)
+    if not args.dry_run:
+        try:
+            dream_result = subprocess.run(
+                [sys.executable, str(Path(__file__).parent / "dream.py"), "--autonomous"],
+                capture_output=True, text=True, timeout=180,
+                cwd=str(REPO_ROOT),
+            )
+            if dream_result.returncode == 0:
+                # Extract summary line from report
+                summary_lines = [
+                    l for l in dream_result.stdout.splitlines()
+                    if l.startswith("- ") and any(
+                        k in l for k in ["[MERGE", "[PROMOTE", "[STALE", "[DATES", "memory is clean"]
+                    )
+                ]
+                summary = summary_lines[0] if summary_lines else "memory is clean"
+                print(f"  /dream: {summary}")
+            else:
+                print(f"  /dream WARN: exit {dream_result.returncode} -- "
+                      f"{dream_result.stderr.strip()[:120]}")
+        except subprocess.TimeoutExpired:
+            print("  /dream WARN: timed out after 180s -- skipped")
+        except Exception as exc:
+            print(f"  /dream WARN: {exc}")
+
     total_kept = sum(r.get("kept", 0) for r in results)
     total_min = (time.monotonic() - start_time) / 60
     print(f"\nOvernight run complete. {len(results)} dimensions, "
