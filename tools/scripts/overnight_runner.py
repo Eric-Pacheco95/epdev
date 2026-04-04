@@ -215,7 +215,7 @@ def parse_program(path: Path) -> dict:
                         dimensions[current_dim]["iterations"] = int(val)
                     except ValueError:
                         pass
-                elif key in ("scope", "metric", "guard", "goal"):
+                elif key in ("scope", "metric", "guard", "goal", "model"):
                     # Strip backticks and surrounding parens/notes
                     val = val.strip("`")
                     if val.startswith("(") and val.endswith(")"):
