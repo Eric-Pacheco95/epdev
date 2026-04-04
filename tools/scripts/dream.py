@@ -60,7 +60,7 @@ LOCK_STALE_SECONDS = 7200  # 2 hours
 # Phase 2 promotion thresholds
 PROMOTION_MATURITY = "proven"        # must match exactly
 PROMOTION_MIN_CONFIDENCE = 90        # must be >= this %
-PROMOTION_MAX_SIMILARITY = 0.70      # theme must NOT already exist in auto-memory
+PROMOTION_MAX_SIMILARITY = 0.85      # theme must NOT already exist in auto-memory (floor ~0.75 for unrelated content)
 
 # Type inference keyword maps (checked against theme name + implication text)
 TYPE_SIGNALS = {
@@ -429,19 +429,25 @@ def phase_promote(dry_run: bool) -> list[str]:
     promoted = 0
     skipped_similar = 0
 
+    auto_memory_prefix = str(MEMORY_DIR.resolve())
+
     for theme in all_themes:
         # Check if semantically covered in auto-memory already
+        # Filter to auto-memory files only -- signals/synthesis/decisions should NOT block promotion
         try:
-            hits = es.search(theme["implication"] or theme["name"], top_k=1)
-            top_score = hits[0]["score"] if hits else 0.0
+            hits = es.search(theme["implication"] or theme["name"], top_k=10)
+            auto_hits = [h for h in hits if h["file_path"].startswith(auto_memory_prefix)]
+            top_hit = auto_hits[0] if auto_hits else None
+            top_score = top_hit["score"] if top_hit else 0.0
         except Exception:
+            top_hit = None
             top_score = 0.0
 
         if top_score >= PROMOTION_MAX_SIMILARITY:
             skipped_similar += 1
             actions.append(
                 f"[PROMOTE] SKIP '{theme['name'][:50]}' "
-                f"(already covered: {hits[0]['file_name']} @ {top_score:.2f})"
+                f"(already covered: {top_hit['file_name']} @ {top_score:.2f})"
             )
             continue
 
