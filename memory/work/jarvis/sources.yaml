@@ -172,6 +172,16 @@
   last_notable: "Apr 3 — Attributed axios npm supply chain attack to North Korea UNC1069 (WAVESHAPER.V2 backdoor)"
   note: "Added 2026-04-04 — Google Mandiant/GTIG primary attribution source; cited in axios compromise, APT reports"
 
+- name: "Microsoft Security Blog"
+  url: "https://www.microsoft.com/en-us/security/blog"
+  feed_url: "https://www.microsoft.com/en-us/security/blog/feed/"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-04"
+  last_notable: "Apr 1 — Mitigation guide for axios npm supply chain compromise (WAVESHAPER.V2)"
+  note: "Added 2026-04-04 — Microsoft MSRC + Defender research; key for supply chain mitigations and Patch Tuesday coverage"
+
 # =============================================================================
 # Tier 3 -- Monthly (broader ecosystem, research)
 # =============================================================================
