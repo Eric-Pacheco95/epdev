@@ -153,27 +153,6 @@ Analyze the current session and extract learnings. If invoked with specific cont
 
 # CONTRACT
 
-## Input
-- **required:** session context (auto-read from conversation) or explicit content
-  - type: text
-  - example: (no input needed when run at end of session -- reads conversation context)
-- **optional:** specific content to analyze (voice transcript, text block)
-  - type: text
-  - default: (analyzes current session)
-
-## Output
-- **produces:** learning signal summary
-  - format: structured-markdown
-  - sections: SIGNALS WRITTEN, FAILURES WRITTEN, SYNTHESIS STATUS, SKILL GAP CANDIDATES, SOURCE ENGAGEMENT
-  - destination: stdout (summary) + files (signals)
-- **side-effects:**
-  - writes signal files to `memory/learning/signals/`
-  - writes failure files to `memory/learning/failures/` (if applicable)
-  - updates `memory/learning/_signal_meta.json`
-  - may invoke `/synthesize-signals` if threshold met (>= 20 signals or >= 10 + 48h or >= 8 + 72h)
-  - may update `data/source_candidates.jsonl` (engagement count increment)
-  - may update `memory/work/jarvis/sources.yaml` (if Eric approves a candidate source)
-
 ## Errors
 - **trivial-session:** session had no meaningful work to capture
   - recover: skill will say so and exit cleanly; no signals written; this is expected for quick Q&A sessions
