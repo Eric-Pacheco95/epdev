@@ -79,7 +79,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
   note: "Replaces OpenAI Blog (403 blocked, no RSS). OpenAI coverage via HN + Zvi is sufficient. The Batch covers all major lab releases weekly including OpenAI."
 
 - name: "Krebs on Security"
@@ -88,7 +88,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Mar 23 — CanisterWorm wiper targets Iran. No new posts since Mar 23."
 
 - name: "The Hacker News"
   url: "https://thehackernews.com"
@@ -96,7 +97,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — UNC1069 (DPRK) axios npm supply chain attack; TA416 targets EU governments; PHP web shells via cookie channels"
 
 - name: "LangChain Blog"
   url: "https://blog.langchain.com"
@@ -104,7 +106,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — Self-healing agents in production (auto-PR on regression); Apr 2 — Open models crossing threshold on agent tasks"
 
 - name: "Hugging Face Blog"
   url: "https://huggingface.co/blog"
@@ -112,7 +115,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 2 — Gemma 4 multimodal (2B-31B, Apache 2.0); Apr 1 — Holo3 computer use frontier"
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
@@ -120,7 +124,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Fabric GitHub Releases"
   url: "https://github.com/danielmiessler/fabric/releases"
@@ -128,7 +132,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Mar 26 — v1.4.442 OAuth refactor; Mar 22 — Anthropic SDK bump v1.27.1"
 
 - name: "Latent Space Podcast"
   url: "https://www.latent.space"
@@ -136,16 +141,17 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — AINews Good Friday (Gemma 4 day); Marc Andreessen on death of browser + why this time is different"
 
 - name: "Blockworks"
-  url: "https://blockworks.co"
-  feed_url: "https://blockworks.co/feed/"
+  url: "https://blockworks.com"
+  feed_url: "https://blockworks.com/feed/"
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
-  note: "Replaces CoinDesk (RSS 403 blocked). Blockworks covers institutional/macro crypto (CoinDesk's strength) better than CoinTelegraph which skews retail."
+  last_checked: "2026-04-04"
+  note: "Replaces CoinDesk (RSS 403 blocked). URL updated: blockworks.co 308-redirects to blockworks.com. Feed stale in Jan 2026 — monitor for recovery."
 
 - name: "CoinTelegraph"
   url: "https://cointelegraph.com"
@@ -153,7 +159,8 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 4 — Tether mulling fundraise delay if demand < $500B valuation"
 
 # =============================================================================
 # Tier 3 -- Monthly (broader ecosystem, research)
