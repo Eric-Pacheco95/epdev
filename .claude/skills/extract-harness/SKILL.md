@@ -13,19 +13,21 @@ Extract a bank-safe, audit-friendly workflow harness from the full Jarvis system
 BUILD
 
 ## Syntax
-/extract-harness [--target <repo-name>] [--update] [--dry-run] <target environment description>
+/extract-harness [--target <repo-name>] [--update] [--dry-run] [--evolve] <target environment description>
 
 ## Parameters
 - target environment: description of the target environment and its constraints (required)
 - --target: name of the output repo (default: claude-workbench)
-- --update: update an existing extraction rather than creating from scratch — diffs current target against source and applies incremental changes
+- --update: update an existing extraction — diffs skills, templates, knowledge, and CLAUDE.md against source and applies incremental changes
 - --dry-run: audit and classify skills but don't write files — outputs the keep/strip/adapt report only
+- --evolve: after extraction/update, run a gap analysis: what NEW skills, templates, or knowledge would improve the target environment for its users? Proposes improvements without building them
 
 ## Examples
 - /extract-harness Bank environment, SOX/PCI-DSS compliance, no autonomous agents, no personal data
 - /extract-harness --target claude-workbench --update Sync new skills added since last extraction
 - /extract-harness --dry-run Evaluate what would be extracted for a consulting firm with moderate compliance needs
 - /extract-harness --target team-harness Internal dev team, less restrictive, keep more analytical skills
+- /extract-harness --target claude-workbench --update --evolve Sync + propose new workflows for bank BA/BSAs
 
 ## Chains
 - Before: /architecture-review (validate extraction decisions for the target environment)
@@ -99,10 +101,15 @@ For each KEEP and ADAPT skill:
    - `memory/learning/` → remove (no learning system)
    - `history/decisions/` → keep (audit trail is universal)
    - `orchestration/` → remove unless orchestration is extracted
-4. **Update skill chains**:
+4. **Adapt examples for target audience**:
+   - Replace personal/project examples with target-environment examples
+   - For bank environments: use KYC, AML, regulatory change, requirements writing, API design review examples
+   - For dev environments: use code review, architecture, sprint planning examples
+   - Examples should speak the target user's language — this is what makes the tool feel built for them
+5. **Update skill chains**:
    - Remove references to skills not included in the extraction
    - Update chain documentation to reflect only available skills
-5. **Validate references**:
+6. **Validate references**:
    - Grep all extracted SKILL.md files for `/skill-name` patterns
    - Verify every referenced skill exists in the extraction
    - Flag any dangling references as errors — do not proceed until resolved
@@ -119,12 +126,37 @@ Create the target repo structure:
 │   └── skills/                # Extracted skill definitions
 ├── security/
 │   └── constitutional-rules.md  # Adapted security rules (strip self-healing, subagent scoping)
+├── templates/                 # Reusable artifact formats (Claude loads before generating)
+│   ├── requirements.md        # Requirements document
+│   ├── adr.md                 # Architecture Decision Record
+│   ├── meeting-notes.md       # Meeting notes
+│   └── status-update.md       # Status update / sprint report
+├── context/                   # Session context — Claude actively populates
+│   ├── glossary.md            # Terms, acronyms, system names (Claude appends new terms)
+│   ├── stakeholders/          # Per-project stakeholder maps
+│   └── sprint-log/            # Lightweight delivery history per project
+├── knowledge/                 # Domain reference — Claude reads when generating artifacts
+│   ├── regulatory/            # Regulatory summaries (OSFI, PIPEDA, etc.)
+│   └── standards/             # Story format, DoR/DoD, review checklists
 ├── docs/                      # PRDs, specs, workflow outputs
+│   ├── projects/              # One subdirectory per project
+│   └── absorbed/              # Content absorbed via /absorb
 ├── history/
-│   └── decisions/             # Decision log with template
-│       └── TEMPLATE.md
+│   ├── decisions/             # Decision log with ADR template
+│   └── lessons-learned/       # Sprint/milestone retrospectives
 └── README.md                  # Quick start, skill table, pipelines, directory structure
 ```
+
+### Active Context Population rules (add to CLAUDE.md):
+
+The target CLAUDE.md MUST include steering rules that make Claude actively write to context dirs during sessions:
+- Glossary auto-append: when new terms appear, add to `context/glossary.md` without being asked
+- Template loading: when generating artifacts, load relevant template from `templates/` first
+- Decision logging: after architecture/design decisions, write ADR to `history/decisions/`
+- Regulatory flags: when touching compliance-adjacent work, check `knowledge/regulatory/` and inject NFRs
+- Stakeholder map: when starting new project, check/offer to create `context/stakeholders/{project}.md`
+- Sprint log: after completing deliverables, append to `context/sprint-log/{project}.md`
+- Lessons learned: after sprint/milestone completion, prompt user to add entry to `history/lessons-learned/`
 
 ### CLAUDE.md adaptation checklist:
 - [ ] Remove all personal identity references
@@ -157,6 +189,33 @@ Create the target repo structure:
 - [ ] "No Learning, No Autonomous Systems" section explaining stateless design
 - [ ] License
 
+## Step 3.5: EVOLVE (only if --evolve flag)
+
+Gap analysis for the target environment. Ask:
+
+1. **Workflow gaps**: What repetitive tasks do target users (BA/BSA/junior dev) do daily that no current skill addresses?
+   - Meeting → action items extraction
+   - Email → requirements translation
+   - Regulatory update → impact analysis
+   - Code review → risk assessment checklist
+   - Sprint retro → structured lessons-learned capture
+2. **Knowledge gaps**: What domain reference material should be in `knowledge/` that isn't?
+   - Industry-specific regulations not yet summarized
+   - Common architecture patterns for the domain
+   - Testing standards or QA checklists
+3. **Template gaps**: What artifact formats do target users produce regularly that have no template?
+4. **LLM usage compliance**: Does the CLAUDE.md include rules about:
+   - What data can/cannot be sent to the LLM API?
+   - Audit trail for AI-assisted decisions?
+   - Disclaimers on AI-generated artifacts?
+   - Model usage logging for compliance reporting?
+5. **Strategic assessment**: Present two paths with pros/cons:
+   - **Internal play**: Position as an internal AI workflow initiative → team adoption → innovation leadership → promotion/new role
+   - **External play**: Package as an open-market product → sell to enterprises like the target org → revenue but higher risk
+
+Output: numbered list of proposed improvements with effort estimates (S/M/L) and a recommended priority order.
+Do NOT build any of these — output the proposal for user review, then add approved items to `docs/backlog.md` in the target repo.
+
 ## Step 4: VALIDATE
 
 Run these checks on the complete extraction:
@@ -181,10 +240,13 @@ If creating new repo:
 4. If pushing: create repo with `gh repo create`, push, report URL
 
 If --update:
-1. Show diff between current target and new extraction
-2. Ask user to confirm changes
-3. Commit with message describing what was added/updated/removed
-4. Push if user confirms
+1. **Skill diff**: Compare source `.claude/skills/` against target — report: new skills to add, existing skills with source changes, skills in target but not in source (manual additions — preserve)
+2. **Infrastructure diff**: Compare templates/, context/, knowledge/, history/ — report: new templates, updated knowledge files, new directories in source not in target
+3. **CLAUDE.md diff**: Check if source CLAUDE.md steering rules have been updated — apply relevant changes to target CLAUDE.md (preserving target-specific customizations)
+4. Show full diff report: "Adding N skills, updating M files, N new templates/knowledge files"
+5. Ask user to confirm changes
+6. Commit with message describing what was added/updated/removed
+7. Push if user confirms
 
 # OUTPUT INSTRUCTIONS
 
