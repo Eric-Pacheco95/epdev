@@ -324,6 +324,7 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
     result = {
         "dimension": dim_name,
         "branch": branch,
+        "model": dim_config.get("model", "default"),
         "status": "skipped",
         "baseline": None,
         "final": None,
@@ -348,8 +349,12 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
     # dimension-scoped write rules via overnight_path_guard.validate_write_path().
     env["JARVIS_OVERNIGHT_DIMENSION"] = dim_name
     try:
+        dim_model = dim_config.get("model")
+        claude_cmd = [CLAUDE_BIN, "-p", "--verbose", "-"]
+        if dim_model:
+            claude_cmd = [CLAUDE_BIN, "-p", "--verbose", "--model", dim_model, "-"]
         proc = subprocess.run(
-            [CLAUDE_BIN, "-p", "--verbose", "-"],
+            claude_cmd,
             input=prompt,
             capture_output=True, text=True, encoding="utf-8", cwd=run_cwd,
             timeout=7200,  # 2 hour hard kill

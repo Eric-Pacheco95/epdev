@@ -52,6 +52,8 @@ from tools.scripts.backlog_archive import archive_tasks
 from tools.scripts.slack_notify import notify
 from tools.scripts.lib.backlog import backlog_append
 
+LOCAL_ROUTING_LOG = REPO_ROOT / "data" / "local_routing.log"
+
 # -- Paths ------------------------------------------------------------------
 
 BACKLOG_FILE = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
@@ -387,6 +389,119 @@ def resolve_model(task: dict) -> str:
     if model:
         return model
     return TIER_DEFAULTS.get(task.get("tier", 1), "opus")
+
+
+def resolve_model_with_tags(task: dict) -> str:
+    """Like resolve_model but enforces never_local_tags for 'local' model.
+
+    If model resolves to 'local' but task has a never_local tag (security,
+    tier_0, architecture, identity), routes to Sonnet instead.
+    """
+    model = resolve_model(task)
+    if model != "local":
+        return model
+    # Only enforce the never_local_tags safety gate; do not re-run full routing
+    # logic (which also gates on auto_local_tasks and would wrongly override an
+    # explicit model: "local" field when the task_type is not pre-approved).
+    import json as _json
+    try:
+        cfg_path = REPO_ROOT / "local_model_config.json"
+        cfg = _json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
+    except (OSError, _json.JSONDecodeError):
+        cfg = {}
+    never_local = set(cfg.get("never_local_tags", []))
+    task_type = task.get("task_type", task.get("id", "unknown"))
+    tags = [str(t) for t in task.get("tags", [])]
+    for tag in tags:
+        if tag in never_local:
+            routed = "sonnet"
+            _log_local_routing_override(task_type, tags, routed)
+            return routed
+    return "local"
+
+
+def _log_local_routing_override(task_type: str, tags: list, routed_to: str) -> None:
+    """Log when never_local_tags override a 'local' model request."""
+    try:
+        LOCAL_ROUTING_LOG.parent.mkdir(parents=True, exist_ok=True)
+        entry = json.dumps({
+            "event": "tag_override",
+            "task_type": task_type,
+            "tags": tags,
+            "routed_to": routed_to,
+            "timestamp": datetime.now().isoformat(),
+        })
+        with LOCAL_ROUTING_LOG.open("a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except OSError:
+        pass
+
+
+def _dispatch_local(task: dict, dry_run: bool = False) -> dict:
+    """Run a local-model task via call_local(). No worktree created.
+
+    Returns a report dict compatible with run_worker() output.
+    """
+    from tools.scripts.local_model import call_local, LocalModelUnavailable, _load_config
+
+    task_type = task.get("task_type", task.get("id", "unknown"))
+    prompt = generate_worker_prompt(task, branch=f"local/{task['id']}")
+
+    report = {
+        "task_id": task["id"],
+        "branch": "local",
+        "model": "local",
+        "source": task.get("source", "unknown"),
+        "started": datetime.now().isoformat(),
+        "prompt_tokens_approx": len(prompt) // 4,
+    }
+
+    if dry_run:
+        print(f"  [DRY RUN] Would call local model for task: {task['id']}")
+        report["status"] = "dry_run"
+        report["completed"] = datetime.now().isoformat()
+        return report
+
+    print(f"  Invoking local model for task: {task['id']} (type={task_type})")
+    try:
+        cfg = _load_config()
+        timeout_s = cfg.get("max_response_wait_s", 120)
+        output = call_local(prompt, task_type, timeout_s=timeout_s)
+        output_ascii = output.encode("ascii", errors="replace").decode("ascii")
+        report["exit_code"] = 0
+        report["stdout_tail"] = output_ascii[-2000:]
+        report["stderr_tail"] = ""
+        report["status"] = "ok"
+    except LocalModelUnavailable as exc:
+        # Log fallback and re-route to Sonnet via standard path
+        fallback = "claude-sonnet-4-6"
+        _log_local_fallback(task_type, str(exc), fallback)
+        print(f"  Local model unavailable ({exc}); falling back to {fallback}")
+        report["model"] = fallback
+        report["local_fallback"] = True
+        report["fallback_reason"] = str(exc)
+        # Return special status so dispatch() knows to re-run via worktree
+        report["status"] = "local_fallback"
+
+    report["completed"] = datetime.now().isoformat()
+    return report
+
+
+def _log_local_fallback(task_type: str, reason: str, fallback_to: str) -> None:
+    """Append a fallback entry to data/local_routing.log."""
+    try:
+        LOCAL_ROUTING_LOG.parent.mkdir(parents=True, exist_ok=True)
+        entry = json.dumps({
+            "event": "fallback",
+            "task_type": task_type,
+            "reason": reason[:200],
+            "fallback_to": fallback_to,
+            "timestamp": datetime.now().isoformat(),
+        })
+        with LOCAL_ROUTING_LOG.open("a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except OSError:
+        pass
 
 
 # -- Worker prompt helpers ---------------------------------------------------
@@ -1247,6 +1362,38 @@ def dispatch(dry_run: bool = False) -> None:
         task["status"] = "claimed"
         write_backlog(backlog)
 
+        # Local model branch -- stateless inference, no worktree needed
+        resolved_model = resolve_model_with_tags(task)
+        if resolved_model == "local":
+            report = _dispatch_local(task, dry_run=dry_run)
+            if dry_run or report.get("status") == "dry_run":
+                task["status"] = "pending"
+                write_backlog(backlog)
+                return
+            if report.get("status") == "local_fallback":
+                # Ollama unavailable -- fall through to normal worktree path with Sonnet
+                task["model"] = report.get("model", "claude-sonnet-4-6")
+            else:
+                # Local succeeded -- verify ISC against REPO_ROOT, then complete
+                task["status"] = "verifying"
+                write_backlog(backlog)
+                isc_results = verify_isc(task, REPO_ROOT)
+                isc_pass = sum(1 for r in isc_results if r.get("status") == "pass")
+                isc_total = len(isc_results)
+                print(f"  ISC: {isc_pass}/{isc_total} passed")
+                report["isc_results"] = isc_results
+                report["isc_passed"] = isc_pass
+                report["isc_total"] = isc_total
+                save_run_report(report)
+                if isc_pass == isc_total:
+                    task["status"] = "done"
+                else:
+                    task["status"] = "failed"
+                    task["failure_reason"] = f"ISC {isc_pass}/{isc_total} passed (local)"
+                write_backlog(backlog)
+                release_lock()
+                return
+
         if not dry_run:
             # Create worktree
             wt_path = worktree_setup(branch, worktree_dir=WORKTREE_DIR)
@@ -1441,6 +1588,11 @@ def self_test() -> bool:
         assert resolve_model({"tier": 0}) == "sonnet"
         assert resolve_model({"tier": 1}) == "opus"
         assert resolve_model({}) == "opus"
+        assert resolve_model({"model": "local"}) == "local"
+        # resolve_model_with_tags: security tag overrides local -> sonnet
+        assert resolve_model_with_tags({"model": "local", "tags": ["security"]}) != "local"
+        # resolve_model_with_tags: no override tags -> local preserved
+        assert resolve_model_with_tags({"model": "local", "tags": []}) == "local"
         print("  PASS: Model resolution correct")
     except Exception as exc:
         print(f"  FAIL: {exc}")

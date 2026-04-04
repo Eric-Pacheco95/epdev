@@ -17,7 +17,7 @@ Run ISC format gate then execute all verify methods and report results (PRD mode
 VERIFY
 
 ## Syntax
-/validation --prd <path-to-prd> [--json] [--pretty] [--execute]
+/validation --prd <path-to-prd> [--normal] [--json] [--pretty] [--execute]
 /validation --task <path-to-task.json> [--json] [--pretty]
 /validation --task-inline '<json-string>' [--json] [--pretty]
 
@@ -28,6 +28,7 @@ VERIFY
 - --json: optional; machine-readable JSON output instead of the default ASCII table
 - --pretty: optional; indented JSON output (implies --json)
 - --execute: optional (--prd mode only); execute all verify methods after quality gate and write audit report to history/validations/
+- --normal: optional (--prd mode only); route ISC format gate, output structure check, and code review (normal severity) through local Ollama model via call_local(); Codex adversarial review is NOT invoked; silently falls back to Sonnet if Ollama unavailable
 
 ## Examples
 - /validation --prd memory/work/isc-validation/PRD.md
@@ -35,6 +36,7 @@ VERIFY
 - /validation --prd memory/work/foo/PRD.md --json
 - /validation --task /tmp/my-task.json
 - /validation --task-inline '{"id": "t-001", "description": "...", "tier": 1, "priority": 2, "autonomous_safe": true, "isc": ["X is true | Verify: test -f foo"]}'
+- /validation --prd memory/work/foo/PRD.md --normal
 
 ## Chains
 - Before: /implement-prd (validation is the VERIFY gate at phase completion)
@@ -69,6 +71,9 @@ true
 - If --task and the task file does not exist:
   - Print: "ERROR: Task file not found: <path>"
   - STOP
+- If --normal is provided without --prd:
+  - Print: "ERROR: --normal requires --prd mode"
+  - STOP
 
 ## Step 1A: RUN PRD VALIDATION PIPELINE (--prd mode)
 
@@ -80,6 +85,37 @@ python tools/scripts/isc_validator.py --prd <path> --execute [--json if passed] 
 
 - Capture the full output and display it to Eric verbatim
 - The script handles: format quality gate (6 checks), verify-method classification, executable command execution, audit report write to history/validations/
+
+## Step 1A-normal: RUN --normal VALIDATION (--prd mode with --normal flag)
+
+When --normal is passed with --prd, route validation checks through the local Ollama model instead of cloud inference. Codex adversarial review is NOT invoked.
+
+Run the ISC format gate via isc_validator (unchanged -- deterministic script, not LLM):
+
+```
+python tools/scripts/isc_validator.py --prd <path> [--json if passed] [--pretty if passed]
+```
+
+Then for each ISC criterion that is [A] (architectural/review type), route the review check through local model:
+
+```python
+from tools.scripts.local_model import call_local
+result = call_local(
+    "Review this ISC criterion: is it state-based (not action-based), binary-testable, and single-sentence?\n\n" + criterion_text,
+    task_type="isc_format_validation"
+)
+```
+
+For output structure checks and code review (normal severity only -- no Critical/High re-review loop):
+
+```python
+result = call_local(review_prompt, task_type="output_structure_check")
+result = call_local(review_prompt, task_type="code_review_normal")
+```
+
+- If call_local() raises LocalModelUnavailable, fall back to standard --prd pipeline silently and log the fallback to data/local_routing.log
+- Do NOT invoke Codex adversarial mode in --normal path
+- Display results using same format as Step 1A output
 
 ## Step 1B: RUN TASK VALIDATION (--task or --task-inline mode)
 
