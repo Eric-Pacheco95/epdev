@@ -14,7 +14,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Mar 31 — Australia/Anthropic MOU for AI safety research"
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
@@ -22,7 +23,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster; v2.1.89 (Apr 1) — Named subagents, defer permission hooks"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
@@ -30,7 +32,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 4 — Quoting Kyle Daigle (GitHub 275M commits/wk); Apr 3 — Vulnerability Research Is Cooked (AI changing exploit dev)"
 
 - name: "Daniel Miessler"
   url: "https://danielmiessler.com/newsletter"
@@ -38,7 +41,8 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Mar 28 — Most Important AI Ideas April 2026; We Are Confusing Two Types of AGI (Soft vs Hard AGI)"
 
 - name: "Hacker News"
   url: "https://news.ycombinator.com"
@@ -46,7 +50,8 @@
   type: community
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
+  last_notable: "Apr 4 — Anthropic removing OpenClaw support for Claude Code; OpenClaw CVE-2026-33579 privilege escalation; axios supply chain attack"
 
 - name: "MLOps YouTube"
   url: "https://www.youtube.com/@MLOps"
@@ -54,7 +59,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 - name: "Andrej Karpathy YouTube"
   url: "https://www.youtube.com/@AndrejKarpathy"
@@ -62,7 +67,7 @@
   type: ai_education
   tier: 1
   frequency: daily
-  last_checked: "2026-04-03"
+  last_checked: "2026-04-04"
 
 # =============================================================================
 # Tier 2 -- Weekly (ecosystem, security, competitors, crypto)
