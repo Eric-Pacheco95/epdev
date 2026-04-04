@@ -155,20 +155,6 @@ Interpret the exit code and deliver the final verdict:
 
 # CONTRACT
 
-## Input
-- **required:** --prd path to a PRD file containing ISC criteria
-  - type: file path (relative to repo root or absolute)
-- **optional:** --json flag
-  - type: flag
-  - default: off (ASCII table output)
-
-## Output
-- **produces:** two-stage verification report
-  - format: ASCII text (or JSON if --json passed)
-  - sections: quality gate results, execution results, verdict
-  - destination: stdout
-- **side-effects:** writes timestamped report to history/validations/ (gitignored, secret-scanned)
-
 ## Errors
 - **no-prd-flag:** --prd not provided -- print usage and stop
 - **prd-not-found:** file at --prd path does not exist -- print error and stop

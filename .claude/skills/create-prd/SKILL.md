@@ -101,22 +101,6 @@ false
 
 # CONTRACT
 
-## Input
-- **required:** project description or research brief
-  - type: text
-  - example: `Build an autonomous task runner for Jarvis that executes safe tasks on a schedule`
-- **optional:** research brief file path
-  - type: file-path
-  - example: `memory/work/jarvis/research_brief.md`
-  - default: (uses inline description if no file)
-
-## Output
-- **produces:** product requirements document
-  - format: structured-markdown
-  - sections: OVERVIEW, PROBLEM AND GOALS, NON-GOALS, USERS AND PERSONAS, USER JOURNEYS OR SCENARIOS, FUNCTIONAL REQUIREMENTS, NON-FUNCTIONAL REQUIREMENTS, ACCEPTANCE CRITERIA, SUCCESS METRICS, OUT OF SCOPE, DEPENDENCIES AND INTEGRATIONS, RISKS AND ASSUMPTIONS, OPEN QUESTIONS
-  - destination: file (`memory/work/<project-slug>/PRD.md`) + stdout
-- **side-effects:** creates PRD file in memory/work/
-
 ## Errors
 - **scope-unclear:** input is too vague to derive requirements
   - recover: provide more context about the problem, target users, and constraints; or run /research first to build a brief

@@ -147,21 +147,6 @@ true
 
 # CONTRACT
 
-## Input
-- **required:** architecture proposal or design decision
-  - type: text or file-path
-  - example: `Should we integrate task dispatch into the heartbeat or keep it separate?`
-- **optional:** --stride flag
-  - type: flag
-  - default: auto-detected based on proposal content (adds STRIDE overlay to the red-team agent)
-
-## Output
-- **produces:** architecture decision synthesis
-  - format: structured-markdown
-  - sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION
-  - destination: stdout (inline — not saved to file unless explicitly requested)
-- **side-effects:** creates temp directory `memory/work/_arch-review-{timestamp}/` with agent output files (cleaned up after synthesis)
-
 ## Errors
 - **trivial-decision:** proposal doesn't warrant full review
   - recover: skill will say so and suggest a simpler approach

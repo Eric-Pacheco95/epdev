@@ -105,21 +105,6 @@ true
 
 # CONTRACT
 
-## Input
-- **required:** content to analyze
-  - type: text
-  - example: `<article text, transcript, or pasted content>`
-- **optional:** content source URL or title
-  - type: text
-  - default: (unattributed)
-
-## Output
-- **produces:** structured wisdom extraction
-  - format: structured-markdown
-  - sections: IDEAS, INSIGHTS, QUOTES, HABITS, REFERENCES, RECOMMENDATIONS
-  - destination: stdout
-- **side-effects:** none (pure transform)
-
 ## Errors
 - **empty-input:** no content provided or content is too short to extract from
   - recover: provide at least 200 words of content; for URLs, use /research to fetch first

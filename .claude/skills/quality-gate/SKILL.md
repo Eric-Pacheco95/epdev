@@ -40,20 +40,6 @@ true
 
 # CONTRACT
 
-## Input
-- **required:** orchestration/tasklist.md (auto-read)
-  - type: auto-read
-- **optional:** phase or task scope to audit
-  - type: text
-  - default: all checked items across all phases
-
-## Output
-- **produces:** quality gap report
-  - format: structured-markdown
-  - sections: summary line, findings table, Critical and High Gaps, Checked-But-Pending Items, Gate Verification Commands, Recommendations
-  - destination: stdout
-- **side-effects:** none (read-only audit)
-
 ## Errors
 - **no-checked-items:** tasklist has no [x] items to audit
   - recover: nothing to audit; run after completing some tasks
