@@ -168,30 +168,15 @@ The target CLAUDE.md MUST include steering rules that make Claude actively write
 
 ## Step 3.5: EVOLVE (only if --evolve flag)
 
-Gap analysis for the target environment. Ask:
+Gap analysis for the target environment. Evaluate:
 
-1. **Workflow gaps**: What repetitive tasks do target users (BA/BSA/junior dev) do daily that no current skill addresses?
-   - Meeting → action items extraction
-   - Email → requirements translation
-   - Regulatory update → impact analysis
-   - Code review → risk assessment checklist
-   - Sprint retro → structured lessons-learned capture
-2. **Knowledge gaps**: What domain reference material should be in `knowledge/` that isn't?
-   - Industry-specific regulations not yet summarized
-   - Common architecture patterns for the domain
-   - Testing standards or QA checklists
-3. **Template gaps**: What artifact formats do target users produce regularly that have no template?
-4. **LLM usage compliance**: Does the CLAUDE.md include rules about:
-   - What data can/cannot be sent to the LLM API?
-   - Audit trail for AI-assisted decisions?
-   - Disclaimers on AI-generated artifacts?
-   - Model usage logging for compliance reporting?
-5. **Strategic assessment**: Present two paths with pros/cons:
-   - **Internal play**: Position as an internal AI workflow initiative → team adoption → innovation leadership → promotion/new role
-   - **External play**: Package as an open-market product → sell to enterprises like the target org → revenue but higher risk
+1. **Workflow gaps**: Repetitive tasks target users (BA/BSA/junior dev) do daily with no current skill — e.g., meeting → action items, email → requirements, regulatory update → impact analysis, code review → risk checklist, retro → lessons capture.
+2. **Knowledge gaps**: Domain reference missing from `knowledge/` — regulations, architecture patterns, QA checklists.
+3. **Template gaps**: Artifact formats produced regularly with no template.
+4. **LLM compliance**: Does CLAUDE.md cover: data send/don't-send rules, AI decision audit trail, artifact disclaimers, model usage logging?
+5. **Strategic assessment** (two paths): Internal play (team adoption → innovation leadership) vs. External play (sell to enterprises → revenue, higher risk).
 
-Output: numbered list of proposed improvements with effort estimates (S/M/L) and a recommended priority order.
-Do NOT build any of these — output the proposal for user review, then add approved items to `docs/backlog.md` in the target repo.
+Output: numbered list with effort estimates (S/M/L) and priority order. Do NOT build — present proposal, then add approved items to `docs/backlog.md`.
 
 ## Step 4: VALIDATE
 
