@@ -131,11 +131,12 @@
 
 | Theme | Previous maturity | New maturity | Last signal date | Reason |
 |-------|-------------------|--------------|------------------|--------|
-| Architecture-review gate validated | established (85%) | proven (95%) | 2026-04-03 | 3 new supporting signals across 2 sessions |
-| Grep failure blindness | candidate (70%) | candidate (65%) | 2026-04-02 | No new signals, slight confidence decay but within 90d |
-| Autonomous producer health degrading | candidate (60%) | candidate (50%) | 2026-04-03 | Root cause identified as rate-limit exhaustion (not code defect); benign with 14 sessions open; decay to 50% -- will archive if no new degradation signals by 2026-04-10 |
-| System self-diagnosis fails silently | candidate (75%) | candidate (80%) | 2026-04-02 | Rate-limit-silent-success signal supports the pattern |
-| System health noise from heartbeat auto-signals | candidate (50%) | established (65%) | 2026-04-03 | 3 new signals (2 network_connections + 1 context_budget_proxy) confirm systemic noise pattern across 2 metrics |
+| Architecture-review gate validated | proven (95%) | proven (97%) | 2026-04-04 | 2 new signals from 2026-04-04 (idea kill mechanism + rescope behavior); 8 total across 6 reviews |
+| Grep failure blindness | candidate (70%) | candidate (60%) | 2026-04-02 | No new signals since 2026-04-02; 2-day decay; approaching archive threshold |
+| Autonomous producer health degrading | candidate (50%) | candidate (50%) | 2026-04-03 | No new signals; archive trigger 2026-04-10 stands; root cause was rate-limit cascade |
+| System self-diagnosis fails silently | candidate (80%) | candidate (80%) | 2026-04-02 | No new signals; steering rule about claude -p stdout checking already promoted |
+| System health noise from heartbeat auto-signals | established (65%) | established (75%) | 2026-04-04 | 2 more heartbeat signals on 2026-04-04; pattern confirmed across 3 consecutive days |
+| YouTube content extraction gap | candidate (60%) | candidate (60%) | 2026-04-03 | No new signals; archive trigger 2026-04-17 stands |
 
 ---
 
