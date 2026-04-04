@@ -265,34 +265,13 @@ After writing: print "Prediction tracked: data/predictions/[filename]"
 
 Four analytical pillars, applied in this order:
 
-**1. Civilizational Cycles**
-Where is each major power in its cycle? Look for:
-- Elite overproduction (too many elites competing for too few positions)
-- Fiscal strain (debt-to-GDP, deficit trajectories, currency pressure)
-- Internal fragmentation (political polarization, institutional trust collapse)
-- Rising vs. declining power dynamics (Thucydides Trap base rate: 12 of 16 historical cases led to conflict)
+**1. Civilizational Cycles**: Elite overproduction, fiscal strain (debt/deficits/currency), internal fragmentation, rising vs. declining power dynamics (Thucydides Trap: 12 of 16 cases → conflict).
 
-**2. Game-Theoretic Actor Modeling**
-States are rational actors maximizing self-interest in constrained strategic games:
-- Focus on self-interest, NOT ideology — ideology is the cover story, incentives are the driver
-- Map what each actor wants, what they can credibly threaten, what they cannot afford to lose
-- Identify commitment problems (promises that are costly to withdraw vs. cheap talk)
-- Look for misaligned incentives among allies (each ally may benefit from commitment, not victory)
+**2. Game-Theoretic Actor Modeling**: Self-interest not ideology. Map: what each actor wants, what they can threaten, what they cannot lose. Identify commitment problems and misaligned ally incentives.
 
-**3. Financial and Institutional Drivers**
-Debt structures, reserve currencies, and capital flows are primary drivers, not background:
-- Reserve currency status as the ultimate strategic asset
-- Trade route control (sea lanes, straits, pipelines) as geopolitical leverage
-- Industrial capacity ratios as predictors of long-term military outcome
-- Central bank balance sheets and sovereign debt trajectories
+**3. Financial & Institutional Drivers**: Reserve currency status, trade route control (sea lanes, straits, pipelines), industrial capacity ratios, central bank balance sheets.
 
-**4. Historical Pattern Matching**
-Find the closest historical analogue and stress-test it:
-- State the analogue explicitly ("This resembles the X situation of [year]")
-- Quality audit: how it matches the current case (2-3 parallels)
-- Quality audit: at least 2 critical structural differences between then and now
-- What the historical analogue predicts for the current situation
-- What would make "this time is different" actually true
+**4. Historical Pattern Matching**: State analogue explicitly. Quality audit: 2-3 parallels + 2 critical structural differences. What does the analogue predict? What would make "this time different" true?
 
 ### Named Heuristics (apply when relevant, don't force all four)
 - **Law of Asymmetry**: Weaker party can win via social cohesion over material superiority
