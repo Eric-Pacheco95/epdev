@@ -48,6 +48,22 @@ TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
 ABSORBED_DIR = REPO_ROOT / "memory" / "learning" / "absorbed"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
+G2_STREAK_FILE = REPO_ROOT / "data" / "g2_streak.json"
+CRYPTO_BOT_ROOT = Path("C:/Users/ericp/Github/crypto-bot")
+
+# Signal filename keywords that indicate non-G2 activity
+NON_G2_SIGNAL_KEYWORDS = [
+    # G1: financial independence / side hustles
+    "crypto", "trading", "revenue", "side-hustle", "income", "business",
+    # G3: guitar / music
+    "guitar", "music", "band", "practice", "song", "chord", "improv",
+    # G4: health / gym
+    "gym", "workout", "health", "fitness", "exercise",
+    # G5: bank automation
+    "bank-auto", "rpa", "corporate",
+    # G6: self-discovery / balance
+    "therapy", "balance", "social",
+]
 
 # Dynamic synthesis threshold:
 #   >= 35 signals: always trigger (hard ceiling; raised from 20 for auto-signal producers)
@@ -271,6 +287,69 @@ def _count_pending_absorb_proposals() -> int:
     return count
 
 
+def _has_non_g2_activity_today() -> bool:
+    """Return True if today has any non-G2 signal file or crypto-bot commit."""
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    # Check signal filenames for non-G2 keywords
+    if SIGNALS_DIR.is_dir():
+        for p in SIGNALS_DIR.glob(f"{today_str}_*.md"):
+            name_lower = p.name.lower()
+            if any(kw in name_lower for kw in NON_G2_SIGNAL_KEYWORDS):
+                return True
+
+    # Check crypto-bot repo for today's commits
+    if CRYPTO_BOT_ROOT.is_dir():
+        try:
+            result = subprocess.run(
+                ["git", "log", "--oneline", f"--since={today_str}"],
+                capture_output=True, text=True, encoding="utf-8",
+                timeout=5, cwd=str(CRYPTO_BOT_ROOT),
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return True
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
+    return False
+
+
+def _g2_streak_check() -> list[str]:
+    """Warn if G2-only streak >= 5 consecutive days. Updates state once per day."""
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    state: dict = {"last_checked_date": "", "current_streak_days": 0, "last_non_g2_date": ""}
+    if G2_STREAK_FILE.is_file():
+        try:
+            state = json.loads(G2_STREAK_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Update once per day only
+    if state.get("last_checked_date") != today_str:
+        if _has_non_g2_activity_today():
+            state["current_streak_days"] = 0
+            state["last_non_g2_date"] = today_str
+        else:
+            state["current_streak_days"] = state.get("current_streak_days", 0) + 1
+        state["last_checked_date"] = today_str
+        try:
+            G2_STREAK_FILE.parent.mkdir(parents=True, exist_ok=True)
+            G2_STREAK_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        except OSError:
+            pass
+
+    streak = state.get("current_streak_days", 0)
+    last_non_g2 = state.get("last_non_g2_date") or "none recorded"
+
+    if streak >= 5:
+        return [
+            f"  >>> G2-only streak: {streak} days (last non-G2 activity: {last_non_g2})",
+            "      S14: confirm G1/G3/G4 have capture paths before continuing G2 work",
+        ]
+    return []
+
+
 _PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
 
 
@@ -404,6 +483,15 @@ def main() -> None:
         print("Git Safety")
         print("-" * 40)
         for w in git_warnings:
+            print(_ascii_safe(w))
+        print()
+
+    # G2 streak warning (fires at >= 5 consecutive G2-only days)
+    g2_warnings = _g2_streak_check()
+    if g2_warnings:
+        print("Goal Balance Warning")
+        print("-" * 40)
+        for w in g2_warnings:
             print(_ascii_safe(w))
         print()
 
