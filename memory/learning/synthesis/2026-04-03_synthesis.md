@@ -137,6 +137,10 @@
 
 2. **STRATEGIES.md consideration**: The invalidate-and-pivot alpha method (/absorb > /extract-alpha > /analyze-claims > invalidate > re-extract) is a repeatable investment strategy that deserves documentation alongside other strategies.
 
+3. **GOALS.md consideration (from 2026-04-04 signals)**: Revenue strategy is converging on content-first hybrid path with month 12 gate. The financial independence goal should reference this concrete path: (a) content/education from personal Jarvis work (Substack "Building Jarvis"), (b) internal validation of claude-workbench with 15-20 users, (c) external at month 12 gate. The S-tier work-content firewall (never generate content from work commits) should be noted as a non-negotiable constraint.
+
+4. **BELIEFS.md consideration (from 2026-04-04 signals)**: "Domain-specific workflow intelligence is the moat, not scaffolding or governance" is a belief-level insight. Market research confirmed Anthropic/GitHub are commoditizing harness architecture. The differentiation is domain skills encoding institutional knowledge.
+
 ---
 
 ## Confidence Decay Review
