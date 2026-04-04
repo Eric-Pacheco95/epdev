@@ -259,17 +259,12 @@ After all drafts are reviewed and approved by Eric:
 
 # OUTPUT FORMATS
 
-## Market Brief (`memory/work/{slug}/research_brief.md`)
-Sections: metadata (date/type/depth/counts), Executive Summary, Market & Opportunity, Competitive Landscape, Technology, Business Model, Risks & Hard Parts, Prior Art & Lessons, Entry Point, Open Questions, Sources, Recommended Next Steps (/first-principles -> /red-team -> /create-prd)
-
-## Technical Brief (`memory/work/{slug}/research_brief.md`)
-Sections: metadata, What It Is, How It Works, Ecosystem, Gotchas & Limitations, Examples, Integration Notes (Jarvis-specific), Alternatives, Open Questions, Sources, Recommended Next Steps
-
-## Live Snapshot (inline only)
-Sections: metadata (date+time, "may be stale within hours"), Current state, Key data points, Recent changes, Sources, Recommended action
-
-## Quick Format (inline only, any type)
-Sections: Top 3 sources, Key finding (2-3 sentences), Biggest risk/gotcha, Recommended action
+| Type | File | Sections |
+|------|------|---------|
+| Market | `memory/work/{slug}/research_brief.md` | metadata, Executive Summary, Market & Opportunity, Competitive Landscape, Technology, Business Model, Risks, Prior Art, Entry Point, Open Questions, Sources, Next Steps |
+| Technical | `memory/work/{slug}/research_brief.md` | metadata, What It Is, How It Works, Ecosystem, Gotchas, Examples, Integration Notes, Alternatives, Open Questions, Sources, Next Steps |
+| Live | inline only | metadata (stale-within-hours note), Current state, Key data points, Recent changes, Sources, Action |
+| Quick | inline only | Top 3 sources, Key finding (2-3 sentences), Biggest risk/gotcha, Action |
 
 # SECURITY RULES
 
