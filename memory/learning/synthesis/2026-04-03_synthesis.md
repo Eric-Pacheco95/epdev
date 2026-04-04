@@ -106,6 +106,18 @@
 
 ---
 
+### Theme: Active Context Population as stateless learning pattern (NEW)
+- Maturity: candidate
+- Confidence: 60%
+- Anti-pattern: false
+- Supporting signals: 2026-04-04_active-context-population-pattern.md
+- Failure weight: 0
+- Pattern: claude-workbench cannot use Jarvis's full learning loop (signals, synthesis, TELOS) because those systems contain personal data. The replacement pattern is "Active Context Population" -- steering rules in CLAUDE.md that direct Claude to write to memory directories during normal work: auto-append to glossary.md when new terms appear, load templates before generating artifacts, write ADRs after design decisions, prompt lessons-learned after milestones, inject regulatory NFRs when touching compliance work. This creates lightweight institutional knowledge accumulation without personal learning infrastructure.
+- Implication: This pattern is reusable for any stateless Claude Code deployment. The key insight: you do not need signals and synthesis to accumulate knowledge -- you need steering rules that tell Claude to write to the right places during normal work. This should be a standard step in /extract-harness (already added in 2026-04-04 session).
+- Action: Candidate -- single signal. Needs confirmation from at least 1 more deployment using this pattern. If confirmed, propose as a documented architectural pattern in the harness design.
+
+---
+
 ## Proposed Steering Rules
 
 1. **PROMOTE (established, 3 supporting signals)**: Self-tests, smoke tests, and ad-hoc inline validation must redirect ALL stateful write paths to temporary files -- not just the primary file under test, but every side-effect path (state files, backlogs, lock files). For claude -p consumers, check stdout for rate limit messages before interpreting results; exit code 0 does not confirm real work was done.
