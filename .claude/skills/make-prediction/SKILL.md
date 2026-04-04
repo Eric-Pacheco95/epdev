@@ -304,26 +304,13 @@ Find the closest historical analogue and stress-test it:
 
 ### Core Framework: Macro Cycle Analysis
 
-**1. Dalio Big Cycle Positioning**
-- Short-term debt cycle phase: early expansion / mid-cycle optimism / late-cycle euphoria-tightening / crisis-deleveraging (~5-8 year cycles)
-- Long-term debt cycle position: where in the ~75-100 year arc (current: late-stage for most developed economies)
-- Five forces: debt/credit cycles, internal order/disorder, external order/disorder, acts of nature, technology/innovation
+**1. Dalio Big Cycle**: Short-term (~5-8yr): early / mid / late-euphoria / crisis-deleveraging. Long-term (~75-100yr arc). Five forces: debt cycles, internal order, external order, nature, technology.
 
-**2. Sentiment Regime**
-- Current market sentiment: euphoria / optimism / uncertainty / fear / panic
-- Sentiment extremes as contrarian signals (consensus bullish = top signal; consensus bearish = bottom signal)
-- VIX as regime indicator (persistently low = complacency risk; spike = fear regime)
+**2. Sentiment Regime**: euphoria / optimism / uncertainty / fear / panic. Extremes are contrarian signals. VIX: low = complacency; spike = fear.
 
-**3. Macro Regime Signals**
-- Rate trajectory (hiking / holding / cutting) and market expectations vs. actual path
-- Dollar strength/weakness and reserve currency dynamics
-- Liquidity conditions (QE/QT, bank reserves, credit spreads)
-- Fiscal position (deficit trajectories, debt ceiling dynamics)
+**3. Macro Regime**: Rate trajectory (hiking/holding/cutting), dollar strength, liquidity (QE/QT, credit spreads), fiscal (deficit, debt ceiling).
 
-**4. Historical Cycle Comparison**
-- Which previous cycle does the current setup most resemble?
-- What happened next in that cycle?
-- What structural differences exist between then and now?
+**4. Historical Cycle**: Which past cycle does this resemble? What happened next? Key structural differences?
 
 # SECURITY RULES
 
