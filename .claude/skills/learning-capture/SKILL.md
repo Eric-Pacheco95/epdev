@@ -32,7 +32,7 @@ LEARN
 ## Output Contract
 - Input: session context (auto) or explicit content
 - Output: signal summary (SIGNALS WRITTEN, FAILURES WRITTEN, SYNTHESIS STATUS, SKILL GAP CANDIDATES, SOURCE ENGAGEMENT)
-- Side effects: writes signal files, writes failure files, updates _signal_meta.json, may invoke /synthesize-signals
+- Side effects: writes signal files, writes failure files, updates _signal_meta.json, runs jarvis_index.py backfill, may invoke /synthesize-signals
 
 ## autonomous_safe
 false
@@ -87,6 +87,7 @@ false
 - Write each signal to `memory/learning/signals/` using the format below
 - Write any failures to `memory/learning/failures/` using the failure format below
 - Update `memory/learning/_signal_meta.json` with the new count
+- After writing signal files, run `python tools/scripts/jarvis_index.py backfill` to index them into the manifest DB. This is required -- the velocity metric and synthesis threshold checks read the DB, not the filesystem. Without this step, signals exist on disk but are invisible to /vitals and /synthesize-signals.
 - After writing signals, count unprocessed signals in `memory/learning/signals/` (excluding `processed/` subdirectory). If count >= 20 (hard ceiling) OR count >= 10 and last synthesis is 48h+ old OR count >= 8 and last synthesis is 72h+ old: **auto-invoke `/synthesize-signals` immediately** — do not just note it. If synthesis produces proposed steering rules, present them to Eric for approval but do not auto-invoke `/update-steering-rules`
 - **Skill friction check**: If any skill was used this session, review each invocation for friction: missing steps, confusing parameters, unnecessary confirmations, or unclear output. For each friction point, write a signal tagged `skill-improvement` with the skill name, what went wrong, and a proposed fix. This feeds the skill self-improvement loop.
 - **Skill gap check**: After writing signals, scan the session for tasks or patterns that were handled ad-hoc but would benefit from a reusable skill. Evaluate each candidate against:

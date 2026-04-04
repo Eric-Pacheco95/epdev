@@ -726,7 +726,21 @@ def main() -> int:
         elif sum(r.get("kept", 0) for r in results) > 0:
             print("  Backlog: branch review task already queued (deduped).")
 
-        # 8. Update state (writes to main tree, not worktree)
+        # 8. Backfill signal manifest DB so velocity metrics stay current
+        try:
+            bf = subprocess.run(
+                [sys.executable, str(Path(__file__).parent / "jarvis_index.py"), "backfill"],
+                capture_output=True, text=True, timeout=30,
+                cwd=str(Path(__file__).parent.parent.parent),
+            )
+            if bf.returncode == 0:
+                print(f"  Signal index backfill: {bf.stdout.strip()}")
+            else:
+                print(f"  Signal index backfill WARN: {bf.stderr.strip()}")
+        except Exception as exc:
+            print(f"  Signal index backfill WARN: {exc}")
+
+        # 9. Update state (writes to main tree, not worktree)
         if last_completed_dim:
             state["last_dimension"] = last_completed_dim
         state["last_run_date"] = today
