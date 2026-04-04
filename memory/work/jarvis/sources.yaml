@@ -162,6 +162,16 @@
   last_checked: "2026-04-04"
   last_notable: "Apr 4 — Tether mulling fundraise delay if demand < $500B valuation"
 
+- name: "Google Cloud Threat Intelligence"
+  url: "https://cloud.google.com/blog/topics/threat-intelligence"
+  feed_url: "https://cloud.google.com/blog/topics/threat-intelligence/rss"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-04"
+  last_notable: "Apr 3 — Attributed axios npm supply chain attack to North Korea UNC1069 (WAVESHAPER.V2 backdoor)"
+  note: "Added 2026-04-04 — Google Mandiant/GTIG primary attribution source; cited in axios compromise, APT reports"
+
 # =============================================================================
 # Tier 3 -- Monthly (broader ecosystem, research)
 # =============================================================================
