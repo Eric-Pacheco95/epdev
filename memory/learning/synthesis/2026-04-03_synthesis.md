@@ -184,12 +184,14 @@
 
 ## Meta-Observations
 
-1. **Signal velocity jumped dramatically.** From 0.86/day (prior synthesis) to 4.71/day. This is driven by two long, productive sessions (5C pipeline work + investment research + /make-prediction skill build) plus heartbeat auto-signals. The velocity will normalize. The synthesis threshold of 20 signals was correctly triggered.
+1. **Signal velocity jumped dramatically.** From 0.86/day (prior synthesis) to 4.71/day (2026-04-03), then 12/day on 2026-04-04. This is driven by productive sessions (investment research, /project-init, content pipeline, /extract-harness) plus heartbeat auto-signals. The velocity will normalize once the intensive build sprint completes.
 
-2. **Heartbeat auto-signals are low-information noise (confirmed and worsening).** Originally 3 of 27 signals (11%) were identical network_connections WARNs. Post-synthesis, 3 additional heartbeat WARNs arrived (2 more network_connections + 1 context_budget_proxy), making 6 of 30+ total signals (~20%) low-information noise. The noise ratio is increasing as heartbeat continues firing without threshold recalibration. This is now the highest-priority housekeeping item for the auto-signal producer.
+2. **Heartbeat auto-signals are low-information noise (confirmed across 3 days).** Now 8 heartbeat WARNs across 2026-04-03 and 2026-04-04 (~30-40% of daily signal volume). The noise ratio is stable but unacceptable. Threshold recalibration remains the highest-priority housekeeping item.
 
-3. **Investment/domain signals are the highest quality.** The 5 investment research signals (avg rating 8.0) are significantly higher quality than system-health signals (avg rating 6.0). This makes sense -- domain insights from Eric's active work sessions carry more long-term learning value than transient system metrics. The learning system is doing its job when domain signals outnumber infrastructure signals.
+3. **Domain signals are the highest quality and now dominate.** The 2026-04-04 session produced 10 domain/strategy signals (avg rating 7.2) versus 2 heartbeat noise signals. Investment research, revenue strategy, and architectural insight signals consistently rate 7-9. The learning system works best when domain signals outnumber infrastructure signals.
 
-4. **Cross-session signal correlation is emerging.** The architecture review theme now spans 4 separate reviews across 3 sessions. The test isolation theme spans 3 bugs across 2 sessions. These multi-session patterns are exactly what synthesis is designed to detect -- individual signals that only become visible as a pattern when aggregated.
+4. **Cross-session signal correlation is strong.** Architecture review now spans 8 signals across 6 reviews in 4 sessions. Revenue strategy emerged from 6 signals in a single session. The synthesis system is detecting both slow-burn multi-session patterns and rapid single-session convergences.
 
-5. **First skill gap candidate detected.** The investment research pipeline (/absorb > /extract-alpha > /analyze-claims > invalidate > re-extract) scores High on all three criteria (recurrence, repeatability, value). This is the strongest skill gap candidate since /make-prediction itself.
+5. **Revenue strategy is the first identity-adjacent theme.** Unlike prior themes (infrastructure, tooling, process), the revenue/monetization cluster touches TELOS goals directly. This is a signal that the learning system is maturing beyond operational concerns into strategic territory.
+
+6. **First S-tier signal processed.** The work-content-pipeline termination risk (rating 9, Tier S) is the highest-severity signal in the learning system to date. It permanently closed a revenue path and established a non-negotiable safety constraint. S-tier signals should always trigger theme creation regardless of signal count.
