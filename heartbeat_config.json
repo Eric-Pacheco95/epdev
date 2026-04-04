@@ -188,6 +188,18 @@
       "thresholds": { "warn_below": 0.8, "crit_below": 0.5 }
     },
     {
+      "name": "backlog_pending_review_count",
+      "type": "backlog_health_metric",
+      "metric": "backlog_pending_review_count",
+      "thresholds": { "warn_above": 5, "crit_above": 15 }
+    },
+    {
+      "name": "backlog_manual_review_count",
+      "type": "backlog_health_metric",
+      "metric": "backlog_manual_review_count",
+      "thresholds": { "warn_above": 2, "crit_above": 5 }
+    },
+    {
       "name": "network_connections",
       "type": "system_resources",
       "thresholds": { "warn_above": 60, "crit_above": 100 },

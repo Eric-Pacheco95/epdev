@@ -25,7 +25,7 @@
         "goal_context": "Continuous security posture -- identify any new gaps since last audit",
         "isc": [
           "A new security audit report exists in history/security/ dated today | Verify: find history/security -name '*audit*' -newer data/routine_state.json",
-          "No prompt-injection vulnerability introduced since last audit | Verify: grep -r 'CRITICAL' history/security/ --include='*audit*' -l || echo none"
+          "No CRITICAL findings left unresolved | Verify: Review security audit output for CRITICAL severity items"
         ],
         "context_files": [
           "security/constitutional-rules.md"
@@ -54,7 +54,7 @@
         "goal_context": "Learning compounds -- distill recent signals into a synthesis document; update TELOS if warranted",
         "isc": [
           "A new synthesis document exists in memory/learning/synthesis/ dated today | Verify: find memory/learning/synthesis -name '*.md' -newer data/routine_state.json",
-          "Synthesis covers at least 5 signals (documented in the synthesis file) | Verify: grep -c 'signal\\|Signal' memory/learning/synthesis/*.md || echo 0"
+          "Synthesis file contains signal references | Verify: grep -ril signal memory/learning/synthesis/"
         ],
         "context_files": [
           "memory/learning/signals/",

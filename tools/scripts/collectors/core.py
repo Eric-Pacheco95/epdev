@@ -666,6 +666,8 @@ def _get_backlog_health_data(root_dir: Path) -> list[dict]:
         # Return error results for all 5 metrics
         _backlog_health_cache = [
             _result("backlog_pending_count", None, "count", f"backlog_health error: {exc}"),
+            _result("backlog_pending_review_count", None, "count", f"backlog_health error: {exc}"),
+            _result("backlog_manual_review_count", None, "count", f"backlog_health error: {exc}"),
             _result("backlog_failed_count", None, "count", f"backlog_health error: {exc}"),
             _result("backlog_done_count", None, "count", f"backlog_health error: {exc}"),
             _result("backlog_success_rate", None, "ratio", f"backlog_health error: {exc}"),

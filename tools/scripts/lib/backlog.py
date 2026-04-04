@@ -28,8 +28,10 @@ VALID_STATUSES = frozenset({
 })
 
 # Statuses that count as "active" for dedup purposes
+# pending_review is included so paradigm_health/overnight injectors don't
+# create duplicate tasks when one already sits in the human review queue.
 ACTIVE_STATUSES = frozenset({
-    "pending", "executing", "verifying", "manual_review", "claimed",
+    "pending", "executing", "verifying", "manual_review", "claimed", "pending_review",
 })
 
 # Optional field defaults applied during auto-fill
