@@ -74,14 +74,20 @@ false
 
 Before generating sub-questions, check if Jarvis already has domain knowledge on this topic.
 
-1. **Read `memory/knowledge/index.md`** and scan for entries matching the detected domain (crypto, security, ai-infra) or topic keywords
-2. **If prior articles exist:**
+1. **Semantic memory search (always-on):** Run `python tools/scripts/embedding_service.py search "<topic>" --top-k 5` to find semantically related prior research briefs, signals, synthesis themes, and decision logs. Parse the output and surface any hits with score >= 0.70:
+   - Group by tier: `memory/work/` (prior research briefs), `memory/learning/` (signals/synthesis), `history/decisions/` (architectural decisions)
+   - Tell Eric: "Semantic search found N related memory files: [name @ score, ...]"
+   - If Ollama is not running (embedding_service exits with error): skip silently, proceed to step 2
+   - Load the top 1-2 hits as additional context if score >= 0.75
+
+2. **Read `memory/knowledge/index.md`** and scan for entries matching the detected domain (crypto, security, ai-infra) or topic keywords
+3. **If prior articles exist:**
    - Surface the 2-3 most recent one-liners from the index
    - Load the single most relevant prior article (by topic similarity) as additional context
    - Tell Eric: "We have N prior articles on {domain}. Most recent: {title} ({date}). Loading as context."
    - Sub-questions in Phase 1 should build on prior findings — do not re-research what's already known
-3. **If no prior articles exist:** proceed normally, note "No prior domain knowledge found — starting fresh"
-4. **Domain mapping** — map the auto-detected or explicit type to a knowledge domain:
+4. **If no prior articles exist:** proceed normally, note "No prior domain knowledge found — starting fresh"
+5. **Domain mapping** — map the auto-detected or explicit type to a knowledge domain:
    - crypto, trading, DeFi, blockchain, BTC, ETH → `crypto`
    - security, vulnerability, attack, defense, audit → `security`
    - AI, LLM, infrastructure, orchestration, tooling → `ai-infra`
