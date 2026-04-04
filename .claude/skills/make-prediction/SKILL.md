@@ -294,13 +294,11 @@ Find the closest historical analogue and stress-test it:
 - What the historical analogue predicts for the current situation
 - What would make "this time is different" actually true
 
-### Named Heuristics (reference when applicable)
-- **Law of Asymmetry**: In asymmetric conflicts, the weaker party can win by transforming social energy and national cohesion into a strategic advantage
-- **Law of Escalation**: Escalation control matters more than escalation dominance — the ability to manage pace and limits of conflict matters more than overwhelming superiority
-- **Law of Proximity**: Internal conflicts (domestic rivalries, political incentives, social divisions) often determine a nation's foreign policy behavior more than external threats
-- **Law of Eschatological Convergence**: End-times narratives across religious traditions can actively shape strategic decision-making when leaders believe in or exploit them
-
-Use these as analytical tools when they fit the specific question — do not force all four into every geopolitical prediction.
+### Named Heuristics (apply when relevant, don't force all four)
+- **Law of Asymmetry**: Weaker party can win via social cohesion over material superiority
+- **Law of Escalation**: Escalation control > escalation dominance; pace and limits matter more than firepower
+- **Law of Proximity**: Domestic rivalries often drive foreign policy more than external threats
+- **Law of Eschatological Convergence**: End-times narratives shape strategic decisions when leaders exploit them
 
 ## Market Lens (--market)
 
