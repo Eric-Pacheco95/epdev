@@ -3,6 +3,14 @@
   "root_dir": "C:/Users/ericp/Github/epdev",
   "collectors": [
     {
+      "name": "producer_recency",
+      "type": "producer_recency",
+      "thresholds": {
+        "warn_above": 1
+      },
+      "isc_ref": "producer-watchdog:ISC-2+3 producer_recency collector + sentinel write"
+    },
+    {
       "name": "signal_count",
       "type": "manifest_signal_count",
       "thresholds": {}

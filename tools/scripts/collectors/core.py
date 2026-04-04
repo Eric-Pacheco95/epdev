@@ -645,6 +645,165 @@ def collect_producer_health(cfg: dict, root_dir: Path, _prev: dict = None) -> di
         return _result(name, None, "count", "producer_health error: %s" % exc)
 
 
+# ── producer_recency ────────────────────────────────────────────────
+
+def _parse_datetime_utc(value: str) -> "datetime":
+    """Parse a date string ('2026-04-04') or ISO datetime to a timezone-aware UTC datetime."""
+    value = value.strip()
+    # Date-only: YYYY-MM-DD -- use end-of-day (23:59:59 UTC) to give producer benefit of the doubt
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", value):
+        dt = datetime.strptime(value, "%Y-%m-%d")
+        return dt.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+    # ISO datetime with trailing Z
+    if value.endswith("Z"):
+        value = value[:-1] + "+00:00"
+    # Python 3.7+ fromisoformat handles +HH:MM offsets
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt
+
+
+def collect_producer_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Check each producer in orchestration/producers.json for staleness.
+
+    For each producer:
+      - Determines last-run time via state_type (json_key, file_mtime, dir_latest)
+      - Skips producers still within first_run_grace_until_utc
+      - Emits a WARN detail entry when age_hours > alert_threshold_hours
+      - Writes a sentinel file to data/producers/{name}.suspend for stale producers
+
+    Returns a single result: value = count of stale/missing producers.
+    """
+    name = cfg.get("name", "producer_recency")
+    producers_path = root_dir / "orchestration" / "producers.json"
+
+    if not producers_path.is_file():
+        return _result(name, None, "count", "producers.json not found: orchestration/producers.json")
+
+    try:
+        producers = json.loads(producers_path.read_text(encoding="utf-8", errors="replace"))
+    except (json.JSONDecodeError, OSError) as exc:
+        return _result(name, None, "count", "failed to read producers.json: %s" % exc)
+
+    now_utc = datetime.now(timezone.utc)
+    issues = []
+    stale_count = 0
+
+    for entry in producers:
+        entry_name = entry.get("name", "unknown")
+        try:
+            # Grace period check
+            grace_str = entry.get("first_run_grace_until_utc")
+            if grace_str:
+                try:
+                    grace_until = _parse_datetime_utc(grace_str)
+                    if grace_until > now_utc:
+                        continue
+                except (ValueError, TypeError):
+                    # Malformed grace field -- skip staleness check conservatively
+                    issues.append("malformed grace period for %s: %s" % (entry_name, grace_str))
+                    continue
+
+            state_type = entry.get("state_type", "json_key")
+            state_file_str = entry.get("state_file", "")
+            state_key = entry.get("state_key")
+            alert_threshold_hours = entry.get("alert_threshold_hours", 26)
+
+            if not state_file_str:
+                issues.append("state file not found: (empty) [%s]" % entry_name)
+                stale_count += 1
+                continue
+
+            state_path = _resolve_path(state_file_str, root_dir)
+            last_run_utc = None
+
+            if state_type == "json_key":
+                if not state_path.is_file():
+                    issues.append("state file not found: %s [%s]" % (state_file_str, entry_name))
+                    stale_count += 1
+                    continue
+                try:
+                    data = json.loads(state_path.read_text(encoding="utf-8", errors="replace"))
+                    raw_value = data.get(state_key) if state_key else None
+                    if raw_value is None:
+                        issues.append("state key '%s' not found in %s [%s]" % (
+                            state_key, state_file_str, entry_name))
+                        stale_count += 1
+                        continue
+                    last_run_utc = _parse_datetime_utc(str(raw_value))
+                except (json.JSONDecodeError, OSError, ValueError, TypeError) as exc:
+                    issues.append("error reading state for %s: %s" % (entry_name, exc))
+                    stale_count += 1
+                    continue
+
+            elif state_type == "file_mtime":
+                if not state_path.exists():
+                    issues.append("state file not found: %s [%s]" % (state_file_str, entry_name))
+                    stale_count += 1
+                    continue
+                mtime = state_path.stat().st_mtime
+                last_run_utc = datetime.fromtimestamp(mtime, tz=timezone.utc)
+
+            elif state_type == "dir_latest":
+                if not state_path.is_dir():
+                    issues.append("state file not found: %s [%s]" % (state_file_str, entry_name))
+                    stale_count += 1
+                    continue
+                newest_mtime = None
+                try:
+                    for child in state_path.iterdir():
+                        # Check files first; fall back to subdir mtime if no files exist
+                        if child.is_file() or child.is_dir():
+                            child_mtime = child.stat().st_mtime
+                            if newest_mtime is None or child_mtime > newest_mtime:
+                                newest_mtime = child_mtime
+                except OSError as exc:
+                    issues.append("error scanning dir %s [%s]: %s" % (
+                        state_file_str, entry_name, exc))
+                    stale_count += 1
+                    continue
+                if newest_mtime is None:
+                    issues.append("dir is empty: %s [%s]" % (state_file_str, entry_name))
+                    stale_count += 1
+                    continue
+                last_run_utc = datetime.fromtimestamp(newest_mtime, tz=timezone.utc)
+
+            else:
+                issues.append("unknown state_type '%s' [%s]" % (state_type, entry_name))
+                stale_count += 1
+                continue
+
+            # Compare age against threshold
+            if last_run_utc is not None:
+                age_hours = (now_utc - last_run_utc).total_seconds() / 3600
+                if age_hours > alert_threshold_hours:
+                    stale_count += 1
+                    issues.append("%s stale: %.1fh (threshold: %sh)" % (
+                        entry_name, age_hours, alert_threshold_hours))
+                    # Write sentinel file (idempotent -- preserves mtime of first suspension)
+                    try:
+                        sentinel_dir = root_dir / "data" / "producers"
+                        sentinel_dir.mkdir(parents=True, exist_ok=True)
+                        sentinel_path = sentinel_dir / ("%s.suspend" % entry_name)
+                        if not sentinel_path.exists():
+                            sentinel_msg = (
+                                "suspended by producer_recency watchdog at %s" %
+                                now_utc.isoformat()
+                            )
+                            sentinel_path.write_text(sentinel_msg, encoding="ascii")
+                    except OSError as exc:
+                        issues.append("failed to write sentinel for %s: %s" % (entry_name, exc))
+
+        except Exception as exc:
+            issues.append("error: %s [%s]" % (exc, entry_name))
+
+    detail = "; ".join(issues) if issues else None
+    return _result(name, stale_count, "count", detail)
+
+
 # ── backlog_health ─────────────────────────────────────────────────
 
 # Cache for backlog_health results to avoid repeated file reads in a single snapshot
@@ -771,6 +930,7 @@ COLLECTOR_TYPES = {
     "scheduled_tasks": collect_scheduled_tasks,
     "auth_health": collect_auth_health,
     "producer_health": collect_producer_health,
+    "producer_recency": collect_producer_recency,
     "autonomous_signal_rate": collect_autonomous_signal_rate,
     "signal_volume": collect_signal_volume,
     "manifest_signal_count": collect_manifest_signal_count,

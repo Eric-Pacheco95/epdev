@@ -13,6 +13,10 @@ REM Log file: one per day, append
 for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set LOGDATE=%%I
 set LOGFILE=data\logs\autoresearch_%LOGDATE%.log
 
+REM Suspend check -- exits non-zero if watchdog has suspended this producer
+"C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\check_suspend.py jarvis_autoresearch >> "%LOGFILE%" 2>&1
+if %ERRORLEVEL% EQU 3 exit /b 0
+
 echo [%date% %time%] TELOS introspection starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\self_diagnose_wrapper.py -- "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\jarvis_autoresearch.py >> "%LOGFILE%" 2>&1
 echo [%date% %time%] TELOS introspection complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1

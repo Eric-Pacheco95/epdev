@@ -291,6 +291,13 @@ RESEARCH_TOPICS_PATH_PATTERN = re.compile(
     r"orchestration[/\\]research_topics\.json$", re.IGNORECASE
 )
 
+# Producer registry -- controls which producers run and whether alerts fire.
+# Guard is autonomous-session-only; interactive sessions are operator-controlled.
+# A prompt-injected autonomous worker could tamper to suppress alerts or unsuspend producers.
+PRODUCERS_REGISTRY_PATH_PATTERN = re.compile(
+    r"orchestration[/\\]producers\.json$", re.IGNORECASE
+)
+
 # Secrets patterns for Read tool blocking (autonomous sessions)
 _SECRET_FILE_PATTERNS = re.compile(
     r"(?:^|[/\\])\.env(?:[/\\]|$)"
@@ -337,6 +344,15 @@ def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None
             "block",
             f"Autonomous sessions MUST NOT write to orchestration/research_topics.json. "
             f"Topic titles flow into worker prompt notes -- tampering enables prompt injection. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if PRODUCERS_REGISTRY_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to orchestration/producers.json. "
+            f"This file controls which producers run and whether watchdog alerts fire -- "
+            f"tampering can silently disable all producer monitoring. "
             f"Blocked: {tool} to {file_path}"
         )
 

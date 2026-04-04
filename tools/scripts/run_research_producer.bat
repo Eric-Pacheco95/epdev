@@ -11,6 +11,10 @@ if not exist "data\logs" mkdir "data\logs"
 for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set LOGDATE=%%I
 set LOGFILE=data\logs\research_producer_%LOGDATE%.log
 
+REM Suspend check -- exits non-zero if watchdog has suspended this producer
+"C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\check_suspend.py research_producer >> "%LOGFILE%" 2>&1
+if %ERRORLEVEL% EQU 3 exit /b 0
+
 echo [%date% %time%] Research producer starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\research_producer.py >> "%LOGFILE%" 2>&1
 echo [%date% %time%] Research producer complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
