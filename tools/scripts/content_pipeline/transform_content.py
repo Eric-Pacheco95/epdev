@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """transform_content.py -- Transform collected sources into a Substack draft post.
 
-Reads staging/weekly_sources.json, builds a prompt, calls claude -p,
+Reads staging/weekly_sources.json, calls the Anthropic SDK directly,
 and writes a draft markdown file to staging/draft_YYYYMMDD.md.
 
 Exit codes:
     0 -- draft written successfully
-    1 -- error (not enough sources, rate limit, subprocess failure, I/O error)
+    1 -- error (not enough sources, API error, I/O error)
 """
 
 from __future__ import annotations
 
 import json
 import os
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,15 +23,7 @@ from pathlib import Path
 STAGING = Path(__file__).resolve().parent / "staging"
 SOURCES_FILE = STAGING / "weekly_sources.json"
 
-# ---------------------------------------------------------------------------
-# Rate limit phrases to detect in claude -p stdout
-# ---------------------------------------------------------------------------
-RATE_LIMIT_PHRASES = [
-    "hit your limit",
-    "rate limit",
-    "too many requests",
-    "quota exceeded",
-]
+MODEL = "claude-opus-4-6"
 
 # ---------------------------------------------------------------------------
 # Prompt template
@@ -108,20 +99,44 @@ def format_source_block(source: dict) -> str:
     return f"{header}\n{content}\n"
 
 
-def build_prompt(sources: list) -> str:
-    """Build the full claude -p prompt."""
+def build_user_prompt(sources: list) -> str:
+    """Build the user-turn prompt containing source material."""
     source_blocks = "\n".join(format_source_block(s) for s in sources)
-    return f"{SYSTEM_PERSONA}\n\n{CONTENT_REQUEST}\n\n=== SOURCE MATERIAL ===\n\n{source_blocks}"
+    return f"{CONTENT_REQUEST}\n\n=== SOURCE MATERIAL ===\n\n{source_blocks}"
 
 
-def check_rate_limit(stdout: str) -> bool:
-    """Return True if stdout contains a rate limit message."""
-    lower = stdout.lower()
-    return any(phrase in lower for phrase in RATE_LIMIT_PHRASES)
+def call_api(user_prompt: str) -> str:
+    """Call the Anthropic SDK and return the raw text response."""
+    try:
+        import anthropic
+    except ImportError:
+        print(
+            "[TRANSFORM] ERROR: 'anthropic' package not installed. "
+            "Run: pip install anthropic",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        print(
+            "[TRANSFORM] ERROR: ANTHROPIC_API_KEY environment variable not set.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+        model=MODEL,
+        max_tokens=2048,
+        system=SYSTEM_PERSONA,
+        messages=[{"role": "user", "content": user_prompt}],
+    )
+    return message.content[0].text
 
 
 def parse_draft_output(raw: str) -> dict:
-    """Parse claude output into title, subtitle, tldr, body components."""
+    """Parse API output into title, subtitle, tldr, body components."""
     result = {"title": "", "subtitle": "", "tldr": [], "body": ""}
 
     lines = raw.strip().splitlines()
@@ -192,66 +207,29 @@ def main() -> int:
         return 1
 
     print(f"[TRANSFORM] {len(sources)} sources loaded. Building prompt...")
-    prompt = build_prompt(sources)
+    user_prompt = build_user_prompt(sources)
 
-    print("[TRANSFORM] Calling claude -p...")
+    print(f"[TRANSFORM] Calling Anthropic API ({MODEL})...")
     try:
-        result = subprocess.run(
-            ["claude", "-p", prompt],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=120,
-        )
-    except FileNotFoundError:
-        print(
-            "[TRANSFORM] ERROR: 'claude' command not found. "
-            "Ensure claude CLI is installed and on PATH.",
-            file=sys.stderr,
-        )
-        return 1
-    except subprocess.TimeoutExpired:
-        print("[TRANSFORM] ERROR: claude -p timed out after 120 seconds.", file=sys.stderr)
+        raw_output = call_api(user_prompt)
+    except Exception as exc:
+        print(f"[TRANSFORM] ERROR: API call failed: {exc}", file=sys.stderr)
         return 1
 
-    stdout = result.stdout or ""
-    stderr = result.stderr or ""
-
-    if stderr:
-        print(f"[TRANSFORM] claude stderr: {stderr[:200]}", file=sys.stderr)
-
-    # Rate limit check (must happen before exit-code check -- rate-limited runs
-    # may return exit code 0 with zero real output)
-    if check_rate_limit(stdout):
-        print(
-            "[TRANSFORM] ERROR: Rate limit hit -- run tomorrow",
-            file=sys.stderr,
-        )
-        return 1
-
-    if result.returncode != 0:
-        print(
-            f"[TRANSFORM] ERROR: claude -p exited with code {result.returncode}",
-            file=sys.stderr,
-        )
-        return 1
-
-    if not stdout.strip():
-        print("[TRANSFORM] ERROR: claude -p returned empty output.", file=sys.stderr)
+    if not raw_output.strip():
+        print("[TRANSFORM] ERROR: API returned empty output.", file=sys.stderr)
         return 1
 
     print("[TRANSFORM] Parsing draft output...")
-    parsed = parse_draft_output(stdout)
+    parsed = parse_draft_output(raw_output)
 
     if not parsed["title"] or not parsed["body"]:
         print(
             "[TRANSFORM] WARN: Could not fully parse structured output. "
             "Writing raw output as draft body.",
         )
-        # Fallback: write raw output
         parsed["title"] = "Draft -- parse error"
-        parsed["body"] = stdout.strip()
+        parsed["body"] = raw_output.strip()
 
     date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     date_compact = datetime.now(timezone.utc).strftime("%Y%m%d")

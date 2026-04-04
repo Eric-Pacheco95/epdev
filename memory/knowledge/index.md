@@ -42,6 +42,12 @@
 |------|-------|-------------|------|
 | 2026-04-01 | AI Smart Home Middleware Market | Consumer play is risky — Google/Amazon/Apple bundle AI free; B2B property management is the viable niche ($50-200/mo WTP, 20-35% ROI); Home Assistant has no paid add-on marketplace | `smart-home/2026-04-01_smart-home-ai-middleware-market.md` |
 
+## fintech
+
+| Date | Topic | Key Finding | Path |
+|------|-------|-------------|------|
+| 2026-04-03 | AI Automation Consulting for Canadian Banking | Big 5 spend C$5B+/yr on tech; OSFI E-23 (May 2027) creates compliance demand; practitioner-level consulting gap is real; employment agreement is #1 blocker for side-hustle | `fintech/2026-04-03_banking-ai-consulting-market.md` |
+
 ## general
 
 | Date | Topic | Key Finding | Path |
