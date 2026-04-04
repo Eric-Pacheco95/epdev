@@ -77,6 +77,22 @@ false
 - Record risks, assumptions, and open questions separately so they are visible to decision-makers
 - Structure the output using the prescribed sections below
 - **ISC Quality Gate** — Before finalizing the PRD, validate every ISC criterion against the 6-check gate (see CLAUDE.md > ISC Quality Gate). For each criterion, confirm: (1) count is 3-8 per phase, (2) single sentence with no compound "and", (3) state-not-action phrasing, (4) binary pass/fail, (5) at least one anti-criterion exists, (6) `| Verify:` suffix present. If any check fails, fix the criterion inline before writing the PRD file. Append a one-line "ISC Quality Gate: PASS (6/6)" or "PARTIAL (N/6 — {which failed})" note at the end of the ACCEPTANCE CRITERIA section
+
+- **Model Annotation** — After the ISC Quality Gate passes, apply the keyword heuristic to each criterion and propose `| model: X |` annotations. Present them as a numbered review list and wait for Eric to confirm, edit, or reject before writing to the PRD file:
+
+  Heuristic rules (apply in order — first match wins):
+  1. Criterion text contains any of: `security`, `auth`, `trust`, `injection`, `validate`, `policy`, `constitutional`, `architecture`, `design` → **no annotation** (Opus default)
+  2. Verify method is `Grep` or `Read` AND criterion text contains none of: `create`, `write`, `implement`, `refactor`, `generate`, `build` AND criterion uses only state verbs (`exists`, `present`, `count`, `contains`) → `| model: haiku |`
+  3. Criterion text contains any of: `create`, `write`, `implement`, `refactor`, `generate`, `build` AND no Opus-trigger keywords → `| model: sonnet |`
+  4. Anything ambiguous or mixed-concern → **no annotation** (Opus default — safe fallback)
+
+  Present proposed annotations to Eric:
+  > "Model routing proposals for this PRD's ISC items — confirm, edit, or remove any annotation before I write the file:
+  > 1. [criterion text shortened] → model: sonnet
+  > 2. [criterion text shortened] → Opus (no annotation)
+  > ..."
+  Wait for Eric's response before writing. If Eric's response is ambiguous or not clearly directed at the annotation list, ask once: "Confirming approval of the model routing list above before I write — correct?" before writing. If Eric approves without changes, write all proposed annotations. If Eric edits any annotation, use their version.
+
 - After outputting the PRD, remind the user: "Next step: `/implement-prd` to execute this PRD through the full BUILD → VERIFY → LEARN loop"
 
 # OUTPUT INSTRUCTIONS

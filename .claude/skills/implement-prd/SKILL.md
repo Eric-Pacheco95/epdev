@@ -118,16 +118,26 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 - Track loop iterations: after BUILD completes, report in IMPLEMENTATION LOG how many items needed 0, 1, 2, or 3 fix cycles (this measures loop value)
 - **Mid-build commit checkpoint**: After every 3-4 completed ISC items, prompt Eric to commit: "Checkpoint: {N} ISC items verified. Run /commit to save progress?" This creates recovery points against context compaction. Do not auto-commit — wait for confirmation. If Eric declines, continue building
 
-### REVIEW GATE: Auto-invoke /review-code with fix loop
+### REVIEW GATE: Deterministic prescan + cross-model review
 
-- Once all ISC items are built and verified (or blocked), gather all new and modified files and invoke `/review-code` on them — this is a non-optional gate
+- Once all ISC items are built and verified (or blocked), gather all new and modified files — this is a non-optional gate
+
+**Step 1 — Deterministic prescan (main thread):**
+- Run `python tools/scripts/code_prescan.py --path <changed-files> --json` — zero LLM tokens
+- Review prescan output: ruff findings feed RELIABILITY, security scan findings feed SECURITY FINDINGS
+- If Critical security findings in the prescan: fix them before proceeding to Step 2
+
+**Step 2 — Cross-model review (Sonnet subagent):**
+- Spawn a Sonnet subagent with adversarial review framing, passing: changed file list, PRD ISC context, and build session summary
+- The subagent has no build-session history — this provides fresh-eyes review free from generator confirmation bias
+- Subagent prompt must include: "You are reviewing code you did not write. Be adversarial. Look for: incomplete implementations, suboptimal approaches, edge cases, security gaps, and anything that would fail in production."
+- **Rate-limit guard**: before treating subagent exit code 0 as PASS, check subagent stdout for rate-limit messages ("hit your limit", "rate limit", "try again"). If found: surface explicit error "REVIEW GATE: subagent rate-limited — review incomplete" and do NOT proceed to VERIFY. If stdout is empty: surface "REVIEW GATE: subagent returned no output — review incomplete" and do NOT proceed to VERIFY.
 - Enter the **Review Fix Loop** (max 2 cycles):
-  1. Run `/review-code` on all changed files
-  2. If no Critical or High findings: PASS — proceed to full VERIFY
-  3. If Critical or High findings exist: apply fixes for each finding (only Critical and High — Medium/Low are reported but do not trigger re-review)
-  4. Re-run `/review-code` to confirm fixes resolved the findings
-  5. If findings persist after cycle 2: report remaining findings in REVIEW FINDINGS with status ACCEPTED-RISK and explicit reasoning
-- Scope constraint: only fix issues that directly relate to ISC items being implemented. Report out-of-scope findings but do not auto-fix them
+  1. If no Critical or High findings: PASS — proceed to VERIFY
+  2. If Critical or High findings: apply fixes (Critical and High only — Medium/Low reported but no re-review)
+  3. Re-run subagent to confirm fixes resolved findings
+  4. If findings persist after cycle 2: report in REVIEW FINDINGS as ACCEPTED-RISK with explicit reasoning
+- Scope constraint: only fix issues that directly relate to ISC items being implemented
 
 ### VERIFY PHASE: Full pass
 
@@ -172,7 +182,7 @@ For each completed ISC item, generate a scaffold sentence and prompt Eric to con
 - QUALITY GATE: summary of `/quality-gate` output — pass/fail, issues found, resolutions applied
 - COMPLETION STATUS: one of COMPLETE / PARTIAL / BLOCKED — with a bullet list of any deferred or blocked items and why
 - Do not output code blocks for entire files — reference file paths instead
-- Do not skip `/review-code` — if it was not run, flag COMPLETION STATUS as PARTIAL and explain
+- Do not skip the REVIEW GATE — if neither the deterministic prescan nor the cross-model review was run, flag COMPLETION STATUS as PARTIAL and explain
 - Do not mark ISC items as PASS without running the verify method
 - Do not add meta-commentary about being an AI
 

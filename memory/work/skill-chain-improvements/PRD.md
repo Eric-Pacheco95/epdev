@@ -78,21 +78,21 @@ Four targeted improvements to the Jarvis core skill chain (`/implement-prd`, `/c
 
 ### Phase 1: Foundation
 
-- [ ] `python tools/scripts/isc_validator.py --prd <path> --phase 1 --json` returns only ISC items under the Phase 1 section header | Verify: CLI | [E] | [M] | model: sonnet
-- [ ] `/implement-prd memory/work/skill-chain-improvements/PRD.md --phase 1` builds only Phase 1 ISC items while Phase 2 section text is visible but excluded from the build loop | Verify: Review [A]
-- [ ] OWNERSHIP CHECK in `/implement-prd` VERIFY RESULTS outputs a scaffold sentence per ISC item and requires Eric to confirm or edit before COMPLETION STATUS is written | Verify: Review [A]
-- [ ] `/implement-prd --phase 1` on a PRD with no phase section headers prints a warning and falls back to full-scope rather than silently building nothing | Verify: CLI | [E] | [M] | model: sonnet
-- [ ] No ISC item in Phase 1 is marked PASS in OWNERSHIP CHECK without an Eric-authored sentence in the VERIFY RESULTS table | Verify: Review [A] | anti-criterion
+- [x] `python tools/scripts/isc_validator.py --prd <path> --phase 1 --json` returns only ISC items under the Phase 1 section header | Verify: CLI | [E] | [M] | model: sonnet
+- [x] `/implement-prd memory/work/skill-chain-improvements/PRD.md --phase 1` builds only Phase 1 ISC items while Phase 2 section text is visible but excluded from the build loop | Verify: Review [A]
+- [x] OWNERSHIP CHECK in `/implement-prd` VERIFY RESULTS outputs a scaffold sentence per ISC item and requires Eric to confirm or edit before COMPLETION STATUS is written | Verify: Review [A]
+- [x] `/implement-prd --phase 1` on a PRD with no phase section headers prints a warning and falls back to full-scope rather than silently building nothing | Verify: CLI | [E] | [M] | model: sonnet
+- [x] No ISC item in Phase 1 is marked PASS in OWNERSHIP CHECK without an Eric-authored sentence in the VERIFY RESULTS table | Verify: Review [A] | anti-criterion
 
 ISC Quality Gate: PASS (6/6)
 
 ### Phase 2: Model Routing
 
-- [ ] `/create-prd` proposes `model:` annotations for ISC items using the keyword heuristic and presents a numbered review list before writing to the PRD file | Verify: Review [A]
-- [ ] Any ISC item containing `security`, `auth`, `trust`, or `injection` is annotated with no model tag (Opus default) by the heuristic | Verify: Grep | [E] | [M]
-- [ ] `/implement-prd` REVIEW GATE spawns a Sonnet subagent with adversarial framing and PRD context, replacing the same-model `/review-code` LLM step while keeping the deterministic prescan | Verify: Review [A]
-- [ ] Empty or rate-limited subagent stdout (exit 0, no content) causes the REVIEW GATE to surface an explicit error rather than silently passing | Verify: Review [A]
-- [ ] No `model: haiku` annotation is proposed for an ISC item whose criterion text contains code generation verbs (`create`, `write`, `implement`, `refactor`) | Verify: Review [A] | anti-criterion
+- [x] `/create-prd` proposes `model:` annotations for ISC items using the keyword heuristic and presents a numbered review list before writing to the PRD file | Verify: Review [A]
+- [x] Any ISC item containing `security`, `auth`, `trust`, or `injection` is annotated with no model tag (Opus default) by the heuristic | Verify: Grep | [E] | [M]
+- [x] `/implement-prd` REVIEW GATE spawns a Sonnet subagent with adversarial framing and PRD context, replacing the same-model `/review-code` LLM step while keeping the deterministic prescan | Verify: Review [A]
+- [x] Empty or rate-limited subagent stdout (exit 0, no content) causes the REVIEW GATE to surface an explicit error rather than silently passing | Verify: Review [A]
+- [x] No `model: haiku` annotation is proposed for an ISC item whose criterion text contains code generation verbs (`create`, `write`, `implement`, `refactor`) | Verify: Review [A] | anti-criterion
 
 ISC Quality Gate: PASS (6/6)
 
