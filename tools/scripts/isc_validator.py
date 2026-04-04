@@ -23,6 +23,8 @@ Usage:
     python tools/scripts/isc_validator.py --task-inline '{...}'   # validate task JSON string
     python tools/scripts/isc_validator.py --task PATH --json      # JSON output
     python tools/scripts/isc_validator.py --task PATH --pretty    # indented JSON
+    python tools/scripts/isc_validator.py --prd PATH --phase 1        # filter to Phase 1 items
+    python tools/scripts/isc_validator.py --prd PATH --phase 2A --json  # Phase 2A, JSON output
 
 Exit codes:
     0 = all quality gate checks pass (and, with --execute, all executed criteria pass)
@@ -929,6 +931,10 @@ def main():
         "--execute", action="store_true",
         help="Execute verify methods after quality gate; write audit report to history/validations/",
     )
+    parser.add_argument(
+        "--phase", type=str, default=None,
+        help="Filter output to ISC items in the named phase section (e.g. --phase 1, --phase 2A)",
+    )
     args = parser.parse_args()
 
     # -- Task mode (lightweight) --
@@ -974,6 +980,37 @@ def main():
         prd_path = REPO_ROOT / prd_path
 
     output = run_quality_gate(prd_path)
+
+    if args.phase:
+        prd_text = prd_path.read_text(encoding="utf-8")
+        all_items = output.get("criteria", [])
+        phases = detect_phases(prd_text, all_items)
+        # Match phase by checking if args.phase appears in the phase name
+        # e.g. "--phase 1" matches "Phase 1: Foundation", "--phase 2A" matches "Phase 2A: ..."
+        matched = None
+        for p in phases:
+            name = p["name"]
+            # Normalize: check if the phase label (digits+letters) appears in the name
+            label = args.phase.strip()
+            if re.search(r'(?<!\d)' + re.escape(label) + r'(?!\w)', name, re.IGNORECASE):
+                matched = p
+                break
+        if matched is None or len(matched["items"]) == 0:
+            # ISC Item 4: warn and fall back to full scope
+            print(
+                f"WARNING: No items found for phase '{args.phase}' -- "
+                "check that the PRD has a section header matching "
+                f"'### Phase {args.phase}' or '### Phase {args.phase}: <name>'. "
+                "Falling back to full scope.",
+                file=sys.stderr,
+            )
+        else:
+            # Filter output to matched phase items only
+            matched_lines = {it["line"] for it in matched["items"]}
+            output["criteria"] = [c for c in output["criteria"] if c["line"] in matched_lines]
+            output["extracted_count"] = len(output["criteria"])
+            output["phase_filter"] = args.phase
+            output["phase_name"] = matched["name"]
 
     if args.execute:
         # Guard against recursive --execute calls (e.g. when a verify method

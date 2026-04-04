@@ -15,15 +15,18 @@ Execute a PRD end-to-end: ISC extract, build, review, verify, complete
 BUILD
 
 ## Syntax
-/implement-prd <path-to-prd> [--items <ISC subset>]
+/implement-prd <path-to-prd> [--items <ISC subset>] [--phase <label>]
 
 ## Parameters
 - path-to-prd: file path to PRD (required for execution, omit for usage help)
 - --items: specific ISC items to implement (optional, default: all)
+- --phase: scope build to one phase by label (e.g. --phase 1, --phase 2A); matches existing PRD section headers like `### Phase 1: Foundation`; out-of-scope phases stay in context as read-only reference
 
 ## Examples
 - /implement-prd memory/work/jarvis/PRD.md
 - /implement-prd memory/work/crypto-bot/PRD.md --items 1,2,3
+- /implement-prd memory/work/crypto-bot/PRD.md --phase 1
+- /implement-prd memory/work/jarvis/PRD.md --phase 2A
 
 ## Chains
 - Before: /create-prd (generates the PRD)
@@ -94,6 +97,14 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 - If the PRD has 3+ hard fails across multiple criteria: STOP and print "ISC Quality Gate: FAIL -- this PRD needs /create-prd revision before implementation" with specifics
 - Fallback: if isc_validator.py is unavailable, manually validate against the 6-check gate (see CLAUDE.md > ISC Quality Gate): count (3-8 per phase), conciseness (no compound "and"), state-not-action, binary-testable, anti-criteria (at least one), verify method present
 
+### PHASE SCOPE FILTER (only if --phase N was provided)
+
+- Run: `python tools/scripts/isc_validator.py --prd <PRD-path> --phase N --json`
+- Use the returned `criteria` list as the BUILD scope — build only these items
+- The full PRD text (including out-of-scope phases) remains in context as read-only reference; use it to avoid painting into corners
+- If the command returns a WARNING on stderr and falls back to full scope: print the warning to Eric and proceed with full scope — do not silently ignore the fallback
+- The `--items` flag (if also provided) applies as a further filter on top of the phase scope
+
 ### BUILD PHASE: Implement with per-item verify loop
 
 - For each ISC item, implement the required component or change in dependency order (foundations before features)
@@ -128,6 +139,23 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 - Mark completed ISC checkboxes in the PRD (`- [ ]` → `- [x]`) only after the verify method passes AND structured evidence is recorded
 - Find the corresponding task in `orchestration/tasklist.md` and mark it complete (`[ ]` → `[x]`) with a one-line completion note
 - Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
+
+### OWNERSHIP CHECK (required before COMPLETION STATUS)
+
+For each completed ISC item, generate a scaffold sentence and prompt Eric to confirm or edit before proceeding:
+
+> "OWNERSHIP CHECK -- confirm you understand each completed component by editing or approving these one-sentence descriptions:
+> 1. [scaffold: one plain sentence describing what was built and why for ISC item 1]
+> 2. [scaffold: one plain sentence for ISC item 2]
+> ..."
+
+- Wait for Eric's response before writing COMPLETION STATUS
+- If Eric edits a sentence, use their version verbatim
+- If Eric approves without editing (e.g. "looks good"), use the scaffold version
+- Record all sentences in the VERIFY RESULTS table under OWNERSHIP CHECK column
+- Do not write COMPLETION STATUS until Eric has responded — this is a non-bypassable gate
+- The scaffold sentence must describe what the component does and why it was needed, not just what file was changed
+
 - Log a brief decision record to `history/decisions/` noting what was built, which ISC items passed, and any deferred items
 - **Final commit prompt**: Run `git status` — if there are uncommitted changes, prompt: "BUILD complete and verified. Ready to commit? Run /commit or I can stage and commit now." Do not auto-commit — wait for Eric's confirmation. If Eric declines, proceed to /learning-capture
 - Invoke `/learning-capture` to close the session with captured signals — include approach retrospective here (what approach was taken, what alternatives existed, whether the same path would be chosen again); retrospective belongs in LEARN, not self-judged in the same VERIFY pass that generated the output
@@ -140,7 +168,7 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 - ISC CHECKLIST: numbered list of all ISC items with status (PASS / FAIL / DEFERRED) and one-line verify result per item
 - IMPLEMENTATION LOG: bullet list of files created or modified with one-line description of each change. Include **LOOP METRICS**: how many ISC items needed 0/1/2/3 fix cycles, and how many review cycles were needed. This measures whether the loop is adding value
 - REVIEW FINDINGS: summary of `/review-code` output — severity, findings applied, findings accepted-risk with reasoning
-- VERIFY RESULTS: starts with OWNERSHIP CHECK (approach taken, alternatives not pursued, would-I-choose-again verdict), then table with columns: ISC Item | Verify Method | Result | Evidence Type | Source | Content
+- VERIFY RESULTS: starts with OWNERSHIP CHECK table (columns: ISC Item | Eric's One-Sentence Summary | Source (scaffold or Eric-edited)), then approach retrospective (approach taken, alternatives not pursued, would-I-choose-again verdict), then evidence table with columns: ISC Item | Verify Method | Result | Evidence Type | Source | Content
 - QUALITY GATE: summary of `/quality-gate` output — pass/fail, issues found, resolutions applied
 - COMPLETION STATUS: one of COMPLETE / PARTIAL / BLOCKED — with a bullet list of any deferred or blocked items and why
 - Do not output code blocks for entire files — reference file paths instead
