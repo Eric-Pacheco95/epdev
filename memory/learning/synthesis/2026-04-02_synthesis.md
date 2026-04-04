@@ -32,7 +32,7 @@
 ---
 
 ### Theme: Autonomous producer health is degrading
-- Maturity: candidate
+- Maturity: candidate (ARCHIVING -- confidence below threshold)
 - Confidence: 60%
 - Anti-pattern: false
 - Supporting signals: 2026-04-02_heartbeat-producer_health.md, 2026-04-02_heartbeat-producer_health_2.md, 2026-04-02_heartbeat-_collector_health.md
@@ -40,7 +40,8 @@
 - Pattern: producer_health dropped from 3 -> 2 -> 1 across two heartbeat windows (10:00 and 13:00 UTC on 2026-04-02), a 50% drop over 3 hours. _collector_health increased from 0 -> 2 (WARN threshold crossed). The jarvis_autoresearch runner failed with exit code 1 and the self-diagnose wrapper returned an empty response, making root cause unavailable through automated means.
 - Implication: At least one autonomous producer stalled or failed today. The synthesis dispatch itself also failed overnight due to Claude Max rate limit exhaustion (per task context). These are related: if autoresearch runs exhaust rate limits, synthesis and other overnight jobs will fail in cascade. The rate limit exhaustion is the most likely root cause for the autoresearch failure, not a code defect.
 - Action: (1) Investigate which producer(s) are stale or failed -- run `python tools/scripts/compress_signals.py --stats` and check producer logs. (2) Review autoresearch runner for rate-limit handling -- add exponential backoff or a daily token budget guard. (3) The self-diagnose wrapper returning empty response when claude -p is exhausted should emit a louder signal (per steering rule: "if the verifier itself fails, it must produce a louder alert than a verification failure"). Promote this to a failure pattern in the jarvis_autoresearch agent definition.
-- Follow-up (2026-04-03 overnight review): Root cause confirmed as Claude Max rate-limit exhaustion per 2026-04-02_rate-limit-silent-success.md signal. The producer_health degradation was not a code defect but a resource exhaustion cascade -- overnight jobs at 4am ran after heavy daytime usage. Rate-limit stdout checking has been added as a steering rule. Theme confidence decaying toward archive threshold (see 2026-04-03 synthesis decay table).
+- Follow-up (2026-04-03 overnight review): Root cause confirmed as Claude Max rate-limit exhaustion per 2026-04-02_rate-limit-silent-success.md signal. The producer_health degradation was not a code defect but a resource exhaustion cascade -- overnight jobs at 4am ran after heavy daytime usage. Rate-limit stdout checking has been added as a steering rule.
+- Follow-up (2026-04-04 overnight review): No new producer health signals since 2026-04-03. Theme decayed to 50% in 2026-04-03 decay table. Root cause addressed (rate-limit stdout checking steering rule promoted). Archive trigger 2026-04-10 -- will be fully archived if no recurrence by that date. The actionable output of this theme (steering rule) has already been delivered.
 
 ---
 
