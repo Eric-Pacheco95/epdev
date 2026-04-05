@@ -138,3 +138,16 @@ false
 Visualize the following input. If a type argument is provided (brain/workflow/project/investigate/system), use it. Otherwise infer from context.
 
 INPUT:
+
+# VERIFY
+
+- Confirm the Mermaid diagram is syntactically valid (no unclosed brackets, valid node types, valid edge syntax)
+- Confirm all edge labels have explicit verbs/subjects (not bare arrows)
+- Confirm the HTML viewer file was generated and saved unless --no-html was passed
+- Confirm auto-open was attempted with `start <file>` on Windows
+- If the diagram contains syntax errors: fix before returning output
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_visualize-{slug}.md when a visualization reveals a structural insight about Jarvis architecture that was not obvious from the code or docs (e.g., missing link in a flow, unexpected coupling, critical path)
+- Rating: 7+ for architectural insights; 4-6 for documentation value only; skip signal for simple one-off diagrams with no reuse value
