@@ -265,6 +265,16 @@
   last_checked: "2026-04-05"
   last_notable: "Apr 3 — PR diff performance (React virtualization for large diffs); Apr 1 — Supply chain security (CI/CD credential theft mitigations, OIDC tokens); /fleet command for parallel Copilot CLI agents"
 
+- name: "Anthropic Safety & Policy"
+  url: "https://www.anthropic.com/research"
+  feed_url: ""
+  type: ai_safety
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-05"
+  last_notable: "Apr 1 — RSP v3.0 published (Responsible Scaling Policy update; Zvi critique: lacks concrete commitments, vague 'strong argument' standard); Mar 31 — Australia/Anthropic MOU for AI safety research"
+  note: "Added 2026-04-05 — Separate from Anthropic Blog (products/news); tracks constitutional AI, interpretability, RSP safety milestone commitments; URL-only (no separate RSS)"
+
 - name: "Rekt News (DeFi Exploits)"
   url: "https://rekt.news"
   feed_url: ""
