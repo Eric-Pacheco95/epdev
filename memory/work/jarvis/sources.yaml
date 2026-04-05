@@ -14,8 +14,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-04"
-  last_notable: "Mar 31 — Australia/Anthropic MOU for AI safety research"
+  last_checked: "2026-04-05"
+  last_notable: "Mar 31 — Australia/Anthropic MOU for AI safety research; Apr 5 — Anthropic launches employee PAC amid AI policy tensions"
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
@@ -23,8 +23,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-04"
-  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster; v2.1.89 (Apr 1) — Named subagents, defer permission hooks"
+  last_checked: "2026-04-05"
+  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster; v2.1.91 (Apr 2) — MCP tool result persistence override, disableSkillShellExecution; v2.1.90 (Apr 1) — /powerup command, faster SSE transport (linear not quadratic)"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
@@ -32,8 +32,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-04"
-  last_notable: "Apr 4 — Quoting Kyle Daigle (GitHub 275M commits/wk); Apr 3 — Vulnerability Research Is Cooked (AI changing exploit dev)"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 5 — scan-for-secrets 0.1→0.2 (Python secret scanner, Claude Code + README-driven dev); Apr 4 — Quoting Kyle Daigle (GitHub 275M commits/wk); Apr 3 — Vulnerability Research Is Cooked"
 
 - name: "Daniel Miessler"
   url: "https://danielmiessler.com/newsletter"
@@ -41,8 +41,8 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-04-04"
-  last_notable: "Mar 28 — Most Important AI Ideas April 2026; We Are Confusing Two Types of AGI (Soft vs Hard AGI)"
+  last_checked: "2026-04-05"
+  last_notable: "Mar 28 — Most Important AI Ideas April 2026 (5 transformative concepts); We Are Confusing Two Types of AGI (Soft vs Hard AGI)"
 
 - name: "Hacker News"
   url: "https://news.ycombinator.com"
@@ -50,8 +50,8 @@
   type: community
   tier: 1
   frequency: daily
-  last_checked: "2026-04-04"
-  last_notable: "Apr 4 — Anthropic removing OpenClaw support for Claude Code; OpenClaw CVE-2026-33579 privilege escalation; axios supply chain attack"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 5 — 36 malicious npm packages (Strapi plugins, DB exploitation + reverse shells); Fortinet FortiClient EMS CVE-2026-35616 emergency patch; Apr 4 — axios supply chain attack"
 
 - name: "MLOps YouTube"
   url: "https://www.youtube.com/@MLOps"
@@ -59,7 +59,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
 
 - name: "Andrej Karpathy YouTube"
   url: "https://www.youtube.com/@AndrejKarpathy"
@@ -67,7 +67,7 @@
   type: ai_education
   tier: 1
   frequency: daily
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
 
 # =============================================================================
 # Tier 2 -- Weekly (ecosystem, security, competitors, crypto)
@@ -181,6 +181,16 @@
   last_checked: "2026-04-04"
   last_notable: "Apr 1 — Mitigation guide for axios npm supply chain compromise (WAVESHAPER.V2)"
   note: "Added 2026-04-04 — Microsoft MSRC + Defender research; key for supply chain mitigations and Patch Tuesday coverage"
+
+- name: "Google Security Blog"
+  url: "https://security.googleblog.com"
+  feed_url: "http://feeds.feedburner.com/GoogleOnlineSecurityBlog"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-05"
+  last_notable: "Apr 2 — Multi-layer indirect prompt injection defense in Workspace (red-team + automated + model hardening); Mar 31 — VRP 2025 Year in Review ($17M to 700+ researchers); Mar 25 — Android 17 post-quantum cryptography (verified boot, keystore, app signing)"
+  note: "Added 2026-04-05 — Google application security research blog; complements GTIC (threat intel) with defensive architecture and vulnerability research"
 
 # =============================================================================
 # Tier 3 -- Monthly (broader ecosystem, research)
