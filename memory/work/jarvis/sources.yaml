@@ -79,8 +79,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
-  note: "Replaces OpenAI Blog (403 blocked, no RSS). OpenAI coverage via HN + Zvi is sufficient. The Batch covers all major lab releases weekly including OpenAI."
+  last_checked: "2026-04-05"
+  note: "Replaces OpenAI Blog (403 blocked, no RSS). OpenAI coverage via HN + Zvi is sufficient. The Batch covers all major lab releases weekly including OpenAI. Feed returned 404 on 2026-04-05 — monitor for recovery."
 
 - name: "Krebs on Security"
   url: "https://krebsonsecurity.com"
@@ -88,8 +88,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
-  last_notable: "Mar 23 — CanisterWorm wiper targets Iran. No new posts since Mar 23."
+  last_checked: "2026-04-05"
+  last_notable: "Mar 23 — CanisterWorm wiper targets Iran. No new posts since Mar 23 (13 days silent)."
 
 - name: "The Hacker News"
   url: "https://thehackernews.com"
@@ -97,8 +97,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
-  last_notable: "Apr 3 — UNC1069 (DPRK) axios npm supply chain attack; TA416 targets EU governments; PHP web shells via cookie channels"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 5 — 36 malicious npm packages (Strapi plugins, Redis/PostgreSQL exploitation + reverse shells); Fortinet FortiClient EMS CVE-2026-35616 actively exploited; Apr 3 — TA416 targets EU governments"
 
 - name: "LangChain Blog"
   url: "https://blog.langchain.com"
@@ -106,8 +106,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
-  last_notable: "Apr 3 — Self-healing agents in production (auto-PR on regression); Apr 2 — Open models crossing threshold on agent tasks"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 3 — Self-healing agents in production (auto-PR on regression, no manual intervention); Apr 2 — Open models (GLM-5, MiniMax M2.7) now match closed frontier on agent tasks"
 
 - name: "Hugging Face Blog"
   url: "https://huggingface.co/blog"
@@ -115,8 +115,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
-  last_notable: "Apr 2 — Gemma 4 multimodal (2B-31B, Apache 2.0); Apr 1 — Holo3 computer use frontier"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 2 — Gemma 4 multimodal (2B-31B, Apache 2.0); Apr 1 — Holo3 computer use frontier; Falcon Perception (TIIUAE)"
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
@@ -124,7 +124,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
 
 - name: "Fabric GitHub Releases"
   url: "https://github.com/danielmiessler/fabric/releases"
@@ -132,8 +132,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
-  last_notable: "Mar 26 — v1.4.442 OAuth refactor; Mar 22 — Anthropic SDK bump v1.27.1"
+  last_checked: "2026-04-05"
+  last_notable: "Mar 26 — v1.4.442 OAuth refactor (auth logic extracted to dedicated module); Mar 22 — v1.4.441 Anthropic SDK bump v1.27.1, removed deprecated model aliases"
 
 - name: "Latent Space Podcast"
   url: "https://www.latent.space"
@@ -141,8 +141,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
-  last_notable: "Apr 3 — AINews Good Friday (Gemma 4 day); Marc Andreessen on death of browser + why this time is different"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 3 — AINews Good Friday (Gemma 4, Hermes Agent as breakout open-source agent framework); Marc Andreessen on death of browser + why this time is different (reasoning + coding + agents)"
 
 - name: "Blockworks"
   url: "https://blockworks.com"
@@ -150,7 +150,7 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
   note: "Replaces CoinDesk (RSS 403 blocked). URL updated: blockworks.co 308-redirects to blockworks.com. Feed stale in Jan 2026 — monitor for recovery."
 
 - name: "CoinTelegraph"
@@ -159,8 +159,8 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
-  last_notable: "Apr 4 — Tether mulling fundraise delay if demand < $500B valuation"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 5 — Drift Protocol $280M exploit (months of prep, linked to prior $58M Radiant Capital hack); Anthropic PAC launch; Apr 4 — Tether fundraise delay if valuation < $500B"
 
 - name: "Google Cloud Threat Intelligence"
   url: "https://cloud.google.com/blog/topics/threat-intelligence"
@@ -168,9 +168,19 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
   last_notable: "Apr 3 — Attributed axios npm supply chain attack to North Korea UNC1069 (WAVESHAPER.V2 backdoor)"
   note: "Added 2026-04-04 — Google Mandiant/GTIG primary attribution source; cited in axios compromise, APT reports"
+
+- name: "Mistral AI Blog"
+  url: "https://mistral.ai/news"
+  feed_url: ""
+  type: ai_releases
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-05"
+  last_notable: "Mar 31 — Spaces CLI built for humans and agents; Mar 23 — Voxtral TTS (frontier open-weights TTS, voice agents); Mar 17 — Forge (enterprise frontier model building)"
+  note: "Added 2026-04-05 — Mistral is a key open-model lab (Mixtral, Mistral Large, Codestral, Voxtral); no RSS feed detected, URL-only monitoring"
 
 - name: "Microsoft Security Blog"
   url: "https://www.microsoft.com/en-us/security/blog"
