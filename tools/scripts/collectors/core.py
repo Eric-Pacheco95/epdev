@@ -233,9 +233,10 @@ def collect_file_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
     ext = cfg.get("ext", ".md")
 
     if target.is_file():
-        # Single file recency
+        # Single file recency — clamp to 0 so clock skew or filesystem
+        # timestamp rounding never produces a nonsensical negative value.
         mtime = datetime.fromtimestamp(target.stat().st_mtime, tz=timezone.utc)
-        days = (datetime.now(timezone.utc) - mtime).days
+        days = max(0, (datetime.now(timezone.utc) - mtime).days)
         return _result(name, days, "days_since")
 
     if not target.is_dir():
@@ -252,7 +253,7 @@ def collect_file_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
 
     if newest_mtime is None:
         return _result(name, None, "days_since", f"no {ext} files found in {cfg['path']}")
-    days = (datetime.now(timezone.utc) - newest_mtime).days
+    days = max(0, (datetime.now(timezone.utc) - newest_mtime).days)
     return _result(name, days, "days_since")
 
 
