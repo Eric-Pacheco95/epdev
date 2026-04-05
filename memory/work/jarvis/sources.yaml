@@ -212,7 +212,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
   last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0)"
 
 - name: "Meta AI Blog"
@@ -221,7 +221,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
 
 - name: "Microsoft AI Blog"
   url: "https://news.microsoft.com/source/topics/ai/"
@@ -229,7 +229,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -237,8 +237,8 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-04"
-  last_notable: "Apr 3 — WebinarTV secretly recording Zoom meetings; Apr 2 — US bans all foreign-made consumer routers"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 3 — WebinarTV secretly recording Zoom meetings without consent; US bans all foreign-made consumer routers (supply chain risk)"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
@@ -246,7 +246,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -254,7 +254,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
@@ -262,8 +262,8 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-04"
-  last_notable: "Apr 4 — 275M commits/week + 2.1B GitHub Actions minutes/week (Daigle via Willison)"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 3 — PR diff performance (React virtualization for large diffs); Apr 1 — Supply chain security (CI/CD credential theft mitigations, OIDC tokens); /fleet command for parallel Copilot CLI agents"
 
 - name: "AI Safety Newsletter (Zvi)"
   url: "https://thezvi.substack.com"
@@ -271,4 +271,14 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-04"
+  last_checked: "2026-04-05"
+  last_notable: "Apr 3 — Anthropic RSP v3 critique (lacks concrete commitments, vague 'strong argument' standards); Apr 2 — AI #162 Visions of Mythos (Anthropic leaks, ecosystem)"
+
+- name: "SANS Internet Storm Center"
+  url: "https://isc.sans.edu"
+  feed_url: "https://isc.sans.edu/rssfeed_full.xml"
+  type: security
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-05"
+  note: "Added 2026-04-05 — Daily threat handlers diary; high signal-to-noise for active exploits and IOCs; good complement to THN/Krebs for early-warning CVE exploitation"
