@@ -116,3 +116,16 @@ true
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm all required output sections are present (SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE AND ABUSE CASES, DATA AND TRUST RISKS, RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS) plus STRIDE sections if --stride was active
+- Confirm every item in RANKED FINDINGS has a corresponding entry in MITIGATIONS (or explicit note that no mitigation exists)
+- Confirm severity ratings are not all the same level (uniform severity across findings signals insufficient discrimination)
+- If any required section is missing: generate it before returning output
+
+# LEARN
+
+- When >= 2 High-severity findings are identified, write a signal to memory/learning/signals/{YYYY-MM-DD}_red-team-{slug}.md
+- Rating: 8-9 for critical attack surfaces that were previously unknown; 5-7 for familiar risk classes with new context; only write signal when findings would meaningfully change design or implementation decisions
+- Promote the highest-severity finding pattern to the relevant agent or skill Critical Rules if it represents a recurring Jarvis-specific risk
