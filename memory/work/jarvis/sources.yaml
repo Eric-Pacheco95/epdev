@@ -265,6 +265,15 @@
   last_checked: "2026-04-05"
   last_notable: "Apr 3 — PR diff performance (React virtualization for large diffs); Apr 1 — Supply chain security (CI/CD credential theft mitigations, OIDC tokens); /fleet command for parallel Copilot CLI agents"
 
+- name: "Cohere Blog"
+  url: "https://cohere.com/blog"
+  feed_url: ""
+  type: ai_releases
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-05"
+  note: "Added 2026-04-05 — Cohere focuses on enterprise RAG, Command models, Embed; relevant for Jarvis embedding pipeline (nomic-embed-text context); URL-only, no RSS feed detected"
+
 - name: "Anthropic Python SDK Releases"
   url: "https://github.com/anthropics/anthropic-sdk-python/releases"
   feed_url: "https://github.com/anthropics/anthropic-sdk-python/releases.atom"
