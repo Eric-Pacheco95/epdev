@@ -95,3 +95,15 @@ true
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm all seven required sections are present: PROBLEM, KNOWN AND UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION
+- Confirm ALTERNATIVE FRAMINGS contains at least two distinct paths
+- Confirm NEXT TEST OR ACTION is concrete (not vague guidance) and actionable in the current context
+- If any check fails: fix before returning output
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_first-principles-{slug}.md when the analysis reveals a core assumption that was previously treated as a hard constraint (constraint-vs-convention collapse)
+- Rating: 8+ if the assumption flip changes the entire solution direction; 5-7 for useful reframing; only write signal when CONSTRAINTS VS CONVENTIONS or CORE ASSUMPTIONS yields a genuinely surprising finding
