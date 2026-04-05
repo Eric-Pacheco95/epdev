@@ -106,3 +106,16 @@ Await description from Eric. If not provided, print usage and stop.
 
 INPUT:
 
+
+# VERIFY
+
+- Confirm the task was appended to orchestration/backlog.json (not overwritten)
+- Confirm all required fields are present in the task entry: id, title, priority, project, created_at
+- Confirm the task JSON is valid (no syntax errors)
+- If backlog.json is missing or invalid JSON: repair it before appending rather than overwriting silently
+
+# LEARN
+
+- Do not write signals for routine backlog captures
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_backlog-pattern.md only when 3+ tasks of the same type or project accumulate in a single session without being dispatched -- this signals a potential bottleneck or decision avoidance pattern
+- Rating: 6-7 for bottleneck patterns worth addressing; skip for normal backlog growth
