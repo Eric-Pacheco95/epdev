@@ -276,8 +276,6 @@ signal_file: {signal filename}
 
 # SKILL CHAIN
 
-- **Follows:** (standalone -- any time Eric finds resonant content)
-- **Precedes:** `/telos-update` (if proposals reveal broader identity shifts), `/learning-capture` (session end)
 - **Composes:** `/extract-wisdom` + `/find-logical-fallacies` + `/analyze-claims` (analytical lenses; claims lens active in --deep only)
 - **Replaces:** `/voice-capture` (deprecated -- voice dumps go to #jarvis-voice)
 - **Escalate to:** `/delegation` if scope expands

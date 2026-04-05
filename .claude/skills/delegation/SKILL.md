@@ -165,8 +165,6 @@ Project initialization (new project from scratch):
 
 # SKILL CHAIN
 
-- **Follows:** anything — delegation is the universal entry point
-- **Precedes:** any skill (routes to the right one)
 - **Composes:** the full skill ecosystem
 - **Escalate to:** itself (delegation is the top-level orchestrator)
 

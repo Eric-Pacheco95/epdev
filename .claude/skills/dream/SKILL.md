@@ -83,7 +83,6 @@ If Eric wants to revert a merge:
 
 # SKILL CHAIN
 
-- **Precedes:** /learning-capture (capture insights from consolidation session)
 - **Composes:** embedding_service.py (semantic similarity engine)
 - **Related:** /update-steering-rules (CLAUDE.md only -- separate)
 - **Escalate to:** manual git restore if a merge produced bad output

@@ -125,10 +125,7 @@ false
 
 # SKILL CHAIN
 
-- **Follows:** `/research` (brief as input) or `/red-team` (stress-test findings as input)
-- **Precedes:** `/implement-prd` (pass PRD file path as input)
 - **Composes:** (leaf at this step — produces the PRD document)
-- **Full chain:** `/research` → `/first-principles` → `/red-team` → `/create-prd` → `/implement-prd` → `/learning-capture`
 - **Escalate to:** `/delegation` if requirements are unclear or scope needs redefinition
 
 # INPUT

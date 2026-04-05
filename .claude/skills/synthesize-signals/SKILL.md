@@ -161,8 +161,6 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 
 # SKILL CHAIN
 
-- **Follows:** `/learning-capture` (produces signals), auto-triggered when signal count >= 20 or >= 10 with 48h+ stale synthesis
-- **Precedes:** `/update-steering-rules` (encode proven themes), `/telos-update` (identity-level insights)
 - **Composes:** confidence decay review (inline), signal lineage tracking (inline)
 - **Escalate to:** `/delegation` if synthesis reveals cross-project patterns requiring orchestration
 

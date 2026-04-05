@@ -84,10 +84,7 @@ true
 
 # SKILL CHAIN
 
-- **Follows:** `/research` (provides context to decompose)
-- **Precedes:** `/red-team` (stress-test conclusions), `/create-prd` (turn conclusions into requirements)
 - **Composes:** (leaf -- pure analysis, no sub-skills)
-- **Full chain:** `/research` > `/first-principles` > `/red-team` > `/create-prd`
 - **Escalate to:** `/architecture-review` for complex multi-angle decisions (runs first-principles + fallacy detection + red-team in parallel)
 
 # INPUT

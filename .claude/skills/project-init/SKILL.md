@@ -159,13 +159,9 @@ Initialize a new project following the full ISC pipeline.
 
 # SKILL CHAIN
 
-- **Follows:** (entry point for new projects — no required predecessor)
-- **Precedes:** `/implement-prd` (pass the generated PRD path as input)
 - **Composes:** `/research` + `/first-principles` + `/red-team` + `/create-prd` (in sequence)
-- **Full chain:** `/project-init` → `/implement-prd` → `/learning-capture`
 - **Escalate to:** `/delegation` if the project scope or domain is unclear before starting
 
 INPUT:
-
 
 ARGUMENTS: {topic}

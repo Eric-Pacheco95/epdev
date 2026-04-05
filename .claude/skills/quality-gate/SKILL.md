@@ -80,8 +80,6 @@ true
 
 # SKILL CHAIN
 
-- **Follows:** phase completion, `/implement-prd` VERIFY gate, monthly cadence, or on-demand
-- **Precedes:** `/update-steering-rules` (if gaps reveal systemic patterns), `/learning-capture` (audit findings become signals)
 - **Composes:** `jarvis_index.py` search, file existence checks, decision log cross-reference
 - **Escalate to:** `/delegation` if gaps require multi-skill remediation pipeline
 

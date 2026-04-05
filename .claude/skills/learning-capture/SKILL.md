@@ -162,8 +162,6 @@ Analyze the current session and extract learnings. If invoked with specific cont
 
 # SKILL CHAIN
 
-- **Follows:** any build, research, or design session — this is always the final step
-- **Precedes:** `/synthesize-signals` (invoke automatically if unprocessed signal count exceeds 10)
 - **Composes:** skill gap check (inline) → present candidates to Eric → Eric decides whether to invoke `/create-pattern`
 - **Escalate to:** `/synthesize-signals` immediately if signals > 10, then `/telos-update` if identity-level insights emerged
 

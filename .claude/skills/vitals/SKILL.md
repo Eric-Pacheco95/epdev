@@ -200,8 +200,6 @@ Proposals acted on: {n}/{total} ({rate}%)
 # SKILL CHAIN
 
 - **Replaces:** morning_feed.py (9am scheduled task -- now on-demand via /vitals)
-- **Follows:** heartbeat run (automatic), overnight runner (scheduled 4am)
-- **Precedes:** /synthesize-signals (if signals accumulated), /self-heal (if collectors failing)
 - **Composes:** vitals_collector.py (subprocess), slack_notify.py (import)
 - **Escalate to:** /delegation if health is CRITICAL
 

@@ -196,10 +196,7 @@ For each completed ISC item, generate a scaffold sentence and prompt Eric to con
 
 # SKILL CHAIN
 
-- **Follows:** `/create-prd` (takes PRD file path as input)
-- **Precedes:** `/learning-capture` (always — no build session ends without capture)
 - **Composes:** `/review-code` (non-optional VERIFY gate), `/quality-gate` (non-optional phase-completion gate), `/commit` (mid-build checkpoints + final commit prompt), `/self-heal` (if tests fail)
-- **Full chain:** `/research` → `/create-prd` → `/implement-prd` → `/quality-gate` → `/learning-capture`
 - **Escalate to:** `/delegation` if scope expands mid-build or new dependencies are discovered
 
 # INPUT

@@ -139,8 +139,6 @@ Write to `history/security/{date}_audit.md`:
 
 # SKILL CHAIN
 
-- **Follows:** (standalone -- triggered manually or before commits/PRs)
-- **Precedes:** /self-heal (if critical findings), /review-code (if code-level fixes)
 - **Composes:** security_scan.py (subprocess), tests/defensive/ (health check)
 - **Escalate to:** /delegation if findings require architectural changes
 

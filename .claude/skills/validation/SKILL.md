@@ -157,8 +157,6 @@ Interpret the exit code and deliver the final verdict:
 
 # SKILL CHAIN
 
-- **Follows:** /implement-prd (VERIFY phase gate after each phase)
-- **Precedes:** /learning-capture (findings become signals), /self-heal (if FAILs)
 - **Composes:** tools/scripts/isc_validator.py --execute (single script, two-stage pipeline)
 - **Escalate to:** /self-heal if exit code 1; /quality-gate for broader phase-level audit
 

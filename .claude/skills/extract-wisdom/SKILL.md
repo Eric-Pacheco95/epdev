@@ -111,8 +111,6 @@ true
 
 # SKILL CHAIN
 
-- **Follows:** /research (brief as input) or direct content paste
-- **Precedes:** /telos-update, /learning-capture
 - **Composes:** (leaf -- pure extraction, no sub-skills)
 - **Note:** --summary mode replaces the deprecated /create-summary skill
 

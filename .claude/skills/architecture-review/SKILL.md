@@ -155,8 +155,6 @@ true
 
 # SKILL CHAIN
 
-- **Follows:** `/research` (research provides context for what to review)
-- **Precedes:** `/create-prd` (validated architecture feeds into requirements), `/implement-prd` (if ready to build)
 - **Composes:** `/first-principles` + `/find-logical-fallacies` + `/red-team` (launches these as parallel agents)
 - **Replaces:** Manual sequential invocation of thinking skills on architecture decisions
 - **Escalate to:** `/delegation` if the review reveals the proposal needs fundamental redesign before any of these skills apply

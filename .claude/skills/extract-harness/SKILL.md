@@ -218,8 +218,6 @@ If --update:
 
 # SKILL CHAIN
 
-- **Follows:** `/architecture-review` (validate extraction decisions)
-- **Precedes:** `/red-team --stride` (stress-test output for compliance)
 - **Composes:** skill audit + file adaptation + validation (sequential pipeline)
 - **Related:** `/create-pattern` (for building new skills in the target), `/security-audit` (for validating the output)
 
