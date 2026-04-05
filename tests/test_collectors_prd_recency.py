@@ -4,7 +4,7 @@ import tempfile
 import os
 import time
 from pathlib import Path
-from collectors.core import collect_prd_checkbox, collect_file_recency
+from tools.scripts.collectors.core import collect_prd_checkbox, collect_file_recency
 
 
 def test_prd_checkbox_open_count():
