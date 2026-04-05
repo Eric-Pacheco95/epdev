@@ -90,20 +90,15 @@ Each project in PROJECTS.md should have:
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- For status checks: output a table of all projects with status, health, ISC summary (if external), and next action
-- Example status check row for external project:
-  ```
-  | crypto-bot | BUILD | P1, G1 | RED [ISC 0/5 T1] | Fix webhook auth, ML samples, circuit breakers | 5 blockers before production |
-  ```
-- For prioritization: output a numbered list with rationale for the ordering
-- For new projects: show the project entry and initial task breakdown before writing
-- After writing changes, show a diff of what was updated
-- Always keep `tasklist.md` and `PROJECTS.md` in sync
-- If a project has been stuck (same status for 2+ weeks), flag it as yellow health
-- If a project can't trace to a Problem or Goal, question whether it belongs
-- For external projects, show ISC tier summary in the health column:
-  - `[ISC 0/5 T1 | 0/6 T2 | 0/10 T3]` — meaning 0 of 5 Tier-1 items done, etc.
-  - Health color derivation: T1 open = red, T1 clear + T2 open = yellow, all clear = green
+- Status check: table of all projects — project | status | priority | health | next action | notes
+  - Health format: `[ISC T1/T2/T3 done counts]` — T1 open = RED, T1 clear + T2 open = YELLOW, all clear = GREEN
+  - Flag stuck projects (same status 2+ weeks) as yellow
+- Prioritization: numbered list with ordering rationale
+- New projects: show entry + task breakdown before writing
+- After changes: show diff of updates
+- Keep `tasklist.md` and `PROJECTS.md` in sync
+- Question any project that can’t trace to a Problem or Goal
+
 
 # EXTERNAL PROJECT HEALTH SOURCES
 

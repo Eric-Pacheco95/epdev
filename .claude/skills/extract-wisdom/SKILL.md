@@ -78,18 +78,16 @@ true
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output exactly these sections in order, each with a level-2 heading: IDEAS, INSIGHTS, QUOTES, HABITS, REFERENCES, RECOMMENDATIONS
-- IDEAS: bullet list; each bullet at most 15 words; one idea per bullet
-- INSIGHTS: bullet list; each bullet at most 25 words and must include a one-line explanation of why it matters
-- QUOTES: bullet list; each bullet must be verbatim text in quotation marks plus attribution on the same line when known
-- HABITS: bullet list; each bullet describes an actionable habit or practice in plain language
-- REFERENCES: bullet list; each bullet names the work or tool and, when possible, author or creator and why it was cited
-- RECOMMENDATIONS: bullet list; each bullet is a specific, actionable recommendation
-- If a section has no content in the input, write one bullet: "(none found in input)"
-- Do not give warnings, disclaimers, or meta-commentary; only output the six sections.
-- Do not repeat the same idea across sections unless a quote also appears under QUOTES.
-- Do not start consecutive bullets with the same first three words.
-- When the input is substantial, aim for at least 10 IDEAS, 5 INSIGHTS, and 5 QUOTES.
+- Sections in order (level-2 headings): IDEAS, INSIGHTS, QUOTES, HABITS, REFERENCES, RECOMMENDATIONS
+- IDEAS: bullets, ≤15 words each, one idea per bullet; aim for 10+ when input is substantial
+- INSIGHTS: bullets, ≤25 words + one-line why-it-matters; aim for 5+
+- QUOTES: bullets, verbatim text in quotes + attribution; aim for 5+
+- HABITS: bullets, actionable habit or practice in plain language
+- REFERENCES: bullets, work name + author/creator + why cited
+- RECOMMENDATIONS: bullets, specific and actionable
+- If a section has no content: "(none found in input)"
+- No warnings, disclaimers, or repeated ideas across sections
+
 
 # SUMMARY OUTPUT FORMAT (--summary mode only)
 

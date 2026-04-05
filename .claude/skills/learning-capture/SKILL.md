@@ -136,15 +136,14 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Write real signals using the Write tool — do not just display them
-- Use `python tools/scripts/hook_learning_capture.py` for the actual file writes when possible, or write directly
-- Each signal gets its own file — do not combine multiple signals into one file
-- Be honest about ratings — most sessions produce 3-6 rated signals, not all 10s
-- Prioritize signals that affect future behavior (insights about the user, workflow improvements, system bugs)
-- After writing signals, output a brief summary: how many signals written, highest-rated one, and any skill gap candidates
-- If synthesis threshold is met, invoke `/synthesize-signals` inline — do not ask permission. If synthesis proposes steering rules, present them for Eric's approval. If synthesis surfaces TELOS-relevant themes, note them for next `/telos-update` but do not auto-invoke
-- Do not write stub signals with "(pending)" — every signal must have real content or don't write it at all
-- If you detect patterns across multiple recent signals, note this as a meta-signal worth synthesis
+- Write signals using Write tool — each signal gets its own file; do not combine
+- Use `python tools/scripts/hook_learning_capture.py` for file writes when available
+- Ratings: honest — most sessions produce 3-6 signals, not all 10s
+- Prioritize signals affecting future behavior (user insights, workflow improvements, bugs)
+- After writing: summary of count, highest-rated signal, skill gap candidates
+- If synthesis threshold met: invoke /synthesize-signals inline; present proposed steering rules for Eric approval; note TELOS themes for next /telos-update
+- No stub signals with "(pending)" — real content or don’t write
+
 
 # INPUT
 
