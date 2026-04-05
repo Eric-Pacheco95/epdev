@@ -283,6 +283,16 @@
   last_checked: "2026-04-05"
   note: "Added 2026-04-05 — Daily threat handlers diary; high signal-to-noise for active exploits and IOCs; good complement to THN/Krebs for early-warning CVE exploitation"
 
+- name: "CISA Known Exploited Vulnerabilities (KEV)"
+  url: "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+  feed_url: "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-05"
+  last_notable: "Apr 2 — CVE-2026-3502 TrueConf code execution (tampered updates); Apr 1 — CVE-2026-5281 Google Dawn use-after-free; Mar 26 — CVE-2026-33634 Trivy supply chain (CI/CD secrets exfiltration)"
+  note: "Added 2026-04-05 — CISA KEV is the authoritative list of CVEs with confirmed in-the-wild exploitation; JSON feed at /feeds/known_exploited_vulnerabilities.json; Trivy entry directly relevant to Jarvis CI/CD pipeline"
+
 - name: "GitHub Security Advisory Database (npm)"
   url: "https://github.com/advisories?query=type%3Areviewed&ecosystem=npm"
   feed_url: ""
