@@ -169,18 +169,18 @@ For each completed ISC item, generate a scaffold sentence and prompt Eric to con
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Structure output in this order: PRD SUMMARY, ISC CHECKLIST, IMPLEMENTATION LOG, REVIEW FINDINGS, VERIFY RESULTS, COMPLETION STATUS
-- PRD SUMMARY: one short paragraph — what was built and why
-- ISC CHECKLIST: numbered list of all ISC items with status (PASS / FAIL / DEFERRED) and one-line verify result per item
-- IMPLEMENTATION LOG: bullet list of files created or modified with one-line description of each change. Include **LOOP METRICS**: how many ISC items needed 0/1/2/3 fix cycles, and how many review cycles were needed. This measures whether the loop is adding value
-- REVIEW FINDINGS: summary of `/review-code` output — severity, findings applied, findings accepted-risk with reasoning
-- VERIFY RESULTS: starts with OWNERSHIP CHECK table (columns: ISC Item | Eric's One-Sentence Summary | Source (scaffold or Eric-edited)), then approach retrospective (approach taken, alternatives not pursued, would-I-choose-again verdict), then evidence table with columns: ISC Item | Verify Method | Result | Evidence Type | Source | Content
-- QUALITY GATE: summary of `/quality-gate` output — pass/fail, issues found, resolutions applied
-- COMPLETION STATUS: one of COMPLETE / PARTIAL / BLOCKED — with a bullet list of any deferred or blocked items and why
-- Do not output code blocks for entire files — reference file paths instead
-- Do not skip the REVIEW GATE — if neither the deterministic prescan nor the cross-model review was run, flag COMPLETION STATUS as PARTIAL and explain
-- Do not mark ISC items as PASS without running the verify method
-- Do not add meta-commentary about being an AI
+- Sections in order: PRD SUMMARY, ISC CHECKLIST, IMPLEMENTATION LOG, REVIEW FINDINGS, VERIFY RESULTS, QUALITY GATE, COMPLETION STATUS
+- PRD SUMMARY: 1-para — what was built and why
+- ISC CHECKLIST: numbered, status (PASS/FAIL/DEFERRED) + one-line verify result per item
+- IMPLEMENTATION LOG: bullets of files changed + one-line description. Include LOOP METRICS: fix-cycle distribution (0/1/2/3 cycles per ISC item) and review cycle count
+- REVIEW FINDINGS: /review-code summary — severity, findings applied, accepted-risk with reasoning
+- VERIFY RESULTS: (1) OWNERSHIP CHECK table (ISC Item | Eric summary | scaffold-or-edited), (2) approach retrospective, (3) evidence table (ISC Item | Method | Result | Evidence Type | Source | Content)
+- QUALITY GATE: /quality-gate summary — pass/fail, issues, resolutions
+- COMPLETION STATUS: COMPLETE / PARTIAL / BLOCKED + bullets for deferred/blocked items
+- Reference file paths instead of outputting full file code blocks
+- Never skip REVIEW GATE; flag PARTIAL if prescan and cross-model review were both skipped
+- Never mark ISC items PASS without running verify method
+
 
 # CONTRACT
 
