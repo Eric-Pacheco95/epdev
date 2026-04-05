@@ -80,3 +80,15 @@ After the essay, append a separator and:
 Write an essay on the following topic. If a style author is specified with "in the style of {author}", match that author's voice.
 
 INPUT:
+
+# VERIFY
+
+- Confirm the essay contains no setup phrases ("In conclusion", "To summarize", "It's worth noting that", "In a world where...")
+- Confirm no title header was added unless the prompt explicitly requested one
+- Confirm the JARVIS INTEGRATION block (separator + Signal + TELOS relevance) is appended after the essay
+- If banned phrases are present: rewrite the affected sentences before returning output
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_essay-{slug}.md only when the essay explores a topic with direct TELOS relevance (financial independence, AI infrastructure, music mastery, health, self-discovery) or captures a novel insight Eric has not written about before
+- Rating: 7-9 for essays that crystallize a previously unarticulatable idea; 5-6 for competent execution of a familiar theme; do not write signal for practice or one-off essays with no reuse value
