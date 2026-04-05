@@ -187,7 +187,9 @@ def main() -> None:
         if graded["injection_hits"]:
             print(f"        [WARN] Injection patterns detected: {graded['injection_hits']}")
         if graded["preview"]:
-            wrapped = textwrap.fill(graded["preview"], width=65, initial_indent="        > ", subsequent_indent="          ")
+            # ASCII-safe preview -- strip non-ASCII chars (Windows cp1252 safety)
+            safe_preview = graded["preview"].encode("ascii", errors="replace").decode("ascii")
+            wrapped = textwrap.fill(safe_preview, width=65, initial_indent="        > ", subsequent_indent="          ")
             print(wrapped)
         print()
 
