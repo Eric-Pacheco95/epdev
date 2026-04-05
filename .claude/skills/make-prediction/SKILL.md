@@ -299,3 +299,18 @@ Four analytical pillars, applied in this order:
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm the prediction file was written to data/predictions/YYYY-MM-DD-[slug].md (unless --no-track was passed)
+- Confirm the prediction contains a falsifiable statement (binary-testable outcome with a resolution date or trigger)
+- Confirm at least two distinct outcome scenarios with probabilities that sum to 100% are present
+- Confirm probabilities are calibrated against a stated reference class (not just intuition)
+- If --track and file is missing: write it before returning; if probabilities don't sum to 100%: recalibrate
+
+# LEARN
+
+- After the prediction is tracked, check data/predictions/ for any resolved predictions (status: resolved) that have not yet been analyzed
+- For each resolved prediction found: compare forecast to actual outcome, identify missed signals, and append a lessons-learned note to the resolution section of that file
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_prediction-resolved-{slug}.md only for resolved predictions with meaningful lessons (accuracy was wrong or partially wrong with a clear root cause)
+- Rating: 7-9 for systematic errors (e.g., consistently underestimating X); 4-6 for one-off misses; skip signal for correct predictions unless something unusual was learned
