@@ -55,15 +55,13 @@ true
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output exactly these sections in order, each with a level-2 heading: DIAGNOSIS, IMPROVED PROMPT, OPTIONAL ADDITIONS, CHECKLIST FOR THE USER
-- DIAGNOSIS: bullet list of issues found in the original (max 8 bullets)
-- IMPROVED PROMPT: one fenced markdown block containing only the rewritten prompt text the user should run
-- OPTIONAL ADDITIONS: bullet list of extra lines or few-shot examples they could add; if none, one bullet "(none suggested)"
-- CHECKLIST FOR THE USER: bullet list of yes-or-no questions they should answer to tighten the prompt further
-- Do not wrap IMPROVED PROMPT in more than one fence; use a single ``` block.
-- Do not output the improved prompt outside the fenced block except where it appears inside IMPROVED PROMPT.
-- Do not give AI nature disclaimers; only output the four sections.
-- Do not start consecutive bullets outside the fence with the same first three words.
+- Sections in order (level-2 headings): DIAGNOSIS, IMPROVED PROMPT, OPTIONAL ADDITIONS, CHECKLIST FOR THE USER
+- DIAGNOSIS: bullets of issues (max 8)
+- IMPROVED PROMPT: single fenced markdown block containing only the rewritten prompt
+- OPTIONAL ADDITIONS: bullets of extra lines or few-shot examples; "(none suggested)" if none
+- CHECKLIST FOR THE USER: yes-or-no bullets to tighten the prompt further
+- Single fence only for IMPROVED PROMPT; no duplicating prompt text outside the fence
+
 
 # INPUT
 

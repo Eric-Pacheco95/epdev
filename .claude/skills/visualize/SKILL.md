@@ -118,18 +118,11 @@ false
 
 # OUTPUT INSTRUCTIONS
 
-- Output Markdown with embedded Mermaid as the primary format
-- Diagrams must be syntactically valid Mermaid — test mentally before outputting
-- Make verbs and subjects explicit on edge labels (not just arrows)
-- Diagrams should be dense enough to be useful, sparse enough to be readable
-- Do not give warnings or notes; only output the requested sections
-- **HTML viewer** (default — skip with `--no-html`): After writing the markdown output, also generate a standalone HTML file that renders the diagram in a browser:
-  - Write an HTML file containing the Mermaid source embedded in a `<pre class="mermaid">` block, with `<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>` loading from CDN
-  - Include a `<noscript>` block with the raw Mermaid source as plaintext fallback
-  - Include minimal styling: centered diagram, light background, max-width container
-  - Save the HTML to the same directory as the markdown output (e.g., `memory/work/{project}/diagram.html`)
-  - Auto-open with `start <file>` on Windows so Eric sees the rendered diagram immediately
-  - If the save location is not yet determined (user hasn't approved save), write to a temp path and open from there
+- Output Markdown with embedded Mermaid
+- Diagrams must be syntactically valid Mermaid; make edge labels explicit (not just arrows)
+- Dense enough to be useful, sparse enough to be readable
+- **HTML viewer** (default, skip with `--no-html`): write standalone HTML file with Mermaid source in `<pre class="mermaid">` block, CDN script tag, noscript fallback, minimal centered styling; save to same dir as markdown output; auto-open with `start <file>` on Windows; use temp path if save dir undetermined
+
 
 # INPUT
 

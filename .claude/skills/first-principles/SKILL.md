@@ -64,17 +64,16 @@ true
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output exactly these sections in order, each with a level-2 heading: PROBLEM, KNOWN AND UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION
-- PROBLEM: one short paragraph
-- KNOWN AND UNKNOWN: two bullet sublists labeled Known and Unknown
-- CONSTRAINTS VS CONVENTIONS: bullet list distinguishing hard constraints from soft norms
-- CORE ASSUMPTIONS: numbered list; each item one assumption in plain language
-- REASONING CHAIN: numbered list; each step one sentence; move from premises to conclusions in order
-- ALTERNATIVE FRAMINGS: bullet list; at least two bullets describing different solution paths
-- NEXT TEST OR ACTION: one short paragraph or numbered steps; must be concrete
-- Do not fabricate domain facts; when the input is silent, list the gap under Unknown instead of guessing.
-- Do not give warnings or self-referential notes; only output the seven sections.
-- Do not start consecutive bullets with the same first three words.
+- Sections in order (level-2 headings): PROBLEM, KNOWN AND UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION
+- PROBLEM: 1-para
+- KNOWN AND UNKNOWN: two bullet sublists (Known / Unknown)
+- CONSTRAINTS VS CONVENTIONS: bullets distinguishing hard constraints from soft norms
+- CORE ASSUMPTIONS: numbered, one assumption per item
+- REASONING CHAIN: numbered steps, premises to conclusions
+- ALTERNATIVE FRAMINGS: 2+ bullets describing different solution paths
+- NEXT TEST OR ACTION: 1-para or numbered steps, concrete
+- No fabricated domain facts — list gaps under Unknown; no warnings or self-referential notes
+
 
 # CONTRACT
 
