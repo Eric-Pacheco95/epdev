@@ -70,3 +70,15 @@ true
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm all four sections are present: DIAGNOSIS, IMPROVED PROMPT, OPTIONAL ADDITIONS, CHECKLIST FOR THE USER
+- Confirm IMPROVED PROMPT contains exactly one fenced code block with the rewritten prompt
+- Confirm DIAGNOSIS lists at least one concrete issue (not generic feedback)
+- If DIAGNOSIS is empty or IMPROVED PROMPT is outside a fence: fix before returning output
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_improve-prompt-{slug}.md when the improvement identifies a structural pattern (e.g., missing role, vague output contract, no examples) that recurs across 2+ prompts Eric brings
+- Rating: 6-8 for systemic prompt weakness patterns; only write signal when a reusable insight applies beyond the specific prompt reviewed
