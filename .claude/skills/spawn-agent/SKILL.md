@@ -72,3 +72,16 @@ false
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm all five required sections are present: TASK SUMMARY, SELECTED TRAITS, TRAIT RATIONALE, TENSIONS AND PRIORITIES, SPAWNED AGENT PROMPT
+- Confirm SPAWNED AGENT PROMPT is a single fenced code block with no commentary inside the fence
+- Confirm the generated prompt includes: identity, mission, operating principles, output format, boundaries, and a task input invitation
+- Confirm no actual secrets or credentials appear in the generated prompt (placeholders only)
+- If any check fails: fix before returning output
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_spawn-agent-{slug}.md when a novel trait combination is discovered that is not represented in the existing trait library
+- Rating: 6-8 for genuinely new trait patterns; only write signal when the spawned agent architecture would be reusable for a class of future tasks (not just this one)
