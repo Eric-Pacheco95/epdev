@@ -72,3 +72,15 @@ true
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm all four required sections are present: OVERVIEW, FALLACY FINDINGS, NON-FALLACIOUS STRENGTHS, RECOMMENDED FIXES
+- Confirm every numbered item in FALLACY FINDINGS has a corresponding entry in RECOMMENDED FIXES
+- Confirm FALLACY FINDINGS has at most 12 items (merge if over limit)
+- If any section is missing or count exceeds 12: fix before returning output
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_fallacies-{slug}.md when >= 3 distinct fallacy types are found or a high-stakes document (policy, research, investment thesis) contains >= 2 High-severity logical flaws
+- Rating: 7+ if the fallacies fundamentally undermine the argument; 4-6 for routine style/support issues; only write signal when the analysis changes how Eric should act on the source material
