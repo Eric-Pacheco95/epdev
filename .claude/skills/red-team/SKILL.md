@@ -98,18 +98,18 @@ true
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output exactly these sections in order, each with a level-2 heading: SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE AND ABUSE CASES, DATA AND TRUST RISKS, [if --stride: TRUST BOUNDARIES AND DATA FLOWS, STRIDE ANALYSIS (with subsections: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege)], RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS
-- SUMMARY: one paragraph describing what is being red-teamed
-- THREAT MODEL: bullet list naming actor types and their incentives (e.g. curious user, malicious insider)
-- FAILURE MODES: bullet list of ways the thing breaks or behaves badly
-- MISUSE AND ABUSE CASES: bullet list of adversarial or gaming behaviors
-- DATA AND TRUST RISKS: bullet list; if not applicable, one bullet "(not applicable given input)"
-- RANKED FINDINGS: numbered list from highest to lowest priority; each item includes severity (High, Medium, Low) and one-line rationale
-- MITIGATIONS: bullet list mapping each numbered finding to a mitigation when possible
-- OPEN QUESTIONS: bullet list of what the red team still needs to know
-- Do not encourage illegal activity; describe defenses and risks in abstract terms.
-- Do not give moralizing or AI self-disclosure; only output the eight sections.
-- Do not start consecutive bullets with the same first three words.
+- Sections in order (level-2 headings): SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE AND ABUSE CASES, DATA AND TRUST RISKS, [if --stride: TRUST BOUNDARIES AND DATA FLOWS, STRIDE ANALYSIS], RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS
+- SUMMARY: 1-para describing what is being red-teamed
+- THREAT MODEL: bullets of actor types + incentives
+- FAILURE MODES: bullets of ways it breaks/behaves badly
+- MISUSE AND ABUSE CASES: bullets of adversarial/gaming behaviors
+- DATA AND TRUST RISKS: bullets; "(not applicable)" if none
+- STRIDE ANALYSIS: subsections for Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege
+- RANKED FINDINGS: numbered high-to-low; each item: severity + 1-line rationale
+- MITIGATIONS: bullets mapped to numbered findings
+- OPEN QUESTIONS: what the red team still needs to know
+- Describe defenses and risks abstractly — no illegal instructions, no moralizing.
+
 
 # INPUT
 

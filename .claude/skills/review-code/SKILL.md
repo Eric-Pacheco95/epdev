@@ -81,18 +81,18 @@ true
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output exactly these sections in order, each with a level-2 heading: CONTEXT, SUMMARY, SECURITY FINDINGS, RELIABILITY AND CORRECTNESS, MAINTAINABILITY AND OBSERVABILITY, TESTING GAPS, RECOMMENDATIONS, OPEN QUESTIONS
-- CONTEXT: one paragraph on language, scope of review, and what the code is intended to do
-- SUMMARY: one short paragraph with overall risk posture (Low, Medium, High) and top themes; justify the level briefly
-- SECURITY FINDINGS: numbered list from highest to lowest severity; each item includes severity (Critical, High, Medium, Low, Informational), location hint (file or symbol if present in input), one-line issue, and one-line impact; put "none identified" as one numbered item only if truly none
-- RELIABILITY AND CORRECTNESS: bullet list of non-security bugs, race conditions, or logic issues
-- MAINTAINABILITY AND OBSERVABILITY: bullet list of structure, naming, duplication, logging, or operational concerns
-- TESTING GAPS: bullet list of missing or weak tests relative to risk
-- RECOMMENDATIONS: bullet list mapping to numbered security findings where possible; include quick wins vs larger refactors when relevant
-- OPEN QUESTIONS: bullet list of what you need to judge severity or exploitability (e.g. deployment context, threat model)
-- Do not include exploit code, weaponized payloads, or step-by-step instructions to attack live systems.
-- Do not shame or moralize; stay technical and constructive.
-- Do not start consecutive bullets with the same first three words.
+- Sections in order (level-2 headings): CONTEXT, SUMMARY, SECURITY FINDINGS, RELIABILITY AND CORRECTNESS, MAINTAINABILITY AND OBSERVABILITY, TESTING GAPS, RECOMMENDATIONS, OPEN QUESTIONS
+- CONTEXT: 1-para on language, review scope, what the code does
+- SUMMARY: 1-para overall risk posture (Low/Med/High), top themes, brief justification
+- SECURITY FINDINGS: numbered high-to-low severity; each item: severity | location | issue | impact; "(none identified)" if clean
+- RELIABILITY AND CORRECTNESS: bullets of non-security bugs, race conditions, logic issues
+- MAINTAINABILITY AND OBSERVABILITY: bullets on structure, naming, duplication, logging, ops concerns
+- TESTING GAPS: bullets of missing/weak tests relative to risk
+- RECOMMENDATIONS: bullets mapped to numbered security findings; note quick wins vs larger refactors
+- OPEN QUESTIONS: bullets of what’s needed to judge severity (deployment context, threat model)
+- No exploit code, weaponized payloads, or step-by-step attack instructions.
+- Stay technical and constructive.
+
 
 # INPUT
 

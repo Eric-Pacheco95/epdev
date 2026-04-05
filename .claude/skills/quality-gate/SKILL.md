@@ -67,16 +67,15 @@ true
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Lead with a one-line summary: "Audited N checked items across M phases. Found X gaps (C critical, H high, M medium, L low)."
-- Output the main findings as a table with these exact columns: `| Phase | Task | Original Intent | What Was Delivered | Gap? | Downstream Risk |`
-- Only include rows where a gap was found — do not list items that pass all four checks
-- After the table, output a `## Critical and High Gaps` section with one paragraph per critical/high gap explaining the specific downstream impact
-- After gaps, output a `## Checked-But-Pending Items` section listing any `[x]` items with qualifying language in their descriptions
-- After that, output a `## Gate Verification Commands` section listing each phase gate criterion with the command that mechanically verifies it
-- End with a `## Recommendations` section — but recommendations must be limited to "what to audit next" or "what to verify before proceeding." Never recommend code changes, fixes, or implementations — this skill is OBSERVE only
-- Do not modify any files, tasklists, or configurations
-- Do not propose steering rules (that is `/update-steering-rules` territory)
-- Do not run any remediation — flag and report only
+- Lead: "Audited N checked items across M phases. Found X gaps (C critical, H high, M medium, L low)."
+- Main findings table: `| Phase | Task | Original Intent | What Was Delivered | Gap? | Downstream Risk |` — only gap rows
+- ## Critical and High Gaps: 1-para per gap explaining downstream impact
+- ## Checked-But-Pending Items: list `[x]` items with qualifying language in their descriptions
+- ## Gate Verification Commands: phase gate criteria with the verification command for each
+- ## Recommendations: "what to audit next" or "what to verify before proceeding" only — never code changes or fixes (OBSERVE only)
+- Never modify files, tasklists, or configurations
+- Never propose steering rules
+
 
 # SKILL CHAIN
 
