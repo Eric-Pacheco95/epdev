@@ -265,6 +265,16 @@
   last_checked: "2026-04-05"
   last_notable: "Apr 3 — PR diff performance (React virtualization for large diffs); Apr 1 — Supply chain security (CI/CD credential theft mitigations, OIDC tokens); /fleet command for parallel Copilot CLI agents"
 
+- name: "Rekt News (DeFi Exploits)"
+  url: "https://rekt.news"
+  feed_url: ""
+  type: crypto
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-05"
+  last_notable: "Mar 18 — Venus Protocol Rekt IV ($3.7M, 9-month position build + supply cap bypass); Mar 16 — Price Impact Kills (Aave $50M in, 327 AAVE out via CoWSwap slippage); no RSS feed"
+  note: "Added 2026-04-05 — Authoritative DeFi exploit post-mortems; relevant to crypto-bot risk model; no RSS, URL-only; Drift Protocol $280M exploit (Apr 5) likely incoming"
+
 - name: "AI Safety Newsletter (Zvi)"
   url: "https://thezvi.substack.com"
   feed_url: "https://thezvi.substack.com/feed"
