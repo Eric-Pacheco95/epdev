@@ -32,7 +32,7 @@
 ---
 
 ### Theme: Autonomous producer health is degrading
-- Maturity: candidate (ARCHIVING -- confidence below threshold)
+- Maturity: candidate (ARCHIVED 2026-04-05 -- root cause resolved, no recurrence in 3 days)
 - Confidence: 60%
 - Anti-pattern: false
 - Supporting signals: 2026-04-02_heartbeat-producer_health.md, 2026-04-02_heartbeat-producer_health_2.md, 2026-04-02_heartbeat-_collector_health.md
