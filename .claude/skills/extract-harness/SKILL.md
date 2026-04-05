@@ -226,3 +226,17 @@ If --update:
 - **Related:** `/create-pattern` (for building new skills in the target), `/security-audit` (for validating the output)
 
 INPUT:
+
+# VERIFY
+
+- Confirm Step 4 VALIDATE ran all six checks (dangling references, personal data, path validation, Jarvis references, skill count, security rules)
+- Confirm validation report was output to Eric before any files were written to disk
+- Confirm extraction did not auto-push without explicit user confirmation
+- Confirm all six validation checks returned PASS (or document what failed and was fixed)
+- If any personal data or Jarvis reference was found in output: block delivery and surface the specific matches
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_extract-harness-{slug}.md when the extraction reveals skills or patterns that are so Jarvis-specific they cannot be generalized (blocking extraction of > 20% of skills)
+- Rating: 7-8 for architectural insights about what is and is not reusable infrastructure; 5-6 for routine extractions with minor adaptation needed; skip signal for clean extractions with no interesting findings
+- If --evolve was used and produced harness improvements: capture them as a history/decisions/ entry
