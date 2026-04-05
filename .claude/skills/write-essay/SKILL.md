@@ -54,14 +54,13 @@ true
 
 # OUTPUT INSTRUCTIONS
 
-- Output a full, publish-ready essay
-- No cliches, no jargon, no journalistic openers ("In a world where...")
-- No setup phrases: "In conclusion", "To summarize", "It's worth noting that"
-- No warnings, disclaimers, or meta-commentary about the essay
-- If a style author was specified: match their vocabulary level, sentence rhythm, and tonal register precisely
-- Default style (no author specified): clear, direct, concrete — Hemingway density, not academic bloat
-- Length: whatever the argument requires — no padding to hit a word count
-- Only output the essay text — no title header unless it's naturally part of the piece
+- Output a full, publish-ready essay — only the essay text, no title header unless natural
+- No clichés, jargon, journalistic openers ("In a world where..."), or setup phrases ("In conclusion", "To summarize")
+- No warnings, disclaimers, or meta-commentary
+- Style author specified: match their vocabulary, sentence rhythm, and tonal register precisely
+- Default (no author): clear, direct, concrete — Hemingway density
+- Length: whatever the argument requires; no padding
+
 
 # JARVIS INTEGRATION
 

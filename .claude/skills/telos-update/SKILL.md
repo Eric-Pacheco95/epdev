@@ -86,16 +86,16 @@ All files live in `memory/work/telos/`:
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Present proposed changes as a clear before/after diff for each file
-- Group changes by file, showing the file name as a heading
-- For LEARNED.md and STATUS.md, show what will be added (these are auto-approved)
-- For all other files, show proposed changes and wait for explicit "yes" / approval
-- After writing, output a one-line summary: "Updated N TELOS files: [list]"
-- If no meaningful updates are found, say so — don't force updates
-- After a monthly TELOS review (GOALS.md, CHALLENGES.md, or BELIEFS.md updated), suggest: "Run `/red-team --thinking` to surface blindspots in your current mental models and reasoning frames."
-- Never delete content from WRONG.md (append-only)
-- Convert relative dates to absolute dates (e.g., "last Thursday" → "2026-03-20")
-- When updating LEARNED.md, add entries at the top of the relevant section with date prefix
+- Present changes as before/after diff per file, grouped by file name as heading
+- LEARNED.md and STATUS.md: auto-approved (show what will be added)
+- All other files: show proposed changes, wait for explicit approval
+- After writing: "Updated N TELOS files: [list]"
+- If no meaningful updates: say so, don’t force updates
+- After monthly review of GOALS/CHALLENGES/BELIEFS: suggest /red-team --thinking
+- WRONG.md is append-only — never delete content
+- Relative dates → absolute ("last Thursday" → "2026-03-20")
+- LEARNED.md entries added at top of relevant section with date prefix
+
 
 # NOTION AUTO-WRITE (TELOS Mirror)
 

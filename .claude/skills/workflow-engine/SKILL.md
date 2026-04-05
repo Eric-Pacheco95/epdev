@@ -98,13 +98,13 @@ These are pre-defined pipelines for common tasks. Invoke by name.
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Always show the pipeline diagram before executing
-- Wait for user approval before starting execution (unless the user said "run it" or "go ahead")
-- Between steps, show a one-line status: "Step 2/4: Running /red-team..."
-- If a step produces output too long to pass directly, summarize the key points as input to the next step
-- After completion, show: pipeline name (if named), steps executed, total skills invoked
-- If the user's goal doesn't map cleanly to existing skills, say which skills are missing and offer to create them with `/create-pattern`
-- Log the workflow definition for reuse — if a custom pipeline is used more than once, suggest adding it as a named workflow
+- Show pipeline diagram before executing; wait for approval (unless user said "run it")
+- Step status: "Step N/M: Running /skill-name..."
+- Summarize long step output as key points before passing to next step
+- After completion: pipeline name, steps executed, total skills invoked
+- If skills are missing for a goal: note which and offer /create-pattern
+- Log workflow definitions for reuse; if pipeline used 2+ times, suggest adding as named workflow
+
 
 # INPUT
 

@@ -120,15 +120,13 @@ Write to `history/security/{date}_audit.md`:
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Run the scanner FIRST before any LLM analysis -- all data comes from the JSON in Phase 1
-- Order findings by severity (Critical first)
-- For each finding, include the specific file and line number
-- If no findings after triage, report a clean audit -- this is still valuable to log
-- Never expose actual secret values in the audit report -- reference by location only
-- After completion, output a summary table: severity counts + overall risk rating
-- If critical findings exist, flag them prominently and recommend immediate action
+- Run scanner FIRST (Phase 1 JSON) before any LLM analysis
+- Order findings by severity (Critical first); include file + line number per finding
+- Clean audit = no findings after triage (still log this)
+- Never expose secret values in report — reference by location only
+- Summary table: severity counts + overall risk rating; flag Critical findings prominently
 - Log every audit to `history/security/` regardless of findings
-- All script output is pre-sanitized by the scanner (no secret values, no injection payloads)
+
 
 # CONTRACT
 

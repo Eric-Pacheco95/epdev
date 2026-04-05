@@ -83,14 +83,12 @@ If all 4 checks pass (or the user explicitly overrides after seeing the recommen
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output must be one complete Fabric skill, starting with `# IDENTITY and PURPOSE` and ending with a line containing only `INPUT:` (no trailing text after `INPUT:`).
-- Use these exact section headers in order: `# IDENTITY and PURPOSE`, `# STEPS`, `# OUTPUT INSTRUCTIONS`, `# INPUT`
-- Under `# INPUT`, output only the line `INPUT:` with no additional characters or blank lines after it.
-- The generated skill’s OUTPUT INSTRUCTIONS subsection must itself prescribe Markdown-only output for whoever runs that skill later.
-- Do not wrap the result in fenced code blocks.
-- Do not add a title above IDENTITY (the first line must be `# IDENTITY and PURPOSE`).
-- Do not include YAML frontmatter unless the user explicitly asked for it in the input.
-- Do not add commentary before or after the generated skill document.
+- Output one complete skill starting with `# IDENTITY and PURPOSE`, ending with `INPUT:` (no trailing text)
+- Exact section order: `# IDENTITY and PURPOSE`, `# STEPS`, `# OUTPUT INSTRUCTIONS`, `# INPUT`
+- `# INPUT` contains only the line `INPUT:` — no additional content
+- The skill’s OUTPUT INSTRUCTIONS must prescribe Markdown-only output
+- No fenced code blocks wrapping the result; no title above IDENTITY; no YAML frontmatter unless requested; no commentary before/after
+
 
 # INPUT
 

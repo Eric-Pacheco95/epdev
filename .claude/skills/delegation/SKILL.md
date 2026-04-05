@@ -153,15 +153,14 @@ Project initialization (new project from scratch):
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Lead with the routing decision: "This is a `/skill-name` task" or "This needs a pipeline: [chain]"
-- Show the routing rationale in one sentence
-- Always show what comes NEXT after the routed skill — "After this completes, the next step is `/skill-name`"
-- If routing to a skill, invoke it immediately (don't just describe it)
-- If routing to a pipeline, show the full chain diagram and ask for approval before executing
-- If flagging for Eric, explain what's needed and why Jarvis can't handle it alone
-- If multiple tasks, output a prioritized numbered list with routing + full chain for each
-- Never drop a task — everything gets routed somewhere, even if it's "add to backlog"
-- If a completed-skill output is provided, identify the next chain step and offer to invoke it immediately
+- Lead: "This is a /skill-name task" or "This needs a pipeline: [chain]"
+- Routing rationale in one sentence
+- Always show next step: "After this completes, the next step is /skill-name"
+- Invoke the routed skill immediately; for pipelines show chain diagram and ask approval
+- Multiple tasks: prioritized numbered list with routing + chain
+- Never drop a task — everything gets routed, even if to backlog
+- Completed-skill output provided: identify next chain step and offer to invoke
+
 
 # SKILL CHAIN
 

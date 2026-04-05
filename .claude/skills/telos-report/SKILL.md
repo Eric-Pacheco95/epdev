@@ -56,14 +56,15 @@ false
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Output exactly these sections: REPORT PERIOD, TELOS CHANGES, TOP LEARNINGS, SYSTEM HEALTH, RECOMMENDATIONS
-- REPORT PERIOD: one line stating the date range
-- TELOS CHANGES: bullet list per file that changed, with summary of changes
-- TOP LEARNINGS: numbered list of the 3-5 most significant things Jarvis learned about Eric
-- SYSTEM HEALTH: table showing each TELOS file, its status (active/template/stale), and last updated date
-- RECOMMENDATIONS: bullet list of what Eric should focus on next (files to populate, reflections to make)
-- Keep the tone conversational — this is a personal report, not a corporate document
-- If no changes occurred in the period, say so and suggest running /telos-update or populating empty files
+- Sections: REPORT PERIOD, TELOS CHANGES, TOP LEARNINGS, SYSTEM HEALTH, RECOMMENDATIONS
+- REPORT PERIOD: date range
+- TELOS CHANGES: bullets per changed file with summary
+- TOP LEARNINGS: numbered 3-5 most significant learnings about Eric
+- SYSTEM HEALTH: table — file | status (active/template/stale) | last updated
+- RECOMMENDATIONS: bullets of what Eric should focus on next
+- Conversational tone — personal report, not corporate doc
+- If no changes: say so and suggest /telos-update or populating empty files
+
 
 # NOTION AUTO-WRITE
 
