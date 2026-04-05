@@ -83,14 +83,13 @@
 
 ### Theme: System health noise from heartbeat auto-signals
 - Maturity: established
-- Confidence: 80%
+- Confidence: 75%
 - Anti-pattern: false
 - Supporting signals: 2026-04-03_heartbeat-network_connections.md, 2026-04-03_heartbeat-network_connections_2.md, 2026-04-03_heartbeat-network_connections_3.md, 2026-04-03_heartbeat-network_connections.md (unprocessed, 73% spike), 2026-04-03_heartbeat-network_connections_2.md (unprocessed, 58% spike), 2026-04-03_heartbeat-context_budget_proxy.md (unprocessed, 9.8% increase), 2026-04-04_heartbeat-network_connections.md, 2026-04-04_heartbeat-network_connections_2.md
 - Failure weight: 4 (1 failure: autoresearch runner failed x4)
 - Pattern: Heartbeat auto-signals continue accumulating: 8 signals across 2026-04-03 and 2026-04-04, all network_connections WARNs or context_budget_proxy. On 2026-04-04 alone, 2 more network_connections signals arrived despite the session-start banner showing 12 Claude sessions active (expected high connection count). All signals are low-information: they confirm metrics changed but provide no root cause and suggest only "review and consider adjusting thresholds."
 - Implication: This noise pattern is persistent and worsening -- the auto-signal producer is generating ~3-4 heartbeat WARNs per day that add no diagnostic value. Without threshold recalibration, heartbeat WARNs will increasingly dominate the signal pipeline and dilute synthesis quality. The noise ratio (heartbeat signals / total signals) has been ~30-40% across the last 2 days.
-- Action: (1) Raise min_delta thresholds in heartbeat_config.json for network_connections (current threshold too low for multi-session workloads). (2) Add 24h same-metric dedup window. (3) Consider adding context correlation (session count) to suppress expected spikes. Confidence raised to 80% -- pattern confirmed across 4 consecutive days with 10+ supporting signals including 2026-04-04 network_connections WARN (44->61, 38.6% increase during active sessions).
-- Follow-up (2026-04-05 overnight review): One more heartbeat_network_connections signal on 2026-04-04 (rating 6, 38.6% increase). This is the 10th+ heartbeat WARN signal in 4 days. The 2026-04-04 synthesis already upgraded this to 92% confidence independently -- confirming cross-synthesis convergence. Threshold recalibration remains the highest-priority housekeeping item for signal pipeline quality.
+- Action: (1) Raise min_delta thresholds in heartbeat_config.json for network_connections (current threshold too low for multi-session workloads). (2) Add 24h same-metric dedup window. (3) Consider adding context correlation (session count) to suppress expected spikes. Confidence raised to 75% -- pattern now confirmed across 3 consecutive days with 8+ supporting signals.
 
 ---
 
