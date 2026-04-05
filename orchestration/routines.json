@@ -98,5 +98,63 @@
         "notes": "Routine-injected by routines engine -- tier 1, human review recommended"
       }
     }
+    ,
+    {
+      "routine_id": "prediction-backtest",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Run prediction backtest producer -- execute up to 3 unrun historical events from backtest_events.yaml",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 2,
+        "priority": 5,
+        "goal_context": "Prediction calibration bootstrap -- run constrained historical predictions to build accuracy signal base",
+        "isc": [
+          "At least 1 new backtest prediction file written to data/predictions/backtest/ | Verify: find data/predictions/backtest -name '*.md' -newer data/backtest_state.json",
+          "All output files carry backtested=true and leakage_risk=HIGH in frontmatter | Verify: grep -l 'backtested: true' data/predictions/backtest/*.md",
+          "backtest_state.json updated with run date for each executed event | Verify: Read data/backtest_state.json"
+        ],
+        "context_files": [
+          "data/backtest_events.yaml",
+          "data/backtest_state.json"
+        ],
+        "skills": [],
+        "model": "sonnet",
+        "autonomous_safe": true,
+        "notes": "Runs prediction_backtest_producer.py -- outputs tagged pending_review, require Eric approval before calibration use"
+      }
+    },
+    {
+      "routine_id": "prediction-weekly-review",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Run prediction weekly review task -- surface due predictions and backtest reviews in Slack",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 1,
+        "priority": 3,
+        "goal_context": "Close the prediction resolution loop -- Eric resolves via Slack reply to keep calibration data flowing",
+        "isc": [
+          "Slack notification posted to #epdev listing all predictions due within 30 days | Verify: Check #epdev Slack for prediction_review message dated today",
+          "Log file written to data/logs/prediction_review_{date}.log | Verify: find data/logs -name 'prediction_review_*' -newer data/routine_state.json",
+          "No forward prediction open for >90 days without a resolution prompt | Verify: Read log file (anti-criterion)"
+        ],
+        "context_files": [
+          "data/predictions/"
+        ],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "notes": "Runs prediction_review_task.py -- low-cost Slack surface task"
+      }
+    }
   ]
 }
