@@ -1,0 +1,432 @@
+# Backtest Events -- Prediction Intelligence Layer
+# Each entry represents a historical event with a known outcome.
+# Used by prediction_backtest_producer.py to run constrained /make-prediction passes.
+#
+# Fields:
+#   event_id:              unique slug
+#   description:           the prediction question to ask (as if asking in real time)
+#   domain:                geopolitics | market | technology | planning
+#   knowledge_cutoff_date: date to constrain Claude's knowledge to (YYYY-MM-DD)
+#   known_outcome:         what actually happened (used for scoring)
+#   difficulty:            low | medium | high (how uncertain the outcome was at cutoff)
+#   at_time_context:       public knowledge available at cutoff_date to inject into prompt
+
+events:
+
+  # ── GEOPOLITICS ───────────────────────────────────────────────────────────
+
+  - event_id: geo-us-election-2020
+    description: "Who will win the 2020 US Presidential Election and by what margin?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2020-10-01"
+    known_outcome: "Joe Biden wins with 306 Electoral College votes vs Trump's 232. Popular vote: Biden 51.3%, Trump 46.9%."
+    difficulty: medium
+    at_time_context: >
+      Biden leads national polls by 7-10 points but state-level polling is tighter.
+      COVID-19 pandemic ongoing; record early voting. Trump won unexpected 2016 victory
+      despite polling disadvantage. Key swing states: Pennsylvania, Michigan, Wisconsin,
+      Florida, Arizona. Senate races competitive. Prediction markets show Biden ~65%
+      favorite. 2016 polling miss fresh in forecasters' minds.
+
+  - event_id: geo-brexit-outcome-2016
+    description: "Will the UK vote to Leave or Remain in the EU in the June 2016 referendum, and what will the margin be?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2016-06-20"
+    known_outcome: "Leave wins 51.9% to 48.1%. Turnout 72.2%. Scotland and Northern Ireland voted Remain; England and Wales voted Leave."
+    difficulty: high
+    at_time_context: >
+      Final pre-vote polls show a slight Remain lead (52-48 average) but within margin
+      of error. Prediction markets strongly favor Remain at ~75%. Jo Cox MP assassinated
+      June 16, briefly paused campaigning. Immigration and sovereignty key Leave arguments.
+      Economic warnings from IMF, Bank of England favor Remain. Last major polling: June 19.
+
+  - event_id: geo-russia-ukraine-invasion-2022
+    description: "Will Russia launch a full-scale military invasion of Ukraine in early 2022?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-01-15"
+    known_outcome: "Russia launches full-scale invasion on February 24 2022 from multiple directions including Kyiv, Kharkiv, Kherson, and the Donbas."
+    difficulty: high
+    at_time_context: >
+      ~100,000 Russian troops massed on Ukrainian border since late 2021. US intelligence
+      warning of imminent invasion publicly stated. Russia denies invasion plans. Western
+      Europe skeptical of US intelligence claims. Germany blocking weapons shipments.
+      Diplomatic talks ongoing (Biden-Putin call January 10). Analysts split: many see
+      limited operation or coercive diplomacy rather than full invasion. Natural gas
+      leverage gives Russia negotiating power.
+
+  - event_id: geo-pelosi-taiwan-conflict-2022
+    description: "If Nancy Pelosi visits Taiwan in August 2022, will China launch direct military strikes against Taiwan or US assets?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-08-01"
+    known_outcome: "Pelosi visited August 2-3 2022. China responded with unprecedented military exercises surrounding Taiwan but did not strike Taiwan or US assets directly. Fired ballistic missiles into Japan's EEZ."
+    difficulty: medium
+    at_time_context: >
+      Reports of Pelosi's potential visit leaking. China issued stern warnings including
+      threat of forceful response. US military assets repositioned to region. Historical
+      precedent: Lee Teng-hui US visit 1995 triggered Taiwan Strait Crisis with live-fire
+      exercises but no conflict. Xi Jinping currently consolidating power ahead of 20th
+      Party Congress. Military analysts debate whether China would risk conflict.
+
+  - event_id: geo-french-election-2022
+    description: "Will Emmanuel Macron win the 2022 French Presidential election runoff against Marine Le Pen?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-04-01"
+    known_outcome: "Macron wins 58.5% to Le Pen's 41.5% in the April 24 runoff."
+    difficulty: low
+    at_time_context: >
+      First round April 10. Macron leads in polls at ~54-56% for runoff. Le Pen running
+      on purchasing power and anti-globalization platform. War in Ukraine ongoing; Le Pen's
+      historical ties to Russia a liability. Melenchon voters (22% in round 1) mostly
+      expected to abstain or back Macron. 2017 Macron won 66% vs Le Pen. Market and
+      institutional consensus strongly favors Macron. Abstention historically high.
+
+  - event_id: geo-iran-nuclear-deal-2022
+    description: "Will the 2015 JCPOA nuclear deal be revived through ongoing negotiations in 2022?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-07-01"
+    known_outcome: "Negotiations ultimately collapsed. No deal reached in 2022. Iran continued uranium enrichment to 60%. No JCPOA revival occurred."
+    difficulty: high
+    at_time_context: >
+      Vienna talks resumed March 2022 after Russia-Ukraine invasion disrupted them.
+      Draft deal text reportedly 95% complete in March. Sticking points: IRGC
+      terrorism designation removal demanded by Iran; US refusing. Indirect talks
+      through EU mediator. Iran's nuclear program advanced significantly since 2018
+      US withdrawal. Regional actors (Israel, Saudi Arabia) opposed to deal.
+      EU mediator Mora optimistic in early 2022; US less so by July.
+
+  - event_id: geo-saudi-iran-normalization-2023
+    description: "Will Saudi Arabia and Iran normalize relations in 2023?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "Saudi Arabia and Iran reached a normalization agreement brokered by China on March 10 2023. Embassies reopened by end of 2023."
+    difficulty: high
+    at_time_context: >
+      Saudi-Iran relations severed since January 2016 (Saudi execution of Shia cleric).
+      Proxy conflicts in Yemen, Lebanon, Iraq ongoing. China quietly mediating behind
+      scenes. No public signals of imminent normalization. Yemen ceasefire holding
+      since April 2022 via UN mediation. MBS consolidating power; pragmatic foreign
+      policy signals. Iran under maximum economic pressure from sanctions.
+
+  - event_id: geo-nato-finland-sweden-2022
+    description: "Will Finland and Sweden apply to join NATO following Russia's invasion of Ukraine?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-05-01"
+    known_outcome: "Both applied for NATO membership in May 2022. Finland joined April 4 2023. Sweden joined March 7 2024."
+    difficulty: low
+    at_time_context: >
+      Both countries formally neutral for decades. Russian invasion triggered major
+      public opinion shift: Finnish support for NATO jumped from 26% to 76% in polls.
+      Swedish Social Democrat government (historically anti-NATO) signaling possible
+      reversal. NATO Secretary General Stoltenberg publicly welcoming. Russia threatening
+      consequences. Turkey signaling possible veto but not yet blocking. Nordic
+      cooperation framework suggests they would move together.
+
+  - event_id: geo-israel-hamas-invasion-2023
+    description: "Following the October 7 2023 Hamas attack, will Israel launch a full ground invasion of Gaza?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2023-10-15"
+    known_outcome: "Israel launched a full ground invasion of Gaza on October 27 2023. Significant urban combat in northern Gaza by November."
+    difficulty: medium
+    at_time_context: >
+      Hamas killed ~1,400 Israelis on October 7 in largest attack since 1973 war.
+      Israel declared war, began intensive air campaign. 300,000 Israeli reservists
+      called up. Ground forces massing on Gaza border. Israel evacuating northern
+      Gaza civilians. Biden visit to Tel Aviv October 18 in solidarity. International
+      pressure for pause/ceasefire building. Hospital explosion October 17 complicated
+      messaging. Historical precedent: 2014 Gaza war included ground operation.
+
+  - event_id: geo-ukraine-war-six-months-2022
+    description: "Will the Russia-Ukraine war still be actively ongoing at six months (September 2022)?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-03-01"
+    known_outcome: "War remained actively ongoing at September 2022. Ukraine launched Kharkiv counteroffensive in September, recapturing significant territory."
+    difficulty: medium
+    at_time_context: >
+      Invasion began February 24. Kyiv not captured as expected by Russia. Ukrainian
+      resistance stronger than anticipated. Russian logistics failures visible. US and
+      NATO supplying weapons. Economic sanctions unprecedented in scope. Russia facing
+      setbacks but still advancing in south/east. Western analysts divided: some expect
+      negotiated settlement in months; others expect protracted conflict. No precedent
+      for large-scale interstate war in Europe in modern era.
+
+  # ── MARKET ────────────────────────────────────────────────────────────────
+
+  - event_id: mkt-btc-ath-2021
+    description: "Will Bitcoin reach a new all-time high above $65,000 in Q4 2021?"
+    domain: market
+    knowledge_cutoff_date: "2021-10-01"
+    known_outcome: "Bitcoin reached $69,044 on November 10 2021, a new all-time high. Subsequently declined sharply."
+    difficulty: medium
+    at_time_context: >
+      Bitcoin at ~$47,000 in early October. Previous ATH $64,895 in April 2021.
+      On-chain metrics: exchange reserves declining (supply squeeze signal). Institutional
+      adoption growing (El Salvador legal tender). Bitcoin ETF applications pending SEC
+      review. October historically strong month (Uptober). Futures market backwardation
+      ended. September correction of ~25% just completed. Retail sentiment recovering.
+
+  - event_id: mkt-crypto-bear-2022
+    description: "Will Bitcoin fall below $20,000 by July 2022?"
+    domain: market
+    knowledge_cutoff_date: "2022-04-01"
+    known_outcome: "Bitcoin fell to $17,567 on June 18 2022 -- first time below $20,000 since December 2020."
+    difficulty: high
+    at_time_context: >
+      Bitcoin at ~$46,000 in April. Fed began hiking rates March 2022 (25bps).
+      Tech stocks correcting. Terra/Luna ecosystem showing stress signals. Celsius
+      and other yield platforms pausing withdrawals (rumors). Previous bear markets:
+      -84% in 2018, -55% in 2020. Crypto highly correlated with risk assets.
+      Crypto winter discourse emerging but many analysts calling for recovery.
+      LUNA/UST depeg risk underappreciated by most.
+
+  - event_id: mkt-ftx-collapse-2022
+    description: "Is FTX solvent and will it survive as an exchange through Q4 2022?"
+    domain: market
+    knowledge_cutoff_date: "2022-11-01"
+    known_outcome: "FTX filed for Chapter 11 bankruptcy on November 11 2022. SBF arrested December 12. ~$8B shortfall between FTX assets and liabilities."
+    difficulty: high
+    at_time_context: >
+      CoinDesk article November 2 revealed Alameda Research balance sheet heavily
+      weighted to FTT token. Binance's CZ tweeted November 6 Binance would liquidate
+      FTT holdings. FTX customer withdrawals spiked. SBF tweeting assurances November 7
+      "FTX is fine." Binance signed LOI to acquire FTX November 8 then withdrew
+      November 9 citing due diligence findings. FTX assets under $1B vs ~$6B withdrawal
+      requests by November 9. Crypto community shocked; FTX was considered top-tier.
+
+  - event_id: mkt-us-recession-2023
+    description: "Will the United States enter a recession in 2023?"
+    domain: market
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "No US recession in 2023. GDP grew 2.5% for full year 2023. Labor market remained resilient throughout."
+    difficulty: high
+    at_time_context: >
+      Fed raised rates 425bps in 2022, fastest pace since 1980s. Yield curve inverted
+      (2/10 spread -70bps). Bloomberg consensus: 65% recession probability in 2023.
+      Leading indicators declining. Housing market cooling sharply. Consumer confidence
+      falling. Historical track record: inverted yield curve preceded every US recession
+      in last 50 years. However: unemployment still near 3.5%, labor market strong.
+      Soft landing historically rare but not impossible.
+
+  - event_id: mkt-nvidia-2023
+    description: "Will Nvidia stock outperform the S&P 500 by more than 50 percentage points in 2023?"
+    domain: market
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "Nvidia returned +239% in 2023 vs S&P 500 +24%. Outperformance of ~215 percentage points."
+    difficulty: medium
+    at_time_context: >
+      Nvidia at ~$14.60 (pre-split adjusted ~$146) in January 2023 after -50% in 2022.
+      GPU shortage for AI training becoming discussed but not widely priced in.
+      ChatGPT released November 2022 -- AI hype building. Nvidia had strong gaming
+      GPU business but data center was growing. Analyst consensus: neutral to moderate
+      bull case. H100 announced but production constraints unclear. Few analysts
+      forecasting >100% return for any major chip company.
+
+  - event_id: mkt-bitcoin-etf-2024
+    description: "Will the SEC approve a spot Bitcoin ETF by end of January 2024?"
+    domain: market
+    knowledge_cutoff_date: "2024-01-01"
+    known_outcome: "SEC approved 11 spot Bitcoin ETFs on January 10 2024. BlackRock, Fidelity, ARK/21Shares among approvals."
+    difficulty: medium
+    at_time_context: >
+      Grayscale won court case against SEC in August 2023 (court ruled SEC arbitrary
+      in rejecting GBTC conversion). Multiple ETF applications pending including
+      BlackRock (historically near-perfect ETF approval record). SEC met with applicants
+      multiple times in late 2023. Prediction markets: ~85% approval probability by
+      January 2024. 10-year history of SEC rejections but legal landscape shifted.
+      Bitcoin at ~$42,000 in late December 2023.
+
+  - event_id: mkt-btc-halving-ath-2024
+    description: "Will Bitcoin reach a new all-time high above $70,000 in 2024 following the April halving?"
+    domain: market
+    knowledge_cutoff_date: "2024-01-01"
+    known_outcome: "Bitcoin reached $73,737 on March 14 2024 -- new ATH before the April 19 halving. Post-halving: further gains into late 2024."
+    difficulty: medium
+    at_time_context: >
+      Bitcoin at ~$42,000 in January 2024. Spot ETF just approved (Jan 10). Halving
+      scheduled April 19 2024 (block reward 6.25 BTC -> 3.125 BTC). Historical pattern:
+      previous 3 halvings all preceded by ATH in subsequent 12-18 months. ETF inflows
+      could add structural demand. Previous ATH $69K in November 2021. Cycle analysts
+      widely expect ATH in 2024-2025 window.
+
+  - event_id: mkt-eth-merge-2022
+    description: "Will the Ethereum Merge (proof-of-stake transition) succeed without a major chain split or security failure?"
+    domain: market
+    knowledge_cutoff_date: "2022-08-01"
+    known_outcome: "Ethereum Merge succeeded on September 15 2022. No major chain split. Network transitioned from PoW to PoS successfully. Minor ETH PoW fork (ETHW) had negligible adoption."
+    difficulty: medium
+    at_time_context: >
+      Merge targeted for September 2022 after years of delays. Testnets (Ropsten,
+      Goerli, Sepolia) merged successfully. Core devs confident. ETHW fork planned
+      by some miners protecting revenue. Technical risk: first-ever consensus
+      mechanism change for a $200B+ network. Historical precedent: none at this scale.
+      DeFi protocols preparing. MEV/validator coordination untested at mainnet scale.
+
+  - event_id: mkt-svb-collapse-2023
+    description: "Will Silicon Valley Bank (SVB) survive the bank run and remain operational through March 2023?"
+    domain: market
+    knowledge_cutoff_date: "2023-03-01"
+    known_outcome: "SVB failed on March 10 2023 -- largest US bank failure since 2008. FDIC took control. Depositors made whole via emergency government action March 12."
+    difficulty: high
+    at_time_context: >
+      SVB disclosed $1.8B loss on bond portfolio sale March 8. Announced $2.25B
+      capital raise. Venture capital community on Twitter March 9 organizing withdrawal
+      of deposits (Peter Thiel's Founders Fund among first). SVB stock down 60%.
+      Classic bank run dynamic. SVB had concentrated exposure to VC/startup sector
+      and long-duration bonds (marked to market losses from Fed hikes). Most analysts
+      still treating as isolated to SVB; contagion risk underappreciated.
+
+  - event_id: mkt-fed-hikes-2022
+    description: "Will the Federal Reserve raise interest rates by more than 200 basis points total in 2022?"
+    domain: market
+    knowledge_cutoff_date: "2022-06-01"
+    known_outcome: "Fed raised rates by 425 basis points total in 2022 (March: 25bps, May: 50bps, June: 75bps, July: 75bps, September: 75bps, November: 75bps, December: 50bps)."
+    difficulty: low
+    at_time_context: >
+      Fed raised 25bps in March (first hike since 2018), 50bps in May. June FOMC
+      meeting upcoming. CPI at 8.6% in May 2022 -- 40-year high. Fed funds rate at
+      0.75-1.00%. Market pricing: ~75bps in June. Dot plot from March showed ~1.75%
+      by year end (implying ~125bps total from Jan). Inflation proving more persistent
+      than Fed's "transitory" framing. Historical precedent: 1994 Fed raised 300bps
+      in one year without recession.
+
+  # ── TECHNOLOGY ────────────────────────────────────────────────────────────
+
+  - event_id: tech-chatgpt-100m-users
+    description: "Will ChatGPT reach 100 million users within 3 months of its November 2022 launch?"
+    domain: technology
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "ChatGPT reached 100 million monthly active users in January 2023 -- approximately 2 months after launch. Fastest consumer app to reach 100M users in history at that time."
+    difficulty: low
+    at_time_context: >
+      ChatGPT launched November 30 2022. Reached 1 million users in 5 days (vs
+      Instagram: 2.5 months, Netflix: 3.5 years). Twitter and tech media saturated
+      with ChatGPT examples. OpenAI servers frequently overloaded. Previous fastest
+      to 100M: TikTok (9 months), Instagram (2.5 years). No consumer AI product
+      had grown this fast. GPT-3 API had been available for 2 years but ChatGPT's
+      UX removed the barrier to access.
+
+  - event_id: tech-gpt4-bar-exam
+    description: "Will GPT-4 pass the US Bar Exam at a score in the top 25% of human test takers?"
+    domain: technology
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "GPT-4 scored in the top 10% of bar exam takers when released March 14 2023. GPT-3.5 had scored in the bottom 10%."
+    difficulty: medium
+    at_time_context: >
+      GPT-3.5 (ChatGPT) scored in bottom 10% of bar exam takers per early studies.
+      GPT-4 rumored to have dramatically improved reasoning. OpenAI reportedly training
+      on legal and professional exam data. AI legal tools (Harvey, Casetext) emerging.
+      Legal experts skeptical AI could pass bar. Constitutional AI and RLHF advancing
+      rapidly. Scaling law researchers optimistic about emergent capabilities.
+      No AI had passed professional licensing exams at top-percentile level.
+
+  - event_id: tech-self-driving-2025
+    description: "Will any company achieve Level 4 autonomous driving at broad commercial scale (>100 cities) by end of 2024?"
+    domain: technology
+    knowledge_cutoff_date: "2022-01-01"
+    known_outcome: "No company achieved Level 4 at broad commercial scale (>100 cities) by end of 2024. Waymo operating in limited geofenced areas in Phoenix, SF, Austin. Cruise suspended after accident. Tesla FSD still Level 2."
+    difficulty: low
+    at_time_context: >
+      Waymo One operating in Phoenix metro area. Cruise operating in SF with permits.
+      Tesla FSD beta rolling out but still supervised. Elon Musk predicted full
+      self-driving by 2020, 2021, 2022. Multiple companies (Aurora, Argo AI, Zoox)
+      targeting commercial launch. Heavy media coverage of AV progress. Regulatory
+      frameworks still being developed. Accidents creating regulatory scrutiny.
+      Industry bullish; most analysts expected meaningful deployment by 2025.
+
+  - event_id: tech-meta-stock-2022
+    description: "Will Meta (formerly Facebook) stock decline more than 50% from its January 2022 price by year-end 2022?"
+    domain: technology
+    knowledge_cutoff_date: "2022-01-01"
+    known_outcome: "Meta stock declined from ~$335 in January to ~$120 by December 2022 -- a decline of approximately 64%."
+    difficulty: medium
+    at_time_context: >
+      Meta at ~$335 in January 2022. Announced $10B+ annual investment in Reality Labs
+      (Metaverse). Q4 2021 earnings showed user decline in core Facebook (first ever).
+      Apple ATT privacy changes estimated $10B annual revenue impact. TikTok taking
+      share from younger demographics. Metaverse strategy dividing analysts. Ad market
+      softening. Rising interest rates compress tech multiples. Still profitable;
+      Zuckerberg controlling shareholder. Previous large-cap tech drawdowns rarely
+      exceeded 40%.
+
+  - event_id: tech-twitter-acquisition-2022
+    description: "Will Elon Musk complete the acquisition of Twitter at the agreed $54.20/share price?"
+    domain: technology
+    knowledge_cutoff_date: "2022-10-01"
+    known_outcome: "Musk completed acquisition October 27 2022 at $54.20/share for $44B total. Had attempted to exit deal in July; litigation forced completion."
+    difficulty: low
+    at_time_context: >
+      Musk signed acquisition agreement April 25 2022. Attempted to exit in July
+      citing bot data dispute. Twitter sued Musk to enforce deal. Delaware Chancery
+      Court appeared likely to rule against Musk based on legal commentary. Trial
+      scheduled for October 17. Musk renewed offer at original price October 4.
+      Legal experts: ~75% chance court forces Musk to complete or pay massive penalty.
+      Whether he'd actually follow through remained uncertain.
+
+  - event_id: tech-openai-gpt5-2024
+    description: "Will OpenAI release a model called GPT-5 in 2024?"
+    domain: technology
+    knowledge_cutoff_date: "2024-01-01"
+    known_outcome: "OpenAI did not release GPT-5 in 2024. They released GPT-4o (May), o1 preview (September), and o1 (December) instead. No model explicitly named GPT-5 launched in 2024."
+    difficulty: high
+    at_time_context: >
+      GPT-4 released March 2023. Typical OpenAI cadence suggested GPT-5 possible
+      in 2024. Altman hinting at major model releases. Training compute costs and
+      timelines less publicly discussed. OpenAI competitors (Anthropic, Google Gemini)
+      releasing strong models. AI safety discussions potentially slowing deployment.
+      Industry observers expecting GPT-5 by mid-2024 based on historical release
+      cadence. Reasoning/O-series product line not yet public.
+
+  - event_id: tech-apple-vision-pro-2024
+    description: "Will the Apple Vision Pro achieve strong consumer adoption (>1M units in first 6 months post-launch)?"
+    domain: technology
+    knowledge_cutoff_date: "2024-02-01"
+    known_outcome: "Apple Vision Pro launched February 2 2024 at $3,499. Sold approximately 200,000-300,000 units in first quarter. Clearly below mainstream adoption; Apple reduced production orders by H2 2024."
+    difficulty: medium
+    at_time_context: >
+      Pre-orders opened January 19. Apple citing 'weeks' shipping lead time initially.
+      Early reviews: impressive but heavy (600g), limited use cases, high price.
+      No streaming apps from Netflix/YouTube at launch. Enterprise interest mentioned.
+      Analyst estimates varied widely: 400K-700K units year 1. Reference class:
+      meta Quest 2 sold ~15M units at $299. Category-defining Apple products
+      historically take 2-3 iterations to reach mass market (original iPhone excluded).
+
+  - event_id: tech-eu-ai-act-2024
+    description: "Will the EU AI Act be formally passed by the European Parliament in 2024?"
+    domain: technology
+    knowledge_cutoff_date: "2024-01-01"
+    known_outcome: "EU AI Act passed European Parliament March 13 2024 with 523 votes in favor. Entered into force August 2024."
+    difficulty: low
+    at_time_context: >
+      EU AI Act political agreement reached December 9 2023 after intense negotiations
+      on foundation models. Final text to be prepared for parliamentary vote.
+      Strong cross-party support established. Process: legal/linguistic review,
+      parliamentary plenary vote, Council adoption, publication in Official Journal.
+      Timeline widely expected to produce formal passage in early 2024.
+      Main uncertainty: delays in legal review or late political complications.
+
+  - event_id: tech-anthropic-claude3-2024
+    description: "Will Anthropic release a new Claude model family that benchmarks competitively with GPT-4 in early 2024?"
+    domain: technology
+    knowledge_cutoff_date: "2024-01-01"
+    known_outcome: "Anthropic released Claude 3 family (Haiku, Sonnet, Opus) on March 4 2024. Claude 3 Opus outperformed GPT-4 on most benchmarks at launch."
+    difficulty: low
+    at_time_context: >
+      Claude 2.1 released November 2023 with 200K context window. Anthropic raised
+      $7.3B in 2023 (Amazon $4B, Google $2B+). Strong team, Constitutional AI
+      research. GPT-4 still leading on most benchmarks as of Jan 2024.
+      Rumored Claude 3 project internally. Anthropic's stated mission to build safe
+      and capable AI; competitive pressure from OpenAI and Google.
+      Release timing and benchmark performance uncertain.
+
+  - event_id: tech-x-subscriptions-underperform
+    description: "Will Twitter/X paid subscription revenue significantly underperform Elon Musk's early targets by mid-2023?"
+    domain: technology
+    knowledge_cutoff_date: "2023-06-01"
+    known_outcome: "Twitter Blue/X Premium significantly underperformed targets. Musk had projected $1.3B in subscription revenue for 2023; actual estimates were <$200M. Twitter's total revenue fell ~50% in 2023 vs 2022."
+    difficulty: medium
+    at_time_context: >
+      Twitter Blue relaunch November 2022 at $8/month after chaotic verified badge
+      rollout. As of June 2023: ~600K-900K Blue subscribers estimated by analysts
+      vs target of millions. Advertisers paused spending (brand safety concerns).
+      Musk had stated subscription revenue could become 50% of total. Platform
+      experiencing advertiser exodus. Staff cuts from 7,500 to ~1,500. Ad revenue
+      down ~50% YoY per reports. Subscription model seen as crucial to replace.
