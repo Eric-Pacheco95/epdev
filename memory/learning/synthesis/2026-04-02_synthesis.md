@@ -20,15 +20,14 @@
 ---
 
 ### Theme: Grep failure blindness -- absence of evidence is not evidence of absence
-- Maturity: candidate (ARCHIVING -- no new signals in 3 days, actionable output delivered to Phase 6 PRD)
-- Confidence: 55%
+- Maturity: candidate
+- Confidence: 70%
 - Anti-pattern: false
 - Supporting signals: 2026-04-02_silent-grep-failures.md, 2026-04-02_hybrid-retrieval-architecture.md
 - Failure weight: 0 (no failure signals)
 - Pattern: The architecture review cited "no documented grep failures" as evidence grep is sufficient. Eric correctly challenged this: grep failures are silent by nature -- you never know what was not returned. The real trigger for semantic search is not file count but autonomous agent query load, because agents cannot iterate on grep misses the way a human operator can.
 - Implication: Phase 6 retrieval trigger criteria should be reframed. Do not wait for documented grep failures (unmeasurable). Instead monitor: (1) autonomous agent query frequency and (2) agent retrieval success rate (measurable via logging). The hybrid router architecture Eric proposed addresses this -- agents default to vector path precisely because they cannot self-correct on misses.
 - Action: Candidate only -- needs 1-2 more supporting signals before proposing steering rule. Add to Phase 6 PRD: agent retrieval success rate as a tracked metric. The Phase 6 hybrid router (grep + vector + classifier) is the correct architectural response.
-- Follow-up (2026-04-05 overnight review): No new signals in 3 days (last signal 2026-04-02). Confidence decayed 70% -> 55%. Actionable output (Phase 6 PRD deferral) already delivered. Archive trigger: 2026-04-09. The epistemological insight (absence ≠ evidence) is captured in the anti-pattern section and does not require this theme to remain active.
 
 ---
 
