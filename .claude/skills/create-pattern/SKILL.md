@@ -97,3 +97,18 @@ If all 4 checks pass (or the user explicitly overrides after seeing the recommen
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm the generated skill starts with exactly `# IDENTITY and PURPOSE` (no title above it)
+- Confirm the four required sections are present in order: IDENTITY and PURPOSE, STEPS, OUTPUT INSTRUCTIONS, INPUT
+- Confirm the skill ends with `INPUT:` on its own line with no trailing text
+- Confirm the generated skill is not wrapped in fenced code blocks
+- Confirm the generated OUTPUT INSTRUCTIONS inside the skill prescribes Markdown-only output
+- If any structural check fails: regenerate the affected section before returning
+
+# LEARN
+
+- After generating the skill, evaluate: would this pattern apply to >= 3 future recurring tasks?
+- If yes: note the pattern name in memory/learning/signals/{YYYY-MM-DD}_new-pattern-{slug}.md
+- Rating: 7-8 for high-reuse patterns that fill a clear skill gap; 4-6 for narrow single-purpose skills; skip signal for one-off tasks that were forced into skill format
