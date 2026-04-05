@@ -87,3 +87,17 @@ If Eric wants to revert a merge:
 - **Composes:** embedding_service.py (semantic similarity engine)
 - **Related:** /update-steering-rules (CLAUDE.md only -- separate)
 - **Escalate to:** manual git restore if a merge produced bad output
+
+# VERIFY
+
+- Read data/dream_last_report.md and confirm it exists and is non-empty (dream ran successfully)
+- Confirm no merges occurred on protected files (TELOS.md, constitutional-rules.md, CLAUDE.md)
+- Confirm the similarity threshold used was >= 0.80 (recalibration threshold for nomic-embed-text on sparse corpora)
+- If data/dream_last_report.md is missing: report dream failure and surface the CONTRACT error recovery steps
+- If a protected file was merged: alert Eric immediately and provide rollback path from data/dream_snapshots/
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_dream-consolidation.md when the run produces >= 3 merges
+- Include: which files were merged, similarity scores, whether the corpus is healthy or showing noise at threshold
+- Rating: 6-7 for routine consolidation; 8+ if a critical pattern was surfaced that should become a steering rule; do not write signal for clean (no-change) runs
