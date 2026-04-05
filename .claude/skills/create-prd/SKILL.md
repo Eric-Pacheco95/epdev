@@ -96,22 +96,23 @@ false
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output exactly these sections in order, each with a level-2 heading: OVERVIEW, PROBLEM AND GOALS, NON-GOALS, USERS AND PERSONAS, USER JOURNEYS OR SCENARIOS, FUNCTIONAL REQUIREMENTS, NON-FUNCTIONAL REQUIREMENTS, ACCEPTANCE CRITERIA, SUCCESS METRICS, OUT OF SCOPE, DEPENDENCIES AND INTEGRATIONS, RISKS AND ASSUMPTIONS, OPEN QUESTIONS
-- OVERVIEW: one short paragraph naming the product or feature and its purpose; no bullets
-- PROBLEM AND GOALS: bullet list; tie each goal to a user or business outcome when the input allows
-- NON-GOALS: bullet list; if none stated, one bullet "(none stated—confirm with stakeholders)"
-- USERS AND PERSONAS: bullet list; if thin input, note what is unknown
-- USER JOURNEYS OR SCENARIOS: bullet or short numbered flows; skip with one bullet "(not specified)" if the input has no scenario detail
-- FUNCTIONAL REQUIREMENTS: bullet list; prefix with IDs like FR-001 when there are more than five items
-- NON-FUNCTIONAL REQUIREMENTS: bullet list; use "(none stated)" if not applicable
-- ACCEPTANCE CRITERIA: bullet list; each item testable or observable where possible
-- SUCCESS METRICS: bullet list; include "(to be defined)" bullets when metrics are missing
-- OUT OF SCOPE: bullet list; if everything is in scope per input, one bullet "(none stated)"
-- DEPENDENCIES AND INTEGRATIONS: bullet list; include teams, systems, APIs, data sources
-- RISKS AND ASSUMPTIONS: two sub-bullets or short subsections for risks vs assumptions if both exist
-- OPEN QUESTIONS: bullet list of decisions or information still needed
-- Do not invent revenue figures, legal commitments, or named customers not present in the input.
-- Do not give meta-commentary about being an AI; only output the sections above.
+- Output exactly these sections in order (level-2 headings): OVERVIEW, PROBLEM AND GOALS, NON-GOALS, USERS AND PERSONAS, USER JOURNEYS OR SCENARIOS, FUNCTIONAL REQUIREMENTS, NON-FUNCTIONAL REQUIREMENTS, ACCEPTANCE CRITERIA, SUCCESS METRICS, OUT OF SCOPE, DEPENDENCIES AND INTEGRATIONS, RISKS AND ASSUMPTIONS, OPEN QUESTIONS
+- OVERVIEW: 1-para, no bullets
+- PROBLEM AND GOALS: bullets tied to user/business outcomes
+- NON-GOALS: bullets; if none: "(none stated—confirm with stakeholders)"
+- USERS AND PERSONAS: bullets; note unknowns if thin input
+- USER JOURNEYS OR SCENARIOS: bullets/numbered flows; if no detail: "(not specified)"
+- FUNCTIONAL REQUIREMENTS: bullets; prefix FR-001 etc. if > 5 items
+- NON-FUNCTIONAL REQUIREMENTS: bullets; "(none stated)" if not applicable
+- ACCEPTANCE CRITERIA: testable/observable bullets; append ISC Quality Gate note
+- SUCCESS METRICS: bullets; "(to be defined)" when missing
+- OUT OF SCOPE: bullets; if everything in scope: "(none stated)"
+- DEPENDENCIES AND INTEGRATIONS: bullets — teams, systems, APIs, data sources
+- RISKS AND ASSUMPTIONS: subsections for risks vs assumptions
+- OPEN QUESTIONS: bullets of decisions or info still needed
+- Do not invent revenue figures, legal commitments, or named customers not in input.
+- Do not add meta-commentary.
+
 
 # CONTRACT
 
