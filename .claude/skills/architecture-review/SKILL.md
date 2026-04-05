@@ -164,3 +164,17 @@ true
 - **Escalate to:** `/delegation` if the review reveals the proposal needs fundamental redesign before any of these skills apply
 
 INPUT:
+
+# VERIFY
+
+- Confirm output contains all seven required sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION
+- Confirm the temp directory memory/work/_arch-review-{timestamp}/ was deleted after synthesis
+- Confirm RECOMMENDATION ends with a concrete next step (specific skill invocation or research action)
+- Confirm total output is under 1500 words
+- If any section is missing or temp dir still exists: fix before returning
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_arch-review-{slug}.md when the review produces >= 2 High-severity risks or a contested point where agents strongly disagree
+- Rating: 8+ if review caught a critical flaw that would have caused a production failure; 5-7 for meaningful corrections; only write signal when the review changed the outcome (i.e., the proposal was modified or rejected based on findings)
+- Also note in history/decisions/{YYYY-MM-DD}-arch-review-{slug}.md any Corrected Assumptions for future reference on this domain
