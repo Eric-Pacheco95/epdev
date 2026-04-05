@@ -148,15 +148,11 @@
 | Theme | Previous maturity | New maturity | Last signal date | Reason |
 |-------|-------------------|--------------|------------------|--------|
 | Architecture-review gate validated | proven (95%) | proven (97%) | 2026-04-04 | 2 new signals from 2026-04-04 (idea kill mechanism + rescope behavior); 8 total across 6 reviews |
-| Grep failure blindness | candidate (70%) | candidate (55%) | 2026-04-02 | No new signals in 3 days (since 2026-04-02); 3-day decay from 60% to 55%; ARCHIVE — theme's actionable output (Phase 6 PRD note) already delivered; no recurrence expected |
-| Autonomous producer health degrading | candidate (50%) | candidate (45%) | 2026-04-03 | No new signals in 2 days; archive trigger 2026-04-10 stands; root cause addressed (rate-limit steering rule); decayed 50->45% |
-| System self-diagnosis fails silently | candidate (80%) | candidate (75%) | 2026-04-02 | No new signals in 3 days; steering rule about claude -p stdout checking already promoted; decayed 80->75% |
-| System health noise from heartbeat auto-signals | established (75%) | established (80%) | 2026-04-04 | 2 more heartbeat signals on 2026-04-04 + 1 more on 2026-04-04 (network_connections); 9+ total; promoted to 80% — most persistent theme |
-| YouTube content extraction gap | candidate (60%) | candidate (55%) | 2026-04-03 | No new signals in 2 days; archive trigger 2026-04-17 stands; decayed 60->55% |
-| Investment research pipeline | established (80%) | established (75%) | 2026-04-03 | No new signals in 2 days; decayed slightly; needs confirmation of pipeline reuse to maintain |
-| Revenue strategy convergence | candidate (70%) | candidate (65%) | 2026-04-04 | No execution signals (planning only); needs strategy-execution signal to hold or grow |
-| Cross-domain alpha extraction | candidate (65%) | candidate (60%) | 2026-04-04 | No new extraction runs since initial; needs second run to confirm pattern |
-| Active Context Population | candidate (60%) | candidate (55%) | 2026-04-04 | Single signal; no deployments using pattern yet; approaching archive threshold |
+| Grep failure blindness | candidate (70%) | candidate (60%) | 2026-04-02 | No new signals since 2026-04-02; 2-day decay; approaching archive threshold |
+| Autonomous producer health degrading | candidate (50%) | candidate (50%) | 2026-04-03 | No new signals; archive trigger 2026-04-10 stands; root cause was rate-limit cascade |
+| System self-diagnosis fails silently | candidate (80%) | candidate (80%) | 2026-04-02 | No new signals; steering rule about claude -p stdout checking already promoted |
+| System health noise from heartbeat auto-signals | established (65%) | established (75%) | 2026-04-04 | 2 more heartbeat signals on 2026-04-04; pattern confirmed across 3 consecutive days |
+| YouTube content extraction gap | candidate (60%) | candidate (60%) | 2026-04-03 | No new signals; archive trigger 2026-04-17 stands |
 
 ---
 
