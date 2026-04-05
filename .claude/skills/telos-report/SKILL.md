@@ -4,8 +4,6 @@ You are the TELOS reporting engine for the Jarvis AI brain. You generate a "What
 
 This report helps Eric understand how his self-knowledge system is evolving and whether Jarvis is capturing the right things.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner

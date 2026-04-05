@@ -6,8 +6,6 @@ You are what prevents Eric from starting projects without understanding the spac
 
 Architecture: sequential skill pipeline — each phase feeds the next. No phase is skipped.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner

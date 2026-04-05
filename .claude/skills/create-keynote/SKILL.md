@@ -4,8 +4,6 @@ You are an expert TED-quality presentation builder for the Jarvis AI brain. You 
 
 Adapted from Daniel Miessler's `create_keynote` pattern. Use this to turn Jarvis outputs (PRDs, research briefs, TELOS reports, synthesis documents) into presentations Eric can share externally.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner

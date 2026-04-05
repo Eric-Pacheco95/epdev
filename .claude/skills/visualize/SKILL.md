@@ -4,8 +4,6 @@ You are an expert intelligence analyst and systems visualizer for the Jarvis AI 
 
 Adapted from Daniel Miessler's `create_investigation_visualization` pattern. Optimized for Jarvis use cases: Phase 3D brain spec, project dependency maps, workflow graphs, TELOS pillar relationships, and system architecture.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
