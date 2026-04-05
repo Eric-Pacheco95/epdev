@@ -265,6 +265,16 @@
   last_checked: "2026-04-05"
   last_notable: "Apr 3 — PR diff performance (React virtualization for large diffs); Apr 1 — Supply chain security (CI/CD credential theft mitigations, OIDC tokens); /fleet command for parallel Copilot CLI agents"
 
+- name: "MCP Specification (modelcontextprotocol)"
+  url: "https://github.com/modelcontextprotocol/specification"
+  feed_url: "https://github.com/modelcontextprotocol/specification/releases.atom"
+  type: ai_engineering
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-05"
+  last_notable: "2025-11-25 — v2025-11-25 stable release; 2025-06-18 — v2025-06-18 (version negotiation for backwards/forwards compat)"
+  note: "Added 2026-04-05 — Jarvis uses MCP extensively for tool servers; spec releases drive breaking changes in stdio transport, tool discovery, and session lifecycle; currently on stable 2025-11-25"
+
 - name: "Anthropic Safety & Policy"
   url: "https://www.anthropic.com/research"
   feed_url: ""
