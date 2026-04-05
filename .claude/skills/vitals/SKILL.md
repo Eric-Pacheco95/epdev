@@ -208,3 +208,17 @@ Proposals acted on: {n}/{total} ({rate}%)
 # INPUT
 
 Run vitals check now.
+
+# VERIFY
+
+- Confirm terminal output is ASCII-only and under 40 lines (Windows cp1252 safety)
+- Confirm terminal output was displayed BEFORE the Slack post
+- Confirm collector JSON was used as the sole data source (no additional file reads)
+- Confirm Slack post was attempted; if it failed, confirm fallback to data/logs/vitals_YYYY-MM-DD.md was executed
+- If schema_version != "1.0.0" in collector output: STOP and surface schema mismatch before proceeding
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_vitals-alert.md when vitals shows a CRITICAL or DEGRADED health state for >= 2 consecutive days, or when a new category of collector failure appears
+- Rating: 8+ for unknown failure modes; 6-7 for recurring degradation patterns; skip signal for routine healthy runs or isolated one-day blips
+- If "Top 3 Today" items persist across 3+ consecutive vitals runs without progress: flag in signal as ADHD momentum blocker requiring explicit Eric attention
