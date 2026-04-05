@@ -123,25 +123,17 @@ true
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Output exactly these sections in order, each with a level-2 heading:
+- Output exactly these 7 sections (level-2 headings), in order:
+  - **DECISION SUMMARY**: 1-para — decision named, alternatives considered, which agents ran
+  - **CONVERGENT FINDINGS**: numbered — finding + which agents confirmed it
+  - **CORRECTED ASSUMPTIONS**: numbered — original assumption | what's wrong | corrected version; skip with "(none)" if clean
+  - **ARCHITECTURAL RISKS**: table — Risk | Severity (High/Med/Low) | Mitigation | Source
+  - **CONTESTED POINTS**: numbered — disagreement | Agent 1 pos | Agent 2 pos | resolution; skip with "(none)" if agents converged
+  - **VALIDATED ELEMENTS**: bullets — sound elements; brief, no explanation needed
+  - **RECOMMENDATION**: 2-3 sentence approach; "Top 3 changes:" numbered; "Highest-risk element:"; "Next step:" with skill
+- Synthesize agent outputs — do not repeat them in full
+- Keep total output under 1500 words
 
-  **DECISION SUMMARY**: One paragraph naming the decision, alternatives considered, and analysis approach (which agents ran)
-
-  **CONVERGENT FINDINGS**: Numbered list of findings where multiple agents agreed. Each item: finding statement + which agents confirmed it. These are highest-confidence conclusions.
-
-  **CORRECTED ASSUMPTIONS**: Numbered list of assumptions from the original proposal that were identified as flawed. Each item: original assumption, what's wrong with it, corrected version. Skip section with "(none — proposal assumptions held up)" if clean.
-
-  **ARCHITECTURAL RISKS**: Table with columns: Risk | Severity (High/Medium/Low) | Mitigation | Source (which agent identified it)
-
-  **CONTESTED POINTS**: Numbered list of items where agents disagreed. Each item: the disagreement, Agent 1's position, Agent 2's position, recommended resolution. Skip with "(none — agents converged)" if clean.
-
-  **VALIDATED ELEMENTS**: Bullet list of proposal elements confirmed as sound by the analysis. Keep brief — these don't need explanation.
-
-  **RECOMMENDATION**: 2-3 sentence recommended approach. Then: "Top 3 changes from original proposal:" as a numbered list. Then: "Highest-risk element to validate first:" as one sentence. Then: "Next step:" with specific skill invocation.
-
-- Do not repeat the full agent outputs — synthesize them. The value is the synthesis, not the raw analysis
-- Do not include agent prompts or meta-commentary about the analysis process
-- Keep total output under 1500 words — this is a decision document, not a research paper
 
 # CONTRACT
 
