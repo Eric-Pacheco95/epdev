@@ -127,3 +127,18 @@ Describe the goal or name a built-in workflow. Provide the content or context to
 ```
 
 INPUT:
+
+# VERIFY
+
+- Confirm the pipeline diagram was displayed before execution began
+- Confirm each step's output was used as context for the next step (not dropped silently)
+- Confirm the completion summary shows: pipeline name, steps executed, total skills invoked
+- Confirm the workflow definition was logged for reuse if this is a custom pipeline
+- If any step produced an error: surface it explicitly rather than continuing to the next step with incomplete input
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_workflow-{slug}.md when a new custom pipeline is used that could become a named workflow
+- Include: pipeline steps, input type, total duration estimate, which steps produced the most value
+- Rating: 7+ for genuinely novel pipelines that should be promoted to named workflows; 4-6 for one-off combinations; do not write signal for single-step invocations
+- If the workflow identified a missing skill: log it as a backlog item in orchestration/tasklist.md
