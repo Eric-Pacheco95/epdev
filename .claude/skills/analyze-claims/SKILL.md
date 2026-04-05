@@ -72,3 +72,15 @@ true
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm all six required output sections are present: CLAIM INVENTORY, EVIDENCE MAP, SUPPORT ASSESSMENT, GAPS AND ASSUMPTIONS, INTERNAL CONSISTENCY, VERDICT
+- Confirm no outside facts, statistics, or sources were introduced that are not in the input
+- Confirm every claim in CLAIM INVENTORY has a corresponding entry in EVIDENCE MAP and SUPPORT ASSESSMENT
+- If any section is missing: regenerate that section before returning output
+
+# LEARN
+
+- If the analysis revealed >= 3 unsupported or weakly-supported claims, note the content source and claim pattern in a signal: memory/learning/signals/{YYYY-MM-DD}_analyze-claims-{slug}.md
+- Rating guideline: 7+ if novel fallacy pattern or systematic deception detected; 4-6 for routine analysis; only write signal when something surprising or pattern-breaking was found
