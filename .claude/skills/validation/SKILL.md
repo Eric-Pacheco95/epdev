@@ -139,13 +139,14 @@ Interpret the exit code and deliver the final verdict:
 
 # OUTPUT INSTRUCTIONS
 
-- Only output ASCII-safe text -- no Unicode, no em-dashes (use --), no smart quotes
-- Lead each section with a plain header: "=== VALIDATION REPORT ==="
-- Reproduce the full script output verbatim -- do not summarize or truncate
-- After the full output, deliver the Step 2 verdict message clearly separated
-- If zero criteria found (--prd mode): "No ISC criteria found in <path>. Add criteria in '- [ ] criterion | Verify: method' format."
-- If task JSON is invalid (--task mode): "ERROR: Invalid JSON: <detail>" or the structured error list from the validator
-- Do not add decorative framing, praise, or commentary
+- ASCII-safe text only — no Unicode, em-dashes (use --), smart quotes
+- Lead: "=== VALIDATION REPORT ==="
+- Reproduce full script output verbatim — do not summarize or truncate
+- After output: Step 2 verdict clearly separated
+- Zero criteria (--prd): "No ISC criteria found in <path>. Add '- [ ] criterion | Verify: method' format."
+- Invalid task JSON (--task): structured error from validator
+- No decorative framing, praise, or commentary
+
 
 # CONTRACT
 

@@ -59,13 +59,12 @@ false
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Present proposed rules in a numbered list with evidence
-- Show where each rule would be inserted in CLAUDE.md
-- Rules must be specific and actionable — not vague guidelines
-- Each rule should be testable: you should be able to check if it's being followed
-- After writing, output: "Added N steering rules to CLAUDE.md from M evidence sources"
-- If no new rules are warranted, say so — don't force rules that aren't needed
-- Never remove existing rules without explicit approval — only add or refine
+- Proposed rules: numbered list with evidence; show insertion point in CLAUDE.md
+- Rules must be specific, actionable, and testable
+- After writing: "Added N steering rules to CLAUDE.md from M evidence sources"
+- If no new rules warranted: say so
+- Never remove existing rules without explicit approval
+
 
 # INPUT
 

@@ -98,14 +98,13 @@ Write to `memory/learning/failures/{date}_{slug}.md`:
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Always show the error first, then the diagnosis, then the fix
-- Apply fixes using the Edit tool — show what changed
-- After fixing, run verification and show the passing result
-- If the fix requires multiple attempts, log each attempt (this feeds the learning system)
-- If you cannot diagnose the root cause, say so clearly and log as an anomaly signal
-- Never suppress or ignore test failures — every failure teaches something
-- Prefer minimal fixes over refactors — fix the bug, don't redesign the system
-- After completion, output a one-line summary: "Self-healed: {component} — {what was wrong}"
+- Show error → diagnosis → fix in that order
+- Apply fixes with Edit tool; show what changed; run verification and show result
+- Log each fix attempt (feeds learning system)
+- If root cause unclear: say so, log as anomaly signal
+- Never suppress test failures; prefer minimal fixes over refactors
+- Final summary: "Self-healed: {component} — {what was wrong}"
+
 
 # INPUT
 

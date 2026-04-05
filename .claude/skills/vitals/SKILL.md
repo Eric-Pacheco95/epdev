@@ -182,13 +182,14 @@ Proposals acted on: {n}/{total} ({rate}%)
 # OUTPUT INSTRUCTIONS
 
 - Terminal: ASCII-only, under 40 lines, display FIRST before Slack
-- Slack: full mrkdwn, comprehensive, posted AFTER terminal display
-- Use `=` and `-` for horizontal rules in terminal
-- If no overnight data: show "No overnight run" in both outputs
-- If Slack fails: save to `data/logs/vitals_YYYY-MM-DD.md` and tell Eric
-- "Top 3 Today" must be grounded in evidence from collector data
-- All data comes from the collector JSON in Phase 1 -- do NOT make additional file reads for data the collector already provides
-- After terminal dashboard, append: "Want a visual? `/visualize` can diagram ISC gaps, signal flow, or skill usage."
+- Slack: full mrkdwn, comprehensive, posted AFTER terminal
+- Use `=` and `-` for terminal horizontal rules
+- If no overnight data: "No overnight run" in both outputs
+- If Slack fails: save to `data/logs/vitals_YYYY-MM-DD.md`, tell Eric
+- "Top 3 Today" must be grounded in collector data evidence
+- All data from Phase 1 collector JSON — no extra file reads
+- After terminal: suggest "/visualize" for ISC gaps, signal flow, or skill usage diagrams
+
 
 # CONTRACT
 
