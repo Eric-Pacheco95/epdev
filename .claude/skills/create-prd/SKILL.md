@@ -129,6 +129,20 @@ false
 - **Composes:** (leaf at this step — produces the PRD document)
 - **Escalate to:** `/delegation` if requirements are unclear or scope needs redefinition
 
+# VERIFY
+
+- PRD file was written to the expected path (memory/work/{project}/PRD.md) | Verify: `ls memory/work/{project}/PRD.md`
+- ISC section contains at least 3 criteria and no more than 8 per phase | Verify: Count ISC items in PRD
+- Every ISC criterion has a `| Verify:` suffix with a concrete test method | Verify: Read each ISC line for `| Verify:` tag
+- At least one anti-criterion (what must NOT happen) is present | Verify: Grep PRD for 'must not' or 'never' in ISC section
+- PRD was collaboratively developed (Eric was asked questions, not just handed a doc) | Verify: Check output for question-and-answer exchanges before PRD was written
+
+# LEARN
+
+- If ISC criteria are consistently vague at first pass (lacking measurable thresholds), note the project type -- some domains need more concrete definition templates
+- If Eric rejects a PRD draft and requests major changes, log the type of change in a signal -- this reveals which aspects of requirement gathering most often miss the mark
+- After a PRD leads to a successful /implement-prd run with all ISC passing, log the PRD as a template candidate for that project type
+
 # INPUT
 
 INPUT:
