@@ -164,6 +164,20 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 - **Composes:** confidence decay review (inline), signal lineage tracking (inline)
 - **Escalate to:** `/delegation` if synthesis reveals cross-project patterns requiring orchestration
 
+# VERIFY
+
+- Synthesis file was written to `memory/learning/synthesis/YYYY-MM-DD_synthesis.md` | Verify: `ls -t memory/learning/synthesis/ | head -3`
+- At least 3 input signals were processed (minimum threshold enforced) | Verify: Check signal count in synthesis output header
+- Processed signals are marked to prevent double-processing | Verify: Confirm signals appear in the processed list or were moved/tagged
+- Synthesis contains the required sections: themes, key insights, implications | Verify: Read synthesis file headers
+
+# LEARN
+
+- If synthesis regularly produces the same 2-3 themes across multiple runs, those themes are strong candidates for promotion to `memory/work/TELOS.md` via /telos-update
+- If synthesis reveals cross-project patterns (same insight appears in signals from crypto-bot, jarvis, and brain-map), flag them for /project-orchestrator review
+- Track which signal categories (insight, pattern, anomaly, improvement) generate the most synthesis themes -- this reveals where Eric's system is producing the most learning
+- If synthesis is running more often than weekly, the signal volume is high enough to justify a dedicated synthesis schedule
+
 # INPUT
 
 Review accumulated signals and produce a synthesis. If specific signals or a date range is provided, focus on those.
