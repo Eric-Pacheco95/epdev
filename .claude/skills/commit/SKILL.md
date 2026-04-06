@@ -138,6 +138,21 @@ Good commit messages:
 - If splitting commits, guide through each one sequentially
 - Confirm success with the commit hash after completion
 
+# VERIFY
+
+- Commit was created and git log shows the new commit hash | Verify: `git log --oneline -1`
+- No .env, *.key, or credential files are in the commit | Verify: `git show --name-only HEAD | grep -E '.env|.key'` returns empty
+- Commit message follows conventional format (emoji + type + scope + imperative description) | Verify: Read commit message in `git log -1`
+- If atomic split was suggested, all split commits are present | Verify: `git log --oneline -N` shows each logical group as a separate commit
+- Co-Authored-By line present when Jarvis wrote the code | Verify: `git log -1 --format=%B | grep Co-Authored-By`
+
+# LEARN
+
+- Track commit type distribution over time (feat vs fix vs chore vs skill) -- a heavy chore ratio signals maintenance debt; a heavy skill ratio signals active investment in scaffolding
+- If the same scope (component) appears in Critical /review-code findings and then commit messages, that component is high-churn and a refactor candidate
+- If Eric consistently changes the proposed commit message, note the pattern -- it reveals preferred phrasing or description style to update commit heuristics
+- If git hooks fail repeatedly on the same check, log a /self-heal task for the hook
+
 # INPUT
 
 Create a commit for the current staged/modified changes. If a specific message or scope is provided, use it as guidance.
