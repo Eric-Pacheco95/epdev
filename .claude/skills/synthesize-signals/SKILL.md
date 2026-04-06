@@ -32,7 +32,7 @@ LEARN
 ## Output Contract
 - Input: unprocessed signals in memory/learning/signals/ (auto-read)
 - Output: synthesis document + stdout summary (themes found, actions proposed)
-- Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends data/signal_lineage.jsonl, mirrors lineage to SQLite manifest
+- Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends data/signal_lineage.jsonl, mirrors lineage to jarvis_index.db
 
 ## autonomous_safe
 true
@@ -41,8 +41,10 @@ true
 
 - Run `python tools/scripts/compress_signals.py --stats --json` to get signal counts, velocity, and synthesis metadata -- this tells you if synthesis is even needed (check unprocessed count and velocity)
 - Run `python tools/scripts/compress_signals.py --group --json` to get all unprocessed signals pre-grouped by category with ratings -- this replaces manual file reading and categorization
-- Read all failure records from `memory/learning/failures/`
+- Read all failure records from `memory/learning/failures/` -- failures are a first-class input source with 4x harm multiplier
+- Read all absorbed content from `memory/learning/absorbed/` -- external insights absorbed via /absorb are synthesis input alongside session signals
 - Read existing synthesis documents from `memory/learning/synthesis/` for context
+- **Input sources** (all three are required): `signals/` (session learnings) + `failures/` (what went wrong) + `absorbed/` (external insights). The combined unprocessed count across all three directories determines synthesis threshold (35 items).
 - The grouping is already done by the script. Review the groups:
 - Identify recurring themes across signals:
   - What keeps coming up? (repeated patterns = important)

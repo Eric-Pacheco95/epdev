@@ -24,7 +24,7 @@ LEARN
 
 ## Chains
 - Before: any build, research, or design session (this is always the final step)
-- After: /synthesize-signals (auto-invoked if signal count >= 20 or >= 10 with 48h+ stale synthesis)
+- After: /synthesize-signals (auto-invoked if combined count >= 35, or >= 20 with 48h+ stale, or >= 15 with 72h+ stale)
 - Full: [any session work] > /learning-capture > /synthesize-signals > /telos-update
 
 ## Output Contract
@@ -82,11 +82,13 @@ false
   - Energy indicators (long engaged sessions = high energy, short abrupt sessions = low)
   - Log sentiment as a signal with category "pattern" and tag "sentiment:{positive|negative|neutral}"
 - Check if any learnings qualify as **failures** (something went wrong, broke, or produced bad output). Failures get extra fields: root cause, fix applied, prevention
-- Write each signal to `memory/learning/signals/` using the format below
-- Write any failures to `memory/learning/failures/` using the failure format below
-- Update `memory/learning/_signal_meta.json` with the new count
-- After writing signal files, run `python tools/scripts/jarvis_index.py backfill` to index them into the manifest DB. This is required -- the velocity metric and synthesis threshold checks read the DB, not the filesystem. Without this step, signals exist on disk but are invisible to /vitals and /synthesize-signals.
-- After writing signals, count unprocessed signals in `memory/learning/signals/` (excluding `processed/` subdirectory). If count >= 20 (hard ceiling) OR count >= 10 and last synthesis is 48h+ old OR count >= 8 and last synthesis is 72h+ old: **auto-invoke `/synthesize-signals` immediately** — do not just note it. If synthesis produces proposed steering rules, present them to Eric for approval but do not auto-invoke `/update-steering-rules`
+- **Worktree-safe path resolution**: Signal and failure files MUST be written to the main working tree, not the current working directory. Use the absolute path `C:/Users/ericp/Github/epdev/memory/learning/signals/` (and `.../failures/`) regardless of whether the session is running in a worktree context. Worktree-relative writes vanish when the worktree is pruned.
+- Write each signal to `C:/Users/ericp/Github/epdev/memory/learning/signals/` using the format below
+- Write any failures to `C:/Users/ericp/Github/epdev/memory/learning/failures/` using the failure format below
+- **Write-then-read-back verification**: After writing each signal file, immediately read it back with the Read tool to confirm it exists on disk. If the read-back fails, retry the write once using the absolute path. If the second write also fails, output the signal content as plain text in the session output and log a failure record in `failures/` — do not silently drop the signal.
+- **Reconcile `_signal_meta.json`**: After all signals are written, count the actual `.md` files in `memory/learning/signals/` (excluding `_signal_meta.json` and `processed/` subdirectory) and write that count to `memory/learning/_signal_meta.json`. Do NOT increment a counter — always reconcile against filesystem state.
+- After writing signal files, run `python tools/scripts/jarvis_index.py update` to index them into `jarvis_index.db` (incremental — only indexes new/modified files). This is required -- the velocity metric and synthesis threshold checks read the DB, not the filesystem. Without this step, signals exist on disk but are invisible to /vitals and /synthesize-signals.
+- After writing signals, count unprocessed signals in `memory/learning/signals/` (excluding `processed/` subdirectory) PLUS failure files in `memory/learning/failures/` PLUS absorbed files in `memory/learning/absorbed/`. If combined count >= 35 (hard ceiling) OR count >= 20 and last synthesis is 48h+ old OR count >= 15 and last synthesis is 72h+ old: **auto-invoke `/synthesize-signals` immediately** — do not just note it. If synthesis produces proposed steering rules, present them to Eric for approval but do not auto-invoke `/update-steering-rules`
 - **Skill friction check**: If any skill was used this session, review each invocation for friction: missing steps, confusing parameters, unnecessary confirmations, or unclear output. For each friction point, write a signal tagged `skill-improvement` with the skill name, what went wrong, and a proposed fix. This feeds the skill self-improvement loop.
 - **Skill gap check**: After writing signals, scan the session for tasks or patterns that were handled ad-hoc but would benefit from a reusable skill. Evaluate each candidate against:
   - **Recurrence**: Would this task plausibly come up again (weekly+)?
@@ -136,8 +138,7 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Write signals using Write tool — each signal gets its own file; do not combine
-- Use `python tools/scripts/hook_learning_capture.py` for file writes when available
+- Write signals using Write tool with absolute paths (see worktree-safe path resolution) — each signal gets its own file; do not combine
 - Ratings: honest — most sessions produce 3-6 signals, not all 10s
 - Prioritize signals affecting future behavior (user insights, workflow improvements, bugs)
 - After writing: summary of count, highest-rated signal, skill gap candidates
@@ -149,7 +150,7 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 
 - At least one signal file was written to `memory/learning/signals/` from this session | Verify: `ls -t memory/learning/signals/ | head -3`
 - No D-tier signals were written (quality gate enforced) | Verify: Check each written signal for tier label >= C
-- `_signal_meta.json` was updated with new signal count | Verify: `python tools/scripts/jarvis_index.py --check` or read the file
+- `_signal_meta.json` was reconciled (file count matches actual .md files on disk) | Verify: Read `_signal_meta.json` and compare count to `ls memory/learning/signals/*.md | wc -l`
 - If signal count exceeded auto-synthesis threshold, /synthesize-signals was invoked | Verify: Check for synthesis run in output or `ls memory/learning/synthesis/`
 - Failure files (if any) were written to `memory/learning/failures/` with root cause | Verify: `ls -t memory/learning/failures/ | head -3` (only if failures were discussed)
 
@@ -177,6 +178,6 @@ Analyze the current session and extract learnings. If invoked with specific cont
 # SKILL CHAIN
 
 - **Composes:** skill gap check (inline) → present candidates to Eric → Eric decides whether to invoke `/create-pattern`
-- **Escalate to:** `/synthesize-signals` immediately if signals > 10, then `/telos-update` if identity-level insights emerged
+- **Escalate to:** `/synthesize-signals` immediately if combined count >= 35 (or >= 20 with 48h stale, >= 15 with 72h stale), then `/telos-update` if identity-level insights emerged
 
 INPUT:

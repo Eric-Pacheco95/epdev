@@ -300,7 +300,7 @@ RULES (non-negotiable):
 - Stop after DATA[max_iterations] iterations OR 5 consecutive no-improvement iterations
 - NEVER modify: memory/work/telos/, security/constitutional-rules.md, CLAUDE.md, .env, *.pem, *.key
 - NEVER run git push
-- When committing gitignored files (e.g. memory/learning/synthesis/*.md), use git add -f only on synthesis docs -- NEVER force-add memory/learning/signals/processed/ files; processed signals are personal content that must stay local-only
+- NEVER commit synthesis files (memory/learning/synthesis/*.md) to git -- synthesis is local-only content that must stay gitignored; committing them creates a revert cycle where the next clean checkout removes them
 - Write a run report to memory/work/jarvis/autoresearch/overnight-{today}/report.md
 - Include a TSV run log: iteration | commit_hash | metric_value | delta | status | description
 

@@ -32,6 +32,7 @@ _EXPECTED_SCHEMA_VERSION = 1
 _CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
 _SIGNALS_DIR = _REPO_ROOT / "memory" / "learning" / "signals"
 _FAILURES_DIR = _REPO_ROOT / "memory" / "learning" / "failures"
+_ABSORBED_DIR = _REPO_ROOT / "memory" / "learning" / "absorbed"
 _SYNTHESIS_DIR = _REPO_ROOT / "memory" / "learning" / "synthesis"
 _DECISIONS_DIR = _REPO_ROOT / "history" / "decisions"
 _SECURITY_DIR = _REPO_ROOT / "history" / "security"
@@ -417,22 +418,27 @@ def _do_index(conn: sqlite3.Connection) -> int:
         for md in _FAILURES_DIR.glob("*.md"):
             total += _ingest_markdown(conn, md, "failure")
 
-    # 4. Synthesis
+    # 4. Absorbed content
+    if _ABSORBED_DIR.exists():
+        for md in _ABSORBED_DIR.glob("*.md"):
+            total += _ingest_markdown(conn, md, "absorbed")
+
+    # 5. Synthesis
     if _SYNTHESIS_DIR.exists():
         for md in _SYNTHESIS_DIR.glob("*.md"):
             total += _ingest_markdown(conn, md, "synthesis")
 
-    # 5. Decisions
+    # 6. Decisions
     if _DECISIONS_DIR.exists():
         for md in _DECISIONS_DIR.glob("*.md"):
             total += _ingest_markdown(conn, md, "decision")
 
-    # 6. Security events
+    # 7. Security events
     if _SECURITY_DIR.exists():
         for md in _SECURITY_DIR.glob("*.md"):
             total += _ingest_markdown(conn, md, "security")
 
-    # 7. Heartbeat logs
+    # 8. Heartbeat logs
     if _HEARTBEAT_DIR.exists():
         for log in _HEARTBEAT_DIR.glob("heartbeat_*.log"):
             total += _ingest_heartbeat(conn, log)
