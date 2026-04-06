@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+# Windows artifacts (created by bad /dev/null redirects on Windows)
+NUL
+
 # ------------------------------------------------------------------------------
 # Secrets & credentials
 # Aligns with security/constitutional-rules.md — never commit key material.
