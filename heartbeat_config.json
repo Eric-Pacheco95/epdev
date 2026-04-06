@@ -212,6 +212,13 @@
       "type": "system_resources",
       "thresholds": { "warn_above": 60, "crit_above": 100 },
       "min_delta": 15
+    },
+    {
+      "name": "stale_branches",
+      "type": "stale_branches",
+      "ttl_days": 7,
+      "thresholds": { "warn_above": 0, "crit_above": 3 },
+      "isc_ref": "Phase5D: branch lifecycle tracker -- flag stale jarvis/* branches"
     }
   ],
   "alert_routing": {
@@ -271,6 +278,26 @@
       "context_files": [],
       "model": "sonnet",
       "min_severity": "CRIT"
+    },
+    "autonomous_signal_rate": {
+      "description": "Autonomous signal volume spike -- check per-producer breakdown in heartbeat detail, throttle or pause offending producer",
+      "skills": [],
+      "isc": [
+        "Autonomous signal rate is below warn threshold (10/day) | Verify: python -c \"import json; d=json.load(open('data/heartbeat_latest.json')); print(d.get('autonomous_signal_rate',{}).get('value',0) < 10)\""
+      ],
+      "context_files": ["orchestration/autonomous-rules.md"],
+      "model": "haiku",
+      "min_severity": "WARN"
+    },
+    "stale_branches": {
+      "description": "Stale Jarvis branches need merge or discard -- run branch_lifecycle.py --notify for details",
+      "skills": [],
+      "isc": [
+        "No stale jarvis/* branches older than 7 days | Verify: python tools/scripts/branch_lifecycle.py --json"
+      ],
+      "context_files": [],
+      "model": "haiku",
+      "min_severity": "WARN"
     }
   },
   "daily_alert_caps": {

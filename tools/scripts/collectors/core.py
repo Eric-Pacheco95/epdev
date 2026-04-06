@@ -12,6 +12,7 @@ Collector types:
   dir_count           — count subdirectories
   disk_usage          — directory size in MB
   hook_output_size    — run a hook script and measure output chars
+  stale_branches      — count stale Jarvis autonomous branches
 """
 
 from __future__ import annotations
@@ -547,7 +548,11 @@ def collect_manifest_signal_velocity(cfg: dict, root_dir: Path, _prev: dict = No
 # ── manifest_autonomous_signal_rate ───────────────────────────────
 
 def collect_manifest_autonomous_signal_rate(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
-    """Count autonomous signals from manifest DB source field."""
+    """Count autonomous signals from manifest DB source field.
+
+    Returns rate per day plus per-category breakdown so volume spikes
+    from specific producers (prediction, heartbeat, overnight) are visible.
+    """
     name = cfg.get("name", "autonomous_signal_rate")
     window = cfg.get("window_days", 7)
     db_path = root_dir / "data" / "jarvis_index.db"
@@ -569,10 +574,43 @@ def collect_manifest_autonomous_signal_rate(cfg: dict, root_dir: Path, _prev: di
             "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL AND date >= ?",
             (cutoff,)
         ).fetchone()[0]
+
+        # Per-category breakdown for autonomous signals (identifies which
+        # producer is spiking: prediction-accuracy, heartbeat, etc.)
+        cat_rows = conn.execute(
+            "SELECT COALESCE(category, 'uncategorized'), COUNT(*) FROM signals "
+            "WHERE deleted_at IS NULL AND source = 'autonomous' AND date >= ? "
+            "GROUP BY category ORDER BY COUNT(*) DESC LIMIT 5",
+            (cutoff,)
+        ).fetchall()
+
+        # Also count by filename prefix pattern to catch producer origin
+        # (e.g., prediction-*, backtest-*, heartbeat-*)
+        prefix_rows = conn.execute(
+            "SELECT "
+            "  CASE "
+            "    WHEN filename LIKE 'prediction-%' OR filename LIKE '%prediction%' THEN 'prediction' "
+            "    WHEN filename LIKE 'backtest-%' OR filename LIKE '%backtest%' THEN 'backtest' "
+            "    WHEN filename LIKE 'heartbeat-%' OR filename LIKE '%heartbeat%' THEN 'heartbeat' "
+            "    WHEN filename LIKE 'overnight-%' OR filename LIKE '%overnight%' THEN 'overnight' "
+            "    WHEN filename LIKE 'dispatch-%' OR filename LIKE '%dispatch%' THEN 'dispatcher' "
+            "    ELSE 'other' "
+            "  END as producer, COUNT(*) "
+            "FROM signals WHERE deleted_at IS NULL AND source = 'autonomous' AND date >= ? "
+            "GROUP BY producer ORDER BY COUNT(*) DESC",
+            (cutoff,)
+        ).fetchall()
         conn.close()
+
         rate = round(count / max(window, 1), 2)
-        return _result(name, rate, "per_day",
-                       "%d autonomous signals in last %dd (%d total)" % (count, window, total))
+        cat_parts = ["%s=%d" % (c, n) for c, n in cat_rows]
+        prod_parts = ["%s=%d" % (p, n) for p, n in prefix_rows if n > 0]
+        detail = "%d autonomous in last %dd (%d total), rate=%.1f/day, by_category=[%s], by_producer=[%s]" % (
+            count, window, total, rate,
+            ", ".join(cat_parts) if cat_parts else "none",
+            ", ".join(prod_parts) if prod_parts else "none",
+        )
+        return _result(name, rate, "per_day", detail)
     except Exception as exc:
         return _result(name, None, "per_day",
                        "manifest_autonomous_signal_rate error: %s" % exc)
@@ -914,6 +952,19 @@ def collect_system_resources(cfg: dict, root_dir: Path, _prev: dict = None) -> d
     return _result(name, https_connections, "count", detail)
 
 
+# ── stale_branches ─────────────────────────────────────────────────
+
+def _collect_stale_branches(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Thin wrapper — delegates to branch_lifecycle.collect_stale_branches()."""
+    try:
+        sys.path.insert(0, str(root_dir))
+        from tools.scripts.branch_lifecycle import collect_stale_branches
+        return collect_stale_branches(cfg, root_dir, _prev)
+    except Exception as exc:
+        return _result(cfg.get("name", "stale_branches"), None, "count",
+                       "stale_branches import error: %s" % exc)
+
+
 # ── Dispatcher ──────────────────────────────────────────────────────
 
 COLLECTOR_TYPES = {
@@ -939,6 +990,7 @@ COLLECTOR_TYPES = {
     "manifest_autonomous_signal_rate": collect_manifest_autonomous_signal_rate,
     "backlog_health_metric": collect_backlog_health_metric,
     "system_resources": collect_system_resources,
+    "stale_branches": _collect_stale_branches,
 }
 
 
