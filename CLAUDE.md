@@ -102,6 +102,11 @@ Load documentation on-demand, not upfront:
 - When Eric faces a decision with multiple viable paths, present a full options comparison (pros/cons table or numbered list with tradeoffs) before offering a recommendation — never lead with "I recommend X"
 - For mobile -> desktop file write, always use iCloud Drive — OneDrive iOS Files provider is architecturally read-only
 
+### Trade Development
+
+- Trade development sessions must persist the final thesis to `data/predictions/` as a structured prediction record, even when no trade is taken — lost theses cannot be backtested and prior analysis is wasted on re-research
+- For trades involving political deadlines or ultimatums, always run /analyze-claims with /research to check extension history — serial extenders (e.g. Trump Iran: 4 extensions in 16 days) invalidate short-dated trade structures
+
 ### Platform: Windows & Scheduling
 
 - Python CLI scripts that print to terminal must use ASCII-only output — Windows cp1252 encoding breaks Unicode box-drawing chars with a hard UnicodeEncodeError; when assigning external content (scraped, API, user input) to variables that will be printed/logged, strip non-ASCII at assignment: `raw.encode('ascii', errors='replace').decode('ascii')`

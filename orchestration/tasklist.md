@@ -58,6 +58,17 @@
 - [ ] **Update `/research` waterfall** — Edit `SKILL.md` URL Content Extraction Waterfall to add Firecrawl as Step 2.5: after tavily_extract for difficult domains, before WebFetch for static sites. Target: JS-heavy/SPA sites. Also add Firecrawl as tavily_extract fallback when Tavily credits exhausted (1000/mo limit).
 - [ ] **Validation** — Run `/research` against a JS SPA URL (e.g., Linear changelog) and confirm Firecrawl extracts content where WebFetch previously returned empty shell. Verify injection check doesn't false-positive on normal content.
 
+### Morning Feed Actions (2026-04-06)
+
+- [ ] **Wire Claude Code "defer" into dispatcher** — v2.1.89 PreToolUse "defer" permission replaces manual_required soft convention with native pause+resume. Wire into autonomous-rules.md as the approval gate pattern for Phase 5 dispatcher. (G2)
+- [ ] **Supply chain audit (Axios/LiteLLM)** — Run `/security-audit --supply-chain` across epdev and crypto-bot. Verify no transitive Axios dependency pulled a compromised version. Check LiteLLM credential exposure. (G2, P1)
+- [x] **OpenClaw dependency check** — Grep confirmed: 0 references in .claude/, settings.json, or any code/config. Only appears in research/knowledge docs. Clean. (2026-04-06)
+- [ ] **scan-for-secrets pre-publish** — Evaluate Willison's scan-for-secrets tool as pre-publish check in content pipeline (Substack drafts, session transcripts). (G2)
+
+### ISC Producer (from architecture review 2026-04-06)
+
+- [x] **Build ISC producer** — `tools/scripts/isc_producer.py` built and verified. 21 PRDs scanned in 64s. 8/8 ISC PASS. Cross-model review: 4 High findings fixed (archive exclusion, dedup hash, anti-criterion near-miss, timeout flag). Pending: Task Scheduler entry. (2026-04-06)
+
 ### Parked (No demand signal within 60 days — research saved)
 
 > Items below failed the enthusiasm filter: no specific project, no specific user, no specific ship date. Research is preserved. Revisit when a real project creates demand.

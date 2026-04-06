@@ -35,6 +35,7 @@ SKILLS_DIR = REPO_ROOT / ".claude" / "skills"
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
 MORNING_FEED_DIR = REPO_ROOT / "memory" / "work" / "jarvis" / "morning_feed"
 EVENTS_DIR = REPO_ROOT / "history" / "events"
+ISC_PRODUCER_REPORT = REPO_ROOT / "data" / "isc_producer_report.json"
 OUTPUT_FILE = REPO_ROOT / "data" / "vitals_latest.json"
 
 
@@ -129,6 +130,24 @@ def compute_trend_averages(trend_data: list[dict]) -> dict:
                 "samples": len(values),
             }
     return averages
+
+
+def collect_isc_producer() -> dict:
+    """Read ISC producer report for ready-to-mark count and summary."""
+    result = {"status": "NO REPORT", "ready_to_mark_count": 0, "summary": None,
+              "run_date": None, "prds_scanned": 0}
+    if not ISC_PRODUCER_REPORT.is_file():
+        return result
+    try:
+        data = json.loads(ISC_PRODUCER_REPORT.read_text(encoding="utf-8"))
+        result["status"] = "OK"
+        result["ready_to_mark_count"] = len(data.get("ready_to_mark", []))
+        result["summary"] = data.get("summary")
+        result["run_date"] = data.get("run_date")
+        result["prds_scanned"] = data.get("prds_scanned", 0)
+    except (json.JSONDecodeError, OSError):
+        result["status"] = "ERROR"
+    return result
 
 
 def collect_overnight_state() -> dict | None:
@@ -754,6 +773,10 @@ def main() -> None:
     if session_usage:
         files_scanned.append(str(EVENTS_DIR))
 
+    isc_producer = collect_isc_producer()
+    if isc_producer.get("status") == "OK":
+        files_scanned.append(str(ISC_PRODUCER_REPORT))
+
     overnight_streak = collect_overnight_streak()
     external_monitoring_structured = collect_external_monitoring_structured(overnight_deep_dive)
     contradictions_structured = collect_contradictions_structured(overnight_deep_dive)
@@ -795,6 +818,7 @@ def main() -> None:
         "external_monitoring_structured": external_monitoring_structured,
         "contradictions_structured": contradictions_structured,
         "proposals_structured": proposals_structured,
+        "isc_producer": isc_producer,
         "errors": errors,
     }
 
