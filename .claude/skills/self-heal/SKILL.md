@@ -106,6 +106,20 @@ Write to `memory/learning/failures/{date}_{slug}.md`:
 - Final summary: "Self-healed: {component} — {what was wrong}"
 
 
+# VERIFY
+
+- A failure log entry was written with all 6 required fields (Context, Error, Root Cause, Fix Applied, Verification, Prevention) | Verify: Read the failure log entry in `memory/learning/failures/`
+- The fix was verified to pass (test or manual check confirms the error is gone) | Verify: Confirmation output shows the fix works
+- No minimal fix ballooned into a refactor or scope expansion | Verify: Check that only the failing component was modified
+- If a steering rule was proposed: it was surfaced to Eric for approval before being added to CLAUDE.md | Verify: Check output for steering rule proposal with approval request
+
+# LEARN
+
+- Track the most common failure types (import errors, path issues, encoding bugs, test isolation) -- after 5+ self-heals, the top failure type should become a pre-build check in the relevant skill
+- If the same component fails 3+ times, flag it as a structural debt signal -- the fix pattern is a symptom, not the cure; the component needs a /review-code + refactor
+- If root cause is consistently unclear (logged as anomaly), the diagnostic logic in self-heal needs improvement; log a signal suggesting a better diagnostic step
+- After successful self-heal, run the full defensive test suite to confirm no regression: `python tests/defensive/run_all.py`
+
 # INPUT
 
 Diagnose and fix the following failure. If no specific failure is provided, run the defensive and self-heal test suites and fix any failures found.
