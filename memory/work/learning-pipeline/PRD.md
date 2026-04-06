@@ -89,18 +89,18 @@ The Jarvis learning pipeline -- the system that captures session learnings, synt
 
 ### Phase A: Pipeline Repair
 
-- [ ] Signal files written by /learning-capture exist on disk after session exit | Verify: Write test signal, exit, verify in new session [M]
-- [ ] Worktree-context signal writes land in main tree `memory/learning/signals/`, not worktree path | Verify: Grep overnight runner for absolute path usage [A]
-- [ ] Failure files appear in `memory/learning/failures/` when failures are discussed in a session | Verify: Trigger known failure, run /learning-capture, `ls failures/` [M]
-- [ ] /synthesize-signals processes files from signals/, failures/, AND absorbed/ | Verify: Place test files in all three dirs, run synthesis, confirm all referenced in output [M]
-- [ ] Synthesis threshold fires at 35 unprocessed items | Verify: Create 34 test signals, confirm no auto-synthesis; add 1 more, confirm trigger [M]
-- [ ] No synthesis files are committed to git by overnight runner | Verify: `git log --oneline -20 -- memory/learning/synthesis/` shows no new entries after fix [M]
-- [ ] `jarvis_manifest.db` references are removed from codebase | Verify: `grep -r "manifest" tools/ .claude/` returns zero hits [M] | model: haiku |
-- [ ] `jarvis_index.db` indexes gitignored signals and synthesis from local paths | Verify: Run backfill, query for known signal title, confirm hit [M]
-- [ ] /vitals learning_loop_health metric reads from jarvis_index.db and reports non-null | Verify: Run /vitals after backfill, confirm "Last synthesis: Xd ago" not "NEVER" [M]
+- [x] Signal files written by /learning-capture exist on disk after session exit | Verify: Write test signal, exit, verify in new session [M]
+- [x] Worktree-context signal writes land in main tree `memory/learning/signals/`, not worktree path | Verify: Grep overnight runner for absolute path usage [A]
+- [x] Failure files appear in `memory/learning/failures/` when failures are discussed in a session | Verify: Trigger known failure, run /learning-capture, `ls failures/` [M]
+- [x] /synthesize-signals processes files from signals/, failures/, AND absorbed/ | Verify: Place test files in all three dirs, run synthesis, confirm all referenced in output [M]
+- [x] Synthesis threshold fires at 35 unprocessed items | Verify: Create 34 test signals, confirm no auto-synthesis; add 1 more, confirm trigger [M]
+- [x] No synthesis files are committed to git by overnight runner | Verify: `git log --oneline -20 -- memory/learning/synthesis/` shows no new entries after fix [M]
+- [x] `jarvis_manifest.db` references are removed from codebase | Verify: `grep -r "manifest" tools/ .claude/` returns zero hits [M] | model: haiku |
+- [x] `jarvis_index.db` indexes gitignored signals and synthesis from local paths | Verify: Run backfill, query for known signal title, confirm hit [M]
+- [x] /vitals learning_loop_health metric reads from jarvis_index.db and reports non-null | Verify: Run /vitals after backfill, confirm "Last synthesis: Xd ago" not "NEVER" [M]
 
 Anti-criterion:
-- [ ] No signal data is silently lost during normal operation (write-then-read-back verification) | Verify: Count signals written in session output matches `ls signals/*.md | wc -l` delta [M]
+- [x] No signal data is silently lost during normal operation (write-then-read-back verification) | Verify: Count signals written in session output matches `ls signals/*.md | wc -l` delta [M]
 
 ### Phase B: Wisdom Promotion
 
