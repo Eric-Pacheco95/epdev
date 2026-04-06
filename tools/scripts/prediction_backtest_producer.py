@@ -43,7 +43,7 @@ PREDICTIONS_DIR = REPO_ROOT / "data" / "predictions" / "backtest"
 SIGNALS_DIR     = REPO_ROOT / "memory" / "learning" / "signals"
 LOGS_DIR        = REPO_ROOT / "data" / "logs"
 
-MAX_EVENTS_PER_RUN = 3
+MAX_EVENTS_PER_RUN = 10
 LEAKAGE_CONFIDENCE_THRESHOLD = 0.85  # flag if model confidence on winner > 85%
 
 TODAY = date.today().isoformat()
@@ -82,9 +82,24 @@ def load_events() -> list[dict]:
 
 
 def select_unrun_events(events: list[dict], state: dict, limit: int) -> list[dict]:
-    """Return up to `limit` events that have not yet been run."""
+    """Return up to `limit` events that have not yet been run.
+
+    Only selects events that are approved or have no status field (legacy events).
+    Events with status: proposed are skipped -- they need Eric's approval first.
+    """
     run_ids = set(state.get("completed", {}).keys())
-    unrun = [e for e in events if e["event_id"] not in run_ids]
+    unrun = []
+    for e in events:
+        if e["event_id"] in run_ids:
+            continue
+        status = e.get("status", "")
+        # Skip proposed events -- they need human approval
+        if status == "proposed":
+            continue
+        # Skip rejected events
+        if status == "rejected":
+            continue
+        unrun.append(e)
     return unrun[:limit]
 
 
@@ -352,30 +367,129 @@ Do not promote to calibration until status is updated to `reviewed`.
 
 
 # ---------------------------------------------------------------------------
+# Post-prediction analysis (backtests have known outcomes -- analyze immediately)
+# ---------------------------------------------------------------------------
+
+ANALYSIS_PROMPT_TEMPLATE = dedent("""\
+    You are a prediction calibration analyst. Compare a prediction against its known outcome
+    and extract reasoning lessons.
+
+    PREDICTION (model output, constrained to {cutoff_date}):
+    {prediction_text}
+
+    KNOWN OUTCOME:
+    {known_outcome}
+
+    PRIMARY CONFIDENCE: {confidence}
+    ALIGNMENT SCORE: {alignment} (keyword overlap -- rough proxy)
+
+    Analyze this prediction and produce EXACTLY this format (no other text):
+
+    ## Prediction Analysis
+
+    **Verdict**: [correct/wrong/partial -- based on whether the primary prediction matched the outcome]
+    **Calibration error**: [Was the model overconfident, underconfident, or well-calibrated?
+    State the probability assigned to the actual outcome vs what happened.]
+
+    **Key reasoning errors**: [What did the model get wrong? What factors were
+    over/underweighted? Be specific -- name the exact reasoning step that failed.]
+
+    **What worked**: [What reasoning was correct? What factors were properly identified?]
+
+    **Lesson for future predictions**: [One concrete, actionable rule that would improve
+    the next prediction in this domain. Format as: "When [condition], [do X instead of Y]."
+    This must be specific enough to apply, not generic advice.]
+
+    **Signpost accuracy**: [Which signposts from the prediction turned out to be useful
+    predictors? Which were noise?]
+""")
+
+
+def generate_backtest_analysis(
+    event: dict, claude_output: str, scoring: dict
+) -> str | None:
+    """Generate post-prediction analysis for a backtest (known outcome available)."""
+    try:
+        confidence = scoring.get("primary_confidence")
+        conf_str = f"{confidence:.0%}" if confidence is not None else "unknown"
+
+        prompt = ANALYSIS_PROMPT_TEMPLATE.format(
+            cutoff_date=event.get("knowledge_cutoff_date", ""),
+            prediction_text=claude_output[:3000],  # truncate to keep prompt reasonable
+            known_outcome=event.get("known_outcome", ""),
+            confidence=conf_str,
+            alignment=f"{scoring.get('alignment_score', 0):.0%}",
+        )
+
+        result = subprocess.run(
+            ["claude", "-p", "--model", "sonnet", prompt],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=str(REPO_ROOT),
+        )
+
+        if result.returncode != 0:
+            return None
+
+        output = result.stdout.strip()
+
+        # Rate limit guard
+        rate_limit_phrases = ["hit your limit", "rate limit", "quota exceeded"]
+        if any(phrase in output.lower() for phrase in rate_limit_phrases):
+            print(f"  WARN: rate limit during analysis -- skipping", file=sys.stderr)
+            return None
+
+        return output if output else None
+
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return None
+
+
+def append_analysis_to_file(prediction_path: Path, analysis_text: str) -> None:
+    """Append analysis section to the prediction file."""
+    content = prediction_path.read_text(encoding="utf-8")
+    if "## Prediction Analysis" in content:
+        return  # don't duplicate
+    content += f"\n\n{analysis_text}\n"
+    prediction_path.write_text(content, encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
 # Slack notification
 # ---------------------------------------------------------------------------
 
 def notify_slack(results: list[dict]) -> None:
+    """Send review summary to Slack -- this is the human touchpoint."""
     if not results:
         return
     try:
         from tools.scripts.slack_notify import notify
 
-        lines = [f"*Backtest Producer -- {TODAY}*", f"{len(results)} event(s) run\n"]
+        leakage_count = sum(1 for r in results if r["scoring"].get("suspect_leakage"))
+        high_conf = sum(1 for r in results if (r["scoring"].get("primary_confidence") or 0) > 0.80)
+
+        lines = [
+            f"*Backtest Review Summary -- {TODAY}*",
+            f"{len(results)} event(s) run | {leakage_count} leakage flagged | {high_conf} high-confidence\n",
+        ]
         for r in results:
             event = r["event"]
             scoring = r["scoring"]
-            flag = " :warning: SUSPECT LEAKAGE" if scoring.get("suspect_leakage") else ""
+            flag = " :warning: LEAKAGE" if scoring.get("suspect_leakage") else ""
             conf = scoring.get("primary_confidence")
-            conf_str = f"{conf:.0%}" if conf is not None else "unknown"
+            conf_str = f"{conf:.0%}" if conf is not None else "?"
+            align = scoring.get("alignment_score", 0)
             lines.append(
                 f"- `{event['event_id']}` [{event['domain']}] "
-                f"conf={conf_str} align={scoring.get('alignment_score', '?'):.0%}"
+                f"conf={conf_str} align={align:.0%} diff={event.get('difficulty', '?')}"
                 f"{flag}"
             )
+
         lines.append(
-            "\nAll outputs tagged `backtested=true, leakage_risk=HIGH`. "
-            "Review in `data/predictions/backtest/` before calibration use."
+            "\n*Action needed:* Reply with verdict per event to promote to calibration:"
+            "\n`correct <event_id>` | `wrong <event_id>` | `partial <event_id>` | `reject <event_id>`"
+            "\nOr reply `approve all` to bulk-accept provisional scores."
         )
         notify("\n".join(lines), severity="routine")
     except Exception as exc:
@@ -468,6 +582,15 @@ def main() -> int:
         scoring = score_prediction(event, claude_output)
         prediction_path = write_prediction_file(event, claude_output, scoring)
         signal_path = write_accuracy_signal(event, scoring, prediction_path)
+
+        # Generate post-prediction analysis (backtests have known outcomes)
+        print(f"  Analyzing prediction vs known outcome...")
+        analysis = generate_backtest_analysis(event, claude_output, scoring)
+        if analysis:
+            append_analysis_to_file(prediction_path, analysis)
+            print(f"  Analysis appended")
+        else:
+            print(f"  WARN: analysis generation failed -- prediction saved without analysis")
 
         # Update state
         completed[event_id] = {

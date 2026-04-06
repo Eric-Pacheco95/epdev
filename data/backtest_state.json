@@ -1,0 +1,214 @@
+{
+  "completed": {
+    "geo-us-election-2020": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-us-election-2020.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-us-election-2020.md",
+      "suspect_leakage": false
+    },
+    "geo-brexit-outcome-2016": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-brexit-outcome-2016.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-brexit-outcome-2016.md",
+      "suspect_leakage": false
+    },
+    "geo-russia-ukraine-invasion-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-russia-ukraine-invasion-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-russia-ukraine-invasion-2022.md",
+      "suspect_leakage": false
+    },
+    "geo-pelosi-taiwan-conflict-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-pelosi-taiwan-conflict-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-pelosi-taiwan-conflict-2022.md",
+      "suspect_leakage": false
+    },
+    "geo-french-election-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-french-election-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-french-election-2022.md",
+      "suspect_leakage": true
+    },
+    "geo-iran-nuclear-deal-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-iran-nuclear-deal-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-iran-nuclear-deal-2022.md",
+      "suspect_leakage": true
+    },
+    "geo-saudi-iran-normalization-2023": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-saudi-iran-normalization-2023.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-saudi-iran-normalization-2023.md",
+      "suspect_leakage": false
+    },
+    "geo-nato-finland-sweden-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-nato-finland-sweden-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-nato-finland-sweden-2022.md",
+      "suspect_leakage": true
+    },
+    "geo-israel-hamas-invasion-2023": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-israel-hamas-invasion-2023.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-israel-hamas-invasion-2023.md",
+      "suspect_leakage": false
+    },
+    "geo-ukraine-war-six-months-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-ukraine-war-six-months-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-ukraine-war-six-months-2022.md",
+      "suspect_leakage": false
+    },
+    "mkt-btc-ath-2021": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-btc-ath-2021.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-btc-ath-2021.md",
+      "suspect_leakage": false
+    },
+    "mkt-crypto-bear-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-crypto-bear-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-crypto-bear-2022.md",
+      "suspect_leakage": false
+    },
+    "mkt-ftx-collapse-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-ftx-collapse-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-ftx-collapse-2022.md",
+      "suspect_leakage": false
+    },
+    "mkt-us-recession-2023": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-us-recession-2023.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-us-recession-2023.md",
+      "suspect_leakage": false
+    },
+    "mkt-nvidia-2023": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-nvidia-2023.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-nvidia-2023.md",
+      "suspect_leakage": false
+    },
+    "mkt-bitcoin-etf-2024": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-bitcoin-etf-2024.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-bitcoin-etf-2024.md",
+      "suspect_leakage": true
+    },
+    "mkt-btc-halving-ath-2024": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-btc-halving-ath-2024.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-btc-halving-ath-2024.md",
+      "suspect_leakage": false
+    },
+    "mkt-eth-merge-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-eth-merge-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-eth-merge-2022.md",
+      "suspect_leakage": false
+    },
+    "mkt-svb-collapse-2023": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-svb-collapse-2023.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-svb-collapse-2023.md",
+      "suspect_leakage": false
+    },
+    "mkt-fed-hikes-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-fed-hikes-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-fed-hikes-2022.md",
+      "suspect_leakage": false
+    },
+    "tech-gpt4-bar-exam": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-gpt4-bar-exam.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-gpt4-bar-exam.md",
+      "suspect_leakage": false
+    },
+    "tech-chatgpt-100m-users": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-chatgpt-100m-users.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-chatgpt-100m-users.md",
+      "suspect_leakage": false
+    },
+    "tech-self-driving-2025": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-self-driving-2025.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-self-driving-2025.md",
+      "suspect_leakage": false
+    },
+    "tech-meta-stock-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-meta-stock-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-meta-stock-2022.md",
+      "suspect_leakage": false
+    },
+    "tech-twitter-acquisition-2022": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-twitter-acquisition-2022.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-twitter-acquisition-2022.md",
+      "suspect_leakage": false
+    },
+    "tech-openai-gpt5-2024": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-openai-gpt5-2024.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-openai-gpt5-2024.md",
+      "suspect_leakage": false
+    },
+    "tech-apple-vision-pro-2024": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-apple-vision-pro-2024.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-apple-vision-pro-2024.md",
+      "suspect_leakage": false
+    },
+    "tech-eu-ai-act-2024": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-eu-ai-act-2024.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-eu-ai-act-2024.md",
+      "suspect_leakage": true
+    },
+    "tech-anthropic-claude3-2024": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-anthropic-claude3-2024.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-anthropic-claude3-2024.md",
+      "suspect_leakage": false
+    },
+    "tech-x-subscriptions-underperform": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-x-subscriptions-underperform.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-x-subscriptions-underperform.md",
+      "suspect_leakage": false
+    },
+    "plan-tokyo-olympics-2020": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-plan-tokyo-olympics-2020.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-plan-tokyo-olympics-2020.md",
+      "suspect_leakage": true
+    },
+    "mkt-us-inflation-2021": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-mkt-us-inflation-2021.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-mkt-us-inflation-2021.md",
+      "suspect_leakage": false
+    },
+    "geo-afghanistan-collapse-2021": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-geo-afghanistan-collapse-2021.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-geo-afghanistan-collapse-2021.md",
+      "suspect_leakage": false
+    },
+    "tech-chip-shortage-2021": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-tech-chip-shortage-2021.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-tech-chip-shortage-2021.md",
+      "suspect_leakage": false
+    },
+    "plan-tesla-cybertruck-2021": {
+      "date": "2026-04-05",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-05-plan-tesla-cybertruck-2021.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-plan-tesla-cybertruck-2021.md",
+      "suspect_leakage": false
+    }
+  }
+}

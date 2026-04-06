@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -39,6 +40,10 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
+
+# Absolute path to claude CLI -- Task Scheduler doesn't have .local/bin on PATH
+_claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
+CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 
 PREDICTIONS_DIR = REPO_ROOT / "data" / "predictions"
 BACKTEST_DIR    = PREDICTIONS_DIR / "backtest"
@@ -255,6 +260,99 @@ Calibration loop checks for threshold (20 forward-looking resolved) after each r
 
 
 # ---------------------------------------------------------------------------
+# Post-resolution analysis
+# ---------------------------------------------------------------------------
+
+ANALYSIS_PROMPT_TEMPLATE = """\
+You are a prediction calibration analyst. Compare a prediction against its known outcome
+and extract reasoning lessons.
+
+PREDICTION FILE:
+{prediction_content}
+
+VERDICT: {verdict}
+RESOLUTION NOTE: {note}
+
+Analyze this prediction and produce EXACTLY this format (no other text):
+
+## Prediction Analysis
+
+**Verdict**: {verdict}
+**Calibration error**: [Was the model overconfident, underconfident, or well-calibrated?
+State the probability assigned to the actual outcome vs what happened.]
+
+**Key reasoning errors**: [What did the model get wrong? What factors were
+over/underweighted? Be specific -- name the exact reasoning step that failed.]
+
+**What worked**: [What reasoning was correct? What factors were properly identified?]
+
+**Lesson for future predictions**: [One concrete, actionable rule that would improve
+the next prediction in this domain. Format as: "When [condition], [do X instead of Y]."
+This must be specific enough to apply, not generic advice.]
+
+**Signpost accuracy**: [Which signposts from the prediction turned out to be useful
+predictors? Which were noise?]
+"""
+
+
+def generate_analysis(prediction_path: Path, verdict: str, note: str) -> str | None:
+    """Run claude -p to generate post-resolution analysis. Returns analysis text or None."""
+    try:
+        content = prediction_path.read_text(encoding="utf-8", errors="replace")
+        # Truncate to avoid massive prompts (keep first 4000 chars)
+        if len(content) > 4000:
+            content = content[:4000] + "\n...[truncated]"
+
+        prompt = ANALYSIS_PROMPT_TEMPLATE.format(
+            prediction_content=content,
+            verdict=verdict,
+            note=note or "(none)",
+        )
+
+        result = subprocess.run(
+            [CLAUDE_BIN, "-p", "--model", "sonnet", prompt],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=str(REPO_ROOT),
+        )
+
+        if result.returncode != 0:
+            print(f"  WARN: analysis claude exited {result.returncode}", file=sys.stderr)
+            return None
+
+        output = result.stdout.strip()
+
+        # Rate limit guard
+        rate_limit_phrases = ["hit your limit", "rate limit", "quota exceeded"]
+        if any(phrase in output.lower() for phrase in rate_limit_phrases):
+            print("  WARN: rate limit during analysis -- skipping", file=sys.stderr)
+            return None
+
+        return output if output else None
+
+    except subprocess.TimeoutExpired:
+        print("  WARN: analysis claude timed out", file=sys.stderr)
+        return None
+    except FileNotFoundError:
+        print("  WARN: claude CLI not found for analysis", file=sys.stderr)
+        return None
+
+
+def append_analysis(path: Path, analysis_text: str) -> None:
+    """Append analysis section to the prediction file."""
+    content = path.read_text(encoding="utf-8", errors="replace")
+
+    # Don't duplicate if analysis already exists
+    if "## Prediction Analysis" in content:
+        print("  Analysis already exists -- skipping append")
+        return
+
+    content += f"\n\n{analysis_text}\n"
+    path.write_text(content, encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
 # Calibration trigger
 # ---------------------------------------------------------------------------
 
@@ -355,6 +453,17 @@ def main() -> int:
             print(f"  >> Calibration threshold met ({resolved_count})! Run prediction_calibration.py")
 
     print(f"Resolved: {path.name} -> {verdict.upper()}" + (f" ({note})" if note else ""))
+
+    # Post-resolution analysis -- extract reasoning lessons
+    if verdict in ("correct", "wrong", "partial"):
+        print("  Generating post-resolution analysis...")
+        analysis = generate_analysis(path, verdict, note)
+        if analysis:
+            append_analysis(path, analysis)
+            print("  Analysis appended to prediction file")
+        else:
+            print("  WARN: analysis generation failed -- file saved without analysis")
+
     return 0
 
 

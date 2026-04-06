@@ -88,14 +88,16 @@ def load_resolved_predictions() -> tuple[list[dict], list[dict]]:
             continue
         forward.append(fm)
 
-    # Reviewed backtests (data/predictions/backtest/*.md with status: reviewed)
+    # Reviewed/resolved backtests (data/predictions/backtest/*.md)
+    # "reviewed" = accepted for calibration (leakage check passed)
+    # "resolved" = reviewed AND scored with correct/wrong/partial verdict
     if BACKTEST_DIR.exists():
         for path in BACKTEST_DIR.glob("*.md"):
             fm = parse_frontmatter(path)
             if not fm:
                 continue
             status = str(fm.get("status", "")).lower()
-            if status != "reviewed":
+            if status not in ("reviewed", "resolved"):
                 continue
             backtest.append(fm)
 

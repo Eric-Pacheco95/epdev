@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "updated": "2026-04-05",
+  "threshold": 20,
+  "bounds": [
+    -0.15,
+    0.15
+  ],
+  "domains": {
+    "geopolitics": {
+      "adjustment": 0.058,
+      "n_resolved": 7,
+      "n_forward": 0,
+      "n_backtest": 7,
+      "accuracy_forward": null,
+      "accuracy_backtest": 0.786,
+      "overconfidence_delta": -0.058,
+      "clamped": false
+    },
+    "market": {
+      "adjustment": 0.061,
+      "n_resolved": 9,
+      "n_forward": 0,
+      "n_backtest": 9,
+      "accuracy_forward": null,
+      "accuracy_backtest": 0.722,
+      "overconfidence_delta": -0.061,
+      "clamped": false
+    },
+    "technology": {
+      "adjustment": 0.15,
+      "n_resolved": 9,
+      "n_forward": 0,
+      "n_backtest": 9,
+      "accuracy_forward": null,
+      "accuracy_backtest": 0.778,
+      "overconfidence_delta": -0.208,
+      "clamped": true
+    }
+  }
+}

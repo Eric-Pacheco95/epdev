@@ -430,3 +430,53 @@ events:
       Musk had stated subscription revenue could become 50% of total. Platform
       experiencing advertiser exodus. Staff cuts from 7,500 to ~1,500. Ad revenue
       down ~50% YoY per reports. Subscription model seen as crucial to replace.
+
+  - event_id: plan-tokyo-olympics-2020
+    description: "Will the Tokyo 2020 Olympics proceed as scheduled in July-August 2020?"
+    domain: planning
+    knowledge_cutoff_date: "2020-01-15"
+    known_outcome: "Postponed to July-August 2021 due to COVID-19 pandemic â€” first Olympic postponement in peacetime history"
+    difficulty: high
+    status: approved
+    at_time_context: >
+      Tokyo 2020 was fully planned for July 24 - August 9, 2020 with venue construction nearly complete and ticket sales underway. Japanese officials had invested over $12 billion in preparations and the IOC showed no signs of contingency planning. WHO had just begun tracking a novel pneumonia cluster in Wuhan, China with fewer than 50 confirmed cases and no evidence of sustained human-to-human transmission outside China. No major international sporting events had been canceled or postponed.
+
+  - event_id: mkt-us-inflation-2021
+    description: “Will US CPI inflation exceed 5% year-over-year at any point in 2021?”
+    domain: market
+    knowledge_cutoff_date: “2021-01-01”
+    known_outcome: “Yes â€” CPI hit 5.4% by June 2021 and rose to 7.0% by December 2021, the highest in 40 years”
+    difficulty: high
+    status: approved
+    at_time_context: >
+      December 2020 CPI stood at 1.4% year-over-year. The Federal Reserve projected 2021 PCE inflation at approximately 1.8% and maintained that any price increases would be transitory supply-chain effects. Most major bank forecasts expected inflation to peak below 3%. The $900B stimulus package had just passed but the additional $1.9T American Rescue Plan had not yet been proposed. Unemployment remained elevated at 6.7% and demand destruction from COVID was widely expected to suppress prices.
+
+  - event_id: geo-afghanistan-collapse-2021
+    description: “Following the announced US military withdrawal, will the Afghan government survive for at least 12 months after the withdrawal deadline of September 11, 2021?”
+    domain: geopolitics
+    knowledge_cutoff_date: “2021-07-01”
+    known_outcome: “No â€” Taliban captured Kabul on August 15, 2021, just 6 weeks after the July 8 withdrawal announcement; the government collapsed in days, not months”
+    difficulty: high
+    status: approved
+    at_time_context: >
+      President Biden announced April 14 that all US troops would leave by September 11, 2021. As of July 1, US intelligence assessments estimated the Afghan government could hold for 6 months to 2 years post-withdrawal, with a 12-month survival scenario considered likely. The Taliban controlled roughly 20% of Afghanistan's districts but had not yet taken any provincial capitals. The Afghan National Army numbered approximately 300,000 on paper and had US air support through the withdrawal deadline. NATO allies and most analysts expected a gradual deterioration, not a rapid collapse.
+
+  - event_id: tech-chip-shortage-2021
+    description: “Will the global semiconductor shortage that emerged in late 2020 resolve to near-normal supply conditions by end of 2021?”
+    domain: technology
+    knowledge_cutoff_date: “2021-01-01”
+    known_outcome: “No â€” the shortage deepened through 2021, auto plants idled globally, lead times stretched to 52+ weeks, and the shortage persisted into 2022”
+    difficulty: medium
+    status: approved
+    at_time_context: >
+      A semiconductor supply crunch had emerged in Q4 2020, initially driven by pandemic-related demand shifts as consumers bought electronics while automakers cut orders. TSMC and Intel publicly projected the shortage as temporary, with most analyst forecasts expecting supply to normalize within 2021 as fabs ramped capacity. Ford and GM had begun warning of limited chip availability but had not yet announced major production cuts. Intel CEO Pat Gelsinger had not yet been appointed and the CHIPS Act was not yet proposed. The shortage was widely framed as a 1-2 quarter disruption.
+
+  - event_id: plan-tesla-cybertruck-2021
+    description: “Will Tesla begin customer deliveries of the Cybertruck in 2021, as Elon Musk indicated at the November 2019 unveiling?”
+    domain: planning
+    knowledge_cutoff_date: “2021-01-01”
+    known_outcome: “No â€” Cybertruck deliveries did not begin until November 2023, more than two years late”
+    difficulty: medium
+    status: approved
+    at_time_context: >
+      Elon Musk unveiled the Cybertruck in November 2019 stating production would begin in late 2021. As of January 2021, the official timeline had not been revised and Tesla had collected over 1 million $100 refundable reservations. Tesla had recently exceeded its own Model Y production ramp timeline, improving credibility for near-term delivery promises. Cybertruck prototypes had been spotted testing on public roads and the Giga Texas facility was under construction. No formal delay announcement had been issued and Musk had not publicly updated the production target.

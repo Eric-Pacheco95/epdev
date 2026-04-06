@@ -1,7 +1,7 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-03-31 (Doc-sync: fixed stale checkboxes, completion summary, Phase 5A/5B items validated)
+> Last updated: 2026-04-05 (Doc-sync: 5C stale checkboxes closed, prediction engine updated, 5D readiness assessed)
 
 ## Priority Backlog (ordered by value/effort)
 
@@ -82,7 +82,7 @@
 
 | Project | Status | Health | Owner | Next Action |
 |---------|--------|--------|-------|-------------|
-| epdev-jarvis-setup | active | green | epdev | Phase 4 COMPLETE, Phase 4→5 gate PASSED — Phase 5A next |
+| epdev-jarvis-setup | active | green | epdev | Phase 5C COMPLETE (5C-5C deferred by design), assessing 5D readiness |
 | crypto-bot | active | yellow | epdev | Paper trading → production gate — see `memory/work/crypto_trading_bot/project_state.md` |
 | jarvis-app | active | green | epdev | Sprint 1+2+3 COMPLETE (app shell, vitals, drill-down, tab restructure) — see `memory/work/jarvis-app/PRD.md` |
 
@@ -428,7 +428,7 @@
 
 **5C-1: Two-stage quality gate convergence**
 - [x] **Converge task_gate.py + backlog_append()** — Done in 5C-3: task_gate keeps routing logic, delegates writes to backlog_append(). Stale ISC allowlist removed.
-- [ ] **Stage 2 dispatch gate hardening** — `select_next_task()` already checks autonomous_safe, deps, context_files, ISC commands. Add: injection scanning on task metadata (P1 from red-team), JARVIS_SESSION_TYPE assertion, .claude/settings.json write protection in autonomous sessions
+- [x] **Stage 2 dispatch gate hardening** — All 3 items implemented: `_scan_task_metadata_injection()` in select_next_task (line 328), JARVIS_SESSION_TYPE assertion (line 966), settings.json + CLAUDE.md write protection in validate_tool_use.py. PreToolUse hook matcher broadened from Bash-only to all tools (2026-04-05). (2026-04-05)
 
 **5C-2: Routines engine (first new intake source)**
 - [x] **Routines config** — `orchestration/routines.json`: schedule, task template, dedup key. Day-one routines: weekly security audit, weekly synthesis, monthly steering audit
@@ -444,7 +444,7 @@
 **5C-5A: Fix overnight runner (prerequisite)**
 - [x] **Rate limit detection** — Detect "hit your limit" in claude -p output, abort remaining dimensions, log clearly
 - [x] **Self-test state isolation** — Self-test no longer overwrites production overnight_state.json
-- [ ] **Validate real production run** — Confirm next overnight run produces non-zero kept counts (requires limit headroom at 4am)
+- [x] **Validate real production run** — VALIDATED: 7 runs completed, all 6 dimensions active, 159 total kept changes (scaffolding:28, codebase_health:53, knowledge_synthesis:19, external_monitoring:26, prompt_quality:30, cross_project:3). Last run: 2026-04-05. (2026-04-05)
 
 **5C-5B: Dispatcher budget controls (independent)**
 - [x] **max_tasks_per_source_per_day** — 3 per source per day; checked via run report history before execution
@@ -461,8 +461,8 @@
 
 > **Prerequisite:** Let pipeline run organically. Collect 15+ tasks with diverse outcomes before optimizing.
 
-- [ ] **Branch lifecycle tracker** — Flag `jarvis/auto-*` and `jarvis/overnight-*` branches with no merge/discard decision after 7 days. Deterministic, zero LLM cost. Real gap found by arch review: 5 orphaned branches in production today
-- [ ] **Autonomous signal rate monitoring** — 4E item, now critical for Phase 5 safety. Alert on volume spikes from autonomous producers (heartbeat, overnight, dispatcher)
+- [x] **Branch lifecycle tracker** — `tools/scripts/branch_lifecycle.py`: scans `jarvis/auto-*` and `jarvis/overnight-*` branches, flags stale (>7d, not merged), reports merged (safe to delete). Heartbeat collector `stale_branches` wired with warn>0, crit>3. CLI: `--json`, `--notify` (Slack), `--self-test` (5 tests pass). (2026-04-05)
+- [x] **Autonomous signal rate monitoring** — Enhanced `manifest_autonomous_signal_rate` collector with per-category and per-producer breakdown (prediction, backtest, heartbeat, overnight, dispatcher). Remediation_map entries added for both `autonomous_signal_rate` and `stale_branches`. Thresholds: warn>10/day, crit>20/day. (2026-04-05)
 - [ ] **Two-layer verification (data-gated)** — Second `claude -p` review of worker output if ISC quality proves insufficient. Only build after 15+ task outcomes show ISC-pass-but-bad-quality pattern. Aron's CEO-checks-worker pattern, adapted
 - [ ] **Worker prompt optimization (data-gated)** — Analyze run reports: what context did workers actually use vs ignore? Only build after 15+ runs provide calibration data
 - [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources (moved from 5C -- requires pipeline stability first)
@@ -501,9 +501,9 @@
 
 > **Skill:** `/make-prediction` (v1 live, 2026-04-03). **Goal:** 50+ tracked predictions for calibration learning, then autonomous backtesting.
 
-- [ ] **Prediction review scheduled task** — Weekly/monthly scan of `data/predictions/` for signposts approaching due dates. Surface due-for-review predictions in session start or Slack. Eric resolves interactively. **Trigger:** 10+ tracked predictions in `data/predictions/`. Backlog: `task-1775191309568356`
-- [ ] **Prediction backtesting pipeline** — Autonomous producer: select historical events, run `/make-prediction` constrained to historical knowledge, score against known outcomes. Requires seed list of 20+ historical events, knowledge-constraining prompt wrapper, scoring logic. **Trigger:** `/make-prediction` v1 validated + dispatcher operational + Phase 5 stable. Backlog: `task-1775191309566355`
-- [ ] **Prediction calibration feedback loop** — After 20+ resolved predictions, analyze accuracy patterns by domain. Write calibration adjustment file that `/make-prediction` reads at CALIBRATE step. **Trigger:** 20+ resolved predictions via `/review-prediction`. Backlog: `task-1775191309569355`
+- [x] **Prediction review scheduled task** — `prediction_review_task.py` posts weekly Slack digest of predictions due within 30 days. Routine `prediction-weekly-review` in routines.json. Haiku model for cost efficiency. (2026-04-05)
+- [x] **Prediction backtesting pipeline** — `prediction_backtest_producer.py` + `prediction_resolver.py`. 35 backtest predictions across 3 domains (10 geo, 10 market, 10 tech, 5 planning). 59 resolutions scored. Events sourced from `data/backtest_events.yaml` (35 events). Routine `prediction-backtest` in routines.json. (2026-04-05)
+- [x] **Prediction calibration feedback loop** — `prediction_calibration.py` computes per-domain accuracy and overconfidence adjustments. `data/calibration.json` active with 3 domains: geo (adj +0.058, n=7), market (adj +0.061, n=9), tech (adj +0.15 clamped, n=9). 25 resolved predictions (above 20 threshold). Routine `prediction-calibration-check` in routines.json. (2026-04-05)
 
 ---
 
