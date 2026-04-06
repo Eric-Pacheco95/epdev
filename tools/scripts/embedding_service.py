@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -54,6 +55,11 @@ FULL_SCOPE_DIRS = [
     REPO_ROOT / "memory" / "learning" / "signals",
     REPO_ROOT / "memory" / "learning" / "signals" / "processed",
     REPO_ROOT / "memory" / "learning" / "synthesis",
+    REPO_ROOT / "memory" / "learning" / "failures",
+    REPO_ROOT / "memory" / "learning" / "absorbed",
+    REPO_ROOT / "memory" / "learning" / "wisdom",
+    REPO_ROOT / "memory" / "knowledge",
+    REPO_ROOT / "memory" / "work",  # TELOS lives here
     REPO_ROOT / "history" / "decisions",
 ]
 
@@ -63,26 +69,55 @@ SNIPPET_LEN = 200
 MAX_FILE_CHARS = 6000  # nomic-embed-text 2048-token context; ~6K chars is safe
 
 
+# --- Injection sanitization ---
+
+_INJECTION_PATTERNS = [
+    r"ignore\s+(all\s+)?previous\s+instructions",
+    r"you\s+are\s+now\s+a",
+    r"disregard\s+(all\s+)?(prior|previous|above)",
+    r"new\s+instructions?\s*:",
+    r"system\s*prompt\s*:",
+    r"<\s*/?system\s*>",
+    r"ADMIN\s*OVERRIDE",
+]
+_INJECTION_RE = re.compile("|".join(_INJECTION_PATTERNS), re.IGNORECASE)
+
+
+def _sanitize_text(text: str) -> str:
+    """Strip injection patterns from text before embedding/retrieval."""
+    return _INJECTION_RE.sub("[REDACTED]", text)
+
+
 # --- Ollama helpers ---
 
-def _check_ollama() -> None:
-    """Fail fast if Ollama is unreachable or model is missing."""
+def _check_ollama(graceful: bool = False) -> bool:
+    """Check if Ollama is reachable and model is available.
+
+    If graceful=True, returns False instead of exiting on failure.
+    If graceful=False (default), exits on failure (legacy behavior).
+    """
     try:
         r = requests.get(f"{OLLAMA_URL}/api/tags", timeout=5)
         r.raise_for_status()
         models = [m["name"] for m in r.json().get("models", [])]
     except Exception as e:
+        if graceful:
+            return False
         print(f"ERROR: Cannot reach Ollama at {OLLAMA_URL} -- {e}")
         print("  Ensure Ollama is running: ollama serve")
         sys.exit(1)
     if not any(EMBED_MODEL in m for m in models):
+        if graceful:
+            return False
         print(f"ERROR: {EMBED_MODEL} not found in Ollama.")
         print(f"  Fix: ollama pull {EMBED_MODEL}")
         sys.exit(1)
+    return True
 
 
 def _embed(text: str) -> list[float]:
     """Return embedding vector for text via Ollama REST API."""
+    text = _sanitize_text(text)
     payload = {"model": EMBED_MODEL, "input": text[:MAX_FILE_CHARS]}
     r = requests.post(f"{OLLAMA_URL}/api/embed", json=payload, timeout=60)
     r.raise_for_status()
@@ -360,6 +395,128 @@ def stats() -> dict:
     }
 
 
+# --- Hybrid retrieval router ---
+
+def _grep_search(query: str, top_k: int = 10) -> list[dict]:
+    """Grep-based keyword search across learning + knowledge files."""
+    import subprocess
+    dirs = [str(d) for d in FULL_SCOPE_DIRS if d.exists()]
+    if not dirs:
+        return []
+
+    hits = []
+    try:
+        result = subprocess.run(
+            ["rg", "--files-with-matches", "--ignore-case",
+             "--fixed-strings", "--type", "md", query] + dirs,
+            capture_output=True, text=True, timeout=10,
+        )
+        for fpath in result.stdout.strip().splitlines()[:top_k]:
+            fpath = fpath.strip()
+            if not fpath:
+                continue
+            p = Path(fpath)
+            try:
+                text = p.read_text(encoding="utf-8", errors="replace")
+                snippet = text[:SNIPPET_LEN].replace("\n", " ")
+            except OSError:
+                snippet = ""
+            hits.append({
+                "file_path": fpath,
+                "file_name": p.name,
+                "score": 1.0,  # grep = exact match
+                "snippet": snippet,
+                "method": "grep",
+            })
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
+        pass
+    return hits
+
+
+def _classify_query(query: str) -> str:
+    """Classify query as keyword, concept, or broad.
+
+    - keyword: contains file paths, exact identifiers, or short specific terms
+    - concept: natural language question or abstract description
+    - broad: ambiguous, could benefit from both methods
+    """
+    # File path or code identifier patterns
+    if re.search(r"[/\\]|\.py|\.md|\.json|_[a-z]+_|[A-Z][a-z]+[A-Z]", query):
+        return "keyword"
+
+    words = query.split()
+    # Short queries (1-2 words) are likely keywords
+    if len(words) <= 2:
+        return "keyword"
+
+    # Question-like or conceptual queries
+    concept_indicators = [
+        "how", "why", "what", "when", "about", "related to",
+        "pattern", "learn", "decision", "insight", "think",
+        "approach", "strategy", "tendency", "belief",
+    ]
+    query_lower = query.lower()
+    if any(ind in query_lower for ind in concept_indicators):
+        return "concept"
+
+    # Longer queries (5+ words) tend to be conceptual
+    if len(words) >= 5:
+        return "concept"
+
+    return "broad"
+
+
+def route(query: str, top_k: int = 5) -> dict:
+    """Hybrid retrieval: select grep, vector, or both based on query type.
+
+    Returns {method, query_type, results, warning}.
+    """
+    query_type = _classify_query(query)
+    ollama_up = _check_ollama(graceful=True)
+    warning = None
+
+    if query_type == "keyword":
+        results = _grep_search(query, top_k=top_k)
+        return {"method": "grep", "query_type": query_type,
+                "results": results, "warning": warning}
+
+    if query_type == "concept":
+        if not ollama_up:
+            warning = "Ollama unavailable -- falling back to grep-only"
+            results = _grep_search(query, top_k=top_k)
+            return {"method": "grep-fallback", "query_type": query_type,
+                    "results": results, "warning": warning}
+        results = search(query, top_k=top_k)
+        for r in results:
+            r["method"] = "vector"
+        return {"method": "vector", "query_type": query_type,
+                "results": results, "warning": warning}
+
+    # broad: use both, merge and dedup
+    grep_hits = _grep_search(query, top_k=top_k)
+
+    if ollama_up:
+        vec_hits = search(query, top_k=top_k)
+        for r in vec_hits:
+            r["method"] = "vector"
+    else:
+        vec_hits = []
+        warning = "Ollama unavailable -- hybrid degraded to grep-only"
+
+    # Merge and dedup by file path
+    seen = set()
+    merged = []
+    for hit in vec_hits + grep_hits:
+        fp = hit.get("file_path", "")
+        if fp not in seen:
+            seen.add(fp)
+            merged.append(hit)
+
+    return {"method": "hybrid" if vec_hits else "grep-fallback",
+            "query_type": query_type,
+            "results": merged[:top_k], "warning": warning}
+
+
 # --- CLI ---
 
 def _cmd_index(args) -> None:
@@ -417,6 +574,32 @@ def _cmd_stats(args) -> None:
     print(f"  Store path    : {s['vectorstore_path']}")
 
 
+def _cmd_route(args) -> None:
+    query = " ".join(args.query)
+    top_k = args.top_k if hasattr(args, "top_k") else 5
+    result = route(query, top_k=top_k)
+
+    if args.json:
+        # Ensure ASCII-safe output for Windows
+        print(json.dumps(result, indent=2, ensure_ascii=True))
+        return
+
+    if result.get("warning"):
+        print(f"WARNING: {result['warning']}")
+    print(f"Query type: {result['query_type']} -> method: {result['method']}")
+
+    hits = result.get("results", [])
+    if not hits:
+        print("No results.")
+        return
+
+    for i, h in enumerate(hits, 1):
+        score = h.get("score", 0)
+        method = h.get("method", "?")
+        print(f"  {i}. [{score:.3f}] ({method}) {h['file_name']}")
+        print(f"       {h.get('snippet', '')[:120]}...")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Jarvis embedding service -- semantic search for memory files"
@@ -445,6 +628,13 @@ def main() -> None:
 
     p_stats = sub.add_parser("stats", help="Index health stats")
     p_stats.set_defaults(func=_cmd_stats)
+
+    p_route = sub.add_parser("route", help="Hybrid retrieval (grep + vector)")
+    p_route.add_argument("query", nargs="+", help="Search query")
+    p_route.add_argument("--top-k", type=int, default=5)
+    p_route.add_argument("--json", action="store_true",
+                         help="Machine-readable output")
+    p_route.set_defaults(func=_cmd_route)
 
     args = parser.parse_args()
     args.func(args)

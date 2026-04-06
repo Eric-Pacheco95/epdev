@@ -132,6 +132,7 @@ memory/learning/synthesis/*.md
 memory/learning/absorbed/*.md
 memory/learning/_signal_meta.json
 memory/learning/signal_lineage.jsonl
+memory/learning/wisdom/*.md
 
 # ------------------------------------------------------------------------------
 # Personal history content — blank-slate template only

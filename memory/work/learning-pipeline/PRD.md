@@ -104,27 +104,27 @@ Anti-criterion:
 
 ### Phase B: Wisdom Promotion
 
-- [ ] Promotion proposals are generated when 15+ synthesis docs exist and themes reach established maturity | Verify: Create 15 synthesis docs with 1 established theme, run promotion check, confirm proposal in staging file [M]
-- [ ] Promotion proposals surface in /vitals morning brief | Verify: Run /vitals with pending proposals, confirm Step 3 shows them [M]
-- [ ] Domain insights promote to `memory/learning/wisdom/{topic}.md` on approval | Verify: Approve a domain proposal, confirm file exists with correct format [M]
-- [ ] Steering rule proposals require explicit Eric approval before writing | Verify: Run promotion with behavioral theme, confirm proposal staged but NOT written to CLAUDE.md [A]
-- [ ] Promoted wisdom articles include source lineage (contributing signals/synthesis) | Verify: Read a promoted wisdom file, confirm lineage section present [M] | model: haiku |
-- [ ] Audit trail entry created in history/decisions/ for each promotion | Verify: `ls history/decisions/*promote*` after promotion [M] | model: haiku |
+- [x] Promotion proposals are generated when 15+ synthesis docs exist and themes reach established maturity | Verify: Create 15 synthesis docs with 1 established theme, run promotion check, confirm proposal in staging file [M]
+- [x] Promotion proposals surface in /vitals morning brief | Verify: Run /vitals with pending proposals, confirm Step 3 shows them [M]
+- [x] Domain insights promote to `memory/learning/wisdom/{topic}.md` on approval | Verify: Approve a domain proposal, confirm file exists with correct format [M]
+- [x] Steering rule proposals require explicit Eric approval before writing | Verify: Run promotion with behavioral theme, confirm proposal staged but NOT written to CLAUDE.md [A]
+- [x] Promoted wisdom articles include source lineage (contributing signals/synthesis) | Verify: Read a promoted wisdom file, confirm lineage section present [M] | model: haiku |
+- [x] Audit trail entry created in history/decisions/ for each promotion | Verify: `ls history/decisions/*promote*` after promotion [M] | model: haiku |
 
 Anti-criterion:
-- [ ] No duplicate promotions occur for themes already promoted | Verify: Run promotion twice for same theme, confirm second run skips with "already promoted" message [M]
+- [x] No duplicate promotions occur for themes already promoted | Verify: Run promotion twice for same theme, confirm second run skips with "already promoted" message [M]
 
 ### Phase C: Vector Retrieval
 
-- [ ] ChromaDB vectorstore indexes all scoped content (signals, synthesis, wisdom, knowledge, decisions, TELOS, auto-memory) | Verify: `python embedding_service.py stats` file count matches corpus total [M]
-- [ ] Semantic search returns relevant results for concept queries | Verify: Search "Eric's decision-making patterns", confirm relevant signals/wisdom appear [M]
-- [ ] Nightly reindex is incremental (unchanged files skipped by mtime) | Verify: Run index twice, second run indexes 0 files [M]
-- [ ] Hybrid router selects correct path per query type | Verify: Test exact query -> grep, concept query -> vector, broad query -> hybrid [M]
-- [ ] Graceful degradation when Ollama is not running | Verify: Stop Ollama, run search, confirm grep-only results with warning [M]
+- [x] ChromaDB vectorstore indexes all scoped content (signals, synthesis, wisdom, knowledge, decisions, TELOS, auto-memory) | Verify: `python embedding_service.py stats` file count matches corpus total [M]
+- [x] Semantic search returns relevant results for concept queries | Verify: Search "Eric's decision-making patterns", confirm relevant signals/wisdom appear [M]
+- [x] Nightly reindex is incremental (unchanged files skipped by mtime) | Verify: Run index twice, second run indexes 0 files [M]
+- [x] Hybrid router selects correct path per query type | Verify: Test exact query -> grep, concept query -> vector, broad query -> hybrid [M]
+- [x] Graceful degradation when Ollama is not running | Verify: Stop Ollama, run search, confirm grep-only results with warning [M]
 
 Anti-criteria:
-- [ ] Embedded content containing injection patterns ("ignore all previous instructions") does not override Jarvis behavior | Verify: Embed adversarial file, search for it, confirm no instruction override [M]
-- [ ] No vectorstore data is committed to git or stored inside the repo directory | Verify: Confirm `~/.jarvis/vectorstore/` path, no vectorstore in repo [A] | model: haiku |
+- [x] Embedded content containing injection patterns ("ignore all previous instructions") does not override Jarvis behavior | Verify: Embed adversarial file, search for it, confirm no instruction override [M]
+- [x] No vectorstore data is committed to git or stored inside the repo directory | Verify: Confirm `~/.jarvis/vectorstore/` path, no vectorstore in repo [A] | model: haiku |
 
 ISC Quality Gate: PASS (6/6)
 

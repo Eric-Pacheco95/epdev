@@ -112,11 +112,29 @@ Say "merged" when done, or "skip" to defer.
 ```
 If no unmerged branches: "Step 2 -- No overnight branches to merge. Skip."
 
-**Step 3 -- PLAN: Backlog triage**
+**Step 3 -- PLAN: Backlog triage + wisdom proposals**
+
+**3a. Wisdom promotion proposals**
+Run `python tools/scripts/promotion_check.py --pending --json` to check for pending promotion proposals.
+If proposals exist, tell Eric:
+```
+Step 3a -- Wisdom promotions ({n} pending)
+  {for each proposal: [route] theme_name (maturity, confidence%)}
+  For each: say "approve", "reject", or "defer".
+  Approve = promote now. Reject = dismiss. Defer = review later.
+```
+When Eric approves a proposal, run `python tools/scripts/promotion_check.py --approve "{proposal_id}"`.
+- wisdom route: auto-writes to memory/learning/wisdom/
+- telos route: stages for /telos-update (remind Eric to run it)
+- steering route: stages for /update-steering-rules (remind Eric to run it)
+
+If no proposals: "Step 3a -- No wisdom promotions pending."
+
+**3b. Backlog triage**
 Pull the pending_review and failed items from the collector data (backlog_pending_review_count, backlog_failed_count).
 Tell Eric:
 ```
-Step 3 -- Backlog triage ({n} items need review)
+Step 3b -- Backlog triage ({n} items need review)
   I'll surface each item. For each: say "approve", "reject", or "defer".
   Approve = dispatch autonomously. Reject = close. Defer = leave pending.
 Say "ready" to start, or "skip" to defer the whole triage.

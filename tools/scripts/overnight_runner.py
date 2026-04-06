@@ -741,6 +741,27 @@ def main() -> int:
         except Exception as exc:
             print(f"  Signal index backfill WARN: {exc}")
 
+        # 8b. Run promotion check (stages proposals for morning /vitals)
+        try:
+            pc = subprocess.run(
+                [sys.executable, str(Path(__file__).parent / "promotion_check.py"),
+                 "--json"],
+                capture_output=True, text=True, timeout=30,
+                cwd=str(REPO_ROOT),
+            )
+            if pc.returncode == 0:
+                pc_data = json.loads(pc.stdout) if pc.stdout.strip() else {}
+                gen = pc_data.get("proposals_generated", 0)
+                if gen > 0:
+                    print(f"  Promotion check: {gen} new proposal(s) staged")
+                else:
+                    print(f"  Promotion check: no new proposals "
+                          f"({pc_data.get('synthesis_count', 0)} synthesis docs)")
+            else:
+                print(f"  Promotion check WARN: {pc.stderr.strip()}")
+        except Exception as exc:
+            print(f"  Promotion check WARN: {exc}")
+
         # 9. Update state (writes to main tree, not worktree)
         if last_completed_dim:
             state["last_dimension"] = last_completed_dim
