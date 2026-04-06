@@ -145,6 +145,21 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 - No stub signals with "(pending)" — real content or don’t write
 
 
+# VERIFY
+
+- At least one signal file was written to `memory/learning/signals/` from this session | Verify: `ls -t memory/learning/signals/ | head -3`
+- No D-tier signals were written (quality gate enforced) | Verify: Check each written signal for tier label >= C
+- `_signal_meta.json` was updated with new signal count | Verify: `python tools/scripts/jarvis_index.py --check` or read the file
+- If signal count exceeded auto-synthesis threshold, /synthesize-signals was invoked | Verify: Check for synthesis run in output or `ls memory/learning/synthesis/`
+- Failure files (if any) were written to `memory/learning/failures/` with root cause | Verify: `ls -t memory/learning/failures/ | head -3` (only if failures were discussed)
+
+# LEARN
+
+- Track the signal:session ratio over time -- consistently < 1 signal/session suggests the quality gate thresholds are too strict; consistently > 5 suggests synthesis is overdue
+- If the same skill gap candidate appears in 3+ consecutive captures, it has crossed the threshold to become a real skill -- invoke /create-pattern
+- If sentiment was negative (frustrated, blocked) and signals are low-rated, note the session type; some sessions are legitimately unproductive and that is acceptable
+- If /synthesize-signals auto-invocation fails, log it as a failure rather than silently skipping -- synthesis failures compound into stale knowledge
+
 # INPUT
 
 Analyze the current session and extract learnings. If invoked with specific context (e.g., a voice transcript or text), analyze that instead.
