@@ -199,6 +199,21 @@ For each completed ISC item, generate a scaffold sentence and prompt Eric to con
 - **Composes:** `/review-code` (non-optional VERIFY gate), `/quality-gate` (non-optional phase-completion gate), `/commit` (mid-build checkpoints + final commit prompt), `/self-heal` (if tests fail)
 - **Escalate to:** `/delegation` if scope expands mid-build or new dependencies are discovered
 
+# VERIFY
+
+- COMPLETION STATUS is COMPLETE, PARTIAL, or BLOCKED -- never left blank | Verify: Read COMPLETION STATUS section
+- Every ISC item has a PASS, FAIL, or DEFERRED status with structured evidence (evidence type, source, content) | Verify: Read VERIFY RESULTS table
+- /review-code was run and its findings are in the output (REVIEW FINDINGS section) | Verify: Check REVIEW FINDINGS is not empty or '(skipped)'
+- /quality-gate was run after each phase | Verify: Check QUALITY GATE section
+- OWNERSHIP CHECK was completed -- Eric confirmed scaffold sentences before COMPLETION STATUS was written | Verify: Check OWNERSHIP CHECK table in output
+- Uncommitted changes were flagged to Eric (not auto-committed) | Verify: Check output for commit prompt
+
+# LEARN
+
+- Track which ISC criterion types most often need fix cycles (0/1/2/3 cycles) -- high-cycle items reveal where implementation planning is weakest
+- If PARTIAL completion is the outcome on 2+ consecutive PRD phases, investigate whether the ISC items are too ambitious for single sessions (break down further)
+- The approach retrospective in VERIFY RESULTS captures whether the same approach would be chosen again -- surface recurring 'would not choose again' patterns in /learning-capture for methodology improvement
+
 # INPUT
 
 INPUT:
