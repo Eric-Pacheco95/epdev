@@ -118,6 +118,30 @@ def _kb_articles_by_domain() -> dict[str, list[str]]:
     return result
 
 
+def latest_article_date_for_slug(domain: str, slug: str) -> str | None:
+    """Most recent knowledge article date matching a specific topic slug, or None.
+
+    Matches articles whose filename contains the slug after the date prefix,
+    e.g. '2026-04-02_ai-agent-frameworks.md' matches slug 'ai-agent-frameworks'.
+    """
+    domain_dir = KNOWLEDGE_DIR / domain
+    if not domain_dir.is_dir():
+        return None
+    matching_dates = []
+    for md in domain_dir.glob("*.md"):
+        name = md.stem
+        if len(name) >= 10 and name[:10].count("-") == 2:
+            try:
+                date.fromisoformat(name[:10])
+            except ValueError:
+                continue
+            # Check if slug appears in the filename after the date prefix
+            suffix = name[11:]  # everything after "YYYY-MM-DD_"
+            if slug in suffix:
+                matching_dates.append(name[:10])
+    return sorted(matching_dates)[-1] if matching_dates else None
+
+
 def latest_article_date(domain: str) -> str | None:
     """Most recent knowledge article date for a domain, or None."""
     articles = _kb_articles_by_domain()
@@ -130,7 +154,8 @@ def is_static_due(topic: dict, state: dict) -> bool:
     slug = topic["slug"]
     interval = topic.get("interval_days", 14)
 
-    kb_date = latest_article_date(topic["domain"])
+    # Check for a knowledge article matching this specific topic slug
+    kb_date = latest_article_date_for_slug(topic["domain"], slug)
     if kb_date:
         try:
             if (date.today() - date.fromisoformat(kb_date)).days < interval:
@@ -624,9 +649,9 @@ def main() -> int:
             record_producer_run(0)
         return 0
 
-    # -- Deduplicate by domain: one task per domain per run AND cross-run backlog check --
-    # Read active backlog tasks to avoid duplicating across sources or runs.
-    backlog_active_domains: set[str] = set()
+    # -- Deduplicate by slug: one task per topic AND cross-run backlog check --
+    # Read active backlog tasks to avoid injecting a topic already pending.
+    backlog_active_slugs: set[str] = set()
     backlog_path = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
     if backlog_path.exists():
         for line in backlog_path.read_text(encoding="utf-8").splitlines():
@@ -637,23 +662,20 @@ def main() -> int:
                 t = json.loads(line)
                 if (t.get("source") == "research_producer"
                         and t.get("status") in ("pending", "executing", "verifying")):
-                    # Extract domain from goal_context or notes
-                    gc = t.get("goal_context", "") or ""
-                    for dm in ("ai-infra", "fintech", "crypto", "security", "general", "automotive"):
-                        if f"'{dm}'" in gc or f'"{dm}"' in gc:
-                            backlog_active_domains.add(dm)
-                            break
+                    rid = t.get("routine_id", "")
+                    if rid.startswith("research_"):
+                        backlog_active_slugs.add(rid[len("research_"):])
             except (json.JSONDecodeError, KeyError):
                 pass
 
-    seen_domains: set[str] = set(backlog_active_domains)
+    seen_slugs: set[str] = set(backlog_active_slugs)
     deduped: list[dict] = []
     for t in sorted(all_candidates, key=lambda x: x.get("priority", 9)):
-        domain = t["domain"]
-        if domain in seen_domains:
+        slug = t["slug"]
+        if slug in seen_slugs:
             continue
         deduped.append(t)
-        seen_domains.add(domain)
+        seen_slugs.add(slug)
 
     src_counts = {}
     for t in deduped:

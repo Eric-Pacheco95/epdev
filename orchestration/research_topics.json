@@ -7,7 +7,7 @@
     "domain": "knowledge base domain (ai-infra | fintech | crypto | security | general)",
     "depth": "quick | default | deep -- passed as depth flag",
     "interval_days": "minimum days between research runs for this topic",
-    "priority": "dispatcher priority 1-5 (lower = higher priority)",
+    "priority": "dispatcher priority 1-5 (lower = higher priority, research defaults to P2)",
     "tags": "keywords for knowledge index matching in prior-knowledge scan",
     "enabled": "set false to pause without deleting"
   },
@@ -41,7 +41,7 @@
       "domain": "fintech",
       "depth": "default",
       "interval_days": 30,
-      "priority": 3,
+      "priority": 2,
       "tags": ["fintech", "banking", "ai", "enterprise", "consulting"],
       "enabled": true
     },
@@ -52,7 +52,7 @@
       "domain": "ai-infra",
       "depth": "default",
       "interval_days": 21,
-      "priority": 3,
+      "priority": 2,
       "tags": ["prediction", "markets", "calibration", "metaculus", "manifold"],
       "enabled": true
     },
@@ -63,7 +63,7 @@
       "domain": "crypto",
       "depth": "default",
       "interval_days": 21,
-      "priority": 3,
+      "priority": 2,
       "tags": ["defi", "mev", "dex", "algo-trading", "market-structure"],
       "enabled": true
     },
@@ -85,7 +85,7 @@
       "domain": "security",
       "depth": "default",
       "interval_days": 30,
-      "priority": 3,
+      "priority": 2,
       "tags": ["security", "prompt-injection", "agentic", "attack-surface", "defense"],
       "enabled": true
     }

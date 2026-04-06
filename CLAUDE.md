@@ -87,6 +87,7 @@ Load documentation on-demand, not upfront:
 - `[MODEL-DEP]` Before declaring ISC-tracked tasks complete, re-read the ISC file and verify each criterion with evidence — do not mark complete based on memory alone (compaction causes stale recall); after build phases, check `git status` and prompt Eric to commit; during `/implement-prd` with 4+ items, commit every 3-4 items as recovery points
 - After multi-phase build sprints (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifacts, file paths match actual locations, counts and dates are current
 - When building a new skill, evaluate each step: does this require intelligence (judgment, synthesis, NLG)? No → deterministic script (Python). Yes → keep in SKILL.md
+- When designing human review for autonomous pipelines, place the approval gate at the batch summary output — not at each intermediate step; auto-approve intermediate artifacts and present a single review surface with smart defaults Eric can override (reduces decision fatigue; per-item gates create backlog that blocks the pipeline)
 - Self-tests must use isolated paths for ALL stateful writes (state files, backlogs, lock files) — use tempfile or pass temp paths to every writer function
 - Near-zero health metric scores (0.00-0.05): first verify scan scope (rglob path, target directory) before diagnosing data quality — parent-directory scans silently include irrelevant files and dilute precision
 - `[MODEL-DEP]` Any `claude -p` consumer must check stdout for rate limit messages ("hit your limit") before treating exit code 0 as success — rate-limited runs return exit 0 with zero work done
@@ -117,6 +118,7 @@ Load documentation on-demand, not upfront:
 - Machine-generated prediction signals (backtest, resolution, calibration) must not flood /synthesize-signals — prediction signals use their own synthesis cycle via the calibration debrief generator; /synthesize-signals processes only session-authored and non-prediction signals
 - Prediction backtest signals with `suspect_leakage: true` must be flagged for Eric's review before contributing to calibration — do not auto-include leakage-suspect backtests at full weight
 - Any autonomous producer that generates 20+ signals in a single batch must write them with a category tag matching its domain (e.g., `prediction-accuracy`) so compress_signals.py can group and route them correctly — uncategorized bulk signals drown session learnings in synthesis
+- An autonomous producer is not "live" until it has produced outcome artifacts, not just run successfully — track what the producer creates (knowledge articles, scored predictions, merged branches), not whether the script exited 0; before updating TELOS or tasklist status, verify at least 1 outcome artifact exists in the last 7 days
 
 ### Research & External Patterns
 

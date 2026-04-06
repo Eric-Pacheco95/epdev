@@ -79,9 +79,10 @@ STALE_LOCK_HOURS = 4
 
 # Budget controls -- prevent autonomous systems from exhausting Claude Max daily limit.
 # Derived from usage data: avg task ~3.3 min, max 10.4 min, overnight uses ~50 min.
-MAX_TASKS_PER_SOURCE_PER_DAY = 3   # per source (heartbeat, routine, overnight, session)
+# The dispatch loop processes multiple tasks per invocation until budget is exhausted.
+MAX_TASKS_PER_SOURCE_PER_DAY = 10  # per source (heartbeat, routine, overnight, session)
 MAX_WALL_TIME_PER_TASK_S = 900     # 15 min hard cap per task
-DAILY_AGGREGATE_CAP_S = 2700       # 45 min total dispatcher time per day
+DAILY_AGGREGATE_CAP_S = 5400       # 90 min total dispatcher time per day
 
 # ISC verify command allowlist and sanitization -- imported from shared module.
 # python/python3 and echo were removed from the allowlist in isc_common (see
@@ -1344,59 +1345,15 @@ def inject_routines() -> int:
 
 # -- Main dispatch loop -----------------------------------------------------
 
-def dispatch(dry_run: bool = False) -> None:
-    """Main dispatch: select task, execute in worktree, verify, update backlog."""
-    print(f"\n=== Jarvis Dispatcher === {datetime.now().isoformat()}")
-    print(f"  Max tier: {MAX_TIER}")
-
-    # Read backlog
-    backlog = read_backlog()
-    if not backlog:
-        print("  No tasks in backlog. Idle Is Success.")
-        return
-
-    # Auto-archive done tasks older than 7 days before selection
-    try:
-        archived = archive_tasks(days=7, backlog_path=BACKLOG_FILE)
-        if archived > 0:
-            print(f"  Archived {archived} completed task(s) (>7 days old)")
-            backlog = read_backlog()
-    except Exception as exc:
-        print(f"  WARNING: archive_tasks failed: {exc}", file=sys.stderr)
-
-    # Inject due routines before task selection
-    try:
-        injected = inject_routines()
-        if injected > 0:
-            backlog = read_backlog()
-    except Exception as exc:
-        print(f"  WARNING: inject_routines failed: {exc}", file=sys.stderr)
-
-    print(f"  Backlog: {len(backlog)} tasks")
-
-    # Select next task
-    task = select_next_task(backlog)
-    if task is None:
-        print("  No eligible tasks. Idle Is Success.")
-        # Still write backlog in case deliverable_exists marked tasks done
-        write_backlog(backlog)
-        return
-
-    print(f"  Selected: {task['id']} (tier {task.get('tier', '?')}, priority {task.get('priority', '?')})")
-    print(f"  Description: {task['description']}")
-
-    # Budget check -- abort before acquiring locks or creating worktrees
-    budget_reason = check_budget(task)
-    if budget_reason:
-        print(f"  BUDGET EXCEEDED: {budget_reason}")
-        print("  Deferring task execution. Idle Is Success.")
-        write_backlog(backlog)
-        return
-
-    # Acquire lock
-    if not acquire_lock(task["id"]):
-        return
-
+def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str:
+    """Execute a single task. Returns a status hint for the dispatch loop:
+      'continue'     -- task finished (success or failure), keep going
+      'stop_budget'  -- budget exhausted, stop loop
+      'stop_rate'    -- rate limited, stop loop
+      'stop_lock'    -- claude -p mutex held, stop loop
+      'stop_dry'     -- dry run, stop loop
+      'stop_error'   -- unrecoverable error, stop loop
+    """
     branch = f"jarvis/auto-{task['id']}"
     wt_path = None
     report = {}
@@ -1413,7 +1370,7 @@ def dispatch(dry_run: bool = False) -> None:
             if dry_run or report.get("status") == "dry_run":
                 task["status"] = "pending"
                 write_backlog(backlog)
-                return
+                return "stop_dry"
             if report.get("status") == "local_fallback":
                 # Ollama unavailable -- fall through to normal worktree path with Sonnet
                 task["model"] = report.get("model", "claude-sonnet-4-6")
@@ -1436,7 +1393,7 @@ def dispatch(dry_run: bool = False) -> None:
                     task["failure_reason"] = f"ISC {isc_pass}/{isc_total} passed (local)"
                 write_backlog(backlog)
                 release_lock()
-                return
+                return "continue"
 
         if not dry_run:
             # Create worktree
@@ -1444,14 +1401,14 @@ def dispatch(dry_run: bool = False) -> None:
             if wt_path is None:
                 handle_task_failure(task, "Failed to create worktree", backlog)
                 write_backlog(backlog)
-                return
+                return "continue"
 
         # Acquire global claude -p mutex (prevents contention with overnight/autoresearch)
         if not dry_run and not acquire_claude_lock("dispatcher"):
             print("  Another claude -p process is running -- aborting")
             task["status"] = "pending"
             write_backlog(backlog)
-            return
+            return "stop_lock"
 
         # Execute
         task["status"] = "executing"
@@ -1462,7 +1419,7 @@ def dispatch(dry_run: bool = False) -> None:
         if dry_run:
             task["status"] = "pending"  # Reset for dry run
             write_backlog(backlog)
-            return
+            return "stop_dry"
 
         # Rate limit -- return task to pending, save report, skip verification
         if report.get("status") == "rate_limited":
@@ -1471,7 +1428,7 @@ def dispatch(dry_run: bool = False) -> None:
             write_backlog(backlog)
             save_run_report(report)
             print("  Task returned to pending -- will retry when limit resets")
-            return
+            return "stop_rate"
 
         # Verify ISC
         task["status"] = "verifying"
@@ -1539,6 +1496,7 @@ def dispatch(dry_run: bool = False) -> None:
 
         # Notify
         notify_completion(task, report, isc_results)
+        return "continue"
 
     except Exception as exc:
         print(f"  DISPATCHER ERROR: {exc}", file=sys.stderr)
@@ -1552,6 +1510,7 @@ def dispatch(dry_run: bool = False) -> None:
             notify(f"Dispatcher crash: {task['id']}\n{exc}", severity="critical")
         except Exception:
             pass
+        return "stop_error"
     finally:
         # Release locks but KEEP worktree + branch for consolidation.
         # The consolidation script (run after all overnight jobs finish)
@@ -1563,6 +1522,83 @@ def dispatch(dry_run: bool = False) -> None:
             # Only remove the worktree checkout (frees disk), branch stays.
             # Consolidation script can still read the branch commits.
             worktree_cleanup(worktree_dir=WORKTREE_DIR)
+
+
+def dispatch(dry_run: bool = False) -> None:
+    """Main dispatch: process eligible tasks until budget is exhausted or backlog is clear."""
+    print(f"\n=== Jarvis Dispatcher === {datetime.now().isoformat()}")
+    print(f"  Max tier: {MAX_TIER}")
+
+    # Read backlog
+    backlog = read_backlog()
+    if not backlog:
+        print("  No tasks in backlog. Idle Is Success.")
+        return
+
+    # Auto-archive done tasks older than 7 days before selection
+    try:
+        archived = archive_tasks(days=7, backlog_path=BACKLOG_FILE)
+        if archived > 0:
+            print(f"  Archived {archived} completed task(s) (>7 days old)")
+            backlog = read_backlog()
+    except Exception as exc:
+        print(f"  WARNING: archive_tasks failed: {exc}", file=sys.stderr)
+
+    # Inject due routines before task selection
+    try:
+        injected = inject_routines()
+        if injected > 0:
+            backlog = read_backlog()
+    except Exception as exc:
+        print(f"  WARNING: inject_routines failed: {exc}", file=sys.stderr)
+
+    print(f"  Backlog: {len(backlog)} tasks")
+
+    tasks_attempted = 0
+
+    while True:
+        # Re-read backlog each iteration (status changes from prior task)
+        if tasks_attempted > 0:
+            backlog = read_backlog()
+
+        # Select next task
+        task = select_next_task(backlog)
+        if task is None:
+            if tasks_attempted == 0:
+                print("  No eligible tasks. Idle Is Success.")
+            else:
+                print(f"  No more eligible tasks after {tasks_attempted} task(s).")
+            # Still write backlog in case deliverable_exists marked tasks done
+            write_backlog(backlog)
+            return
+
+        print(f"\n  --- Task {tasks_attempted + 1} ---")
+        print(f"  Selected: {task['id']} (tier {task.get('tier', '?')}, priority {task.get('priority', '?')})")
+        print(f"  Description: {task['description']}")
+
+        # Budget check -- abort before acquiring locks or creating worktrees
+        budget_reason = check_budget(task)
+        if budget_reason:
+            print(f"  BUDGET EXCEEDED: {budget_reason}")
+            print(f"  Stopping after {tasks_attempted} task(s). Idle Is Success.")
+            write_backlog(backlog)
+            return
+
+        # Acquire lock
+        if not acquire_lock(task["id"]):
+            print(f"  Lock acquisition failed for {task['id']}, stopping.")
+            return
+
+        result = _dispatch_one(task, backlog, dry_run=dry_run)
+        tasks_attempted += 1
+
+        if result != "continue":
+            reason = result.replace("stop_", "")
+            print(f"  Dispatch loop stopped: {reason} (after {tasks_attempted} task(s))")
+            return
+
+    # Unreachable, but defensive
+    print(f"  Dispatch complete: {tasks_attempted} task(s) processed.")
 
 
 # -- Self-test --------------------------------------------------------------

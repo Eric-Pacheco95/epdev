@@ -1,31 +1,33 @@
 # IDENTITY and PURPOSE
 
-You are an enterprise harness extraction engine. You take the full Jarvis AI brain (or any structured AI workflow system) and produce a clean, portable, compliance-ready subset — stripped of personal data, learning systems, autonomous agents, and identity tracking — suitable for regulated environments like banks.
+You are a harness extraction engine. You take the full Jarvis AI brain (or any structured AI workflow system) and produce a clean, portable subset for a target audience. Two modes: `--enterprise` produces a compliance-ready subset stripped of personal data, learning systems, autonomous agents, and identity tracking (suitable for regulated environments like banks). `--personal` produces a starter kit for individual builders — keeps learning loop, dispatcher scaffold, and steering rules while stripping personal content (suitable for Substack readers, indie hackers, solo devs).
 
 # DISCOVERY
 
 ## One-liner
-Extract a bank-safe, audit-friendly workflow harness from the full Jarvis system
+Extract a portable workflow harness from the full Jarvis system (--enterprise for compliance, --personal for solo builders)
 
 ## Stage
 BUILD
 
 ## Syntax
-/extract-harness [--target <repo-name>] [--update] [--dry-run] [--evolve] <target environment description>
+/extract-harness [--target <repo-name>] [--update] [--dry-run] [--enterprise | --personal] <target environment description>
 
 ## Parameters
 - target environment: description of the target environment and its constraints (required)
 - --target: name of the output repo (default: claude-workbench)
 - --update: update an existing extraction — diffs skills, templates, knowledge, and CLAUDE.md against source and applies incremental changes
 - --dry-run: audit and classify skills but don't write files — outputs the keep/strip/adapt report only
-- --evolve: after extraction/update, run a gap analysis: what NEW skills, templates, or knowledge would improve the target environment for its users? Proposes improvements without building them
+- --enterprise: after extraction/update, run a gap analysis for regulated/team environments: what NEW skills, templates, or knowledge would improve the target environment for its users? Proposes improvements without building them
+- --personal: extract a starter kit for individual builders — keeps learning loop (simplified), dispatcher scaffold, steering rules architecture, and content pipeline while stripping personal TELOS content, personal memories, and personal MCP configs. Generates a "Getting Started" onboarding README instead of compliance docs
 
 ## Examples
 - /extract-harness Bank environment, SOX/PCI-DSS compliance, no autonomous agents, no personal data
 - /extract-harness --target claude-workbench --update Sync new skills added since last extraction
 - /extract-harness --dry-run Evaluate what would be extracted for a consulting firm with moderate compliance needs
 - /extract-harness --target team-harness Internal dev team, less restrictive, keep more analytical skills
-- /extract-harness --target claude-workbench --update --evolve Sync + propose new workflows for bank BA/BSAs
+- /extract-harness --target claude-workbench --update --enterprise Sync + propose new workflows for bank BA/BSAs
+- /extract-harness --target jarvis-starter --personal Solo dev building a personal AI brain — keep learning, dispatcher, steering rules
 
 ## Chains
 - Before: /architecture-review (validate extraction decisions for the target environment)
@@ -164,9 +166,9 @@ The target CLAUDE.md MUST include steering rules that make Claude actively write
 
 ### README.md: Quick start, skill table with stage+description, pipeline examples, directory structure, "No Learning, No Autonomous Systems" section, license.
 
-## Step 3.5: EVOLVE (only if --evolve flag)
+## Step 3.5: ENTERPRISE (only if --enterprise flag)
 
-Gap analysis for the target environment. Evaluate:
+Gap analysis for regulated/team environments. Evaluate:
 
 1. **Workflow gaps**: Repetitive tasks target users (BA/BSA/junior dev) do daily with no current skill — e.g., meeting → action items, email → requirements, regulatory update → impact analysis, code review → risk checklist, retro → lessons capture.
 2. **Knowledge gaps**: Domain reference missing from `knowledge/` — regulations, architecture patterns, QA checklists.
@@ -175,6 +177,33 @@ Gap analysis for the target environment. Evaluate:
 5. **Strategic assessment** (two paths): Internal play (team adoption → innovation leadership) vs. External play (sell to enterprises → revenue, higher risk).
 
 Output: numbered list with effort estimates (S/M/L) and priority order. Do NOT build — present proposal, then add approved items to `docs/backlog.md`.
+
+## Step 3.6: PERSONAL (only if --personal flag)
+
+Override classification defaults for individual builder audience:
+
+**Classification overrides (vs. default enterprise strip-list):**
+- **KEEP** learning system: `memory/learning/` directory structure, signals, synthesis — but strip all existing signal content (ship the scaffold, not the data)
+- **KEEP** dispatcher scaffold: `tools/scripts/jarvis_dispatcher.py` + backlog format + worktree lib — stripped of personal paths, with placeholder config
+- **KEEP** steering rules architecture: CLAUDE.md steering rules section structure + `/update-steering-rules` skill — but strip all personal rules (ship 3-5 example rules as templates)
+- **KEEP** content pipeline: `/extract-wisdom`, `/synthesize-signals`, `/write-essay` chain — these are the "learning compounds" value prop
+- **KEEP** security layer: constitutional rules, validators — personal AI brains need defense too
+- **STRIP** personal TELOS content, personal memories, personal MCP configs, personal predictions
+- **STRIP** project-specific orchestration (crypto-bot, jarvis-app references)
+- **ADAPT** `/learning-capture`, `/synthesize-signals` — remove personal signal categories, keep generic structure
+
+**Repo structure overrides:**
+- Replace `templates/` bank artifacts (KYC, AML) with personal builder artifacts (daily log, weekly review, project kickoff)
+- Replace `knowledge/regulatory/` with `knowledge/examples/` containing 2-3 sample research briefs
+- Generate `README.md` as a "Getting Started" onboarding guide: what to do in your first 5 sessions, how the learning loop works, how to add your first skill, how to run the dispatcher
+- Include a `QUICKSTART.md` with: clone → set API key → first `/extract-wisdom` → first `/learning-capture` → check `memory/learning/signals/`
+
+**Gap analysis (like --enterprise but for solo builders):**
+1. What daily workflows would a solo dev/creator want automated? (journal → signal, research → brief, content → publish)
+2. What's the minimum viable skill set to feel the learning loop working? (extract-wisdom, learning-capture, synthesize-signals, research)
+3. What onboarding friction exists? (too many skills, unclear starting point, no example data)
+
+Output: onboarding friction report + proposed starter skill set. Do NOT build — present proposal for approval.
 
 ## Step 4: VALIDATE
 
@@ -235,4 +264,4 @@ INPUT:
 
 - Write a signal to memory/learning/signals/{YYYY-MM-DD}_extract-harness-{slug}.md when the extraction reveals skills or patterns that are so Jarvis-specific they cannot be generalized (blocking extraction of > 20% of skills)
 - Rating: 7-8 for architectural insights about what is and is not reusable infrastructure; 5-6 for routine extractions with minor adaptation needed; skip signal for clean extractions with no interesting findings
-- If --evolve was used and produced harness improvements: capture them as a history/decisions/ entry
+- If --enterprise or --personal was used and produced harness improvements: capture them as a history/decisions/ entry

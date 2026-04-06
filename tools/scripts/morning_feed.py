@@ -51,6 +51,7 @@ HEARTBEAT_FILE = REPO_ROOT / "memory" / "work" / "isce" / "heartbeat_latest.json
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
 CONSOLIDATION_DIR = REPO_ROOT / "data" / "overnight_summary"
 CANDIDATES_FILE = REPO_ROOT / "data" / "source_candidates.jsonl"
+BACKTEST_DIR = REPO_ROOT / "data" / "predictions" / "backtest"
 
 # RSS fetch settings
 RSS_TIMEOUT = 15  # seconds per feed
@@ -573,6 +574,23 @@ def propose_research_tasks(proposals_text: str, dry_run: bool = False) -> int:
     return count
 
 
+# -- Pending backtest count ---------------------------------------------------
+
+def _count_pending_backtests() -> int:
+    """Count backtest prediction files with status: pending_review."""
+    if not BACKTEST_DIR.is_dir():
+        return 0
+    count = 0
+    for f in BACKTEST_DIR.glob("*.md"):
+        try:
+            text = f.read_text(encoding="utf-8")
+            if "status: pending_review" in text:
+                count += 1
+        except OSError:
+            pass
+    return count
+
+
 # -- Research digest ----------------------------------------------------------
 
 def _build_research_digest() -> str:
@@ -781,15 +799,25 @@ If source updates are thin today, suggest 1 idea based on overnight results or c
     if tasks_proposed:
         print(f"  -> {tasks_proposed} research task(s) proposed to gate")
 
-    # 8. Research digest -- articles filed this week + topics queued
+    # 8. Pending backtest count for morning review prompt
+    backtest_pending = _count_pending_backtests()
+
+    # 9. Research digest -- articles filed this week + topics queued
     research_digest = _build_research_digest()
 
-    # 9. Assemble combined message
+    # 10. Assemble combined message
     lines = [
         f"*Jarvis Morning Briefing -- {today}*",
         "",
         f"*Vitals:* {vitals}",
         "",
+    ]
+
+    if backtest_pending > 0:
+        lines.append(f"*Backtests pending review:* {backtest_pending} -- run `/backtest-review`")
+        lines.append("")
+
+    lines.extend([
         f"*Autonomous Work:*",
         consolidation,
         "",
@@ -797,7 +825,7 @@ If source updates are thin today, suggest 1 idea based on overnight results or c
         "",
         "*Today's Proposals:*",
         proposals,
-    ]
+    ])
 
     if tasks_proposed:
         lines.append(f"\n({tasks_proposed} research task(s) queued for autonomous execution)")
