@@ -85,6 +85,7 @@
         "isc": [
           "CLAUDE.md steering rule count is at or below 45 after audit | Verify: grep -c '^- ' CLAUDE.md",
           "CLAUDE.md file size is at or below 20KB after audit | Verify: find . -name 'CLAUDE.md' -size -20k",
+          "All [MODEL-DEP] tagged rules reviewed against current Claude Code behavior -- remove if model limitation is fixed | Verify: grep -c MODEL-DEP CLAUDE.md returns 0 or each is confirmed still needed",
           "A history/decisions/ entry documents the steering audit rationale | Verify: find history/decisions -name '*steering*' -newer data/routine_state.json"
         ],
         "context_files": [

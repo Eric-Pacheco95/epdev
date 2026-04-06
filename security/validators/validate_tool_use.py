@@ -305,6 +305,13 @@ SETTINGS_PATH_PATTERN = re.compile(
     r"\.claude[/\\]settings\.json$", re.IGNORECASE
 )
 
+# Root instruction file -- controls identity, steering rules, and skill routing.
+# An autonomous worker modifying CLAUDE.md could weaken security rules, alter
+# model routing, or inject persistent instructions into every future session.
+CLAUDE_MD_PATH_PATTERN = re.compile(
+    r"CLAUDE\.md$", re.IGNORECASE
+)
+
 # Secrets patterns for Read tool blocking (autonomous sessions)
 _SECRET_FILE_PATTERNS = re.compile(
     r"(?:^|[/\\])\.env(?:[/\\]|$)"
@@ -318,7 +325,15 @@ _SECRET_FILE_PATTERNS = re.compile(
 
 
 def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None:
-    """Block Write/Edit to memory/work/telos/ or context_profiles/ in autonomous sessions.
+    """Block Write/Edit to protected paths in autonomous sessions.
+
+    Protected paths: TELOS, context_profiles, research_topics, producers,
+    settings.json, CLAUDE.md.
+
+    IMPORTANT: Any new autonomous entry point (script that calls claude -p or
+    spawns a worker) MUST set JARVIS_SESSION_TYPE=autonomous in the subprocess
+    env. Without it, all protections in this function are bypassed (fail-open).
+    See jarvis_dispatcher.py line 963 for the assertion pattern to copy.
 
     Returns a block result if the write should be blocked, None otherwise.
     """
@@ -369,6 +384,16 @@ def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None
             f"Autonomous sessions MUST NOT write to .claude/settings.json. "
             f"This file controls allowed tools, hook commands, and MCP servers -- "
             f"a compromised worker rewriting it could escalate its own permissions. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if CLAUDE_MD_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to CLAUDE.md. "
+            f"This root instruction file controls identity, steering rules, and "
+            f"skill routing -- autonomous modification could weaken security or "
+            f"inject persistent instructions into every future session. "
             f"Blocked: {tool} to {file_path}"
         )
 
