@@ -112,6 +112,19 @@ true
 - **Composes:** (leaf -- pure extraction, no sub-skills)
 - **Note:** --summary mode replaces the deprecated /create-summary skill
 
+# VERIFY
+
+- All required output sections are present for the selected mode (TL;DR, KEY POINTS, WISDOM AND INSIGHTS, QUOTES, HABITS AND PRACTICES, MENTAL MODELS, RECOMMENDATIONS, CONCLUSIONS) | Verify: Check section headers in output
+- No facts or quotes were invented outside the input content | Verify: Spot-check 2-3 quotes against the input text
+- If --summary mode: output is condensed (3-5 bullets, 1-2 sentences each) not a full extraction | Verify: Read output length and structure
+- Quotes section uses verbatim text from the input, clearly marked | Verify: Check quotes for quotation marks and attribution
+
+# LEARN
+
+- Track which content types (YouTube, articles, X threads, podcasts) yield the most actionable KEY POINTS -- this reveals which sources are worth prioritizing for /absorb
+- If WISDOM AND INSIGHTS is consistently sparse for a content type, note it as a low-wisdom source category
+- MENTAL MODELS extracted from content are high-value -- if a model appears in 3+ extractions, consider promoting it to TELOS MODELS.md via /telos-update
+
 # INPUT
 
 INPUT:
