@@ -161,6 +161,20 @@ Interpret the exit code and deliver the final verdict:
 - **Composes:** tools/scripts/isc_validator.py --execute (single script, two-stage pipeline)
 - **Escalate to:** /self-heal if exit code 1; /quality-gate for broader phase-level audit
 
+# VERIFY
+
+- isc_validator.py was invoked with the correct --prd path and returned output | Verify: `python tools/scripts/isc_validator.py --prd {path} --execute 2>&1 | head -5`
+- All ISC criteria in the PRD were checked (not just a subset) | Verify: Count PASS/FAIL/SKIP rows in output against total ISC items in PRD
+- Failed ISC items have a specific error message (not just 'FAIL') | Verify: Read FAIL rows for diagnostic detail
+- If /self-heal was invoked: the self-heal completed and the failing ISC item was re-verified | Verify: Check self-heal output and re-run result
+- Exit code from isc_validator.py matches the reported status (0 = all pass, 1 = failures) | Verify: `echo 0` after the run
+
+# LEARN
+
+- Track which ISC criterion types fail most often (file existence, CLI output, grep match, test result) -- this reveals which verification method is least reliable and should be improved
+- If the same PRD item fails validation 2+ times across sessions, it signals the verify method is too brittle -- propose a more robust verify method via /learning-capture
+- After a full validation pass (all PASS), log a signal noting the phase and date -- this builds an audit trail of verified phase completions
+
 # INPUT
 
 Await --prd argument from Eric. If not provided, print usage and stop.
