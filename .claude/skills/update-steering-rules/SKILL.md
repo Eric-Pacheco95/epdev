@@ -17,7 +17,7 @@ LEARN
 /update-steering-rules --audit
 
 ## Parameters
-- --audit: Audit mode -- prune stale rules, merge related rules, move category errors, archive completed-phase references (triggered when rule count exceeds 45 or file exceeds 20KB)
+- --audit: Audit mode -- health check + prune stale rules, merge related rules, move category errors, archive completed-phase references. Runs bi-weekly during interactive sessions or when rule count exceeds 45 / file exceeds 20KB
 
 ## Examples
 - /update-steering-rules -- analyze recent failures and propose new rules
@@ -38,6 +38,8 @@ false
 
 # STEPS
 
+## Mode: Default (no flag) — Propose new rules from evidence
+
 - Read the current AI Steering Rules section from `CLAUDE.md`
 - Read recent failure records from `memory/learning/failures/`
 - Read recent synthesis documents from `memory/learning/synthesis/`
@@ -55,6 +57,39 @@ false
 - Present all proposed rules for review before writing
 - After approval, add rules to the appropriate section of CLAUDE.md
 - Log the update to `history/decisions/` with rationale
+
+## Mode: --audit — Health check + prune + consolidate
+
+**Step A: Health Check (deterministic)**
+Run these checks and report results before proposing any changes:
+
+1. **Size check**: `wc -c CLAUDE.md` — report bytes and pass/fail against 20KB (20480 bytes)
+2. **Rule count**: `grep -c '^- ' CLAUDE.md` — report count and pass/fail against 45-rule ceiling
+3. **MODEL-DEP review**: `grep 'MODEL-DEP' CLAUDE.md` — list all model-limitation rules; for each, check if the limitation is still current (e.g., does MCP still require session restart? does claude -p still return exit 0 on rate limits?)
+4. **Conflict scan**: Read all steering rules and check for:
+   - Rules that contradict each other (e.g., "always X" vs. "never X" in different sections)
+   - Rules scoped as universal that only apply to autonomous/specific contexts
+   - Compound rules that violate the ISC "no compound criteria" principle
+5. **Cross-file consistency**: Read `orchestration/autonomous-rules.md` and `security/constitutional-rules.md` — check for rules duplicated between CLAUDE.md and these files
+6. **Staleness scan**: Flag rules that reference:
+   - Completed phases or shipped features (should be archived)
+   - One-time debugging notes or specific incident workarounds without ongoing relevance
+   - Magic numbers that should be in config files, not steering rules
+
+Present health check results as a table before proceeding.
+
+**Step B: Propose changes**
+For each issue found, propose one of:
+- **REMOVE**: Rule is stale, duplicated, or now handled by model defaults
+- **MERGE**: Two or more related rules should be consolidated into one crisper rule
+- **MOVE**: Rule belongs in a domain-specific file (autonomous-rules.md, a SKILL.md, constitutional-rules.md)
+- **SPLIT**: Compound rule should be separated into distinct concerns
+- **UPDATE**: Rule text is outdated but the concern is still valid — rewrite
+
+Present all proposals in a numbered list with evidence. Wait for Eric's approval before making any changes.
+
+**Step C: Execute approved changes**
+Apply only approved changes. After edits, re-run the size and rule count checks to confirm both thresholds are met. Log the audit to `history/decisions/`.
 
 # OUTPUT INSTRUCTIONS
 

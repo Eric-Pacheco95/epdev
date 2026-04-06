@@ -74,6 +74,7 @@ Load documentation on-demand, not upfront:
 - When walking Eric through credential/secret setup, never ask him to paste secrets in chat — instead confirm setup by offering a file-existence check or a smoke-test command; session transcripts may be stored by Anthropic
 - When checking if a secret/credential exists in a file, always use `grep -c` (count only) — never content-mode grep on .env files; line-content output exposes key values in the session transcript
 - Before the first commit to any new repo, run `git ls-files memory/ history/` to verify no personal content is tracked — infrastructure ships; personal context stays local; this check is a sub-step of `/security-audit` Step 1
+- After adding or modifying validator scripts in security/validators/, verify the settings.json hook matcher matches the tools the validator actually handles — unit tests that call functions directly don't test hook registration
 
 ### Workflow Discipline
 
@@ -87,6 +88,7 @@ Load documentation on-demand, not upfront:
 - After multi-phase build sprints (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifacts, file paths match actual locations, counts and dates are current
 - When building a new skill, evaluate each step: does this require intelligence (judgment, synthesis, NLG)? No → deterministic script (Python). Yes → keep in SKILL.md
 - Self-tests must use isolated paths for ALL stateful writes (state files, backlogs, lock files) — use tempfile or pass temp paths to every writer function
+- Near-zero health metric scores (0.00-0.05): first verify scan scope (rglob path, target directory) before diagnosing data quality — parent-directory scans silently include irrelevant files and dilute precision
 - `[MODEL-DEP]` Any `claude -p` consumer must check stdout for rate limit messages ("hit your limit") before treating exit code 0 as success — rate-limited runs return exit 0 with zero work done
 
 ### Skill Flag Discoverability
@@ -101,7 +103,7 @@ Load documentation on-demand, not upfront:
 
 ### Platform: Windows & Scheduling
 
-- Python CLI scripts that print to terminal must use ASCII-only output — Windows cp1252 encoding breaks Unicode box-drawing chars with a hard UnicodeEncodeError
+- Python CLI scripts that print to terminal must use ASCII-only output — Windows cp1252 encoding breaks Unicode box-drawing chars with a hard UnicodeEncodeError; when assigning external content (scraped, API, user input) to variables that will be printed/logged, strip non-ASCII at assignment: `raw.encode('ascii', errors='replace').decode('ascii')`
 - Always smoke-test scheduled jobs, hook wrappers, and `claude -p` scripts via their actual execution context (Task Scheduler or standalone CMD), never from within an active Claude Code session — subprocess contention causes hangs, and Git Bash is not a valid proxy for Task Scheduler behavior
 
 ### Platform: MCP & Hooks
@@ -110,12 +112,19 @@ Load documentation on-demand, not upfront:
 - Never use `mcp__<server>__*` wildcards in allow lists for servers with mutation tools — enumerate read tools explicitly; wildcards only safe for read-only servers
 - Hook commands must use absolute paths (relative breaks silently); hooks fire on every message — never print content already in CLAUDE.md, only surface dynamic state
 
+### Autonomous Signal Producers
+
+- Machine-generated prediction signals (backtest, resolution, calibration) must not flood /synthesize-signals — prediction signals use their own synthesis cycle via the calibration debrief generator; /synthesize-signals processes only session-authored and non-prediction signals
+- Prediction backtest signals with `suspect_leakage: true` must be flagged for Eric's review before contributing to calibration — do not auto-include leakage-suspect backtests at full weight
+- Any autonomous producer that generates 20+ signals in a single batch must write them with a category tag matching its domain (e.g., `prediction-accuracy`) so compress_signals.py can group and route them correctly — uncategorized bulk signals drown session learnings in synthesis
+
 ### Research & External Patterns
 
 - For current-events research (financial, geopolitical, live topics), always use direct WebSearch — sub-agents may have a stale knowledge cutoff
 - Default posture is absorb ideas over adopt dependencies — before proposing any new tool/MCP/dependency: (1) identify root cause, (2) test existing tools first, (3) if none work, run `/architecture-review`; only adopt when implementation is genuinely hard (>1 day) AND the dependency is mature
 - Before committing to a new product idea competing with platform incumbents, run `/research` targeting "don't build" signals — check: bundled free by incumbents? structural moats? WTP survives bundling?
 - External AI orchestration patterns: filter through "is this a team coordination problem?" — if yes, skip; Jarvis is skill-first, not agent-first
+- TELOS autoresearch S14 contradictions are intentional through Phase 5 — tag them `intentional-suspension`, do not generate action items or backlog tasks from S14 gaps
 
 ### Cross-Project & Integrations
 
