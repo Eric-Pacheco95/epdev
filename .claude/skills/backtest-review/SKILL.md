@@ -156,4 +156,19 @@ If 3+ predictions were scored in this session:
 
 - **Composes:** prediction_resolver.py (per-verdict), prediction_calibration.py (post-review)
 - **Feeds into:** /make-prediction (calibration updates), prediction memory (analysis sections)
-- **Triggered by:** nightly backtest producer Slack summary, or Eric manually
+- **Triggered by:** nightly backtest producer Slack summary, or Eric manually# VERIFY
+
+- All reviewed predictions have been scored (1-10) and a verdict written (CORRECT/INCORRECT/AMBIGUOUS) | Verify: Check output summary for score + verdict on each item
+- Prediction calibration script was run after review | Verify: Confirm prediction_calibration.py output appears in results
+- Suspect-leakage predictions (suspect_leakage: true) were flagged for Eric before contributing to calibration | Verify: Check output for leakage flag
+- No predictions were auto-approved without showing scores to Eric first | Verify: Read output flow -- scores must precede approval
+- If backtests had resolver failures, they were reported (not silently skipped) | Verify: Check output for 'resolver-failure' notices
+
+# LEARN
+
+- Track calibration score over time -- if Brier score improves quarter-over-quarter, prediction methodology is strengthening
+- If the same prediction domain (e.g., crypto prices, macro events) consistently scores INCORRECT, note it as a weak domain and reduce confidence anchoring for that domain
+- If suspect_leakage: true appears on multiple consecutive predictions, investigate the data pipeline for look-ahead bias via /self-heal
+- After each batch review, run /synthesize-signals if 5+ new prediction accuracy signals were generated
+
+
