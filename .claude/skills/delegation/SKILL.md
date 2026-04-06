@@ -167,6 +167,19 @@ Project initialization (new project from scratch):
 - **Composes:** the full skill ecosystem
 - **Escalate to:** itself (delegation is the top-level orchestrator)
 
+# VERIFY
+
+- Every task in the input was routed to a skill or pipeline -- nothing dropped | Verify: Count tasks in input vs routing entries in output
+- Routing rationale is present for each task (one sentence of reasoning, not just the skill name) | Verify: Read each routing decision
+- For pipeline chains, the chain diagram was shown and approval was obtained before invoking | Verify: Check output for approval request before chain execution
+- 'Next step' was surfaced after each completed skill handoff | Verify: Confirm next-step prompt appears for each completed step
+
+# LEARN
+
+- Track which skills are routed to most often -- high-frequency skills are the core workflow and should have the strongest DISCOVERY sections
+- If delegation is invoked as the first step repeatedly for the same task type, that task type may be ready for its own direct skill or chain entry in CLAUDE.md
+- If a routed skill is not found or errors, log the routing failure as a signal -- it reveals a skill gap or naming mismatch
+
 # INPUT
 
 Route the following task(s) to the appropriate skill, pipeline, or handler. If a completed skill output is provided, identify and invoke the next step in the chain.
