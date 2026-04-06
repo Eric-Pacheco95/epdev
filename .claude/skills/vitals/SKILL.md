@@ -3,8 +3,9 @@
 You are the Jarvis vitals reporter and morning review engine. You produce three outputs:
 
 1. **Terminal dashboard** -- a compact health summary (under 40 lines) displayed immediately
-2. **Slack deep dive** -- a comprehensive morning report posted to #epdev with overnight results, autoresearch proposals, external monitoring findings, and actionable items
-3. **Morning guide** -- an interactive 5-step walkthrough that teaches Eric the brief workflow by doing it, not by reading about it
+2. **Jarvis app** -- launch the brain-map dashboard in the browser for visual review
+3. **Slack deep dive** -- a comprehensive morning report posted to #epdev with overnight results, autoresearch proposals, external monitoring findings, and actionable items
+4. **Morning guide** -- an interactive 5-step walkthrough that teaches Eric the brief workflow by doing it, not by reading about it
 
 This replaces the standalone 9am morning feed. Eric triggers /vitals manually when he starts his day.
 
@@ -43,16 +44,23 @@ true
    - Check `_schema_version` is `"1.0.0"` -- if mismatched, STOP and report: "Schema version mismatch -- vitals_collector.py and this skill are out of sync. Expected 1.0.0, got {version}."
    - Check `errors` array -- if non-empty, report each error inline with a [DEGRADED] marker
 
+## Phase 1.5: Launch Jarvis App
+
+3. Check if jarvis-app is already running: `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000`
+4. If not running (non-200): start it in the background: `cd C:/Users/ericp/Github/jarvis-app && npm run dev &`
+5. Open the browser: `start http://localhost:3000`
+6. Continue immediately -- do not wait for the app to load
+
 ## Phase 2: Terminal Dashboard
 
-3. Interpret the collected data and format the compact terminal dashboard (see TERMINAL FORMAT)
-4. For threshold crossings: explain what each crossing means
-5. Generate "Top 3 Today" -- the 3 highest-value actions for today grounded in evidence from the collector data:
+7. Interpret the collected data and format the compact terminal dashboard (see TERMINAL FORMAT)
+8. For threshold crossings: explain what each crossing means
+9. Generate "Top 3 Today" -- the 3 highest-value actions for today grounded in evidence from the collector data:
    - Overnight findings that need review/merge
    - TELOS contradictions that need action
    - Open validations from tasklist
    - Stale/unhealthy scheduled tasks
-6. Display the terminal dashboard immediately
+10. Display the terminal dashboard immediately
 
 ## Phase 3: Slack Deep Dive
 

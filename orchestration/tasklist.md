@@ -50,6 +50,14 @@
 - [x] **`/capture-recording` skill** — Guitar recording analysis via Gemini API. SKILL.md orchestration + Python CLI (`analyze_recording.py`). Solo/band/batch modes, MUSIC.md goal loading, token tracking. 12/12 ISC items passed. PRD: `memory/work/capture-recording/PRD.md`. (2026-03-28)
 - [x] **`/absorb` skill** — External content ingestion + dual-lens analysis + TELOS routing. All 5 phases complete: 29/29 ISC PASS. Poller, voice processor, session hook, autonomous enforcement all wired. PRD: `memory/work/absorb/PRD.md`. `/voice-capture` deprecated. (2026-03-30)
 
+### Tier 3: Firecrawl Integration (Research Pipeline Enhancement)
+
+> **Context:** Smoke test passed 2026-04-05 (4/6 PASS). Firecrawl solves JS SPA rendering gap (React apps WebFetch gets empty shells from) and Medium paywalls. Reddit explicitly blocked by Firecrawl. Direct API, not MCP (reduces context bloat). Results: `memory/work/firecrawl_smoke_results.json`
+
+- [ ] **Firecrawl API wrapper** — Python module at `tools/scripts/lib/firecrawl.py`: thin wrapper around Firecrawl `/scrape` endpoint (direct `requests`, not MCP). API key from env `FIRECRAWL_API_KEY`. Includes injection sanitization check (lift from `firecrawl_smoke_test.py`). ASCII-safe output (Windows cp1252). Timeout + error handling.
+- [ ] **Update `/research` waterfall** — Edit `SKILL.md` URL Content Extraction Waterfall to add Firecrawl as Step 2.5: after tavily_extract for difficult domains, before WebFetch for static sites. Target: JS-heavy/SPA sites. Also add Firecrawl as tavily_extract fallback when Tavily credits exhausted (1000/mo limit).
+- [ ] **Validation** — Run `/research` against a JS SPA URL (e.g., Linear changelog) and confirm Firecrawl extracts content where WebFetch previously returned empty shell. Verify injection check doesn't false-positive on normal content.
+
 ### Parked (No demand signal within 60 days — research saved)
 
 > Items below failed the enthusiasm filter: no specific project, no specific user, no specific ship date. Research is preserved. Revisit when a real project creates demand.

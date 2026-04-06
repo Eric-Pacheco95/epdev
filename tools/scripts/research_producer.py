@@ -447,7 +447,7 @@ def inject_topic(topic: dict, dry_run: bool = False) -> dict | None:
         "description": f"Research ({topic['type']}): {topic['title']}",
         "project": "epdev",
         "repo_path": str(REPO_ROOT).replace("\\", "/"),
-        "tier": 1,
+        "tier": 2,
         "priority": topic.get("priority", 3),
         "autonomous_safe": True,
         "goal_context": (
@@ -458,6 +458,11 @@ def inject_topic(topic: dict, dry_run: bool = False) -> dict | None:
         "isc": [
             f"Research brief exists | Verify: test -f memory/work/{slug}/research_brief.md",
             f"Domain knowledge article filed | Verify: find memory/knowledge/{domain} -name '*{slug[:30]}*.md'",
+        ],
+        "expected_outputs": [
+            f"memory/work/{slug}/",
+            f"memory/knowledge/{domain}/",
+            "memory/learning/signals/",
         ],
         "context_files": [
             "memory/knowledge/index.md",
