@@ -195,6 +195,19 @@ Append to `history/changes/notion_sync.md` (create if it doesn't exist):
 - {YYYY-MM-DD HH:MM} | mode: {mode} | pages read: {list} | signals: {count} | TELOS queued: {yes/no} | pushed: {pages or none}
 ```
 
+# VERIFY
+
+- Summary block is present in output with all required fields (mode, pages read, signals written, TELOS queued, pushed pages, synthesis due) | Verify: Read output summary block
+- Log entry was appended to `history/changes/notion_sync.md` | Verify: `tail -3 history/changes/notion_sync.md`
+- If TELOS updates were queued: they are in the pending proposals file (not auto-applied) | Verify: Check for 'queued' status in output, not 'applied'
+- No Notion page writes occurred in inbox/pull mode (read-only modes) | Verify: Output shows 'pushed: none' for inbox/pull
+
+# LEARN
+
+- Track which Notion pages produce the highest-rated signals -- high-yield pages should be synced more frequently
+- If the same Notion content appears across 2+ sync runs without being processed (signal not written, TELOS not queued), it signals a processing bottleneck; investigate whether the content fails extraction thresholds
+- If Notion MCP fails repeatedly on specific pages, log those page IDs as a /self-heal task
+
 # INPUT
 
 Run the appropriate mode. If a mode argument is provided, use it. Otherwise default to `inbox`.
