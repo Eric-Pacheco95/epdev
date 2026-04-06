@@ -115,6 +115,21 @@ After all TELOS file updates are written, automatically sync the TELOS Mirror pa
 
 If the Notion write fails, log the error but do not fail the skill — the local TELOS files are the primary deliverable.
 
+# VERIFY
+
+- Every approved TELOS file update has a corresponding snapshot in `memory/work/telos/.snapshots/` taken before the write | Verify: `ls memory/work/telos/.snapshots/` and confirm recent timestamps
+- No raw verbatim quotes from external sources were written without `[source: external]` tag | Verify: Read new entries and check for source tags
+- If Notion TELOS mirror sync was attempted, confirmation of success (or logged failure) appears in output | Verify: Check output for 'TELOS Mirror synced' or error message
+- WRONG.md, if updated, was appended to (never deleted from) | Verify: `git diff memory/work/telos/WRONG.md` shows only additions
+- Absolute dates were used for any temporal references (no 'last Thursday') | Verify: Read new entries for relative date phrases
+
+# LEARN
+
+- If the same TELOS file (e.g., BELIEFS.md) is updated in 3+ consecutive sessions, it is a high-churn identity file -- that much change signals an identity model in flux; consider whether the churn reflects real growth or noise
+- Track which TELOS files grow the fastest -- fast-growing files may need periodic consolidation via /telos-update --consolidate
+- If Eric rejects a proposed TELOS update, note the category of the rejected entry -- this reveals the identity model's edges
+- If Notion sync fails repeatedly, log a signal so the failure mode can be diagnosed and fixed
+
 # INPUT
 
 Analyze the current session (or provided input) and propose TELOS updates.
