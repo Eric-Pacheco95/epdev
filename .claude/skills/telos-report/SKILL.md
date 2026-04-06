@@ -79,6 +79,20 @@ After generating the report, automatically push it to the Notion Jarvis Reports 
 
 If the Notion write fails, log the error but do not fail the skill — the local output is the primary deliverable.
 
+# VERIFY
+
+- Report contains all required sections: IDENTITY STATE, GOAL PROGRESS, TOP LEARNINGS, SYSTEM HEALTH, RECOMMENDATIONS | Verify: Check section headers in output
+- GOAL PROGRESS section includes a percentage or measurable progress indicator for each active goal | Verify: Read GOAL PROGRESS entries for numeric or ratio data
+- SYSTEM HEALTH table includes all TELOS files (not just recently updated ones) | Verify: Count rows against files in `memory/work/telos/`
+- If Notion write was attempted: confirmation or failure message is present in output | Verify: Check output for 'Report pushed to Notion' or error message
+- Report is dated accurately (uses today's date, not a prior report's date) | Verify: Check report heading date
+
+# LEARN
+
+- Track GOAL PROGRESS percentages over time -- flat or declining goals are candidates for Eric to re-evaluate (obstacle or changed priority)
+- If the same file consistently shows 'stale' in SYSTEM HEALTH, flag it as a maintenance item in /backlog
+- If Notion write fails repeatedly, log a signal and investigate the Notion MCP connection as a /self-heal task
+
 # INPUT
 
 Generate a TELOS report for the specified period. Default: last 7 days.
