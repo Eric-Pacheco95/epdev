@@ -60,10 +60,10 @@
 
 ### Morning Feed Actions (2026-04-06)
 
-- [ ] **Wire Claude Code "defer" into dispatcher** — v2.1.89 PreToolUse "defer" permission replaces manual_required soft convention with native pause+resume. Wire into autonomous-rules.md as the approval gate pattern for Phase 5 dispatcher. (G2)
-- [ ] **Supply chain audit (Axios/LiteLLM)** — Run `/security-audit --supply-chain` across epdev and crypto-bot. Verify no transitive Axios dependency pulled a compromised version. Check LiteLLM credential exposure. (G2, P1)
+- [x] **Wire Claude Code "defer" into dispatcher (doc)** — autonomous-rules.md updated: `deferred` replaces `manual_required` as the three-state gate pattern using native PreToolUse `{"decision": "defer"}`. Full dispatcher wiring (validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface) requires dedicated Phase 5C session + spike to validate `claude -p --resume` e2e. (2026-04-06)
+- [x] **Supply chain audit (Axios/LiteLLM)** — CLEAN. Zero Axios (direct or transitive) in either repo. Zero LiteLLM — crypto-bot uses OpenAI SDK directly. .env files not tracked (gitignore working). No action needed. (2026-04-06)
 - [x] **OpenClaw dependency check** — Grep confirmed: 0 references in .claude/, settings.json, or any code/config. Only appears in research/knowledge docs. Clean. (2026-04-06)
-- [ ] **scan-for-secrets pre-publish** — Evaluate Willison's scan-for-secrets tool as pre-publish check in content pipeline (Substack drafts, session transcripts). (G2)
+- [x] **scan-for-secrets pre-publish** — ABSORB-IDEA. Tool is v0.3 (48h old, pre-1.0, fails maturity gate). Core algo trivial (known-value + escaped variant search). Pattern to lift: build `secret_scanner.py` combining known-value scan + regex key patterns (~5 formats). Wire as pre-publish gate in content pipeline. (2026-04-06)
 
 ### ISC Producer (from architecture review 2026-04-06)
 
