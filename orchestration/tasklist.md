@@ -453,9 +453,9 @@
 - [x] **Rate limit detection** — Detect "hit your limit" in claude -p output; return task to pending, don't count as failure
 
 **5C-5C: Overnight producer interface (deferred until 3+ real production runs)**
-- [ ] **Overnight runner emits backlog task** — After iterations complete, emit single pending_review task with recommendations via backlog_append()
-- [ ] **ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs)
-- [ ] **Human review gate** — Overnight-sourced tasks require autonomous_safe: false until reviewed
+- [x] **Overnight runner emits backlog task** — `inject_review_task()` at line 544: creates `pending_review` task via `backlog_append()` after each run with kept changes. Deduplicates by `routine_id`. 3 review tasks created (Apr 3-5). (2026-04-05, discovered already built)
+- [ ] **ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs). Current: ISC generated inline per-branch, functional but not templated
+- [x] **Human review gate** — Tasks created with `autonomous_safe: false` + `status: pending_review`. Security failures skip task injection entirely. (2026-04-05, discovered already built)
 
 ### Phase 5D — Hardening + Quality (2-3 sessions, data-dependent)
 

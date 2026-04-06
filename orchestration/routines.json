@@ -216,6 +216,85 @@
         "autonomous_safe": true,
         "notes": "Runs prediction_calibration.py -- checks threshold before executing; haiku for counting, sonnet for analysis"
       }
+    },
+    {
+      "routine_id": "weekly-branch-cleanup",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Run branch lifecycle scan -- delete merged branches, flag stale ones for review",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 5,
+        "goal_context": "Branch hygiene -- merged branches waste git namespace; stale branches indicate abandoned work",
+        "isc": [
+          "No merged jarvis/* branches remain after cleanup | Verify: python tools/scripts/branch_lifecycle.py --json",
+          "All stale branches (>7d unmerged) are flagged in Slack | Verify: python tools/scripts/branch_lifecycle.py"
+        ],
+        "context_files": [],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "notes": "Runs branch_lifecycle.py -- deterministic, zero LLM cost for scan; haiku for branch deletion commands"
+      }
+    },
+    {
+      "routine_id": "weekly-doc-sync",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Doc-sync check -- verify tasklist checkboxes match actual artifacts, file paths are current, counts are accurate",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 6,
+        "goal_context": "Tasklist is Eric's primary trust tool -- stale checkboxes erode trust and cause duplicate work",
+        "isc": [
+          "No tasklist items marked [x] reference files that don't exist | Verify: grep -oP '`[^`]+`' orchestration/tasklist.md | head -20",
+          "Phase status line in tasklist matches actual completion state | Verify: Read orchestration/tasklist.md"
+        ],
+        "context_files": [
+          "orchestration/tasklist.md"
+        ],
+        "skills": [],
+        "model": "sonnet",
+        "autonomous_safe": true,
+        "notes": "Read-only audit -- reports discrepancies, does not auto-fix"
+      }
+    },
+    {
+      "routine_id": "weekly-backlog-health",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Backlog health review -- surface stuck tasks, stale pending_review items, and backlog composition stats",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 5,
+        "goal_context": "Pipeline health depends on backlog flow -- stuck tasks and stale reviews block forward progress",
+        "isc": [
+          "No pending_review tasks older than 7 days exist in backlog | Verify: python -c \"import json,datetime; tasks=[json.loads(l) for l in open('orchestration/task_backlog.jsonl')]; print([t['id'] for t in tasks if t.get('status')=='pending_review'])\"",
+          "Backlog composition stats posted to Slack (pending/done/failed counts) | Verify: check #epdev for backlog_health message"
+        ],
+        "context_files": [
+          "orchestration/task_backlog.jsonl"
+        ],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "notes": "Lightweight audit -- haiku can count and report; escalates stale items to Slack"
+      }
     }
   ]
 }
