@@ -115,6 +115,20 @@ When reading an external ISC tasklist:
 3. List any Tier-1 blockers by name (these are the most actionable items)
 4. If the ISC tasklist doesn't exist yet for a project, flag it: "No ISC tasklist — consider running a deep audit"
 
+# VERIFY
+
+- All active projects were assessed (not just the one Eric mentioned) | Verify: Count projects in status table vs active projects in `orchestration/tasklist.md`
+- Projects with Tier-1 blockers were surfaced prominently in output | Verify: Check output for blocker callouts
+- `tasklist.md` and `PROJECTS.md` are in sync after any updates | Verify: `git diff orchestration/tasklist.md memory/work/PROJECTS.md` (both changed or neither)
+- Each project recommendation traces back to a TELOS Goal or Problem | Verify: Read recommendations for Goal/Problem reference
+
+# LEARN
+
+- Track project velocity over time -- if a project has the same unchecked Tier-1 items across 3+ status checks, it may be stalled; flag for Eric's attention or re-prioritization
+- If a project is consistently marked as P3/G3 with no progress, evaluate whether it belongs in the active roster or should be archived
+- Cross-project patterns (same ISC category failing in crypto-bot and jarvis-app) signal shared infrastructure debt worth a dedicated fix sprint
+- If external ISC tasklists are missing for 2+ consecutive checks, create backlog tasks to add them
+
 # INPUT
 
 Manage projects: check status, add/update/prioritize/archive projects, or recommend what to work on next.
