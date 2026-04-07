@@ -33,3 +33,10 @@ DEPRECATED
 
 ## Output Contract
 - DEPRECATED -- no output; route voice/audio work through /absorb or #jarvis-voice
+# VERIFY
+
+- Not applicable -- this skill is deprecated | Verify: Redirect user to /absorb or #jarvis-voice Slack channel
+
+# LEARN
+
+- Not applicable -- this skill is deprecated; if invoked, redirect user to /absorb (external content) or #jarvis-voice (voice dictation)
