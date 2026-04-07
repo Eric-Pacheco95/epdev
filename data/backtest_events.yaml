@@ -120,21 +120,6 @@ events:
       reversal. NATO Secretary General Stoltenberg publicly welcoming. Russia threatening
       consequences. Turkey signaling possible veto but not yet blocking. Nordic
       cooperation framework suggests they would move together.
-
-  - event_id: geo-israel-hamas-invasion-2023
-    description: "Following the October 7 2023 Hamas attack, will Israel launch a full ground invasion of Gaza?"
-    domain: geopolitics
-    knowledge_cutoff_date: "2023-10-15"
-    known_outcome: "Israel launched a full ground invasion of Gaza on October 27 2023. Significant urban combat in northern Gaza by November."
-    difficulty: medium
-    at_time_context: >
-      Hamas killed ~1,400 Israelis on October 7 in largest attack since 1973 war.
-      Israel declared war, began intensive air campaign. 300,000 Israeli reservists
-      called up. Ground forces massing on Gaza border. Israel evacuating northern
-      Gaza civilians. Biden visit to Tel Aviv October 18 in solidarity. International
-      pressure for pause/ceasefire building. Hospital explosion October 17 complicated
-      messaging. Historical precedent: 2014 Gaza war included ground operation.
-
   - event_id: geo-ukraine-war-six-months-2022
     description: "Will the Russia-Ukraine war still be actively ongoing at six months (September 2022)?"
     domain: geopolitics
@@ -219,34 +204,6 @@ events:
       GPU business but data center was growing. Analyst consensus: neutral to moderate
       bull case. H100 announced but production constraints unclear. Few analysts
       forecasting >100% return for any major chip company.
-
-  - event_id: mkt-bitcoin-etf-2024
-    description: "Will the SEC approve a spot Bitcoin ETF by end of January 2024?"
-    domain: market
-    knowledge_cutoff_date: "2024-01-01"
-    known_outcome: "SEC approved 11 spot Bitcoin ETFs on January 10 2024. BlackRock, Fidelity, ARK/21Shares among approvals."
-    difficulty: medium
-    at_time_context: >
-      Grayscale won court case against SEC in August 2023 (court ruled SEC arbitrary
-      in rejecting GBTC conversion). Multiple ETF applications pending including
-      BlackRock (historically near-perfect ETF approval record). SEC met with applicants
-      multiple times in late 2023. Prediction markets: ~85% approval probability by
-      January 2024. 10-year history of SEC rejections but legal landscape shifted.
-      Bitcoin at ~$42,000 in late December 2023.
-
-  - event_id: mkt-btc-halving-ath-2024
-    description: "Will Bitcoin reach a new all-time high above $70,000 in 2024 following the April halving?"
-    domain: market
-    knowledge_cutoff_date: "2024-01-01"
-    known_outcome: "Bitcoin reached $73,737 on March 14 2024 -- new ATH before the April 19 halving. Post-halving: further gains into late 2024."
-    difficulty: medium
-    at_time_context: >
-      Bitcoin at ~$42,000 in January 2024. Spot ETF just approved (Jan 10). Halving
-      scheduled April 19 2024 (block reward 6.25 BTC -> 3.125 BTC). Historical pattern:
-      previous 3 halvings all preceded by ATH in subsequent 12-18 months. ETF inflows
-      could add structural demand. Previous ATH $69K in November 2021. Cycle analysts
-      widely expect ATH in 2024-2025 window.
-
   - event_id: mkt-eth-merge-2022
     description: "Will the Ethereum Merge (proof-of-stake transition) succeed without a major chain split or security failure?"
     domain: market
@@ -360,77 +317,6 @@ events:
       scheduled for October 17. Musk renewed offer at original price October 4.
       Legal experts: ~75% chance court forces Musk to complete or pay massive penalty.
       Whether he'd actually follow through remained uncertain.
-
-  - event_id: tech-openai-gpt5-2024
-    description: "Will OpenAI release a model called GPT-5 in 2024?"
-    domain: technology
-    knowledge_cutoff_date: "2024-01-01"
-    known_outcome: "OpenAI did not release GPT-5 in 2024. They released GPT-4o (May), o1 preview (September), and o1 (December) instead. No model explicitly named GPT-5 launched in 2024."
-    difficulty: high
-    at_time_context: >
-      GPT-4 released March 2023. Typical OpenAI cadence suggested GPT-5 possible
-      in 2024. Altman hinting at major model releases. Training compute costs and
-      timelines less publicly discussed. OpenAI competitors (Anthropic, Google Gemini)
-      releasing strong models. AI safety discussions potentially slowing deployment.
-      Industry observers expecting GPT-5 by mid-2024 based on historical release
-      cadence. Reasoning/O-series product line not yet public.
-
-  - event_id: tech-apple-vision-pro-2024
-    description: "Will the Apple Vision Pro achieve strong consumer adoption (>1M units in first 6 months post-launch)?"
-    domain: technology
-    knowledge_cutoff_date: "2024-02-01"
-    known_outcome: "Apple Vision Pro launched February 2 2024 at $3,499. Sold approximately 200,000-300,000 units in first quarter. Clearly below mainstream adoption; Apple reduced production orders by H2 2024."
-    difficulty: medium
-    at_time_context: >
-      Pre-orders opened January 19. Apple citing 'weeks' shipping lead time initially.
-      Early reviews: impressive but heavy (600g), limited use cases, high price.
-      No streaming apps from Netflix/YouTube at launch. Enterprise interest mentioned.
-      Analyst estimates varied widely: 400K-700K units year 1. Reference class:
-      meta Quest 2 sold ~15M units at $299. Category-defining Apple products
-      historically take 2-3 iterations to reach mass market (original iPhone excluded).
-
-  - event_id: tech-eu-ai-act-2024
-    description: "Will the EU AI Act be formally passed by the European Parliament in 2024?"
-    domain: technology
-    knowledge_cutoff_date: "2024-01-01"
-    known_outcome: "EU AI Act passed European Parliament March 13 2024 with 523 votes in favor. Entered into force August 2024."
-    difficulty: low
-    at_time_context: >
-      EU AI Act political agreement reached December 9 2023 after intense negotiations
-      on foundation models. Final text to be prepared for parliamentary vote.
-      Strong cross-party support established. Process: legal/linguistic review,
-      parliamentary plenary vote, Council adoption, publication in Official Journal.
-      Timeline widely expected to produce formal passage in early 2024.
-      Main uncertainty: delays in legal review or late political complications.
-
-  - event_id: tech-anthropic-claude3-2024
-    description: "Will Anthropic release a new Claude model family that benchmarks competitively with GPT-4 in early 2024?"
-    domain: technology
-    knowledge_cutoff_date: "2024-01-01"
-    known_outcome: "Anthropic released Claude 3 family (Haiku, Sonnet, Opus) on March 4 2024. Claude 3 Opus outperformed GPT-4 on most benchmarks at launch."
-    difficulty: low
-    at_time_context: >
-      Claude 2.1 released November 2023 with 200K context window. Anthropic raised
-      $7.3B in 2023 (Amazon $4B, Google $2B+). Strong team, Constitutional AI
-      research. GPT-4 still leading on most benchmarks as of Jan 2024.
-      Rumored Claude 3 project internally. Anthropic's stated mission to build safe
-      and capable AI; competitive pressure from OpenAI and Google.
-      Release timing and benchmark performance uncertain.
-
-  - event_id: tech-x-subscriptions-underperform
-    description: "Will Twitter/X paid subscription revenue significantly underperform Elon Musk's early targets by mid-2023?"
-    domain: technology
-    knowledge_cutoff_date: "2023-06-01"
-    known_outcome: "Twitter Blue/X Premium significantly underperformed targets. Musk had projected $1.3B in subscription revenue for 2023; actual estimates were <$200M. Twitter's total revenue fell ~50% in 2023 vs 2022."
-    difficulty: medium
-    at_time_context: >
-      Twitter Blue relaunch November 2022 at $8/month after chaotic verified badge
-      rollout. As of June 2023: ~600K-900K Blue subscribers estimated by analysts
-      vs target of millions. Advertisers paused spending (brand safety concerns).
-      Musk had stated subscription revenue could become 50% of total. Platform
-      experiencing advertiser exodus. Staff cuts from 7,500 to ~1,500. Ad revenue
-      down ~50% YoY per reports. Subscription model seen as crucial to replace.
-
   - event_id: plan-tokyo-olympics-2020
     description: "Will the Tokyo 2020 Olympics proceed as scheduled in July-August 2020?"
     domain: planning
