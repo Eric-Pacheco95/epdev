@@ -2020,7 +2020,7 @@ def self_test() -> bool:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Jarvis Autonomous Dispatcher")
     parser.add_argument("--dry-run", action="store_true", help="Select + show prompt, no execution")
-    parser.add_argument("--test", action="store_true", help="Run self-test")
+    parser.add_argument("--test", "--self-test", action="store_true", help="Run self-test", dest="test")
     args = parser.parse_args()
 
     if args.test:

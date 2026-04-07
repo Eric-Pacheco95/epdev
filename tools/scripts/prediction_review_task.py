@@ -274,16 +274,15 @@ def main() -> int:
     # Sort: overdue first, then by days until due
     due_predictions.sort(key=lambda x: x[1])
 
-    if not due_predictions and not backtest:
-        print(f"Idle: no predictions due within {args.window}d and no backtest reviews pending.")
-        write_log([], [], False)
-        return 0
-
     print(f"Prediction Review -- {TODAY}")
     print(f"  Forward due: {len(due_predictions)}")
     print(f"  Backtest pending review: {len(backtest)}")
 
     message = compose_slack_message(due_predictions, backtest)
+
+    # If no predictions due, post idle summary
+    if not message:
+        message = f"*Prediction Review -- {TODAY}*\nIdle: no predictions due within {args.window}d and no backtest reviews pending."
 
     if args.dry_run:
         print("\n[DRY RUN] Would post to #epdev:")
