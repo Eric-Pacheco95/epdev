@@ -70,26 +70,13 @@ false
 
 ## Phase 0.5: PRIOR KNOWLEDGE SCAN
 
-Before generating sub-questions, check if Jarvis already has domain knowledge on this topic.
+1. **Semantic search**: Run `python tools/scripts/embedding_service.py search "<topic>" --top-k 5`. Surface hits >= 0.70 grouped by tier (memory/work/, memory/learning/, history/decisions/). Tell Eric: "Semantic search found N related files: [name @ score]". Load top 1-2 hits >= 0.75 as context. If Ollama unavailable: skip silently.
 
-1. **Semantic memory search (always-on):** Run `python tools/scripts/embedding_service.py search "<topic>" --top-k 5` to find semantically related prior research briefs, signals, synthesis themes, and decision logs. Parse the output and surface any hits with score >= 0.70:
-   - Group by tier: `memory/work/` (prior research briefs), `memory/learning/` (signals/synthesis), `history/decisions/` (architectural decisions)
-   - Tell Eric: "Semantic search found N related memory files: [name @ score, ...]"
-   - If Ollama is not running (embedding_service exits with error): skip silently, proceed to step 2
-   - Load the top 1-2 hits as additional context if score >= 0.75
+2. **Knowledge index**: Read `memory/knowledge/index.md`; scan for domain/topic matches. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability/defense → `security`; AI/LLM/orchestration/tooling → `ai-infra`.
 
-2. **Read `memory/knowledge/index.md`** and scan for entries matching the detected domain (crypto, security, ai-infra) or topic keywords
-3. **If prior articles exist:**
-   - Surface the 2-3 most recent one-liners from the index
-   - Load the single most relevant prior article (by topic similarity) as additional context
-   - Tell Eric: "We have N prior articles on {domain}. Most recent: {title} ({date}). Loading as context."
-   - Sub-questions in Phase 1 should build on prior findings — do not re-research what's already known
-4. **If no prior articles exist:** proceed normally, note "No prior domain knowledge found — starting fresh"
-5. **Domain mapping** — map the auto-detected or explicit type to a knowledge domain:
-   - crypto, trading, DeFi, blockchain, BTC, ETH → `crypto`
-   - security, vulnerability, attack, defense, audit → `security`
-   - AI, LLM, infrastructure, orchestration, tooling → `ai-infra`
-   - If topic doesn't map to an existing domain, note the domain gap but proceed without scan
+3. If prior articles found: surface 2-3 recent one-liners, load single most relevant as context. Tell Eric: "N prior articles on {domain}. Most recent: {title} ({date})." Sub-questions should fill gaps — don't re-cover known ground.
+
+4. If none: note "No prior domain knowledge — starting fresh".
 
 ## Phase 1: PLAN — Generate sub-questions
 
