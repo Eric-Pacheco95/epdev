@@ -8,10 +8,14 @@
 | Date | Topic | Key Finding | Path |
 |------|-------|-------------|------|
 | 2026-03-27 | Crypto Trading Bot Market & Technology Landscape | Overfitting kills 44% of strategies; backtested Sharpe R²<0.025 as live predictor; CCXT+Freqtrade stack is solved; regime detection is the unsolved problem | `crypto/2026-03-27_crypto-trading-bot-landscape.md` |
+| 2026-04-06 | DeFi Market Structure, MEV, and Algorithmic Trading 2026 | ETH L1 MEV dominated by ~20 entities (sandwich avg $3, 30% bots losing); cross-chain arb + Solana-Jito are viable solo entry points; $3B+ MEV/yr; SEC/CFTC classified ETH/SOL as commodities Mar 2026 | `crypto/2026-04-06_crypto-defi-market-structure.md` |
 
 ## security
 
-*(No articles yet — populate as security research briefs are created)*
+| Date | Topic | Key Finding | Path |
+|------|-------|-------------|------|
+| 2026-04-06 | AI-Specific Security Threats | Agentic AI expands attack surface: indirect injection via tool outputs, MCP tool poisoning (43% of servers vulnerable), multi-agent collusion; merge gate is last reliable defense for autonomous pipelines | `security/2026-04-06_security-ai-threats.md` |
+| 2026-04-06 | Prompt Injection and Agentic Attack Patterns | No complete technical solution exists for prompt injection in current transformers; MCP tool poisoning and memory poisoning are highest-leverage new vectors; defense must be layered and assume-breach | `security/2026-04-06_telos-gap-security-2026-04-06_prompt-injection-agentic-attacks.md` |
 
 ## ai-infra
 
@@ -29,6 +33,10 @@
 | 2026-03-30 | Autonomous Orchestration for Phase 5 | Don't adopt Paperclip or n8n; absorb: task ancestry (parent_id), routines engine (routines.jsonl), CEO hierarchy wrong for solo; existing SENSE/DECIDE/ACT architecture is correct | `ai-infra/2026-03-30_phase5-orchestration-patterns.md` |
 | 2026-04-02 | Local Embedding Models for Jarvis Memory | Winner: nomic-embed-text v1.5 (Ollama-native, 8K context, ~100MB); Vector DB: ChromaDB (embedded, no Docker); cloud APIs violate offline-first principles | `ai-infra/2026-04-02_local-embeddings-vector-search.md` |
 | 2026-04-02 | General-Purpose Prediction Framework | Universal chassis: Bayesian + BDM game theory + Shell/GBN scenarios; Brier Score for calibration tracking; base rate (reference class) is more predictive than domain expertise alone | `ai-infra/2026-04-02_prediction-framework.md` |
+| 2026-04-06 | AI Agent Frameworks -- LangGraph, CrewAI, AutoGen, Agentless | AutoGen in maintenance mode (replaced by MAF); LangGraph wins for stateful/human-in-the-loop; Agentless pattern outperforms agentic for structured tasks; Jarvis already implements Agentless correctly | `ai-infra/2026-04-06_ai-agent-frameworks.md` |
+| 2026-04-06 | Claude API and Anthropic Product Updates | Sonnet 4.6 ($3/$15) outperforms prior Opus on coding at 1/5 the cost; 1M context GA; Batch API (50% off) + prompt caching (90% off) = up to 95% cost reduction for autonomous pipelines | `ai-infra/2026-04-06_claude-api-updates.md` |
+| 2026-04-06 | Prediction Market Platforms and Calibration Mechanics | Metaculus Brier 0.111 (best public platform); proper scoring rules reward calibration not just accuracy; Polymarket hybrid CLOB + UMA oracle; Manifold real-money mode sunset March 2025 | `ai-infra/2026-04-06_prediction-market-mechanics.md` |
+| 2026-04-06 | Autonomous Coding Agent Capabilities -- Devin, SWE-agent, Claude Code, Cursor | Claude Code 80.8% SWE-bench (highest); mini-SWE-agent 74% in 100 lines; context overflow is silent not fatal; harness-first dominates for solo operators | `ai-infra/2026-04-06_autonomous-coding-agents.md` |
 
 ## automotive
 
@@ -47,6 +55,7 @@
 | Date | Topic | Key Finding | Path |
 |------|-------|-------------|------|
 | 2026-04-03 | AI Automation Consulting for Canadian Banking | Big 5 spend C$5B+/yr on tech; OSFI E-23 (May 2027) creates compliance demand; practitioner-level consulting gap is real; employment agreement is #1 blocker for side-hustle | `fintech/2026-04-03_banking-ai-consulting-market.md` |
+| 2026-04-06 | Fintech and Banking AI Adoption -- Enterprise, Vendors, Consulting | $73B bank AI spend in 2025; 95% of GenAI still in pilot; Pilot Graveyard is #1 deployment blocker; EU AI Act Aug 2026 + OSFI E-23 May 2027 = non-discretionary consulting demand | `fintech/2026-04-06_fintech-ai-adoption.md` |
 
 ## general
 
