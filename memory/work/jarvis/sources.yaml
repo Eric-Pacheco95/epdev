@@ -379,3 +379,13 @@
   frequency: monthly
   last_checked: "2026-04-07"
   note: "Added 2026-04-07 — W&B covers MLOps, experiment tracking, LLM evaluation, and production AI monitoring; relevant to Jarvis overnight metrics and vitals pipeline design; complements LangChain/LangSmith coverage"
+
+- name: "ZhipuAI GLM-4 Releases"
+  url: "https://github.com/THUDM/GLM-4/releases"
+  feed_url: "https://github.com/THUDM/GLM-4/releases.atom"
+  type: ai_releases
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-07"
+  last_notable: "GLM-5.1 (Apr 7 HN) — long-horizon multi-step task model; GLM-5 previously matched closed frontier on agent tasks (LangChain Apr 2)"
+  note: "Added 2026-04-07 — ZhipuAI (THUDM) open-weight models; GLM-4/5 series competitive with frontier on agent benchmarks per LangChain Apr 2 report; GLM-5.1 focused on long-horizon planning; key open-weight competitor to track"
