@@ -63,6 +63,19 @@ false
 - If only 1 actor type (typical Jarvis task): skip this step silently
 - This step can be manually forced with `--user-stories` flag regardless of actor count
 
+## Step 0.7: SOCRATIC BRAINSTORM (before extracting requirements)
+
+- Before generating any PRD content, ask Eric 3-5 targeted questions to surface unstated assumptions, constraints, and rejected alternatives. Do NOT skip this even if the input feels complete — the input usually under-specifies tradeoffs.
+- Question targets (pick the 3-5 most relevant to the input):
+  1. **Problem framing**: "What's the underlying problem this solves? Is there a simpler version that solves 80% of it?"
+  2. **Rejected alternatives**: "What approaches did you consider and discard? Why?"
+  3. **Success shape**: "What does 'done' look like in one sentence? What would make you abandon this mid-build?"
+  4. **Hidden constraints**: "What can this NOT touch or break? Any existing skills/files this overlaps?"
+  5. **Scope edge**: "What's the smallest version you'd ship? What's explicitly out?"
+- Present questions as a numbered list and WAIT for answers before proceeding to Step 1. Do not generate placeholder PRD content while waiting.
+- If Eric responds "skip" or "just write it", proceed but flag in OPEN QUESTIONS that the PRD was written without brainstorming and may have unstated assumptions.
+- Pattern source: obra/superpowers `brainstorming` skill (Socratic refinement); validated in feedback memory `feedback_collaborative_design.md` — collaborative design catches overengineering before BUILD.
+
 ## Step 1: EXTRACT
 
 - Extract the product or feature name, intended audience, and the problem being solved from the input
