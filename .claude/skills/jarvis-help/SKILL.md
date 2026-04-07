@@ -226,6 +226,21 @@ Print suggestions under a `SUGGESTED FOR THIS SESSION:` header. Only print if at
 - For full overview: always end with contextual suggestions if any apply
 - Keep output scannable -- this is a reference, not documentation
 
+# VERIFY
+
+- Output is grouped by workflow stage (OBSERVE, THINK, PLAN, BUILD, VERIFY, LEARN, CREATE, ORCHESTRATE) when no filter used | Verify: Scan output for stage headers
+- Each skill entry shows name + one-liner (no verbose descriptions in quick help) | Verify: Read output format
+- Contextual suggestions section appears when session has open PRDs, pending signals, or uncommitted changes | Verify: Check session state and output
+- Stage filter or search produces only matching skills (no full dump for filtered queries) | Verify: Check output scope matches input filter
+- No file writes occurred (jarvis-help is read-only) | Verify: git status unchanged
+
+# LEARN
+
+- If Eric frequently searches for a skill by intent (not name), note the intent-to-skill mappings that work well and reinforce them in DISCOVERY one-liners
+- If a stage consistently has more queries than others, note it -- may indicate a workflow bottleneck or missing skills in that stage
+- If contextual suggestions are frequently rejected or ignored, recalibrate the trigger thresholds
+- If a new skill is added and Eric is unaware of it after 3+ sessions, evaluate adding it to the contextual suggestions rotation
+
 # INPUT
 
 INPUT:
