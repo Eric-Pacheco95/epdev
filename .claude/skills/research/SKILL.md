@@ -125,8 +125,15 @@ Rate sources 1-10 for relevance/credibility. Discard below 5.
 
 1. **Difficult domains** (x.com, twitter, linkedin, medium): `tavily_extract` with `extract_depth: "advanced"`
 2. **Static/public sites** (github, blogs, docs): WebFetch (faster)
-3. **Fallback chain**: tavily_extract fails -> WebFetch -> WebSearch metadata-only (note in brief)
-4. **Reddit**: skip tavily_extract (returns empty). Use WebSearch metadata or ask Eric to paste.
+2.5. **JS-heavy / SPA sites** (React apps, Linear/Vercel/Notion changelogs, anything WebFetch returns as an empty shell): use Firecrawl wrapper:
+   ```python
+   from tools.scripts.lib.firecrawl import scrape
+   r = scrape(url)
+   if r.ok: content = r.markdown
+   ```
+   Returns ASCII-safe markdown. Inspect `r.injection_hits` -- if non-empty, downrank source. Also use as `tavily_extract` fallback when Tavily 1000/mo credit budget is exhausted.
+3. **Fallback chain**: tavily_extract fails -> Firecrawl scrape -> WebFetch -> WebSearch metadata-only (note in brief)
+4. **Reddit**: skip tavily_extract AND Firecrawl (Firecrawl explicitly blocks Reddit). Use WebSearch metadata or ask Eric to paste.
 
 ## Phase 3: SYNTHESIZE
 

@@ -1,7 +1,7 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-04-05 (Doc-sync: 5C stale checkboxes closed, prediction engine updated, 5D readiness assessed)
+> Last updated: 2026-04-07 (Doc-sync: 5C marked complete, skill count 47, vacation-week overnight hardening landed)
 
 ## Priority Backlog (ordered by value/effort)
 
@@ -54,9 +54,9 @@
 
 > **Context:** Smoke test passed 2026-04-05 (4/6 PASS). Firecrawl solves JS SPA rendering gap (React apps WebFetch gets empty shells from) and Medium paywalls. Reddit explicitly blocked by Firecrawl. Direct API, not MCP (reduces context bloat). Results: `memory/work/firecrawl_smoke_results.json`
 
-- [ ] **Firecrawl API wrapper** — Python module at `tools/scripts/lib/firecrawl.py`: thin wrapper around Firecrawl `/scrape` endpoint (direct `requests`, not MCP). API key from env `FIRECRAWL_API_KEY`. Includes injection sanitization check (lift from `firecrawl_smoke_test.py`). ASCII-safe output (Windows cp1252). Timeout + error handling.
-- [ ] **Update `/research` waterfall** — Edit `SKILL.md` URL Content Extraction Waterfall to add Firecrawl as Step 2.5: after tavily_extract for difficult domains, before WebFetch for static sites. Target: JS-heavy/SPA sites. Also add Firecrawl as tavily_extract fallback when Tavily credits exhausted (1000/mo limit).
-- [ ] **Validation** — Run `/research` against a JS SPA URL (e.g., Linear changelog) and confirm Firecrawl extracts content where WebFetch previously returned empty shell. Verify injection check doesn't false-positive on normal content.
+- [x] **Firecrawl API wrapper** — `tools/scripts/lib/firecrawl.py` shipped 2026-04-07. `scrape(url)` returns `ScrapeResult` dataclass (ok, markdown, content_len, elapsed_s, error, injection_hits). Lifts INJECTION_SUBSTRINGS list + ASCII-safe encode from smoke test. Timeout + RequestException + non-200 + JSON decode error paths all covered. CLI smoke: `python -m tools.scripts.lib.firecrawl <url>`. (2026-04-07)
+- [x] **Update `/research` waterfall** — `.claude/skills/research/SKILL.md` Step 2.5 added with `from tools.scripts.lib.firecrawl import scrape` snippet. Fallback chain updated: tavily_extract -> Firecrawl -> WebFetch -> WebSearch. Reddit explicitly excluded (Firecrawl blocks). (2026-04-07)
+- [x] **Validation** — Smoke-tested wrapper against `https://linear.app/changelog` (JS SPA): 65,570 chars extracted in 1.2s, zero injection false positives. Confirms wrapper solves WebFetch empty-shell gap. (2026-04-07)
 
 ### Morning Feed Actions (2026-04-06)
 
@@ -95,7 +95,7 @@
 | 4->5 | **GATE PASSED** | 0 |
 | 5A | **COMPLETE** | 0 |
 | 5B | **COMPLETE** | 0 |
-| 5C | In progress | 3 of 5 done (task gate, heartbeat feeder, decisions channel) |
+| 5C | **COMPLETE** | All sub-phases done (5C-1 through 5C-5C); only "ISC template library" deferred |
 
 ## Active Projects
 
