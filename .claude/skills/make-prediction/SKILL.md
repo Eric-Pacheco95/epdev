@@ -54,26 +54,20 @@ false
 - If --research flag is set: invoke /research on the topic first, then proceed with the research output as additional context
 - If the question clearly requires post-training-cutoff data and --research is not set: suggest "This prediction would benefit from current data. Run with --research flag, or run /research first?"
 - **Calibration injection**: Check if `data/calibration.json` exists. If it does:
-  1. Read the file and identify the domain that matches this prediction (geopolitics, market, technology, planning, other)
-  2. Determine calibration maturity for the domain:
-     - `immature` (n_forward < 10): adjustments are INFORMATIONAL ONLY -- do NOT apply to probabilities
-     - `provisional` (10 <= n_forward < 20): apply adjustment with a warning label
-     - `calibrated` (n_forward >= 20): apply adjustment with full confidence
-  3. If the domain has a non-zero adjustment, display to Eric before proceeding:
+  1. Identify domain (geopolitics, market, technology, planning, other) and maturity:
+     - `immature` (n_forward < 10): INFORMATIONAL ONLY — display but don't apply
+     - `provisional` (10-19 forward): apply with warning label
+     - `calibrated` (20+): apply with full confidence
+  2. If non-zero adjustment exists, display before proceeding:
      ```
      Calibration for {domain}: [{maturity}]
-       Historical accuracy: {accuracy}% across {n} resolved predictions ({n_forward} forward, {n_backtest} backtest)
-       Bias: {overconfident|underconfident} by {delta}%
-       Adjustment: {adjustment:+.0%} {applied|informational only -- insufficient forward data}
+       Accuracy: {accuracy}% | n={n} ({n_forward} fwd, {n_backtest} bt) | Bias: {over|under} by {delta}%
+       Adjustment: {adjustment:+.0%} {applied|informational only}
      ```
-  4. If maturity is `provisional` or `calibrated`: during Step 2 (STRUCTURE), apply the adjustment -- if calibration says -0.07 for geopolitics, reduce all geopolitics outcome probabilities by 7 percentage points from what you would naturally state, then renormalize to 100%. If maturity is `immature`: do NOT apply the adjustment -- display it as context but let the model's natural calibration stand.
-  5. In Step 4 (OUTPUT), include a one-line calibration note after the reference class: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`
-  6. If no calibration file exists or the domain has no data: proceed normally without mention
-  7. **Prediction memory scan**: Check if `data/predictions/` contains resolved predictions in the same domain. If 2+ resolved predictions exist for this domain, load the 2 most recent and extract:
-     - What reasoning errors were made (overweighted markets? missed structural factors?)
-     - What signposts proved most predictive
-     - Display: "Loaded {n} prior predictions as reasoning priors for {domain}"
-     - Use these as reasoning guardrails -- avoid repeating the same error patterns
+  3. If maturity `provisional`/`calibrated`: apply adjustment during Step 2 (reduce outcome probs by delta, renormalize to 100%). If `immature`: display only.
+  4. In Step 4 OUTPUT: add after reference class: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`
+  5. If no calibration file or domain has no data: proceed normally.
+  6. **Prediction memory scan**: If 2+ resolved predictions in `data/predictions/` for this domain, load 2 most recent; extract reasoning errors and effective signposts. Display: "Loaded {n} prior predictions as priors for {domain}." Use as guardrails.
 - **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for entries relevant to the prediction topic. Use this domain mapping:
   - crypto, trading, DeFi, blockchain, BTC, ETH, market cycles → `crypto`
   - security, vulnerability, attack, defense, audit → `security`
