@@ -274,37 +274,19 @@ After writing: print "Prediction tracked: data/predictions/[filename]"
 
 # DOMAIN LENS DETAILS
 
-## Geopolitics Lens (--geopolitics)
+## Geopolitics (--geopolitics) — Predictive History framework
 
-### Core Framework: Predictive History (inspired by Prof Jiang Xueqin)
+Four pillars: **(1) Civilizational Cycles** — elite overproduction, fiscal strain, rising/declining dynamics (Thucydides Trap: 12/16 → conflict). **(2) Actor Modeling** — self-interest not ideology; map wants, leverage, commitment problems. **(3) Financial Drivers** — reserve currency, trade routes, industrial capacity, balance sheets. **(4) Historical Analogue** — state explicitly; 2-3 parallels + 2 critical differences.
 
-Four analytical pillars, applied in this order:
+Named Heuristics (apply when relevant):
+- **Asymmetry**: Social cohesion beats material superiority for weaker party
+- **Escalation**: Control > dominance; pace and limits matter more than firepower
+- **Proximity**: Domestic rivalries often drive foreign policy more than external threats
+- **Eschatological Convergence**: End-times narratives shape decisions when leaders exploit them
 
-**1. Civilizational Cycles**: Elite overproduction, fiscal strain (debt/deficits/currency), internal fragmentation, rising vs. declining power dynamics (Thucydides Trap: 12 of 16 cases → conflict).
+## Market (--market) — Macro Cycle framework
 
-**2. Game-Theoretic Actor Modeling**: Self-interest not ideology. Map: what each actor wants, what they can threaten, what they cannot lose. Identify commitment problems and misaligned ally incentives.
-
-**3. Financial & Institutional Drivers**: Reserve currency status, trade route control (sea lanes, straits, pipelines), industrial capacity ratios, central bank balance sheets.
-
-**4. Historical Pattern Matching**: State analogue explicitly. Quality audit: 2-3 parallels + 2 critical structural differences. What does the analogue predict? What would make "this time different" true?
-
-### Named Heuristics (apply when relevant, don't force all four)
-- **Law of Asymmetry**: Weaker party can win via social cohesion over material superiority
-- **Law of Escalation**: Escalation control > escalation dominance; pace and limits matter more than firepower
-- **Law of Proximity**: Domestic rivalries often drive foreign policy more than external threats
-- **Law of Eschatological Convergence**: End-times narratives shape strategic decisions when leaders exploit them
-
-## Market Lens (--market)
-
-### Core Framework: Macro Cycle Analysis
-
-**1. Dalio Big Cycle**: Short-term (~5-8yr): early / mid / late-euphoria / crisis-deleveraging. Long-term (~75-100yr arc). Five forces: debt cycles, internal order, external order, nature, technology.
-
-**2. Sentiment Regime**: euphoria / optimism / uncertainty / fear / panic. Extremes are contrarian signals. VIX: low = complacency; spike = fear.
-
-**3. Macro Regime**: Rate trajectory (hiking/holding/cutting), dollar strength, liquidity (QE/QT, credit spreads), fiscal (deficit, debt ceiling).
-
-**4. Historical Cycle**: Which past cycle does this resemble? What happened next? Key structural differences?
+Four pillars: **(1) Dalio Big Cycle** — short-term (~5-8yr) early/mid/late-euphoria/crisis; long-term (~75-100yr). Five forces: debt, internal order, external order, nature, technology. **(2) Sentiment** — euphoria/optimism/uncertainty/fear/panic; extremes contrarian; VIX: low=complacency, spike=fear. **(3) Macro Regime** — rates, dollar, liquidity (QE/QT, credit spreads), fiscal. **(4) Historical Cycle** — identify analogue; key structural differences.
 
 # SECURITY RULES
 
