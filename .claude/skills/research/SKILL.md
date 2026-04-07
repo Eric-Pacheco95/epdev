@@ -254,10 +254,10 @@ After all drafts are reviewed and approved by Eric:
 
 ### Outreach mode constraints
 
-- **Interactive-only** — this mode must NEVER be invoked by autonomous/overnight/background agents
-- **No Gmail send** — outreach mode produces drafts only. Eric sends manually via Gmail. Do not propose Gmail MCP integration.
-- **Staleness gate** — if the research brief is older than 7 days, warn: "Research data is N days old. Pricing and incentives may have changed. Re-run research before drafting outreach." Do not proceed without Eric's explicit override.
-- **Promotion trigger** — if this mode is used 3+ times across different vendor categories (not re-runs of the same topic), note in /learning-capture as a signal to evaluate promoting to a standalone `/draft-outreach` skill
+- **Interactive-only** — never invoke via autonomous/overnight/background agents
+- **No Gmail send** — drafts only; Eric sends manually; do not propose Gmail MCP integration
+- **Staleness gate** — if brief is > 7 days old, warn: "Research data is N days old." Do not proceed without Eric's override
+- **Promotion trigger** — if used 3+ times across different vendor categories, note in /learning-capture to evaluate standalone `/draft-outreach` skill
 
 # OUTPUT FORMATS
 
