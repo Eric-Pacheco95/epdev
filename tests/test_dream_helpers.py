@@ -1,6 +1,9 @@
-"""Tests for dream.py -- _slug_from_theme and _infer_memory_type."""
+"""Tests for dream.py -- _slug_from_theme, _infer_memory_type, _parse_synthesis_themes."""
 
-from tools.scripts.dream import _slug_from_theme, _infer_memory_type
+import tempfile
+from pathlib import Path
+
+from tools.scripts.dream import _infer_memory_type, _parse_synthesis_themes, _slug_from_theme
 
 
 # --- _slug_from_theme ---
@@ -48,3 +51,48 @@ def test_infer_defaults_to_feedback():
 
 def test_infer_case_insensitive():
     assert _infer_memory_type("ARCHITECTURE review", "System design") == "project"
+
+
+# --- _parse_synthesis_themes ---
+
+PROVEN_SYNTHESIS = """\
+# Synthesis
+
+### Theme: Automation Gains Speed
+- Maturity: proven
+- Confidence: 95%
+- Implication: Reduces toil significantly
+- Action: Add to skill library
+
+### Theme: Not Ready Yet
+- Maturity: candidate
+- Confidence: 70%
+- Implication: Needs more data
+- Action: Track
+"""
+
+
+def test_parse_synthesis_themes_qualifies_proven():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8") as f:
+        f.write(PROVEN_SYNTHESIS)
+        path = Path(f.name)
+    themes = _parse_synthesis_themes(path)
+    assert len(themes) == 1
+    assert themes[0]["name"] == "Automation Gains Speed"
+    assert themes[0]["confidence"] == 95
+
+
+def test_parse_synthesis_themes_excludes_low_confidence():
+    content = "### Theme: Weak Signal\n- Maturity: proven\n- Confidence: 50%\n"
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8") as f:
+        f.write(content)
+        path = Path(f.name)
+    themes = _parse_synthesis_themes(path)
+    assert themes == []
+
+
+def test_parse_synthesis_themes_empty_file():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8") as f:
+        f.write("# No themes\n")
+        path = Path(f.name)
+    assert _parse_synthesis_themes(path) == []
