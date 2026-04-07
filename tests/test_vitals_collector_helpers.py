@@ -3,6 +3,7 @@
 from tools.scripts.vitals_collector import (
     collect_contradictions_structured,
     collect_external_monitoring_structured,
+    collect_proposals_structured,
     compute_trend_averages,
 )
 
@@ -120,3 +121,35 @@ def test_contradictions_defaults_severity():
     md = "- TELOS claim: Something\n- Signal evidence: Evidence here\n"
     result = collect_contradictions_structured({"autoresearch_contradictions": md})
     assert result[0]["severity"] == "MEDIUM"
+
+
+# ---------------------------------------------------------------------------
+# collect_proposals_structured
+# ---------------------------------------------------------------------------
+
+def test_proposals_none_input():
+    assert collect_proposals_structured(None) is None
+
+
+def test_proposals_empty():
+    assert collect_proposals_structured({"autoresearch_proposals": ""}) is None
+
+
+def test_proposals_parses_entry():
+    md = (
+        "- File: memory/work/TELOS.md\n"
+        "- Change: Update mission statement\n"
+        "- Evidence: 3 signals point to this\n"
+    )
+    result = collect_proposals_structured({"autoresearch_proposals": md})
+    assert result is not None
+    assert len(result) == 1
+    assert "TELOS.md" in result[0]["file"]
+    assert "mission" in result[0]["change"]
+
+
+def test_proposals_defaults_missing_fields():
+    md = "- File: some/file.md\n"
+    result = collect_proposals_structured({"autoresearch_proposals": md})
+    assert result[0]["change"] == ""
+    assert result[0]["evidence"] == ""
