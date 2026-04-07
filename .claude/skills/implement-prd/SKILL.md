@@ -66,23 +66,16 @@ false
 
 ### MODEL ANNOTATION CHECK
 
-After extracting ISC items, check each for a `model:` annotation in the line (e.g., `| model: sonnet |` or `| model: haiku |`):
+Check each ISC item for a `model:` annotation (`| model: sonnet |` or `| model: haiku |`):
+- `model: sonnet` → Agent subagent (sonnet) handles BUILD step
+- `model: haiku` → Agent subagent (haiku) handles BUILD step
+- No annotation or `model: opus` → main thread
 
-- `model: sonnet` → launch Agent subagent (model: sonnet) for that item's BUILD step
-- `model: haiku` → launch Agent subagent (model: haiku) for that item's BUILD step
-- No annotation or `model: opus` → main thread (current session model)
+**If any items lack annotation**, list them and ask:
+> "No model annotation on these items — they'll run on Opus. Annotate as `model: sonnet` (bulk code) or `model: haiku` (extraction/classification), or confirm Opus for all."
+Write annotations to PRD before proceeding if Eric annotates.
 
-**If any items lack a `model:` annotation**, list them and ask before proceeding to BUILD:
-> "These ISC items have no model annotation — they'll run on Opus (main thread). Annotate any as `model: sonnet` (bulk code/file creation) or `model: haiku` (extraction/classification), or confirm Opus for all:
-> 1. [item text]
-> 2. [item text]"
-
-Wait for Eric's response. If he annotates items, write the annotations to the PRD file before proceeding. If he confirms Opus for all, proceed with no subagent dispatch.
-
-**Subagent dispatch rules:**
-- Pass the ISC item text, verify method, and relevant context files to the subagent
-- Subagents must NOT commit — they return file writes only; Opus verifies via the ISC verify method
-- Do not dispatch to a subagent while the main thread is in plan mode (`/plan`) — exit plan mode first
+Subagent rules: pass ISC item text, verify method, and context files; subagents return file writes only (no commits); exit plan mode before dispatching.
 
 ### ISC QUALITY GATE (blocks BUILD)
 
@@ -124,16 +117,11 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 - If Critical security findings in the prescan: fix them before proceeding to Step 2
 
 **Step 2 — Cross-model review (Sonnet subagent):**
-- Spawn a Sonnet subagent with adversarial review framing, passing: changed file list, PRD ISC context, and build session summary
-- The subagent has no build-session history — this provides fresh-eyes review free from generator confirmation bias
-- Subagent prompt must include: "You are reviewing code you did not write. Be adversarial. Look for: incomplete implementations, suboptimal approaches, edge cases, security gaps, and anything that would fail in production."
-- **Rate-limit guard**: before treating subagent exit code 0 as PASS, check subagent stdout for rate-limit messages ("hit your limit", "rate limit", "try again"). If found: surface explicit error "REVIEW GATE: subagent rate-limited — review incomplete" and do NOT proceed to VERIFY. If stdout is empty: surface "REVIEW GATE: subagent returned no output — review incomplete" and do NOT proceed to VERIFY.
-- Enter the **Review Fix Loop** (max 2 cycles):
-  1. If no Critical or High findings: PASS — proceed to VERIFY
-  2. If Critical or High findings: apply fixes (Critical and High only — Medium/Low reported but no re-review)
-  3. Re-run subagent to confirm fixes resolved findings
-  4. If findings persist after cycle 2: report in REVIEW FINDINGS as ACCEPTED-RISK with explicit reasoning
-- Scope constraint: only fix issues that directly relate to ISC items being implemented
+- Spawn Sonnet subagent (fresh-eyes, no build history); pass: changed files, ISC context, build summary
+- Subagent prompt: "You are reviewing code you did not write. Be adversarial: look for incomplete implementations, edge cases, security gaps, anything that would fail in production."
+- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again" before treating exit 0 as PASS; empty stdout also = incomplete. Surface "REVIEW GATE: review incomplete" and do NOT proceed to VERIFY.
+- **Review Fix Loop** (max 2 cycles): Critical/High findings → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
+- Scope: only fix issues related to implemented ISC items
 
 ### VERIFY PHASE: Full pass
 
@@ -146,21 +134,17 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 - Find the corresponding task in `orchestration/tasklist.md` and mark it complete (`[ ]` → `[x]`) with a one-line completion note
 - Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
 
-### OWNERSHIP CHECK (required before COMPLETION STATUS)
+### OWNERSHIP CHECK (non-bypassable gate before COMPLETION STATUS)
 
-For each completed ISC item, generate a scaffold sentence and prompt Eric to confirm or edit before proceeding:
+For each completed ISC item, present a scaffold sentence for Eric to edit or approve:
 
-> "OWNERSHIP CHECK -- confirm you understand each completed component by editing or approving these one-sentence descriptions:
-> 1. [scaffold: one plain sentence describing what was built and why for ISC item 1]
-> 2. [scaffold: one plain sentence for ISC item 2]
-> ..."
+> "OWNERSHIP CHECK: edit or approve each description (what was built and why, not what file changed):
+> 1. [scaffold: one plain sentence for ISC item 1]
+> 2. [scaffold for ISC item 2]"
 
-- Wait for Eric's response before writing COMPLETION STATUS
-- If Eric edits a sentence, use their version verbatim
-- If Eric approves without editing (e.g. "looks good"), use the scaffold version
-- Record all sentences in the VERIFY RESULTS table under OWNERSHIP CHECK column
-- Do not write COMPLETION STATUS until Eric has responded — this is a non-bypassable gate
-- The scaffold sentence must describe what the component does and why it was needed, not just what file was changed
+- Do not write COMPLETION STATUS until Eric responds
+- Use his edited version verbatim; use scaffold if he approves without editing
+- Record sentences in VERIFY RESULTS table under OWNERSHIP CHECK column
 
 - Log a brief decision record to `history/decisions/` noting what was built, which ISC items passed, and any deferred items
 - **Final commit prompt**: Run `git status` — if there are uncommitted changes, prompt: "BUILD complete and verified. Ready to commit? Run /commit or I can stage and commit now." Do not auto-commit — wait for Eric's confirmation. If Eric declines, proceed to /learning-capture
@@ -185,14 +169,10 @@ For each completed ISC item, generate a scaffold sentence and prompt Eric to con
 # CONTRACT
 
 ## Errors
-- **prd-not-found:** supplied file path does not exist
-  - recover: check the path; PRDs are typically in `memory/work/<project>/PRD.md`
-- **isc-missing:** PRD has no ISC items (no `- [ ] ... | Verify:` lines)
-  - recover: the PRD needs ISC criteria before implementation; run /create-prd to generate a proper PRD
-- **verify-failure:** one or more ISC verify methods fail after implementation
-  - recover: skill will invoke /self-heal automatically; if self-heal fails, COMPLETION STATUS will be PARTIAL with details on what failed and why
-- **review-blocked:** /review-code surfaces critical security findings
-  - recover: fix findings before proceeding; skill will not mark COMPLETE until review passes
+- **prd-not-found**: PRD not at given path — check; typically `memory/work/<project>/PRD.md`
+- **isc-missing**: no `- [ ] ... | Verify:` lines — run /create-prd first
+- **verify-failure**: /self-heal auto-invoked; if still failing, COMPLETION STATUS = PARTIAL with diagnosis
+- **review-blocked**: Critical/High security findings must be fixed before COMPLETE
 
 # SKILL CHAIN
 

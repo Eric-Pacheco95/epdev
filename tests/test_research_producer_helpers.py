@@ -55,7 +55,7 @@ def test_is_static_due_recent_article():
     """Topic is NOT due if KB has a recent article within interval."""
     topic = _make_topic("crypto-update", "crypto", interval_days=14)
     today_str = date.today().isoformat()
-    with mock.patch("tools.scripts.research_producer.latest_article_date", return_value=today_str):
+    with mock.patch("tools.scripts.research_producer.latest_article_date_for_slug", return_value=today_str):
         assert is_static_due(topic, {}) is False
 
 

@@ -204,17 +204,11 @@ signal_file: {signal filename}
 ## Step 8: WRITE TELOS ENTRIES (Interactive Mode Only)
 
 - For each approved proposal:
-  1. **Snapshot**: Create `memory/work/telos/.snapshots/` if it doesn't exist, then copy the target TELOS file to `memory/work/telos/.snapshots/{filename}.{ISO-timestamp}.md`
-  2. **Read**: Read the current TELOS file content
-  3. **Check size**: Count existing entries. If > 50, warn: "TELOS file {name} has {N} entries. Consider running /telos-update for consolidation."
-  4. **Write**: Append the approved entry to the appropriate section of the TELOS file, tagged with `[source: external]` and the date
-  5. **Log**: Append to `history/changes/absorb_log.md`:
-     ```
-     - {YYYY-MM-DD HH:MM} | /absorb | {url} | {target file} | APPROVED | {one-line summary}
-     ```
-- If any write fails: report which succeeded and which failed. Do not leave partial state unreported.
-- After all writes: update the analysis file status from PENDING to REVIEWED
-- Update each proposal's status in the analysis file (APPROVED or REJECTED)
+  1. Snapshot target file to `memory/work/telos/.snapshots/{filename}.{ISO-timestamp}.md`
+  2. If file has > 50 entries, warn: "TELOS file {name} has {N} entries. Consider /telos-update."
+  3. Append entry to appropriate section, tagged `[source: external]` with date
+  4. Log: `{YYYY-MM-DD HH:MM} | /absorb | {url} | {target} | APPROVED | {summary}` → `history/changes/absorb_log.md`
+- Report any write failures (never silent). Update analysis file: status → REVIEWED, each proposal → APPROVED or REJECTED.
 
 ## Step 9: GENERATE LEARNING SIGNAL
 

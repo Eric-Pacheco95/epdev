@@ -157,6 +157,21 @@ For `/project-init resume <topic>`:
 
 Initialize a new project following the full ISC pipeline.
 
+# VERIFY
+
+- PRD file exists at memory/work/{slug}/PRD.md with ISC criteria (- [ ] ... | Verify: lines) | Verify: ls memory/work/{slug}/PRD.md && grep -c Verify: memory/work/{slug}/PRD.md
+- Project registered in orchestration/tasklist.md | Verify: grep {slug} orchestration/tasklist.md
+- Project state file created at memory/work/{slug}/project_state.md | Verify: ls memory/work/{slug}/project_state.md
+- Red-team blocking findings were surfaced to Eric before continuing (not silently absorbed) | Verify: Check output for blocking-finding escalation step
+- No API keys, credentials, or wallet addresses appear in PRD or research brief | Verify: grep -i key memory/work/{slug}/PRD.md | wc -l
+
+# LEARN
+
+- If red-team consistently produces blocking findings for a topic category (e.g., commodity markets, social apps), note it as a high-risk category to pre-screen before full pipeline
+- If the research brief is consistently longer than 2,000 words but PRD ISC only uses 20%, calibrate research depth for that project type
+- If quick mode is chosen, check 30 days later whether the project proceeded without issues -- calibrates when quick mode is a safe shortcut
+- Track project-to-implementation conversion rate -- if many /project-init runs never reach /implement-prd, diagnose whether PRD quality or scope is the bottleneck
+
 # SKILL CHAIN
 
 - **Composes:** `/research` + `/first-principles` + `/red-team` + `/create-prd` (in sequence)

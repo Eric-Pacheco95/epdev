@@ -1,11 +1,12 @@
 """Tests for content_pipeline/collect_sources.py -- pure helper functions."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from tools.scripts.content_pipeline.collect_sources import (
     parse_frontmatter_date,
     parse_rating,
     safety_check,
+    within_days,
 )
 
 
@@ -79,3 +80,29 @@ def test_safety_check_blocks_employer_phrase():
     passes, reason = safety_check("At my employer we do things differently.", "signal.md")
     assert passes is False
     assert reason is not None
+
+
+# --- within_days ---
+
+def test_within_days_recent():
+    now = datetime.now(timezone.utc)
+    recent = now - timedelta(days=3)
+    assert within_days(recent, 7, now) is True
+
+
+def test_within_days_old():
+    now = datetime.now(timezone.utc)
+    old = now - timedelta(days=30)
+    assert within_days(old, 7, now) is False
+
+
+def test_within_days_none_uses_fallback_recent():
+    now = datetime.now(timezone.utc)
+    recent_fallback = now - timedelta(days=2)
+    assert within_days(None, 7, recent_fallback) is True
+
+
+def test_within_days_none_uses_fallback_old():
+    now = datetime.now(timezone.utc)
+    old_fallback = now - timedelta(days=30)
+    assert within_days(None, 7, old_fallback) is False

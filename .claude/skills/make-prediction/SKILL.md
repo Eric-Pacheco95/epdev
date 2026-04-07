@@ -54,26 +54,20 @@ false
 - If --research flag is set: invoke /research on the topic first, then proceed with the research output as additional context
 - If the question clearly requires post-training-cutoff data and --research is not set: suggest "This prediction would benefit from current data. Run with --research flag, or run /research first?"
 - **Calibration injection**: Check if `data/calibration.json` exists. If it does:
-  1. Read the file and identify the domain that matches this prediction (geopolitics, market, technology, planning, other)
-  2. Determine calibration maturity for the domain:
-     - `immature` (n_forward < 10): adjustments are INFORMATIONAL ONLY -- do NOT apply to probabilities
-     - `provisional` (10 <= n_forward < 20): apply adjustment with a warning label
-     - `calibrated` (n_forward >= 20): apply adjustment with full confidence
-  3. If the domain has a non-zero adjustment, display to Eric before proceeding:
+  1. Identify domain (geopolitics, market, technology, planning, other) and maturity:
+     - `immature` (n_forward < 10): INFORMATIONAL ONLY — display but don't apply
+     - `provisional` (10-19 forward): apply with warning label
+     - `calibrated` (20+): apply with full confidence
+  2. If non-zero adjustment exists, display before proceeding:
      ```
      Calibration for {domain}: [{maturity}]
-       Historical accuracy: {accuracy}% across {n} resolved predictions ({n_forward} forward, {n_backtest} backtest)
-       Bias: {overconfident|underconfident} by {delta}%
-       Adjustment: {adjustment:+.0%} {applied|informational only -- insufficient forward data}
+       Accuracy: {accuracy}% | n={n} ({n_forward} fwd, {n_backtest} bt) | Bias: {over|under} by {delta}%
+       Adjustment: {adjustment:+.0%} {applied|informational only}
      ```
-  4. If maturity is `provisional` or `calibrated`: during Step 2 (STRUCTURE), apply the adjustment -- if calibration says -0.07 for geopolitics, reduce all geopolitics outcome probabilities by 7 percentage points from what you would naturally state, then renormalize to 100%. If maturity is `immature`: do NOT apply the adjustment -- display it as context but let the model's natural calibration stand.
-  5. In Step 4 (OUTPUT), include a one-line calibration note after the reference class: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`
-  6. If no calibration file exists or the domain has no data: proceed normally without mention
-  7. **Prediction memory scan**: Check if `data/predictions/` contains resolved predictions in the same domain. If 2+ resolved predictions exist for this domain, load the 2 most recent and extract:
-     - What reasoning errors were made (overweighted markets? missed structural factors?)
-     - What signposts proved most predictive
-     - Display: "Loaded {n} prior predictions as reasoning priors for {domain}"
-     - Use these as reasoning guardrails -- avoid repeating the same error patterns
+  3. If maturity `provisional`/`calibrated`: apply adjustment during Step 2 (reduce outcome probs by delta, renormalize to 100%). If `immature`: display only.
+  4. In Step 4 OUTPUT: add after reference class: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`
+  5. If no calibration file or domain has no data: proceed normally.
+  6. **Prediction memory scan**: If 2+ resolved predictions in `data/predictions/` for this domain, load 2 most recent; extract reasoning errors and effective signposts. Display: "Loaded {n} prior predictions as priors for {domain}." Use as guardrails.
 - **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for entries relevant to the prediction topic. Use this domain mapping:
   - crypto, trading, DeFi, blockchain, BTC, ETH, market cycles → `crypto`
   - security, vulnerability, attack, defense, audit → `security`
@@ -274,37 +268,19 @@ After writing: print "Prediction tracked: data/predictions/[filename]"
 
 # DOMAIN LENS DETAILS
 
-## Geopolitics Lens (--geopolitics)
+## Geopolitics (--geopolitics) — Predictive History framework
 
-### Core Framework: Predictive History (inspired by Prof Jiang Xueqin)
+Four pillars: **(1) Civilizational Cycles** — elite overproduction, fiscal strain, rising/declining dynamics (Thucydides Trap: 12/16 → conflict). **(2) Actor Modeling** — self-interest not ideology; map wants, leverage, commitment problems. **(3) Financial Drivers** — reserve currency, trade routes, industrial capacity, balance sheets. **(4) Historical Analogue** — state explicitly; 2-3 parallels + 2 critical differences.
 
-Four analytical pillars, applied in this order:
+Named Heuristics (apply when relevant):
+- **Asymmetry**: Social cohesion beats material superiority for weaker party
+- **Escalation**: Control > dominance; pace and limits matter more than firepower
+- **Proximity**: Domestic rivalries often drive foreign policy more than external threats
+- **Eschatological Convergence**: End-times narratives shape decisions when leaders exploit them
 
-**1. Civilizational Cycles**: Elite overproduction, fiscal strain (debt/deficits/currency), internal fragmentation, rising vs. declining power dynamics (Thucydides Trap: 12 of 16 cases → conflict).
+## Market (--market) — Macro Cycle framework
 
-**2. Game-Theoretic Actor Modeling**: Self-interest not ideology. Map: what each actor wants, what they can threaten, what they cannot lose. Identify commitment problems and misaligned ally incentives.
-
-**3. Financial & Institutional Drivers**: Reserve currency status, trade route control (sea lanes, straits, pipelines), industrial capacity ratios, central bank balance sheets.
-
-**4. Historical Pattern Matching**: State analogue explicitly. Quality audit: 2-3 parallels + 2 critical structural differences. What does the analogue predict? What would make "this time different" true?
-
-### Named Heuristics (apply when relevant, don't force all four)
-- **Law of Asymmetry**: Weaker party can win via social cohesion over material superiority
-- **Law of Escalation**: Escalation control > escalation dominance; pace and limits matter more than firepower
-- **Law of Proximity**: Domestic rivalries often drive foreign policy more than external threats
-- **Law of Eschatological Convergence**: End-times narratives shape strategic decisions when leaders exploit them
-
-## Market Lens (--market)
-
-### Core Framework: Macro Cycle Analysis
-
-**1. Dalio Big Cycle**: Short-term (~5-8yr): early / mid / late-euphoria / crisis-deleveraging. Long-term (~75-100yr arc). Five forces: debt cycles, internal order, external order, nature, technology.
-
-**2. Sentiment Regime**: euphoria / optimism / uncertainty / fear / panic. Extremes are contrarian signals. VIX: low = complacency; spike = fear.
-
-**3. Macro Regime**: Rate trajectory (hiking/holding/cutting), dollar strength, liquidity (QE/QT, credit spreads), fiscal (deficit, debt ceiling).
-
-**4. Historical Cycle**: Which past cycle does this resemble? What happened next? Key structural differences?
+Four pillars: **(1) Dalio Big Cycle** — short-term (~5-8yr) early/mid/late-euphoria/crisis; long-term (~75-100yr). Five forces: debt, internal order, external order, nature, technology. **(2) Sentiment** — euphoria/optimism/uncertainty/fear/panic; extremes contrarian; VIX: low=complacency, spike=fear. **(3) Macro Regime** — rates, dollar, liquidity (QE/QT, credit spreads), fiscal. **(4) Historical Cycle** — identify analogue; key structural differences.
 
 # SECURITY RULES
 

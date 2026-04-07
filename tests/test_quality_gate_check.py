@@ -4,7 +4,9 @@ import tempfile
 from pathlib import Path
 
 from tools.scripts.quality_gate_check import (
+    _sanitize_ascii,
     extract_file_refs,
+    format_report,
     parse_isc_items,
 )
 
@@ -77,3 +79,58 @@ def test_parse_isc_items_no_criteria():
     items = parse_isc_items(p)
     assert items == []
     p.unlink()
+
+
+# ── _sanitize_ascii ──────────────────────────────────────────────────
+
+def test_sanitize_ascii_arrow():
+    assert _sanitize_ascii("A \u2192 B") == "A -> B"
+
+
+def test_sanitize_ascii_em_dash():
+    assert _sanitize_ascii("foo\u2014bar") == "foo--bar"
+
+
+def test_sanitize_ascii_smart_quotes():
+    assert _sanitize_ascii("\u201chello\u201d") == '"hello"'
+
+
+def test_sanitize_ascii_no_change():
+    assert _sanitize_ascii("plain text") == "plain text"
+
+
+# ── format_report ────────────────────────────────────────────────────
+
+def test_format_report_no_issues():
+    report = {
+        "tasklist": None,
+        "decisions": None,
+        "file_checks": [],
+        "issues": [],
+    }
+    result = format_report(report)
+    assert "No issues found." in result
+
+
+def test_format_report_with_issues():
+    report = {
+        "tasklist": None,
+        "decisions": None,
+        "file_checks": [],
+        "issues": [{"severity": "warn", "message": "Something might be wrong"}],
+    }
+    result = format_report(report)
+    assert "WARN" in result
+    assert "Something might be wrong" in result
+
+
+def test_format_report_tasklist():
+    report = {
+        "tasklist": {"total": 10, "checked": 7, "unchecked": 3, "completion_pct": 70, "open_items": []},
+        "decisions": None,
+        "file_checks": [],
+        "issues": [],
+    }
+    result = format_report(report)
+    assert "10 tasks" in result
+    assert "70%" in result

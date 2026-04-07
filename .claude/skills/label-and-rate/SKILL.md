@@ -25,3 +25,10 @@ DEPRECATED
 
 ## Output Contract
 - DEPRECATED -- no output; route all signal work through /learning-capture
+# VERIFY
+
+- Not applicable -- this skill is deprecated | Verify: Redirect user to /learning-capture
+
+# LEARN
+
+- Not applicable -- this skill is deprecated; if this was invoked, add a contextual redirect note suggesting /learning-capture to the user

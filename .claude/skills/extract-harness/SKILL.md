@@ -182,15 +182,10 @@ Output: numbered list with effort estimates (S/M/L) and priority order. Do NOT b
 
 Override classification defaults for individual builder audience:
 
-**Classification overrides (vs. default enterprise strip-list):**
-- **KEEP** learning system: `memory/learning/` directory structure, signals, synthesis — but strip all existing signal content (ship the scaffold, not the data)
-- **KEEP** dispatcher scaffold: `tools/scripts/jarvis_dispatcher.py` + backlog format + worktree lib — stripped of personal paths, with placeholder config
-- **KEEP** steering rules architecture: CLAUDE.md steering rules section structure + `/update-steering-rules` skill — but strip all personal rules (ship 3-5 example rules as templates)
-- **KEEP** content pipeline: `/extract-wisdom`, `/synthesize-signals`, `/write-essay` chain — these are the "learning compounds" value prop
-- **KEEP** security layer: constitutional rules, validators — personal AI brains need defense too
-- **STRIP** personal TELOS content, personal memories, personal MCP configs, personal predictions
-- **STRIP** project-specific orchestration (crypto-bot, jarvis-app references)
-- **ADAPT** `/learning-capture`, `/synthesize-signals` — remove personal signal categories, keep generic structure
+**Classification overrides:**
+- **KEEP**: learning system scaffold (strip existing data), dispatcher scaffold (strip personal paths), steering rules architecture + `/update-steering-rules` (3-5 template rules), content pipeline (`/extract-wisdom` > `/synthesize-signals` > `/write-essay`), security layer
+- **STRIP**: personal TELOS content, memories, MCP configs, predictions, project-specific orchestration
+- **ADAPT**: `/learning-capture`, `/synthesize-signals` — remove personal signal categories, keep generic structure
 
 **Repo structure overrides:**
 - Replace `templates/` bank artifacts (KYC, AML) with personal builder artifacts (daily log, weekly review, project kickoff)

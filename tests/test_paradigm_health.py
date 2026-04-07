@@ -424,8 +424,10 @@ class TestImmutableAuditTrail:
         )
         with tempfile.TemporaryDirectory() as d:
             history_dir = Path(d)
+            decisions_dir = history_dir / "decisions"
+            decisions_dir.mkdir()
             for i in range(3):
-                (history_dir / f"decision_{i}.md").write_text(compliant_content, encoding="utf-8")
+                (decisions_dir / f"decision_{i}.md").write_text(compliant_content, encoding="utf-8")
             with patch("tools.scripts.paradigm_health.HISTORY_DIR", history_dir):
                 score, metric = measure_immutable_audit_trail()
         assert score == 1.0
@@ -444,7 +446,9 @@ class TestImmutableAuditTrail:
         readme_content = "# README\nNot a decision file\n"
         with tempfile.TemporaryDirectory() as d:
             history_dir = Path(d)
-            (history_dir / "README.md").write_text(readme_content, encoding="utf-8")
+            decisions_dir = history_dir / "decisions"
+            decisions_dir.mkdir()
+            (decisions_dir / "README.md").write_text(readme_content, encoding="utf-8")
             with patch("tools.scripts.paradigm_health.HISTORY_DIR", history_dir):
                 score, metric = measure_immutable_audit_trail()
         assert score == 0.0
