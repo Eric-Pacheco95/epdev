@@ -364,16 +364,37 @@ def collect_overnight_deep_dive() -> dict:
 
 
 def collect_unmerged_branches() -> list[str]:
-    """Check for unmerged overnight branches."""
+    """Return overnight branches that have commits not in main.
+
+    A branch is only "unmerged" if it has at least one commit that main does not
+    contain. Branches whose tip is an ancestor of main (already merged or never
+    advanced past their fork point) are excluded so the morning brief does not
+    flag dead branches as actionable.
+    """
     try:
         result = subprocess.run(
             ["git", "branch", "--list", "jarvis/overnight-*"],
             capture_output=True, text=True, timeout=5,
             cwd=str(REPO_ROOT),
         )
-        if result.returncode == 0:
-            branches = [b.strip() for b in result.stdout.strip().splitlines() if b.strip()]
-            return branches
+        if result.returncode != 0:
+            return []
+        branches = [
+            b.strip().lstrip("* ").strip()
+            for b in result.stdout.strip().splitlines()
+            if b.strip()
+        ]
+        unmerged = []
+        for branch in branches:
+            count = subprocess.run(
+                ["git", "rev-list", "--count", f"main..{branch}"],
+                capture_output=True, text=True, timeout=5,
+                cwd=str(REPO_ROOT),
+            )
+            if count.returncode == 0 and count.stdout.strip().isdigit():
+                if int(count.stdout.strip()) > 0:
+                    unmerged.append(branch)
+        return unmerged
     except (subprocess.TimeoutExpired, OSError):
         pass
     return []

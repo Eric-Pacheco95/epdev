@@ -52,6 +52,42 @@ ERROR_PATTERNS = [
     re.compile(r"SECURITY_AUDIT:\s*FAIL"),
 ]
 
+# Patterns that indicate the host is out of memory / pagefile.
+# When matched, skip claude -p diagnosis (it will OOM the same way)
+# and write a hardcoded structured failure record instead.
+OOM_PATTERNS = [
+    re.compile(r"WinError 1455"),
+    re.compile(r"paging file is too small", re.IGNORECASE),
+    re.compile(r"MemoryError"),
+    re.compile(r"Cannot allocate memory"),
+    re.compile(r"\[Errno 12\]"),
+]
+
+
+def detect_oom(output: str) -> bool:
+    """Return True if output indicates host memory/pagefile exhaustion."""
+    for pat in OOM_PATTERNS:
+        if pat.search(output):
+            return True
+    return False
+
+
+def build_oom_diagnosis(runner_name: str) -> str:
+    """Hardcoded diagnosis for OOM failures -- skips claude -p (would also OOM)."""
+    return (
+        "ROOT_CAUSE: Host out of virtual memory -- Windows pagefile exhausted "
+        "(WinError 1455). Diagnosis skipped because claude -p would hit the same OOM.\n"
+        "SEVERITY: 7\n"
+        "CATEGORY: resource_exhaustion\n"
+        "PROPOSED_FIX: Increase Windows pagefile (System Properties -> Advanced -> "
+        "Performance -> Virtual Memory): set initial 16GB, max 32GB. Reboot required.\n"
+        "REVERSIBLE: yes\n"
+        "REQUIRES_HUMAN: yes\n"
+        "DETAILS: %s aborted before any work was done. The runner did not produce "
+        "a branch or any artifacts. This is a host-level issue, not a code bug -- "
+        "no fix can be applied from inside Jarvis."
+    ) % runner_name
+
 # Patterns to strip from output before sending to claude -p (secret safety)
 SECRET_PATTERNS = [
     re.compile(r".*Bearer\s+\S+.*", re.IGNORECASE),
@@ -166,6 +202,7 @@ def call_claude_diagnose(prompt: str) -> str:
             capture_output=True,
             text=True,
             encoding="utf-8",
+            errors="replace",
             timeout=DIAGNOSE_TIMEOUT_S,
             cwd=str(REPO_ROOT),
         )
@@ -406,6 +443,7 @@ def main() -> int:
             capture_output=True,
             text=True,
             encoding="utf-8",
+            errors="replace",  # tolerate non-utf-8 bytes from runner output
             timeout=timeout,
             cwd=str(REPO_ROOT),
         )
@@ -462,20 +500,36 @@ def main() -> int:
     playbook_category = classify_playbook(combined_output)
     print("self-diagnose: playbook match: %s" % playbook_category)
 
-    # 4. Sanitize output and build diagnosis prompt
-    sanitized = sanitize_output(combined_output)
-    prompt = build_diagnosis_prompt(runner_name, exit_code,
-                                    sanitized, playbook_category)
+    # 3b. OOM short-circuit: if host is out of memory, skip claude -p entirely.
+    # Calling claude -p under OOM produces a useless "diagnosis unavailable"
+    # log because the diagnoser hits the same WinError 1455. Use a hardcoded
+    # diagnosis instead so the failure record is actionable.
+    if detect_oom(combined_output):
+        print("self-diagnose: OOM detected -- skipping claude -p (would also OOM)")
+        playbook_category = "resource_exhaustion"
+        diagnosis = build_oom_diagnosis(runner_name)
+    else:
+        # 4. Sanitize output and build diagnosis prompt
+        sanitized = sanitize_output(combined_output)
+        prompt = build_diagnosis_prompt(runner_name, exit_code,
+                                        sanitized, playbook_category)
 
-    # 5. Call claude -p for diagnosis
-    print("self-diagnose: calling claude -p for diagnosis ...")
-    diagnosis = call_claude_diagnose(prompt)
+        # 5. Call claude -p for diagnosis
+        print("self-diagnose: calling claude -p for diagnosis ...")
+        diagnosis = call_claude_diagnose(prompt)
 
-    if diagnosis.startswith("("):
-        # Diagnosis itself failed -- log what we have
-        print("self-diagnose: diagnosis unavailable: %s" % diagnosis,
-              file=sys.stderr)
-        diagnosis = "ROOT_CAUSE: Diagnosis unavailable -- %s\nSEVERITY: 5\nCATEGORY: unknown\nPROPOSED_FIX: Manual investigation needed" % diagnosis
+        if diagnosis.startswith("("):
+            # Diagnosis itself failed -- check if claude -p also OOM'd
+            if detect_oom(diagnosis):
+                print("self-diagnose: claude -p hit OOM -- using hardcoded OOM diagnosis",
+                      file=sys.stderr)
+                playbook_category = "resource_exhaustion"
+                diagnosis = build_oom_diagnosis(runner_name)
+            else:
+                # Diagnosis itself failed for non-OOM reason -- log what we have
+                print("self-diagnose: diagnosis unavailable: %s" % diagnosis,
+                      file=sys.stderr)
+                diagnosis = "ROOT_CAUSE: Diagnosis unavailable -- %s\nSEVERITY: 5\nCATEGORY: unknown\nPROPOSED_FIX: Manual investigation needed" % diagnosis
 
     # 6. Log the failure
     log_path = log_failure(runner_name, exit_code, combined_output,

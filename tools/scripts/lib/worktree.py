@@ -109,27 +109,57 @@ def worktree_setup(
         print(f"  Cleaning up stale worktree at {wt}")
         subprocess.run(
             ["git", "worktree", "remove", str(wt), "--force"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=str(REPO_ROOT),
         )
         subprocess.run(
             ["git", "worktree", "prune"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=str(REPO_ROOT),
         )
 
     # Delete stale branch if it exists (from previous run)
     subprocess.run(
         ["git", "branch", "-D", branch],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        cwd=str(REPO_ROOT),
     )
 
-    # Create worktree with new branch
-    result = subprocess.run(
-        ["git", "worktree", "add", "-b", branch, str(wt)],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
-    )
-    if result.returncode != 0:
+    # Create worktree with new branch.
+    # Retry on WinError 1455 (paging file too small) -- transient OOM at 04:00
+    # can resolve if other processes free memory. Up to 3 attempts with backoff.
+    import time as _time
+    result = None
+    for attempt in range(3):
+        result = subprocess.run(
+            ["git", "worktree", "add", "-b", branch, str(wt)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=str(REPO_ROOT),
+        )
+        if result.returncode == 0:
+            break
+        stderr = (result.stderr or "")
+        is_oom = ("1455" in stderr) or ("paging file" in stderr.lower())
+        if not is_oom or attempt == 2:
+            break
+        wait_s = 30 * (attempt + 1)
         print(
-            f"ERROR: Failed to create worktree: {result.stderr.strip()}",
+            f"  WARN: worktree add hit WinError 1455 (paging file too small). "
+            f"Retrying in {wait_s}s (attempt {attempt + 2}/3)",
+            file=sys.stderr,
+        )
+        _time.sleep(wait_s)
+        # Clean up partial branch state from failed attempt
+        subprocess.run(
+            ["git", "branch", "-D", branch],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=str(REPO_ROOT),
+        )
+
+    if result is None or result.returncode != 0:
+        stderr = (result.stderr.strip() if result else "no result")
+        print(
+            f"ERROR: Failed to create worktree: {stderr}",
             file=sys.stderr,
         )
         return None
@@ -189,7 +219,7 @@ def _symlink_local_memory(wt: Path) -> None:
                 try:
                     result = subprocess.run(
                         ["cmd", "/c", "mklink", "/J", str(dst), str(src)],
-                        capture_output=True, text=True, encoding="utf-8",
+                        capture_output=True, text=True, encoding="utf-8", errors="replace",
                     )
                     if result.returncode == 0:
                         mode = "read-only" if readonly else "read-write"
@@ -217,11 +247,11 @@ def worktree_cleanup(worktree_dir: Optional[Path] = None) -> None:
     if wt.exists():
         subprocess.run(
             ["git", "worktree", "remove", str(wt), "--force"],
-            capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
+            capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(REPO_ROOT),
         )
     subprocess.run(
         ["git", "worktree", "prune"],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(REPO_ROOT),
     )
 
 
@@ -236,7 +266,7 @@ def cleanup_old_branches(prefix: str, days: int = 7) -> None:
 
     result = subprocess.run(
         ["git", "branch", "--list", f"{prefix}*"],
-        capture_output=True, text=True, encoding="utf-8", cwd=str(REPO_ROOT),
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(REPO_ROOT),
     )
     for line in result.stdout.splitlines():
         branch_name = line.strip().lstrip("* ")
@@ -246,7 +276,7 @@ def cleanup_old_branches(prefix: str, days: int = 7) -> None:
         # Get the last commit's Unix timestamp on this branch
         date_result = subprocess.run(
             ["git", "log", "-1", "--format=%ct", branch_name],
-            capture_output=True, text=True, encoding="utf-8",
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
             cwd=str(REPO_ROOT),
         )
         if date_result.returncode != 0 or not date_result.stdout.strip():
@@ -260,7 +290,7 @@ def cleanup_old_branches(prefix: str, days: int = 7) -> None:
         if commit_ts < cutoff_ts:
             subprocess.run(
                 ["git", "branch", "-D", branch_name],
-                capture_output=True, text=True, encoding="utf-8",
+                capture_output=True, text=True, encoding="utf-8", errors="replace",
                 cwd=str(REPO_ROOT),
             )
             print(f"  Cleaned up old branch: {branch_name}")
@@ -270,7 +300,7 @@ def git_diff_stat(cwd: Optional[str] = None) -> str:
     """Get diff stat for latest commit."""
     result = subprocess.run(
         ["git", "diff", "--stat", "HEAD~1..HEAD"],
-        capture_output=True, text=True, encoding="utf-8",
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
         cwd=cwd or str(REPO_ROOT),
     )
     return result.stdout.strip() if result.returncode == 0 else "(no diff available)"
@@ -285,7 +315,7 @@ def git_diff_files(branch: str, base: str = "main", cwd: Optional[str] = None) -
     """
     result = subprocess.run(
         ["git", "diff", "--name-only", f"{base}...{branch}"],
-        capture_output=True, text=True, encoding="utf-8",
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
         cwd=cwd or str(REPO_ROOT),
     )
     if result.returncode != 0:
@@ -297,7 +327,7 @@ def git_commit_count(branch: str, base: str = "main", cwd: Optional[str] = None)
     """Return number of commits on branch ahead of base (merge-base)."""
     result = subprocess.run(
         ["git", "rev-list", "--count", f"{base}...{branch}"],
-        capture_output=True, text=True, encoding="utf-8",
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
         cwd=cwd or str(REPO_ROOT),
     )
     if result.returncode != 0:

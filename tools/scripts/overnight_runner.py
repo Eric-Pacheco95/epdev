@@ -54,6 +54,62 @@ DIMENSION_ORDER = [
 # 100 min = 6000s, leaving ~20 min buffer for worktree setup, quality checks, cleanup.
 TIME_BUDGET_S = 6000
 
+# Pre-flight memory threshold (bytes). If available virtual memory (physical+pagefile)
+# is below this, the runner skips the night cleanly with a Slack alert instead of
+# crashing inside `git worktree add` with WinError 1455.
+# 2 GiB chosen as floor for "worktree create + 1 claude -p invocation can fit".
+PREFLIGHT_MIN_AVAIL_BYTES = 2 * 1024 * 1024 * 1024
+
+
+def check_memory_preflight() -> tuple[bool, str]:
+    """Return (ok, message). Uses GlobalMemoryStatusEx via ctypes -- no PowerShell.
+
+    On non-Windows, always returns ok=True (Windows pagefile OOM doesn't apply).
+    """
+    if os.name != "nt":
+        return True, "non-Windows: skipped"
+    try:
+        import ctypes
+
+        class MEMORYSTATUSEX(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        stat = MEMORYSTATUSEX()
+        stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+            return True, "memory query failed -- proceeding"
+
+        avail_pagefile = stat.ullAvailPageFile
+        avail_phys = stat.ullAvailPhys
+        gib = 1024 * 1024 * 1024
+        msg = (
+            "phys=%.1fGB free / %.1fGB total | pagefile=%.1fGB free / %.1fGB total | "
+            "load=%d%%"
+        ) % (
+            avail_phys / gib,
+            stat.ullTotalPhys / gib,
+            avail_pagefile / gib,
+            stat.ullTotalPageFile / gib,
+            stat.dwMemoryLoad,
+        )
+
+        if avail_pagefile < PREFLIGHT_MIN_AVAIL_BYTES:
+            return False, "LOW PAGEFILE: " + msg
+        return True, msg
+    except Exception as exc:
+        # Never block the runner on a memory check failure
+        return True, "memory query exception (%s) -- proceeding" % exc
+
 
 # -- State management -------------------------------------------------------
 
@@ -611,6 +667,34 @@ def main() -> int:
     print(f"Jarvis Overnight Runner -- {today}")
     print(f"Repo: {REPO_ROOT}")
     print(f"Time budget: {TIME_BUDGET_S // 60} min")
+
+    # 0. Pre-flight memory check -- abort cleanly if pagefile would OOM `git worktree add`.
+    # This is the vacation defense: while the host pagefile is too small, the
+    # runner exits 0 with a Slack alert instead of crashing in worktree creation
+    # and producing a useless self-diagnose log.
+    if not args.dry_run:
+        ok, mem_msg = check_memory_preflight()
+        print(f"Pre-flight memory: {mem_msg}")
+        if not ok:
+            print(
+                "ERROR: Available pagefile below threshold. Skipping tonight's run.",
+                file=sys.stderr,
+            )
+            try:
+                from tools.scripts.slack_notify import notify
+                notify(
+                    ":warning: *Overnight skipped: low memory*\n"
+                    f"Date: `{today}`\n"
+                    f"Status: `{mem_msg}`\n"
+                    "Reason: pagefile below 2GB threshold -- `git worktree add` "
+                    "would hit WinError 1455.\n"
+                    "Action: increase Windows pagefile (System Properties -> "
+                    "Performance -> Virtual Memory). No work was done; no diagnosis attempted.",
+                    severity="routine",
+                )
+            except Exception as exc:
+                print(f"  Slack notify failed: {exc}", file=sys.stderr)
+            return 0  # clean exit -- not a failure, just skipped
 
     # 1. Load state and parse program
     state = load_state()
