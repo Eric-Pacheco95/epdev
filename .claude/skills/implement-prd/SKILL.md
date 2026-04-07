@@ -66,23 +66,16 @@ false
 
 ### MODEL ANNOTATION CHECK
 
-After extracting ISC items, check each for a `model:` annotation in the line (e.g., `| model: sonnet |` or `| model: haiku |`):
+Check each ISC item for a `model:` annotation (`| model: sonnet |` or `| model: haiku |`):
+- `model: sonnet` → Agent subagent (sonnet) handles BUILD step
+- `model: haiku` → Agent subagent (haiku) handles BUILD step
+- No annotation or `model: opus` → main thread
 
-- `model: sonnet` → launch Agent subagent (model: sonnet) for that item's BUILD step
-- `model: haiku` → launch Agent subagent (model: haiku) for that item's BUILD step
-- No annotation or `model: opus` → main thread (current session model)
+**If any items lack annotation**, list them and ask:
+> "No model annotation on these items — they'll run on Opus. Annotate as `model: sonnet` (bulk code) or `model: haiku` (extraction/classification), or confirm Opus for all."
+Write annotations to PRD before proceeding if Eric annotates.
 
-**If any items lack a `model:` annotation**, list them and ask before proceeding to BUILD:
-> "These ISC items have no model annotation — they'll run on Opus (main thread). Annotate any as `model: sonnet` (bulk code/file creation) or `model: haiku` (extraction/classification), or confirm Opus for all:
-> 1. [item text]
-> 2. [item text]"
-
-Wait for Eric's response. If he annotates items, write the annotations to the PRD file before proceeding. If he confirms Opus for all, proceed with no subagent dispatch.
-
-**Subagent dispatch rules:**
-- Pass the ISC item text, verify method, and relevant context files to the subagent
-- Subagents must NOT commit — they return file writes only; Opus verifies via the ISC verify method
-- Do not dispatch to a subagent while the main thread is in plan mode (`/plan`) — exit plan mode first
+Subagent rules: pass ISC item text, verify method, and context files; subagents return file writes only (no commits); exit plan mode before dispatching.
 
 ### ISC QUALITY GATE (blocks BUILD)
 
