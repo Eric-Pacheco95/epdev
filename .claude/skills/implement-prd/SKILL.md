@@ -117,16 +117,11 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
 - If Critical security findings in the prescan: fix them before proceeding to Step 2
 
 **Step 2 — Cross-model review (Sonnet subagent):**
-- Spawn a Sonnet subagent with adversarial review framing, passing: changed file list, PRD ISC context, and build session summary
-- The subagent has no build-session history — this provides fresh-eyes review free from generator confirmation bias
-- Subagent prompt must include: "You are reviewing code you did not write. Be adversarial. Look for: incomplete implementations, suboptimal approaches, edge cases, security gaps, and anything that would fail in production."
-- **Rate-limit guard**: before treating subagent exit code 0 as PASS, check subagent stdout for rate-limit messages ("hit your limit", "rate limit", "try again"). If found: surface explicit error "REVIEW GATE: subagent rate-limited — review incomplete" and do NOT proceed to VERIFY. If stdout is empty: surface "REVIEW GATE: subagent returned no output — review incomplete" and do NOT proceed to VERIFY.
-- Enter the **Review Fix Loop** (max 2 cycles):
-  1. If no Critical or High findings: PASS — proceed to VERIFY
-  2. If Critical or High findings: apply fixes (Critical and High only — Medium/Low reported but no re-review)
-  3. Re-run subagent to confirm fixes resolved findings
-  4. If findings persist after cycle 2: report in REVIEW FINDINGS as ACCEPTED-RISK with explicit reasoning
-- Scope constraint: only fix issues that directly relate to ISC items being implemented
+- Spawn Sonnet subagent (fresh-eyes, no build history); pass: changed files, ISC context, build summary
+- Subagent prompt: "You are reviewing code you did not write. Be adversarial: look for incomplete implementations, edge cases, security gaps, anything that would fail in production."
+- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again" before treating exit 0 as PASS; empty stdout also = incomplete. Surface "REVIEW GATE: review incomplete" and do NOT proceed to VERIFY.
+- **Review Fix Loop** (max 2 cycles): Critical/High findings → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
+- Scope: only fix issues related to implemented ISC items
 
 ### VERIFY PHASE: Full pass
 
