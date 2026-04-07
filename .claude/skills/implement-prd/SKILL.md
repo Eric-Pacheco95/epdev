@@ -146,21 +146,17 @@ Wait for Eric's response. If he annotates items, write the annotations to the PR
 - Find the corresponding task in `orchestration/tasklist.md` and mark it complete (`[ ]` → `[x]`) with a one-line completion note
 - Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
 
-### OWNERSHIP CHECK (required before COMPLETION STATUS)
+### OWNERSHIP CHECK (non-bypassable gate before COMPLETION STATUS)
 
-For each completed ISC item, generate a scaffold sentence and prompt Eric to confirm or edit before proceeding:
+For each completed ISC item, present a scaffold sentence for Eric to edit or approve:
 
-> "OWNERSHIP CHECK -- confirm you understand each completed component by editing or approving these one-sentence descriptions:
-> 1. [scaffold: one plain sentence describing what was built and why for ISC item 1]
-> 2. [scaffold: one plain sentence for ISC item 2]
-> ..."
+> "OWNERSHIP CHECK: edit or approve each description (what was built and why, not what file changed):
+> 1. [scaffold: one plain sentence for ISC item 1]
+> 2. [scaffold for ISC item 2]"
 
-- Wait for Eric's response before writing COMPLETION STATUS
-- If Eric edits a sentence, use their version verbatim
-- If Eric approves without editing (e.g. "looks good"), use the scaffold version
-- Record all sentences in the VERIFY RESULTS table under OWNERSHIP CHECK column
-- Do not write COMPLETION STATUS until Eric has responded — this is a non-bypassable gate
-- The scaffold sentence must describe what the component does and why it was needed, not just what file was changed
+- Do not write COMPLETION STATUS until Eric responds
+- Use his edited version verbatim; use scaffold if he approves without editing
+- Record sentences in VERIFY RESULTS table under OWNERSHIP CHECK column
 
 - Log a brief decision record to `history/decisions/` noting what was built, which ISC items passed, and any deferred items
 - **Final commit prompt**: Run `git status` — if there are uncommitted changes, prompt: "BUILD complete and verified. Ready to commit? Run /commit or I can stage and commit now." Do not auto-commit — wait for Eric's confirmation. If Eric declines, proceed to /learning-capture
