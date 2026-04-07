@@ -96,12 +96,7 @@ false
   - **Value**: Would a skill save meaningful time or reduce errors?
   - Score each candidate High/Medium/Low on all three. Only surface candidates that score High on at least 2 of 3.
   - Output the shortlist as a `## Skill Gap Candidates` section — name, one-line description, recurrence signal. Do NOT auto-invoke `/create-pattern`; present candidates and let Eric decide.
-- **Source engagement check**: After skill gap check, read `data/source_candidates.jsonl` (if it exists). For each candidate source, check if its URL or domain was referenced, discussed, or used as a source in this session. If a match is found:
-  - Increment `engagement_count` for that candidate in the JSONL file (rewrite the file with updated count)
-  - If `engagement_count >= 3`: prompt Eric: "Source '{name}' has come up in 3 sessions now. Add to sources.yaml? (tier suggestion: {tier based on type})"
-  - If Eric approves: append the source to `memory/work/jarvis/sources.yaml` with the suggested tier and clear the candidate from the JSONL
-  - If Eric declines: set `engagement_count` to -1 (permanently skip, don't ask again)
-  - Also check if any external URL referenced in this session (from /research, WebSearch, WebFetch, or discussion) matches an *existing* source in sources.yaml — if it does, note it in the output as "Source hit: {name}" (validates the source list is relevant)
+- **Source engagement check**: Read `data/source_candidates.jsonl` (if exists). If any candidate URL/domain was referenced this session, increment its `engagement_count`. If count reaches 3: prompt "Source '{name}' came up 3 times. Add to sources.yaml? (tier: {suggestion})". If approved: append to `memory/work/jarvis/sources.yaml` and clear from JSONL. If declined: set count to -1 (skip forever). Also check if any session URL matches an *existing* source in sources.yaml — note as "Source hit: {name}" if found.
 - Skip writing if the session was trivial (quick question, no meaningful work done) — say so and exit
 
 # SIGNAL FORMAT
