@@ -230,8 +230,8 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
-  last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0)"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0); no new posts Apr 5-7"
 
 - name: "Meta AI Blog"
   url: "https://ai.meta.com/blog"
@@ -239,7 +239,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
+  last_checked: "2026-04-07"
 
 - name: "Microsoft AI Blog"
   url: "https://news.microsoft.com/source/topics/ai/"
@@ -247,7 +247,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
+  last_checked: "2026-04-07"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -255,8 +255,8 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
-  last_notable: "Apr 3 — WebinarTV secretly recording Zoom meetings without consent; US bans all foreign-made consumer routers (supply chain risk)"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 7 — Cybersecurity in the Age of Instant Software (AI-generated code at scale, vuln/patch velocity implications); Hong Kong NSL forces encryption key disclosure; New Mexico Meta ruling threatens E2E encryption"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
@@ -264,7 +264,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
+  last_checked: "2026-04-07"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -272,7 +272,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
+  last_checked: "2026-04-07"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
@@ -280,8 +280,8 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
-  last_notable: "Apr 3 — PR diff performance (React virtualization for large diffs); Apr 1 — Supply chain security (CI/CD credential theft mitigations, OIDC tokens); /fleet command for parallel Copilot CLI agents"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 6 — GitHub Copilot CLI combines model families for second opinion (multi-model routing); Apr 3 — PR diff performance (React virtualization); Apr 1 — Supply chain security (CI/CD OIDC token mitigations)"
 
 - name: "Cohere Blog"
   url: "https://cohere.com/blog"
@@ -289,7 +289,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
+  last_checked: "2026-04-07"
   note: "Added 2026-04-05 — Cohere focuses on enterprise RAG, Command models, Embed; relevant for Jarvis embedding pipeline (nomic-embed-text context); URL-only, no RSS feed detected"
 
 - name: "Anthropic Python SDK Releases"
@@ -298,8 +298,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-05"
-  last_notable: "v0.89.0 (Apr 3) — Vertex AI multi-region, deprecated client-side compaction helpers; v0.88.0 (Apr 1) — stop_details, Bedrock API key auth; v0.87.0 (Mar 31) — APIStatusError error_type field"
+  last_checked: "2026-04-07"
+  last_notable: "v0.89.0 (Apr 3) — Vertex AI multi-region, deprecated client-side compaction helpers; no new release Apr 5-7; watch: compaction helper deprecation may affect overnight runner"
   note: "Added 2026-04-05 — Jarvis dispatcher and all claude -p invocations depend on this SDK; deprecation of client-side compaction helpers in v0.89.0 may impact overnight runner"
 
 - name: "MCP Specification (modelcontextprotocol)"
@@ -308,8 +308,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-05"
-  last_notable: "2025-11-25 — v2025-11-25 stable release; 2025-06-18 — v2025-06-18 (version negotiation for backwards/forwards compat)"
+  last_checked: "2026-04-07"
+  last_notable: "2025-11-25 — v2025-11-25 stable release (current); no new releases Apr 5-7"
   note: "Added 2026-04-05 — Jarvis uses MCP extensively for tool servers; spec releases drive breaking changes in stdio transport, tool discovery, and session lifecycle; currently on stable 2025-11-25"
 
 - name: "Anthropic Safety & Policy"
@@ -318,8 +318,8 @@
   type: ai_safety
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-05"
-  last_notable: "Apr 1 — RSP v3.0 published (Responsible Scaling Policy update; Zvi critique: lacks concrete commitments, vague 'strong argument' standard); Mar 31 — Australia/Anthropic MOU for AI safety research"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 1 — RSP v3.0 published (Responsible Scaling Policy update; lacks concrete commitments per Zvi); Mar 31 — Australia/Anthropic MOU; no new posts Apr 5-7"
   note: "Added 2026-04-05 — Separate from Anthropic Blog (products/news); tracks constitutional AI, interpretability, RSP safety milestone commitments; URL-only (no separate RSS)"
 
 - name: "Rekt News (DeFi Exploits)"
@@ -328,9 +328,9 @@
   type: crypto
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
-  last_notable: "Mar 18 — Venus Protocol Rekt IV ($3.7M, 9-month position build + supply cap bypass); Mar 16 — Price Impact Kills (Aave $50M in, 327 AAVE out via CoWSwap slippage); no RSS feed"
-  note: "Added 2026-04-05 — Authoritative DeFi exploit post-mortems; relevant to crypto-bot risk model; no RSS, URL-only; Drift Protocol $280M exploit (Apr 5) likely incoming"
+  last_checked: "2026-04-07"
+  last_notable: "Drift Protocol $280M exploit (Apr 5) post-mortem pending — likely incoming; Mar 18 — Venus Protocol Rekt IV ($3.7M); Mar 16 — Price Impact Kills (Aave $50M in, 327 AAVE out)"
+  note: "Added 2026-04-05 — Authoritative DeFi exploit post-mortems; relevant to crypto-bot risk model; no RSS, URL-only"
 
 - name: "AI Safety Newsletter (Zvi)"
   url: "https://thezvi.substack.com"
@@ -338,8 +338,8 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
-  last_notable: "Apr 3 — Anthropic RSP v3 critique (lacks concrete commitments, vague 'strong argument' standards); Apr 2 — AI #162 Visions of Mythos (Anthropic leaks, ecosystem)"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 6 — Housing Roundup #13 (off-topic); Apr 3 — Anthropic RSP v3 critique (lacks concrete commitments); Apr 2 — AI #162 Visions of Mythos"
 
 - name: "SANS Internet Storm Center"
   url: "https://isc.sans.edu"
@@ -347,7 +347,8 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-05"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 7 — ISC Stormcast ep 9882 (audio digest; minimal detail in RSS)"
   note: "Added 2026-04-05 — Daily threat handlers diary; high signal-to-noise for active exploits and IOCs; good complement to THN/Krebs for early-warning CVE exploitation"
 
 - name: "CISA Known Exploited Vulnerabilities (KEV)"
@@ -356,8 +357,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-05"
-  last_notable: "Apr 2 — CVE-2026-3502 TrueConf code execution (tampered updates); Apr 1 — CVE-2026-5281 Google Dawn use-after-free; Mar 26 — CVE-2026-33634 Trivy supply chain (CI/CD secrets exfiltration)"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 6 — CVE-2026-35616 Fortinet FortiClient EMS improper access control (unauthenticated code exec; remediate by 2026-04-09); Apr 2 — TrueConf code execution; Mar 26 — Trivy supply chain (CI/CD secrets)"
   note: "Added 2026-04-05 — CISA KEV is the authoritative list of CVEs with confirmed in-the-wild exploitation; JSON feed at /feeds/known_exploited_vulnerabilities.json; Trivy entry directly relevant to Jarvis CI/CD pipeline"
 
 - name: "GitHub Security Advisory Database (npm)"
@@ -366,6 +367,15 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-05"
-  last_notable: "Apr 4 — GHSA-9jpj-g8vv-j5mf: openclaw High (Gemini OAuth PKCE verifier exposed via state param — confirms Anthropic removal of OpenClaw support); GHSA-737v-mqg7-c878: defu High (prototype pollution); 3x Directus High (field extraction, GraphQL DoS)"
-  note: "Added 2026-04-05 — Reviewed npm advisories; no RSS feed (GraphQL API available). High-value for supply chain and dev-dependency threat tracking; openclaw advisory directly impacts Jarvis toolchain."
+  last_checked: "2026-04-07"
+  last_notable: "Apr 4 — GHSA-9jpj-g8vv-j5mf: openclaw High (Gemini OAuth PKCE verifier exposed); GHSA-737v-mqg7-c878: defu High (prototype pollution); no new high advisories Apr 5-7"
+  note: "Added 2026-04-05 — Reviewed npm advisories; no RSS feed (GraphQL API available). High-value for supply chain and dev-dependency threat tracking."
+
+- name: "Weights & Biases (W&B) Blog"
+  url: "https://wandb.ai/fully-connected"
+  feed_url: "https://wandb.ai/fully-connected/feed"
+  type: ai_engineering
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-07"
+  note: "Added 2026-04-07 — W&B covers MLOps, experiment tracking, LLM evaluation, and production AI monitoring; relevant to Jarvis overnight metrics and vitals pipeline design; complements LangChain/LangSmith coverage"
