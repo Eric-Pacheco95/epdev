@@ -169,14 +169,10 @@ For each completed ISC item, present a scaffold sentence for Eric to edit or app
 # CONTRACT
 
 ## Errors
-- **prd-not-found:** supplied file path does not exist
-  - recover: check the path; PRDs are typically in `memory/work/<project>/PRD.md`
-- **isc-missing:** PRD has no ISC items (no `- [ ] ... | Verify:` lines)
-  - recover: the PRD needs ISC criteria before implementation; run /create-prd to generate a proper PRD
-- **verify-failure:** one or more ISC verify methods fail after implementation
-  - recover: skill will invoke /self-heal automatically; if self-heal fails, COMPLETION STATUS will be PARTIAL with details on what failed and why
-- **review-blocked:** /review-code surfaces critical security findings
-  - recover: fix findings before proceeding; skill will not mark COMPLETE until review passes
+- **prd-not-found**: PRD not at given path — check; typically `memory/work/<project>/PRD.md`
+- **isc-missing**: no `- [ ] ... | Verify:` lines — run /create-prd first
+- **verify-failure**: /self-heal auto-invoked; if still failing, COMPLETION STATUS = PARTIAL with diagnosis
+- **review-blocked**: Critical/High security findings must be fixed before COMPLETE
 
 # SKILL CHAIN
 
