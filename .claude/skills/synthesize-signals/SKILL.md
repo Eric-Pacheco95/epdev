@@ -89,13 +89,11 @@ Each synthesized theme carries a maturity level and confidence score. Inspired b
 
 ## Harm Multiplier
 
-- Failures and anti-patterns count **4x** when scoring theme importance.
-- Rationale: one mistake is costlier than one success. The system should be more responsive to things going wrong than things going right.
+- Failures and anti-patterns count **4x** in theme scoring — one mistake outweighs four successes.
 
 ## Anti-Pattern Inversion
 
-- When a theme's proposed action is tried and fails, do NOT delete the theme. Instead, **invert it** into an anti-pattern: "Do NOT do X because Y happened."
-- Anti-patterns are stored alongside themes with an `anti-pattern: true` flag and carry their own maturity level.
+- When a tried action fails, invert the theme: "Do NOT do X because Y." Store with `anti-pattern: true` and its own maturity level.
 
 # SYNTHESIS FORMAT
 
