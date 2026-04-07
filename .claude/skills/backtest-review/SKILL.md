@@ -156,7 +156,9 @@ If 3+ predictions were scored in this session:
 
 - **Composes:** prediction_resolver.py (per-verdict), prediction_calibration.py (post-review)
 - **Feeds into:** /make-prediction (calibration updates), prediction memory (analysis sections)
-- **Triggered by:** nightly backtest producer Slack summary, or Eric manually# VERIFY
+- **Triggered by:** nightly backtest producer Slack summary, or Eric manually
+
+# VERIFY
 
 - All reviewed predictions have been scored (1-10) and a verdict written (CORRECT/INCORRECT/AMBIGUOUS) | Verify: Check output summary for score + verdict on each item
 - Prediction calibration script was run after review | Verify: Confirm prediction_calibration.py output appears in results
