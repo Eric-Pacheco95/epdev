@@ -14,8 +14,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-05"
-  last_notable: "Mar 31 — Australia/Anthropic MOU for AI safety research; Apr 5 — Anthropic launches employee PAC amid AI policy tensions"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 6 — Anthropic expands partnership with Google and Broadcom for multiple gigawatts of next-gen compute; Apr 5 — Anthropic launches employee PAC amid AI policy tensions"
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
@@ -23,8 +23,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-05"
-  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster; v2.1.91 (Apr 2) — MCP tool result persistence override, disableSkillShellExecution; v2.1.90 (Apr 1) — /powerup command, faster SSE transport (linear not quadratic)"
+  last_checked: "2026-04-07"
+  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster, remote settings forceRemoteSettingsRefresh, /release-notes interactive; no new release Apr 5-7"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
@@ -32,8 +32,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-05"
-  last_notable: "Apr 5 — scan-for-secrets 0.1→0.2 (Python secret scanner, Claude Code + README-driven dev); Apr 4 — Quoting Kyle Daigle (GitHub 275M commits/wk); Apr 3 — Vulnerability Research Is Cooked"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 6 — Google AI Edge Gallery (Gemma 4 on-device iOS app with tool calling); scan-for-secrets 0.3 (redact flag + redact_file() API); datasette-ports 0.2 (no Datasette dep); Cleanup Claude Code Paste tool"
 
 - name: "Daniel Miessler"
   url: "https://danielmiessler.com/newsletter"
@@ -41,8 +41,8 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-04-05"
-  last_notable: "Mar 28 — Most Important AI Ideas April 2026 (5 transformative concepts); We Are Confusing Two Types of AGI (Soft vs Hard AGI)"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 6 — Inference Costs Are Not Sustainable (Claude Code burning sub budget in hours; multi-model + local/cloud hybrid as fix); Mar 28 — Most Important AI Ideas April 2026"
 
 - name: "Hacker News"
   url: "https://news.ycombinator.com"
@@ -50,8 +50,8 @@
   type: community
   tier: 1
   frequency: daily
-  last_checked: "2026-04-05"
-  last_notable: "Apr 5 — 36 malicious npm packages (Strapi plugins, DB exploitation + reverse shells); Fortinet FortiClient EMS CVE-2026-35616 emergency patch; Apr 4 — axios supply chain attack"
+  last_checked: "2026-04-07"
+  last_notable: "Apr 7 — Cloudflare 2029 post-quantum roadmap; Google open-sources Scion (multi-agent orchestration testbed); GLM-5.1 long-horizon tasks; 'Good Taste the Only Real Moat Left'"
 
 - name: "MLOps YouTube"
   url: "https://www.youtube.com/@MLOps"
@@ -59,7 +59,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-05"
+  last_checked: "2026-04-07"
 
 - name: "Andrej Karpathy YouTube"
   url: "https://www.youtube.com/@AndrejKarpathy"
@@ -67,7 +67,16 @@
   type: ai_education
   tier: 1
   frequency: daily
-  last_checked: "2026-04-05"
+  last_checked: "2026-04-07"
+
+- name: "The Pragmatic Engineer"
+  url: "https://newsletter.pragmaticengineer.com"
+  feed_url: "https://newsletter.pragmaticengineer.com/feed"
+  type: ai_engineering
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-07"
+  note: "Added 2026-04-07 — Gergely Orosz weekly newsletter; covers GitHub Copilot, AI coding tools, enterprise AI adoption patterns, and developer market trends; high signal-to-noise for practical AI engineering implications"
 
 # =============================================================================
 # Tier 2 -- Weekly (ecosystem, security, competitors, crypto)
