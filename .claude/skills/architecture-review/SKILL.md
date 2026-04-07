@@ -69,32 +69,19 @@ true
 ## Step 2: LAUNCH PARALLEL AGENTS
 
 - Create a temp directory for agent outputs: `memory/work/_arch-review-{timestamp}/`
-- Launch 3 Agent tool calls simultaneously in a single message (this is critical — they must run in parallel, not sequentially):
+- Launch 3 Agent tool calls simultaneously in a single message (parallel — not sequential). Include full proposal context in every agent prompt.
 
-  **Agent 1: First-Principles Decomposition**
-  - Scope: What is the fundamental problem? What are the irreducible requirements? What assumptions might be wrong? What is the simplest architecture that satisfies the requirements?
-  - Include full proposal context in the prompt
-  - Ask agent to examine each component independently and output structured sections
-  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/first-principles.md` before returning** — this is critical for surviving context compaction in long sessions
+  **Agent 1: First-Principles** — What's the fundamental problem, irreducible requirements, wrong assumptions, simplest solution? Examine each component independently.
+  → Write to `memory/work/_arch-review-{timestamp}/first-principles.md`
 
-  **Agent 2: Logical Fallacy Detection**
-  - Scope: What category errors, hidden assumptions, scope creep, false analogies, and reasoning flaws exist in the proposal? What parts are sound?
-  - Include full proposal context in the prompt
-  - Ask agent to be adversarial but fair — flag what's wrong AND what's right
-  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/fallacy-detection.md` before returning**
+  **Agent 2: Logical Fallacy Detection** — Category errors, hidden assumptions, scope creep, false analogies. Adversarial but fair — flag wrong AND right.
+  → Write to `memory/work/_arch-review-{timestamp}/fallacy-detection.md`
 
-  **Agent 3: Red-Team (+ STRIDE if --stride flag or auto-detected)**
-  - Scope: What are the attack surfaces, failure modes, blast radius, and trust model gaps?
-  - Include full proposal context in the prompt
-  - Always runs. Add STRIDE framework analysis when --stride flag is present or proposal involves system boundaries
-  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/red-team.md` before returning**
+  **Agent 3: Red-Team** — Attack surfaces, failure modes, blast radius, trust model gaps. Add STRIDE when --stride flag is set or proposal crosses system boundaries.
+  → Write to `memory/work/_arch-review-{timestamp}/red-team.md`
 
-  **Agent 4 (only if --thinking flag): Reasoning Blindspot Check**
-  - Scope: Read `memory/work/TELOS.md` and attack Eric's framing of this specific decision — are there blindspots, favored-option bias, or mental model flaws that color how the problem is stated?
-  - Focus on the decision framing, not the proposal content (Agents 1-3 handle the content)
-  - Output: 8 blindspot bullets + 4 red-team-thinking bullets with fixes, focused on this decision context
-  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/thinking.md` before returning**
-  - This agent runs first; its output can reshape how the synthesis interprets the other agents' findings
+  **Agent 4 (--thinking only)**: Read `memory/work/TELOS.md`; attack Eric's framing — blindspots, favored-option bias, mental model flaws in how the problem is stated. Output: 8 blindspot bullets + 4 fixes. Runs first; its output shapes synthesis.
+  → Write to `memory/work/_arch-review-{timestamp}/thinking.md`
 
 - All agents run in background simultaneously. Do NOT duplicate their work in the main thread while waiting
 - Each agent writes to disk as its LAST action — this ensures findings survive context compaction even if the synthesis happens in a later session or after compaction
