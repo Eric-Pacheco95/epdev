@@ -53,6 +53,7 @@ def test_collector_types_registry():
         "manifest_signal_count", "manifest_signal_velocity",
         "autonomous_signal_rate", "manifest_autonomous_signal_rate",
         "producer_health", "producer_recency", "backlog_health_metric", "system_resources",
+        "stale_branches",
     }
     assert set(COLLECTOR_TYPES.keys()) == expected
 
