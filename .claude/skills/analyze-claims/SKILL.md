@@ -43,6 +43,7 @@ true
 - Input under 50 words: ask for more substantial content to analyze, STOP
 - File path: read file, use content as input
 - Input contains no discernible claims (pure fiction, poetry, lists): note limitation, proceed with best effort
+- **Trade domain:** if the input involves a political deadline, ultimatum, or "by date X" announcement, read `orchestration/steering/trade-development.md` — the extension-history rule applies before any position sizing recommendation
 
 - Read the full input and list every distinct factual or normative claim the author makes
 - Label each claim as empirical, interpretive, predictive, or prescriptive where possible

@@ -44,6 +44,8 @@ true
 
 # STEPS
 
+> Before executing any step below, read `orchestration/steering/trade-development.md` and apply its two domain rules (thesis persistence + extension-history check on deadline trades).
+
 ## Step 0: INPUT VALIDATION
 
 - If no input provided: print the DISCOVERY section as a usage block, then STOP

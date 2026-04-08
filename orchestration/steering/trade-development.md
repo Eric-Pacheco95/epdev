@@ -20,8 +20,6 @@ For trades involving political deadlines, ultimatums, or "by date X" announcemen
 
 ## Loaded by
 
-- `.claude/skills/extract-alpha/SKILL.md` (TODO: wire load)
-- `.claude/skills/backtest-review/SKILL.md` (TODO: wire load)
-- `.claude/skills/analyze-claims/SKILL.md` (TODO: wire load)
-
-Until those skills explicitly reference this file, the rules live here as the canonical source. The wire-up is tracked as a follow-up in `orchestration/tasklist.md`.
+- `.claude/skills/extract-alpha/SKILL.md` — top-of-STEPS directive added 2026-04-07
+- `.claude/skills/backtest-review/SKILL.md` — top-of-STEPS directive added 2026-04-07
+- `.claude/skills/analyze-claims/SKILL.md` — inlined into Step 0 INPUT VALIDATION (trade-deadline detection) 2026-04-07
