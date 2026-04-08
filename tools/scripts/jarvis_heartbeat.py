@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -266,7 +267,6 @@ def write_auto_signal(change: dict, cfg: dict, root_dir: Path,
 
     rating = SEVERITY_RATING.get(severity, 6)
     now = datetime.now(timezone.utc)
-    date_str = now.strftime("%Y-%m-%d")
     ts_str = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     signal_dir = root_dir / cfg.get("signal_output_dir", "memory/learning/signals")
@@ -274,12 +274,33 @@ def write_auto_signal(change: dict, cfg: dict, root_dir: Path,
 
     # Sanitize metric name for filename safety
     safe_metric = re.sub(r"[^a-zA-Z0-9_-]", "_", metric)
-    base_name = f"{date_str}_heartbeat-{safe_metric}"
-    signal_path = signal_dir / f"{base_name}.md"
-    counter = 2
-    while signal_path.exists():
-        signal_path = signal_dir / f"{base_name}_{counter}.md"
-        counter += 1
+    # Rolling file: one file per metric, no date prefix, overwritten each crossing
+    signal_path = signal_dir / f"heartbeat_{safe_metric}.md"
+    lock_path = signal_path.with_suffix(".md.lock")
+    tmp_path = signal_path.with_suffix(".md.tmp")
+
+    # Per-metric lockfile guard
+    if lock_path.exists():
+        try:
+            lock_age = now.timestamp() - lock_path.stat().st_mtime
+        except OSError:
+            lock_age = 999
+        if lock_age < 300:
+            print(f"  Heartbeat lock contention on {metric}, skipping")
+            return False
+    lock_path.write_text(ts_str, encoding="ascii")
+
+    # Read previous crossing count from existing rolling file
+    crossing_count = 1
+    if signal_path.exists():
+        try:
+            existing = signal_path.read_text(encoding="utf-8")
+            for line in existing.splitlines():
+                if line.startswith("crossing_count_lifetime:"):
+                    crossing_count = int(line.split(":", 1)[1].strip()) + 1
+                    break
+        except (OSError, ValueError):
+            pass
 
     prev_val = change.get("previous", "N/A")
     curr_val = change.get("current", "N/A")
@@ -290,12 +311,13 @@ def write_auto_signal(change: dict, cfg: dict, root_dir: Path,
     isc_frontmatter = f"\nisc_ref: \"{isc_ref}\"" if isc_ref else ""
     isc_body = f"\n**ISC Reference**: {isc_ref}" if isc_ref else ""
     content = f"""---
-date: {date_str}
 rating: {rating}
 category: system-health
 source: heartbeat-auto
 severity: {severity}
-metric: {metric}{isc_frontmatter}
+metric: {metric}
+last_crossing: {ts_str}
+crossing_count_lifetime: {crossing_count}{isc_frontmatter}
 ---
 
 # ISC Gap: {metric} {direction} {abs(delta_pct):.1f}%
@@ -309,7 +331,10 @@ metric: {metric}{isc_frontmatter}
 
 **Suggested action**: Review {metric} and consider adjusting thresholds if this is expected.
 """
-    signal_path.write_text(content, encoding="utf-8")
+    # Atomic write via temp file + os.replace
+    tmp_path.write_text(content, encoding="ascii")
+    os.replace(tmp_path, signal_path)
+    lock_path.unlink(missing_ok=True)
 
     # Update cooldown state
     cooldown_state[metric] = ts_str

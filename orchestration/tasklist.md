@@ -482,8 +482,19 @@
 
 - [x] **Branch lifecycle tracker** — `tools/scripts/branch_lifecycle.py`: scans `jarvis/auto-*` and `jarvis/overnight-*` branches, flags stale (>7d, not merged), reports merged (safe to delete). Heartbeat collector `stale_branches` wired with warn>0, crit>3. CLI: `--json`, `--notify` (Slack), `--self-test` (5 tests pass). (2026-04-05)
 - [x] **Autonomous signal rate monitoring** — Enhanced `manifest_autonomous_signal_rate` collector with per-category and per-producer breakdown (prediction, backtest, heartbeat, overnight, dispatcher). Remediation_map entries added for both `autonomous_signal_rate` and `stale_branches`. Thresholds: warn>10/day, crit>20/day. (2026-04-05)
+- [x] **Memory dedup v1 — cross-tier merge + index GC** (2026-04-07) — Architecture-reviewed (3 sonnet agents), reduced from full memory_audit_producer proposal. Shipped: `tools/scripts/jarvis_config.py` (PROTECTED_FILES shared constant), dream.py Phase 3 cross-tier merge with bidirectional provenance (`source:` match + similarity ≥0.85) + move-to-`signals/pruned/` instead of unlink, jarvis_heartbeat.py rolling-file pattern (atomic `os.replace`, per-metric lock, lifetime crossing counter), embedding_service.py TELOS exclusion (privacy fix — `memory/work/telos/` was being indexed into ChromaDB), vector dim+norm validation, **`purge_orphaned()` run on every index() — closed memory-leak class bug**, dream registered in producers.json (36h alert) + routines.json (daily-dream, haiku, autonomous-safe). **Surprise root cause:** today's "18 phantom duplicates" were stale ChromaDB rows for deleted files, NOT real cross-tier dupes. Post-GC report: 0 dupes, 23 informational related pairs. 46 orphaned rows purged + 3 TELOS rows excluded. Remaining: full re-index pending Ollama uptime.
+  - **v2 backlog (trigger-gated, do not pre-build):**
+    - `memaudit-v2-producer` — full memory_audit_producer.py if dream patch leaves >5 unresolved cross-tier dupes/week for 2 consecutive weeks
+    - `memaudit-v2-search` — memory_search.py hybrid retrieval router when 2nd skill hits a documented retrieval miss
+    - `memaudit-v2-dedup` — producer_dedup.py write-time guard when a 2nd producer (beyond heartbeat) creates ≥3 near-duplicates/week
+    - `memaudit-v2-refs` — Phase A reference integrity audit if a stale-pointer incident causes a real failure
+    - `memaudit-v2-decay` — Phase B TTL decay if Eric reports acting on stale memory ≥2 times
+    - `memaudit-v2-versioning` — versioned embedding index when nomic-embed-text upgraded OR corpus exceeds 1000 files
+    - `memaudit-v2-contradict` — Phase D LLM contradiction detection: re-evaluate after 90 days; needs separate PRD
+    - `memaudit-threshold-recal` — empirically recalibrate 0.92 dupe threshold; one real cross-tier dupe sits at 0.919 today (`2026-03-27_slack-epdev-routing.md` ↔ `slack-routing.md`)
 - [ ] **Two-layer verification (data-gated)** — Second `claude -p` review of worker output if ISC quality proves insufficient. Only build after 15+ task outcomes show ISC-pass-but-bad-quality pattern. Aron's CEO-checks-worker pattern, adapted
 - [ ] **Worker prompt optimization (data-gated)** — Analyze run reports: what context did workers actually use vs ignore? Only build after 15+ runs provide calibration data
+  - Hypothesis parked 2026-04-07: test prompt valence (neutral / supportive / urgent) as a worker prompt variable, n>=15 outcomes per arm. Source: dair_ai recap of NeurIPS workshop paper finding neutral prompts maximize reliability while supportive/threatening introduce variance — model-specific, untested on Claude
 - [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources (moved from 5C -- requires pipeline stability first)
 
 ### Phase 5E — Self-Correcting Pipeline (after 5D + 15 diverse task outcomes including 3+ manual_review)

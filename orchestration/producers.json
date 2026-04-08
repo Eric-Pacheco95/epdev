@@ -46,6 +46,16 @@
     "bat_wrapper": "tools/scripts/run_autoresearch.bat"
   },
   {
+    "name": "dream",
+    "state_file": "data/dream_last_run.txt",
+    "state_key": null,
+    "state_type": "file_mtime",
+    "alert_threshold_hours": 36,
+    "first_run_grace_until_utc": "2026-04-08T23:59:59Z",
+    "bat_wrapper": null,
+    "_note": "memory consolidation worker -- runs daily, fixes cross-tier dupes via Phase 3 patch (2026-04-07)"
+  },
+  {
     "name": "slack_poller",
     "state_file": "data/slack_poller_state.json",
     "state_key": null,

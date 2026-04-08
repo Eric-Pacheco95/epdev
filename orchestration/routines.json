@@ -270,6 +270,34 @@
       }
     },
     {
+      "routine_id": "daily-dream",
+      "enabled": true,
+      "schedule": {
+        "type": "nightly",
+        "interval_days": 1
+      },
+      "task_template": {
+        "description": "Run python tools/scripts/dream.py --autonomous to consolidate memory and merge cross-tier duplicates",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 4,
+        "goal_context": "Memory hygiene -- merge duplicates, prune stale pointers, promote synthesis themes; cross-tier merge added 2026-04-07",
+        "isc": [
+          "data/dream_last_report.md exists with today's date | Verify: Read data/dream_last_report.md",
+          "data/dream_last_run.txt mtime is within last 36h | Verify: stat data/dream_last_run.txt",
+          "Cross-tier merges (if any) wrote donor files to memory/learning/signals/pruned/ not unlinked | Verify: ls memory/learning/signals/pruned/"
+        ],
+        "context_files": [],
+        "skills": [
+          "dream"
+        ],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "notes": "Deterministic worker -- haiku for any LLM-touched decisions; mostly stdlib + embedding service"
+      }
+    },
+    {
       "routine_id": "weekly-backlog-health",
       "enabled": true,
       "schedule": {

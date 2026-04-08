@@ -65,6 +65,37 @@ FULL_SCOPE_DIRS = [
 
 AUTO_SCOPE_DIRS = [AUTO_MEMORY_DIR]
 
+# Personal-content exclusions: paths matching these patterns are NEVER indexed,
+# even if they fall under a scope dir. Per security steering rule, TELOS and
+# personal work content must not enter ChromaDB (queryable from session transcripts).
+EXCLUDED_FILENAMES = {
+    "TELOS.md",
+    "TELOS_GOALS.md",
+    "TELOS_BELIEFS.md",
+    "TELOS_STRATEGIES.md",
+    "TELOS_CHALLENGES.md",
+    "GOALS.md",
+    "STATUS.md",
+    "LEARNED.md",
+}
+
+EXCLUDED_PATH_PREFIXES = (
+    "memory/work/telos",
+    "memory/work/jarvis/autoresearch",  # autoresearch results may contain personal queries
+)
+
+
+def _is_excluded(fpath: Path) -> bool:
+    """Return True if fpath should NEVER be indexed (personal-content guard)."""
+    if fpath.name in EXCLUDED_FILENAMES:
+        return True
+    try:
+        rel = fpath.resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+    except ValueError:
+        return False
+    return any(rel.startswith(prefix) for prefix in EXCLUDED_PATH_PREFIXES)
+
+
 SNIPPET_LEN = 200
 MAX_FILE_CHARS = 6000  # nomic-embed-text 2048-token context; ~6K chars is safe
 
@@ -123,9 +154,14 @@ def _embed(text: str) -> list[float]:
     r.raise_for_status()
     data = r.json()
     vecs = data.get("embeddings") or data.get("embedding")
-    if isinstance(vecs[0], list):
-        return vecs[0]
-    return vecs
+    vec = vecs[0] if isinstance(vecs[0], list) else vecs
+    # Validate vector dimension and norm (nomic-embed-text must be 768-dim, non-zero)
+    if len(vec) != 768:
+        raise RuntimeError(f"Invalid embedding from Ollama: dim={len(vec)}, norm=N/A")
+    norm = sum(x * x for x in vec) ** 0.5
+    if norm < 0.01:
+        raise RuntimeError(f"Invalid embedding from Ollama: dim={len(vec)}, norm={norm:.4f}")
+    return vec
 
 
 # --- ChromaDB helpers ---
@@ -148,6 +184,48 @@ def _file_id(path: Path) -> str:
 
 # --- Core API ---
 
+def purge_excluded(verbose: bool = True) -> int:
+    """Delete any ChromaDB rows whose file_path matches _is_excluded.
+
+    Called at the start of a full re-index to evict previously-indexed
+    personal-content files (TELOS, autoresearch, etc.) from the store.
+    Returns the count of deleted rows.
+    """
+    col = _get_collection()
+    all_data = col.get(include=["metadatas"])
+    ids_to_delete = []
+    for doc_id, meta in zip(all_data["ids"], all_data.get("metadatas", [])):
+        fpath_str = meta.get("file_path", "")
+        if fpath_str and _is_excluded(Path(fpath_str)):
+            ids_to_delete.append(doc_id)
+    if ids_to_delete:
+        col.delete(ids=ids_to_delete)
+        if verbose:
+            print(f"  purged {len(ids_to_delete)} excluded rows from ChromaDB")
+    return len(ids_to_delete)
+
+
+def purge_orphaned(verbose: bool = True) -> int:
+    """Delete ChromaDB rows whose file_path no longer exists on disk.
+
+    Closes a memory-leak class bug where deleted/moved files leave behind
+    stale embedding rows that get returned by find_similar() as phantom
+    duplicates. Returns the count of deleted rows.
+    """
+    col = _get_collection()
+    all_data = col.get(include=["metadatas"])
+    ids_to_delete = []
+    for doc_id, meta in zip(all_data["ids"], all_data.get("metadatas", [])):
+        fpath_str = meta.get("file_path", "")
+        if fpath_str and not Path(fpath_str).exists():
+            ids_to_delete.append(doc_id)
+    if ids_to_delete:
+        col.delete(ids=ids_to_delete)
+        if verbose:
+            print(f"  purged {len(ids_to_delete)} orphaned rows from ChromaDB")
+    return len(ids_to_delete)
+
+
 def index(scope: str = "auto", verbose: bool = True) -> dict:
     """Embed all .md files in scope dirs, skipping up-to-date files.
 
@@ -158,6 +236,13 @@ def index(scope: str = "auto", verbose: bool = True) -> dict:
 
     dirs = AUTO_SCOPE_DIRS if scope == "auto" else FULL_SCOPE_DIRS
     dirs = [d for d in dirs if d.exists()]
+
+    # Always GC orphaned rows (deleted/moved files) before indexing
+    purge_orphaned(verbose=verbose)
+
+    # Evict previously-indexed personal-content files on full re-index
+    if scope == "full":
+        purge_excluded(verbose=verbose)
 
     # Fetch existing metadata to detect stale files
     existing = {}
@@ -173,6 +258,10 @@ def index(scope: str = "auto", verbose: bool = True) -> dict:
 
     for d in dirs:
         for fpath in sorted(d.glob("*.md")):
+            if _is_excluded(fpath):
+                if verbose:
+                    print(f"  excluded (personal-content guard): {fpath.name}")
+                continue
             if fpath.name == "MEMORY.md":
                 # Index MEMORY.md too -- useful for search but low priority
                 pass
@@ -326,6 +415,10 @@ def update(file_path: str) -> bool:
         print(f"ERROR: File not found: {file_path}")
         return False
 
+    if _is_excluded(fpath):
+        print(f"SKIP: {fpath.name} (personal-content guard -- not indexed)")
+        return True
+
     try:
         text = fpath.read_text(encoding="utf-8", errors="replace")
         if len(text.strip()) < 50:
@@ -416,6 +509,8 @@ def _grep_search(query: str, top_k: int = 10) -> list[dict]:
             if not fpath:
                 continue
             p = Path(fpath)
+            if _is_excluded(p):
+                continue
             try:
                 text = p.read_text(encoding="utf-8", errors="replace")
                 snippet = text[:SNIPPET_LEN].replace("\n", " ")

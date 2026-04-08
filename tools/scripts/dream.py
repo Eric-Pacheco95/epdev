@@ -29,10 +29,14 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from jarvis_config import PROTECTED_FILES, is_protected  # noqa: E402
 
 # --- Paths ---
 
@@ -144,6 +148,7 @@ def phase_orient() -> dict:
         "memory_index": MEMORY_INDEX,
         "file_count": len(content_files),
         "last_run": last_run,
+        "protected_files": PROTECTED_FILES,
     }
 
 
@@ -264,35 +269,117 @@ def _fix_relative_dates(fpath: Path, hits: list, today_str: str) -> int:
     return count
 
 
+def _parse_frontmatter_field(fpath: Path, field: str) -> str | None:
+    """Return the value of a YAML frontmatter field, or None if not found.
+
+    Reads up to the first 30 lines of the file and looks for a --- block.
+    Simple regex/string ops only -- no PyYAML dependency.
+    """
+    try:
+        with fpath.open(encoding="utf-8", errors="replace") as fh:
+            lines = [fh.readline() for _ in range(30)]
+    except Exception:
+        return None
+
+    in_frontmatter = False
+    field_pattern = re.compile(r"^" + re.escape(field) + r":\s*(.+)$")
+    for line in lines:
+        stripped = line.rstrip("\n")
+        if stripped.strip() == "---":
+            if not in_frontmatter:
+                in_frontmatter = True
+                continue
+            else:
+                break  # end of frontmatter block
+        if in_frontmatter:
+            m = field_pattern.match(stripped)
+            if m:
+                return m.group(1).strip()
+    return None
+
+
 def phase_consolidate(orientation: dict, findings: dict, dry_run: bool) -> list[str]:
     """Execute consolidation actions. Returns list of action strings for report."""
     actions = []
     today_str = datetime.now().strftime("%Y-%m-%d")
 
     # -- Merge duplicate pairs --
-    merged_donors = set()
+    merged_donors: set[str] = set()
+    pruned_base = REPO_ROOT / "memory" / "learning" / "signals" / "pruned" / today_str
+
     for score, path_a, path_b in findings.get("duplicates", []):
         fa, fb = Path(path_a), Path(path_b)
         if not fa.exists() or not fb.exists():
             continue
         if str(fa) in merged_donors or str(fb) in merged_donors:
             continue
-        # Keep the larger file (more detailed)
-        keeper, donor = (fa, fb) if fa.stat().st_size >= fb.stat().st_size else (fb, fa)
-        action = f"[MERGE score={score:.3f}] {keeper.name} absorbs {donor.name}"
-        if dry_run:
-            actions.append(f"[DRY-RUN] {action}")
-        else:
-            snap_keeper = _snapshot(keeper)
-            snap_donor = _snapshot(donor)
-            merge_summary = _merge_files(keeper, donor, today_str)
-            donor.unlink()
-            merged_donors.add(str(donor))
+
+        # --- Protected file guard ---
+        if is_protected(fa, REPO_ROOT) or is_protected(fb, REPO_ROOT):
             actions.append(
-                f"{action}\n"
-                f"  {merge_summary}\n"
-                f"  Snapshots: {snap_keeper.name}, {snap_donor.name}"
+                f"[SKIP protected] {fa.name} or {fb.name}"
             )
+            continue
+
+        # --- Determine tier: is either file under MEMORY_DIR (auto-memory)? ---
+        fa_is_auto = str(fa.resolve()).startswith(str(MEMORY_DIR.resolve()))
+        fb_is_auto = str(fb.resolve()).startswith(str(MEMORY_DIR.resolve()))
+        is_cross_tier = fa_is_auto != fb_is_auto  # exactly one side is auto-memory
+
+        if not is_cross_tier:
+            # --- Same-tier: existing behavior (keeper is larger, donor unlinked) ---
+            keeper, donor = (fa, fb) if fa.stat().st_size >= fb.stat().st_size else (fb, fa)
+            action = f"[MERGE score={score:.3f}] {keeper.name} absorbs {donor.name}"
+            if dry_run:
+                actions.append(f"[DRY-RUN] {action}")
+            else:
+                snap_keeper = _snapshot(keeper)
+                snap_donor = _snapshot(donor)
+                merge_summary = _merge_files(keeper, donor, today_str)
+                donor.unlink()
+                merged_donors.add(str(donor))
+                actions.append(
+                    f"{action}\n"
+                    f"  {merge_summary}\n"
+                    f"  Snapshots: {snap_keeper.name}, {snap_donor.name}"
+                )
+        else:
+            # --- Cross-tier: auto-memory side is always keeper ---
+            if fa_is_auto:
+                keeper, donor = fa, fb
+            else:
+                keeper, donor = fb, fa
+
+            # Provenance check: keeper.source frontmatter must match donor filename
+            keeper_source = _parse_frontmatter_field(keeper, "source")
+            if keeper_source != donor.name:
+                actions.append(
+                    f"[SKIP cross-tier no-provenance] {donor.name} "
+                    f"(keeper.source={keeper_source!r})"
+                )
+                continue
+
+            # Similarity floor assertion (already guaranteed by threshold=0.92, belt+suspenders)
+            assert score >= 0.85, f"cross-tier pair below 0.85 floor: {score}"
+
+            action = (
+                f"[CROSS-TIER MERGE score={score:.3f}] {keeper.name} absorbs {donor.name} "
+                f"(moved to pruned/{today_str}/)"
+            )
+            if dry_run:
+                actions.append(f"[DRY-RUN] {action}")
+            else:
+                snap_keeper = _snapshot(keeper)
+                snap_donor = _snapshot(donor)
+                merge_summary = _merge_files(keeper, donor, today_str)
+                pruned_base.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(donor), str(pruned_base / donor.name))
+                merged_donors.add(str(donor))
+                actions.append(
+                    f"{action}\n"
+                    f"  {merge_summary}\n"
+                    f"  Snapshots: {snap_keeper.name}, {snap_donor.name}"
+                )
 
     # -- Remove stale MEMORY.md pointers --
     for stale_link in findings.get("stale_pointers", []):
