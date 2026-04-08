@@ -933,21 +933,32 @@ def collect_system_resources(cfg: dict, root_dir: Path, _prev: dict = None) -> d
     except (OSError, subprocess.TimeoutExpired):
         pass
 
-    # Count established HTTPS connections (port 443)
+    # Count established TCP connections + identify top process holders.
+    # Per-process attribution prevents the "blame Claude" misattribution bug
+    # where a leaking dev server triggered "close idle Claude sessions" alerts
+    # while Claude itself was holding only ~5 connections (2026-04-08 incident).
+    top_holders_str = "no per-process data"
     try:
-        result = subprocess.run(
-            ["netstat", "-n"],
-            capture_output=True, text=True, encoding="utf-8", timeout=10,
-        )
-        if result.returncode == 0:
-            for ln in result.stdout.splitlines():
-                if "ESTABLISHED" in ln and ":443" in ln:
-                    https_connections += 1
-    except (OSError, subprocess.TimeoutExpired):
+        from tools.scripts.lib.net_util import get_https_summary, format_top_holders
+        ps_total, holders = get_https_summary(top_n=3)
+        if ps_total is not None:
+            https_connections = ps_total
+            top_holders_str = format_top_holders(holders)
+        else:
+            # Fallback to legacy netstat-only count if PowerShell unavailable
+            result = subprocess.run(
+                ["netstat", "-n"],
+                capture_output=True, text=True, encoding="utf-8", timeout=10,
+            )
+            if result.returncode == 0:
+                for ln in result.stdout.splitlines():
+                    if "ESTABLISHED" in ln and ":443" in ln:
+                        https_connections += 1
+    except (OSError, subprocess.TimeoutExpired, ImportError):
         pass
 
-    detail = "claude=%d, node=%d, https_connections=%d" % (
-        claude_count, node_count, https_connections
+    detail = "claude=%d, node=%d, total=%d; top: %s" % (
+        claude_count, node_count, https_connections, top_holders_str
     )
     return _result(name, https_connections, "count", detail)
 

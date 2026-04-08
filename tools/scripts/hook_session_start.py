@@ -386,28 +386,30 @@ def _git_safety_check() -> list[str]:
     except (OSError, subprocess.TimeoutExpired):
         pass
 
-    # 2. Check HTTPS connection count (network impact from MCP servers)
+    # 2. Check TCP connection count + identify top process holders.
+    # Per-process attribution prevents misattributing leaks to Claude when
+    # the actual culprit is another dev server on the same host
+    # (2026-04-08: dashboard.app:app uvicorn leaked 337 of 376 connections).
     try:
-        result = subprocess.run(
-            ["netstat", "-n"],
-            capture_output=True, text=True, encoding="utf-8", timeout=10,
-        )
-        if result.returncode == 0:
-            https_count = sum(
-                1 for ln in result.stdout.splitlines()
-                if "ESTABLISHED" in ln and ":443" in ln
-            )
-            if https_count >= 70:
+        from tools.scripts.lib.net_util import get_https_summary, format_top_holders
+        https_count, holders = get_https_summary(top_n=3)
+        if https_count is not None:
+            top_str = format_top_holders(holders)
+            if https_count >= 200:
                 warnings.append(
-                    f"  >>> {https_count} HTTPS connections active -- "
-                    "CRITICAL network impact; close idle Claude sessions immediately"
+                    f"  >>> {https_count} TCP connections active -- "
+                    f"CRITICAL: top holders = {top_str}"
                 )
-            elif https_count >= 40:
                 warnings.append(
-                    f"  >>> {https_count} HTTPS connections active -- "
-                    "elevated network usage; consider closing idle sessions"
+                    "      ACTION: identify the top holder above and restart "
+                    "or close it; this is rarely Claude itself"
                 )
-    except (OSError, subprocess.TimeoutExpired):
+            elif https_count >= 100:
+                warnings.append(
+                    f"  >>> {https_count} TCP connections active -- "
+                    f"elevated; top holders = {top_str}"
+                )
+    except (OSError, subprocess.TimeoutExpired, ImportError):
         pass
 
     # 3. Check for uncommitted changes
