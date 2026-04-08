@@ -74,8 +74,7 @@ Load documentation on-demand, not upfront:
 - When walking Eric through credential/secret setup, never ask him to paste secrets in chat — instead confirm setup by offering a file-existence check or a smoke-test command; session transcripts may be stored by Anthropic
 - When checking if a secret/credential exists in a file, always use `grep -c` (count only) — never content-mode grep on .env files; line-content output exposes key values in the session transcript
 - Before the first commit to any new repo, run `git ls-files memory/ history/` to verify no personal content is tracked — infrastructure ships; personal context stays local; this check is a sub-step of `/security-audit` Step 1
-- Never use `git add -f` (force-add) on a path matched by `.gitignore` without Eric's explicit same-session approval — gitignored paths under `memory/work/telos/`, `memory/learning/`, and `history/` are personal content scrubbed by commit `882805d`; force-adding regresses the privacy policy. Why: the 2026-04-07 /commit run force-added GOALS/STATUS/LEARNED into a public commit after a sub-agent decided "the task said to commit these files." How to apply: any commit task that lists a path under a personal-content directory must call `git check-ignore <path>` first; if ignored, STOP and surface to Eric instead of using `-f`.
-- When drafting any sub-agent task that lists files to commit, run `git check-ignore <each-path>` first and exclude (or escalate) any gitignored matches before sending the prompt — sub-agents follow instructions literally; the gate must be in the prompt construction, not in the sub-agent's judgment. Why: 2026-04-07 /commit meta-failure — Opus drafted a sub-agent task naming gitignored TELOS files; Sonnet executed faithfully with `-f`. The fix is upstream of the sub-agent. How to apply: any time you build a commit/PR task referencing specific paths, do the gitignore pre-check during prompt construction, not after.
+- Before any commit operation that names specific paths — including when drafting a sub-agent commit task — run `git check-ignore <each-path>` first and exclude or escalate any matches; never `git add -f` a gitignored path without Eric's explicit same-session approval. Why: 2026-04-07 `/commit` meta-failure — Opus drafted a sub-agent task naming gitignored TELOS files (GOALS/STATUS/LEARNED), Sonnet executed faithfully with `-f`, and the personal-content scrub from commit `882805d` regressed into a public commit. How to apply: the gitignore gate must fire at BOTH prompt construction (when building a sub-agent task) AND commit execution — sub-agents follow instructions literally, so the defense cannot live in their judgment.
 - After adding or modifying validator scripts in security/validators/, verify the settings.json hook matcher matches the tools the validator actually handles — unit tests that call functions directly don't test hook registration
 
 ### Workflow Discipline
@@ -90,7 +89,6 @@ Load documentation on-demand, not upfront:
 - After multi-phase build sprints (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifacts, file paths match actual locations, counts and dates are current
 - When building a new skill, evaluate each step: does this require intelligence (judgment, synthesis, NLG)? No → deterministic script (Python). Yes → keep in SKILL.md
 - When designing human review for autonomous pipelines, place the approval gate at the batch summary output — not at each intermediate step; auto-approve intermediate artifacts and present a single review surface with smart defaults Eric can override (reduces decision fatigue; per-item gates create backlog that blocks the pipeline)
-- Self-tests must use isolated paths for ALL stateful writes (state files, backlogs, lock files) — use tempfile or pass temp paths to every writer function
 - Near-zero health metric scores (0.00-0.05): first verify scan scope (rglob path, target directory) before diagnosing data quality — parent-directory scans silently include irrelevant files and dilute precision
 - `[MODEL-DEP]` Any `claude -p` consumer must check stdout for rate limit messages ("hit your limit") before treating exit code 0 as success — rate-limited runs return exit 0 with zero work done
 
@@ -103,11 +101,6 @@ Load documentation on-demand, not upfront:
 - Give minimum viable instruction first — Eric is a build-first learner; provide enough to start immediately, then refine as he acts
 - When Eric faces a decision with multiple viable paths, present a full options comparison (pros/cons table or numbered list with tradeoffs) before offering a recommendation — never lead with "I recommend X"
 - For mobile -> desktop file write, always use iCloud Drive — OneDrive iOS Files provider is architecturally read-only
-
-### Trade Development
-
-- Trade development sessions must persist the final thesis to `data/predictions/` as a structured prediction record, even when no trade is taken — lost theses cannot be backtested and prior analysis is wasted on re-research
-- For trades involving political deadlines or ultimatums, always run /analyze-claims with /research to check extension history — serial extenders (e.g. Trump Iran: 4 extensions in 16 days) invalidate short-dated trade structures
 
 ### Platform: Windows & Scheduling
 
@@ -138,13 +131,12 @@ Load documentation on-demand, not upfront:
 ### Cross-Project & Integrations
 
 - crypto-bot: always read `crypto_alpha_trading_bot.plan.md` first; never suggest switching RUN_MODE to production without Eric's explicit approval
-- Project onboarding: (1) `/deep-audit --onboard`, (2) synthesize into tiered ISC tasklist, (3) create domain skills in project repo, (4) register as `/project-orchestrator` external health source
 - `[MODEL-DEP]` Remote Triggers cannot invoke /skills, load CLAUDE.md, fire hooks, or access local files — use local Task Scheduler with `claude -p` for Jarvis-context work; Slack channels (`#jarvis-inbox`, `#jarvis-voice`) are stateless — each message is an independent atomic unit
 
 ### CLAUDE.md Self-Maintenance
 
-- When this file exceeds 45 steering rules or 20KB, run `/update-steering-rules --audit` before adding new rules — merge related rules, move category errors to their proper files, archive stale rules
-- Never keep deprecated skills, completed-phase references, or one-time debugging notes as permanent steering rules — these waste context tokens on every session and confuse downstream behavior
+- CLAUDE.md token budget: hard cap **20 KB total file size**; soft caps of **8 rules per category** and **55 rules total**. Bytes are the real cost (loaded every cold session); rule count is just a leading indicator. When ANY threshold is hit, run `/update-steering-rules --audit` before adding new rules — merge related rules, move category-specific rules into the relevant `SKILL.md` or `orchestration/steering/` doc, and flag rules unused 90+ days for re-validation.
+- Never keep deprecated skills, completed-phase references, or one-time debugging notes as permanent steering rules — these waste context tokens on every session and confuse downstream behavior. Rules tagged `[MODEL-DEP]` must be re-validated against current model/CLI behavior at every audit, not assumed evergreen.
 
 ## Skill-First Execution
 
