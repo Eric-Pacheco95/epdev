@@ -76,22 +76,19 @@ Load documentation on-demand, not upfront:
 - Before the first commit to any new repo, run `git ls-files memory/ history/` to verify no personal content is tracked — infrastructure ships; personal context stays local; this check is a sub-step of `/security-audit` Step 1
 - Before any commit operation that names specific paths — including when drafting a sub-agent commit task — run `git check-ignore <each-path>` first and exclude or escalate any matches; never `git add -f` a gitignored path without Eric's explicit same-session approval. Why: 2026-04-07 `/commit` meta-failure — Opus drafted a sub-agent task naming gitignored TELOS files (GOALS/STATUS/LEARNED), Sonnet executed faithfully with `-f`, and the personal-content scrub from commit `882805d` regressed into a public commit. How to apply: the gitignore gate must fire at BOTH prompt construction (when building a sub-agent task) AND commit execution — sub-agents follow instructions literally, so the defense cannot live in their judgment.
 - After adding or modifying validator scripts in security/validators/, verify the settings.json hook matcher matches the tools the validator actually handles — unit tests that call functions directly don't test hook registration
+- When adding a new validator, security check, or trust-boundary test, extend the existing trust-topology test suite rather than creating a parallel suite. Why: parallel suites duplicate coverage, drift apart over time, and orphan when the original maintainer forgets the second one exists. How to apply: search `tests/defensive/` for the existing trust-topology test before scaffolding any new test file; if a related test exists, add cases to it; only create a new file when the new check has no conceptual overlap with existing ones.
 
 ### Workflow Discipline
 
 - When uncertain, ask — don't guess. Prefer reversible actions over irreversible ones
 - Log significant decisions to `history/decisions/`; after every completed task, run the LEARN phase — diagnose and fix test failures before moving on
 - Run /learning-capture before session limits (hard exits don't fire hooks); sentiment signals only on deviation from baseline — no rating-4 "went well" entries
-- Mark tasklist items `[x]` only after validated in target context — if built but unvalidated, leave unchecked with "BUILT — awaiting validation: [test]"; the tasklist is Eric's primary trust tool
+- Mark tasklist items `[x]` only after validated in target context — if built but unvalidated, leave unchecked with "BUILT — awaiting validation: [test]"; after multi-phase sprints (3+ ISC items, 2+ sessions), run a doc-sync check verifying checkboxes match actual artifacts, file paths match actual locations, counts and dates are current. The tasklist is Eric's primary trust tool.
 - VERIFY phase must include `/review-code` for external-input scripts; phase gate criteria must include a verification command or file-existence check, not self-reported status
-- Before hard-to-reverse decisions (architecture, tool adoption, 3+ paths), run `/architecture-review` — ADHD build velocity defaults to the option with most energy, not best fit
 - **ISC criteria must live in a version-controlled file (PRD, CLAUDE.md, tasklist) — never only in conversation state.** Auto-compaction strips working context including specific ISC text, but on-disk files are re-read fresh post-compact and survive intact. Before declaring ISC-tracked tasks complete, re-read the source-of-truth file and verify each criterion with evidence (not from memory). After build phases, check `git status` and prompt Eric to commit; during `/implement-prd` with 4+ items, commit every 3-4 items as recovery points.
-- After multi-phase build sprints (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifacts, file paths match actual locations, counts and dates are current
 - When building a new skill, evaluate each step: does this require intelligence (judgment, synthesis, NLG)? No → deterministic script (Python). Yes → keep in SKILL.md
 - When designing human review for autonomous pipelines, place the approval gate at the batch summary output — not at each intermediate step; auto-approve intermediate artifacts and present a single review surface with smart defaults Eric can override (reduces decision fatigue; per-item gates create backlog that blocks the pipeline)
-- Near-zero health metric scores (0.00-0.05): first verify scan scope (rglob path, target directory) before diagnosing data quality — parent-directory scans silently include irrelevant files and dilute precision
 - **Anti-criterion ISC verify commands must exit nonzero when the forbidden state is observed.** Never use `grep -v`, `awk`, or other filter-and-print primitives as the sole verifier — they exit 0 whenever the file is readable, making the "anti-criterion" a no-op. Prefer a dedicated `tools/scripts/verify_*.py` script that owns the threshold logic and exits 1 on violation. Why: 2026-04-07 prediction-pipeline backtest leakage guard ran for weeks as a no-op; 27/35 events crossed the cutoff threshold undetected. How to apply: during `/create-prd` ISC drafting and `/quality-gate` review, every "anti-" criterion must be checked for "what command would exit nonzero on the forbidden state?" — if the answer is "none, it just filters output," reject and rewrite.
-- `[MODEL-DEP]` Any `claude -p` consumer must check stdout for rate limit messages ("hit your limit") before treating exit code 0 as success — rate-limited runs return exit 0 with zero work done
 
 ### Skill Flag Discoverability
 
@@ -107,6 +104,7 @@ Load documentation on-demand, not upfront:
 
 - Python CLI scripts that print to terminal must use ASCII-only output — Windows cp1252 encoding breaks Unicode box-drawing chars with a hard UnicodeEncodeError; when assigning external content (scraped, API, user input) to variables that will be printed/logged, strip non-ASCII at assignment: `raw.encode('ascii', errors='replace').decode('ascii')`
 - Always smoke-test scheduled jobs, hook wrappers, and `claude -p` scripts via their actual execution context (Task Scheduler or standalone CMD), never from within an active Claude Code session — subprocess contention causes hangs, and Git Bash is not a valid proxy for Task Scheduler behavior
+- `[MODEL-DEP]` Any `claude -p` consumer must check stdout for rate limit messages ("hit your limit") before treating exit code 0 as success — rate-limited runs return exit 0 with zero work done
 
 ### Platform: MCP & Hooks
 

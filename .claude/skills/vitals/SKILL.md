@@ -35,6 +35,10 @@ OBSERVE
 ## autonomous_safe
 true
 
+# DEBUGGING RECIPES
+
+**Near-zero health metric scores (0.00 to 0.05):** Before diagnosing data quality or scoring logic, first verify the scan scope — check the `rglob` path and target directory in `vitals_collector.py`. Parent-directory scans silently include irrelevant files and dilute precision; a 0.00 score is more often a scope bug than a data bug.
+
 # STEPS
 
 ## Phase 1: Collect Data

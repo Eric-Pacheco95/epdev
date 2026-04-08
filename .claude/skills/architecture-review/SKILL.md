@@ -40,6 +40,10 @@ THINK
 ## autonomous_safe
 true
 
+# WHEN TO INVOKE
+
+Run `/architecture-review` BEFORE any hard-to-reverse decision: architecture choice, tool/dependency adoption, or any decision with 3+ viable paths. ADHD build velocity defaults to the option with the most energy, not the best fit — this skill exists to interrupt that default and force a structured comparison. If you're about to start building and there are multiple ways to do it, you should be running this first.
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION
@@ -97,6 +101,7 @@ true
   - **Corrected**: One or more agents identified a flaw; state the correction
   - **Contested**: Agents disagree; present both sides with recommendation
   - **Risk identified**: Not wrong, but carries specific risk that needs mitigation
+- **Opportunistic bug capture**: If any agent surfaces a bug, security finding, or code-quality issue UNRELATED to the architecture decision under review, do NOT fix it inline — instead append it to `orchestration/task_backlog.jsonl` (or surface it as a "side findings" bullet in the output if backlog write isn't available). Why: architecture reviews must stay scoped to the decision being made; inline bug fixes expand the diff and bury the architectural recommendation. How to apply: after Step 3 synthesis, scan agent outputs for any finding tagged "unrelated", "while we're here", or covering files outside the proposal scope — route those to backlog, keep the review focused.
 - Produce the unified output using the format below
 
 ## Step 4: RECOMMEND

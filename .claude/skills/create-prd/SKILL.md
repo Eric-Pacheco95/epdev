@@ -52,6 +52,7 @@ false
   - STOP and wait for user decision
 - If no research context found and topic seems complex:
   - Print: "No research brief found for this topic. The PRD will be based solely on your description. For a stronger foundation, run `/project-init` (full pipeline: research + analysis + PRD) or `/research <topic>` (research only). Proceed with standalone PRD anyway?"
+- **External-source absorb-vs-adopt gate**: If the input references an external source (tweet, repo URL, blog post, paper, "saw this thing called X") OR the idea was clearly inspired by something Eric just read/absorbed, STOP and prompt: "This idea came from an external source. Run `/architecture-review` first to filter absorb-vs-adopt before drafting requirements? Skipping the filter has previously led to scope creep and dependencies on tools that didn't fit." If Eric confirms skip, proceed and note in PRD's CONTEXT section that the absorb-vs-adopt filter was bypassed. Why: Eric's default posture is absorb ideas over adopt dependencies; the filter belongs BEFORE requirements drafting, not after — once a PRD exists, sunk cost biases adoption.
 - Once input is validated, proceed to Step 1
 
 ## Step 0.5: USER STORY CHECK (optional, auto-triggered)
