@@ -298,7 +298,19 @@ def call_claude(prompt: str, system: str = "") -> str:
             env=env,
         )
         if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
+            output = result.stdout.strip()
+            # Rate limit guard (steering rule [MODEL-DEP]):
+            # claude -p returns exit 0 with the rate-limit message in stdout
+            # when the Claude Max usage limit is hit. Treat as error so
+            # callers (auto_apply_telos, analysis pass) do not act on it.
+            rate_limit_phrases = (
+                "hit your limit", "rate limit", "quota exceeded",
+                "too many requests", "usage limit resets",
+            )
+            output_lower = output.lower()
+            if any(p in output_lower for p in rate_limit_phrases):
+                return "(claude -p rate-limited: %s)" % output[:200]
+            return output
         if result.stderr.strip():
             return "(claude -p error: %s)" % result.stderr.strip()[:200]
         return "(claude -p returned empty response)"
