@@ -501,17 +501,17 @@
 
 > **Prerequisite:** 15+ dispatcher tasks with diverse outcomes (done, failed, manual_review, retried). Architecture review: `memory/work/_arch-review-20260403/` (3-agent convergence on design constraints).
 
-**5E-1: Deterministic follow-on (partial-ISC retry)**
-- [ ] **`generation` field in task schema** — Hard cap at 2 (parent -> G1 -> G2 -> terminal). Prevents runaway loops, scope drift, quality degradation simultaneously
-- [ ] **`_emit_followon()` in dispatcher** — DECIDE function after write_backlog(), before notify_completion(). Extracts failing ISC criteria from verify_isc() results. Never derives from worker output
-- [ ] **Root-source attribution** — Follow-on tasks trace budget to original producer source, not "dispatcher". Prevents budget circumvention
-- [ ] **Always `pending_review`** — Follow-on tasks never enter `pending` autonomously. Max 1 follow-on per dispatch run
-- [ ] **Slack notification includes follow-on task ID** — Eric knows what to review
+**5E-1: Deterministic follow-on (partial-ISC retry)** — BUILT 2026-04-07 (commit `26e90d0`), awaiting 14-day falsification (target 2026-04-21). PRD: `memory/work/jarvis/PRD_phase5e1.md`. 26/26 self-tests pass.
+- [x] **`generation` field in task schema** — Hard cap at 2, enforced in `backlog.validate_task` AND `_emit_followon()` Gate 3
+- [x] **`_emit_followon()` in dispatcher** — 9 sequential gates (failure_type, source=overnight, gen<2, isc_pass/total>=0.5, branch exists, daily throttle, executable-fail subset, injection sanitizer, shrink invariant)
+- [x] **Root-source attribution** — child inherits `parent.source`, never set to "dispatcher"
+- [x] **Always `pending_review`** — anti-criterion enforced; throttle=1/day via `data/followon_state.json`
+- [x] **Slack notification includes follow-on task ID** — `parent_id → followon_id` lineage in notify
 
-**5E-2: Pipeline lifecycle + observability**
-- [ ] **`pending_review` TTL** — 7-day TTL in archive sweep. Stale pending_review tasks escalate to Slack alert, then auto-fail
-- [ ] **Branch existence validation at selection time** — If task references parent_branch, verify it exists before claiming. Expired branch -> manual_review
-- [ ] **Follow-on ISC count must decrease per generation** — If G1 fails more ISC than parent, route to manual_review (evidence of scope expansion)
+**5E-2: Pipeline lifecycle + observability** — BUILT 2026-04-07 (commit `26e90d0`), awaiting 7-day falsification (target 2026-04-14). PRD: `memory/work/jarvis/PRD_phase5e2.md`.
+- [x] **`pending_review` TTL** — `sweep_pending_review()` + `apply_pending_review_sweep()`: 7d Slack alert, 14d auto-fail with archive to `data/pending_review_expired/`
+- [x] **Branch existence validation at selection time** — `validate_parent_branch()` invoked in `select_next_task()`; missing or merged-to-main routes to manual_review with `failure_type=branch_lifecycle`
+- [x] **Follow-on ISC count must decrease per generation** — `validate_followon_isc_shrinks()` standalone helper, wired into 5E-1 Gate 9
 
 **5E-3: LLM-assisted follow-on (deferred within 5E)**
 - [ ] **FOLLOW_UP staging gate** — Worker FOLLOW_UP lines go to `data/followon_pending/` staging file, not directly to backlog. Requires human review before promotion (CLAUDE.md data-source checklist)
