@@ -85,11 +85,12 @@ Load documentation on-demand, not upfront:
 - Mark tasklist items `[x]` only after validated in target context — if built but unvalidated, leave unchecked with "BUILT — awaiting validation: [test]"; the tasklist is Eric's primary trust tool
 - VERIFY phase must include `/review-code` for external-input scripts; phase gate criteria must include a verification command or file-existence check, not self-reported status
 - Before hard-to-reverse decisions (architecture, tool adoption, 3+ paths), run `/architecture-review` — ADHD build velocity defaults to the option with most energy, not best fit
-- `[MODEL-DEP]` Before declaring ISC-tracked tasks complete, re-read the ISC file and verify each criterion with evidence — do not mark complete based on memory alone (compaction causes stale recall); after build phases, check `git status` and prompt Eric to commit; during `/implement-prd` with 4+ items, commit every 3-4 items as recovery points
+- **ISC criteria must live in a version-controlled file (PRD, CLAUDE.md, tasklist) — never only in conversation state.** Auto-compaction strips working context including specific ISC text, but on-disk files are re-read fresh post-compact and survive intact. Before declaring ISC-tracked tasks complete, re-read the source-of-truth file and verify each criterion with evidence (not from memory). After build phases, check `git status` and prompt Eric to commit; during `/implement-prd` with 4+ items, commit every 3-4 items as recovery points.
 - After multi-phase build sprints (3+ ISC items across 2+ sessions), run a doc-sync check: verify tasklist checkboxes match actual artifacts, file paths match actual locations, counts and dates are current
 - When building a new skill, evaluate each step: does this require intelligence (judgment, synthesis, NLG)? No → deterministic script (Python). Yes → keep in SKILL.md
 - When designing human review for autonomous pipelines, place the approval gate at the batch summary output — not at each intermediate step; auto-approve intermediate artifacts and present a single review surface with smart defaults Eric can override (reduces decision fatigue; per-item gates create backlog that blocks the pipeline)
 - Near-zero health metric scores (0.00-0.05): first verify scan scope (rglob path, target directory) before diagnosing data quality — parent-directory scans silently include irrelevant files and dilute precision
+- **Anti-criterion ISC verify commands must exit nonzero when the forbidden state is observed.** Never use `grep -v`, `awk`, or other filter-and-print primitives as the sole verifier — they exit 0 whenever the file is readable, making the "anti-criterion" a no-op. Prefer a dedicated `tools/scripts/verify_*.py` script that owns the threshold logic and exits 1 on violation. Why: 2026-04-07 prediction-pipeline backtest leakage guard ran for weeks as a no-op; 27/35 events crossed the cutoff threshold undetected. How to apply: during `/create-prd` ISC drafting and `/quality-gate` review, every "anti-" criterion must be checked for "what command would exit nonzero on the forbidden state?" — if the answer is "none, it just filters output," reject and rewrite.
 - `[MODEL-DEP]` Any `claude -p` consumer must check stdout for rate limit messages ("hit your limit") before treating exit code 0 as success — rate-limited runs return exit 0 with zero work done
 
 ### Skill Flag Discoverability
@@ -109,7 +110,7 @@ Load documentation on-demand, not upfront:
 
 ### Platform: MCP & Hooks
 
-- `[MODEL-DEP]` MCP servers: stdio transport (npx/uvx), `.mcp.json` in project root; reconfig mid-session requires telling Eric to restart (discovery is startup-only); debug by reading `C:/Users/ericp/.claude.json` directly (mcp list shows health only)
+- `[MODEL-DEP]` MCP servers: stdio transport (npx/uvx), `.mcp.json` in project root; **`.mcp.json` config edits still require session restart**, but MCP servers can push runtime tool/prompt/resource updates via `list_changed` notifications without disconnect; debug by reading `C:/Users/ericp/.claude.json` directly (`mcp list` shows health only)
 - Never use `mcp__<server>__*` wildcards in allow lists for servers with mutation tools — enumerate read tools explicitly; wildcards only safe for read-only servers
 - Hook commands must use absolute paths (relative breaks silently); hooks fire on every message — never print content already in CLAUDE.md, only surface dynamic state
 
@@ -131,7 +132,7 @@ Load documentation on-demand, not upfront:
 ### Cross-Project & Integrations
 
 - crypto-bot: always read `crypto_alpha_trading_bot.plan.md` first; never suggest switching RUN_MODE to production without Eric's explicit approval
-- `[MODEL-DEP]` Remote Triggers cannot invoke /skills, load CLAUDE.md, fire hooks, or access local files — use local Task Scheduler with `claude -p` for Jarvis-context work; Slack channels (`#jarvis-inbox`, `#jarvis-voice`) are stateless — each message is an independent atomic unit
+- Remote Triggers (cloud scheduled tasks) run in fresh-clone isolation: no local file access, no hook firing, no `/skill` invocation, no CLAUDE.md auto-load — only cloud-side connectors. Use local Task Scheduler with `claude -p` for any Jarvis-context work. Slack channels (`#jarvis-inbox`, `#jarvis-voice`) are stateless — each message is an independent atomic unit. *(Verified current 2026-04-07; re-validate at next audit.)*
 
 ### CLAUDE.md Self-Maintenance
 

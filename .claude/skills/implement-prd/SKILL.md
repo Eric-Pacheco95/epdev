@@ -125,6 +125,7 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
 
 ### VERIFY PHASE: Full pass
 
+- **Re-read the PRD file from disk before executing any verify methods.** Do not rely on the ISC list extracted at Step 1 if BUILD took multiple turns or auto-compaction may have fired between then and now — verify command text must come from the on-disk PRD, which is the source of truth. If the on-disk verify command differs from your in-memory copy, trust the file.
 - Run the full VERIFY phase: execute every ISC verify method in sequence and record pass/fail for each
 - **Structured Evidence**: For each ISC item, record three fields in the VERIFY RESULTS table:
   - Evidence type: CLI output | test result | file exists | grep match | manual review
