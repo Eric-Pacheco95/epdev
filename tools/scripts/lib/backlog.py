@@ -12,10 +12,70 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import tempfile
+import time
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+# Cross-platform file locking. msvcrt on Windows; fcntl on POSIX.
+# Both offer advisory exclusive locks on an open file descriptor. The lock
+# wraps the entire read-modify-write window in backlog_append so two
+# producers calling concurrently cannot lose writes.
+_IS_WINDOWS = sys.platform == "win32"
+if _IS_WINDOWS:
+    import msvcrt
+else:
+    import fcntl  # type: ignore[import-not-found]
+
+
+@contextmanager
+def _exclusive_file_lock(lock_path: Path, timeout_s: float = 30.0):
+    """Acquire an exclusive lock on a sidecar file, yielding when held.
+
+    Retries every 100ms up to timeout_s. On Windows, msvcrt.locking blocks
+    ~10s per call and raises OSError on failure, so we catch and retry.
+    On POSIX, fcntl.flock with LOCK_NB raises BlockingIOError when the lock
+    is held elsewhere; same retry loop applies.
+    """
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    # "a+b" creates the file if absent, opens read/write, never truncates.
+    fh = open(lock_path, "a+b")
+    try:
+        deadline = time.monotonic() + timeout_s
+        while True:
+            try:
+                if _IS_WINDOWS:
+                    # Lock 1 byte at offset 0. LK_NBLCK = non-blocking exclusive.
+                    fh.seek(0)
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break  # acquired
+            except (OSError, BlockingIOError):
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(
+                        f"could not acquire backlog lock at {lock_path} within {timeout_s}s"
+                    )
+                time.sleep(0.1)
+        try:
+            yield
+        finally:
+            try:
+                if _IS_WINDOWS:
+                    fh.seek(0)
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+            except OSError:
+                pass
+    finally:
+        try:
+            fh.close()
+        except OSError:
+            pass
 
 # Resolve repo root relative to this file (lib/ -> scripts/ -> tools/ -> repo/)
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -240,50 +300,56 @@ def backlog_append(
             file=_sys.stderr,
         )
 
-    # -- Load existing backlog for dedup check --
-    existing_tasks: list[dict] = []
-    if backlog_path.exists():
-        with open(backlog_path, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    existing_tasks.append(json.loads(line))
-                except json.JSONDecodeError:
-                    # Skip malformed lines (do not corrupt backlog)
-                    continue
+    # -- Acquire exclusive lock around the read-modify-write window --
+    # Without this, two producers calling backlog_append concurrently can
+    # both read the same existing_tasks snapshot and race on os.replace,
+    # silently losing one write. Sidecar .lock file is never git-tracked.
+    lock_path = backlog_path.with_suffix(backlog_path.suffix + ".lock")
+    with _exclusive_file_lock(lock_path):
+        # -- Load existing backlog for dedup check --
+        existing_tasks: list[dict] = []
+        if backlog_path.exists():
+            with open(backlog_path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        existing_tasks.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        # Skip malformed lines (do not corrupt backlog)
+                        continue
 
-    # -- Dedup by routine_id --
-    routine_id = task.get("routine_id")
-    if routine_id:
-        for existing in existing_tasks:
-            if (
-                existing.get("routine_id") == routine_id
-                and existing.get("status") in ACTIVE_STATUSES
-            ):
-                return None
-
-    # -- Atomic append --
-    backlog_path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_path = tempfile.mkstemp(
-        dir=str(backlog_path.parent),
-        suffix=".tmp",
-        prefix="backlog_append_",
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            # Write existing lines
+        # -- Dedup by routine_id --
+        routine_id = task.get("routine_id")
+        if routine_id:
             for existing in existing_tasks:
-                f.write(json.dumps(existing, ensure_ascii=False) + "\n")
-            # Append new task
-            f.write(json.dumps(task, ensure_ascii=False) + "\n")
-        os.replace(tmp_path, str(backlog_path))
-    except Exception:
+                if (
+                    existing.get("routine_id") == routine_id
+                    and existing.get("status") in ACTIVE_STATUSES
+                ):
+                    return None
+
+        # -- Atomic append --
+        backlog_path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(backlog_path.parent),
+            suffix=".tmp",
+            prefix="backlog_append_",
+        )
         try:
-            os.unlink(tmp_path)
-        except OSError:
-            pass
-        raise
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                # Write existing lines
+                for existing in existing_tasks:
+                    f.write(json.dumps(existing, ensure_ascii=False) + "\n")
+                # Append new task
+                f.write(json.dumps(task, ensure_ascii=False) + "\n")
+            os.replace(tmp_path, str(backlog_path))
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
     return task

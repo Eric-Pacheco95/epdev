@@ -77,6 +77,9 @@ tmp/
 *.tmp
 *.bak
 
+# Backlog sidecar lock file (created by lib/backlog._exclusive_file_lock)
+orchestration/task_backlog.jsonl.lock
+
 # Local scratch / session logs (personal tools, not part of repo)
 fortnite_session.log
 tools/scripts/netwatch.py
