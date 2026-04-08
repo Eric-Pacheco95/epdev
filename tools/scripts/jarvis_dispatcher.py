@@ -351,6 +351,399 @@ def _scan_task_metadata_injection(t: dict) -> bool:
     return True
 
 
+# -- Phase 5E-2: branch lifecycle + pending_review TTL ---------------------
+
+def _branch_exists(branch: str) -> bool:
+    """Return True if `branch` exists locally. Module-level for test patching."""
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--list", branch],
+            capture_output=True, text=True, cwd=str(REPO_ROOT), timeout=10,
+        )
+        return bool(result.stdout.strip())
+    except (subprocess.SubprocessError, OSError):
+        return False
+
+
+def _branch_merged_to_main(branch: str) -> bool:
+    """Return True if `branch` has been merged into main. Module-level for test patching."""
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--merged", "main"],
+            capture_output=True, text=True, cwd=str(REPO_ROOT), timeout=10,
+        )
+    except (subprocess.SubprocessError, OSError):
+        return False
+    for line in result.stdout.splitlines():
+        # `git branch --merged` outputs lines like "  branch-name" or "* branch-name"
+        if line.strip().lstrip("* ").strip() == branch:
+            return True
+    return False
+
+
+def validate_parent_branch(task: dict) -> Optional[str]:
+    """Return failure reason if task references an invalid parent_branch.
+
+    Returns None if the task has no parent_branch field, or if the parent_branch
+    exists locally and has not been merged to main.
+
+    Used at selection time so follow-on tasks fail loudly *before* claiming.
+    """
+    parent_branch = task.get("parent_branch")
+    if not parent_branch:
+        return None
+    if not _branch_exists(parent_branch):
+        return f"parent branch missing: {parent_branch}"
+    if _branch_merged_to_main(parent_branch):
+        return f"parent branch already merged to main: {parent_branch}"
+    return None
+
+
+def validate_followon_isc_shrinks(parent_isc: list, child_isc: list) -> Optional[str]:
+    """Return failure reason if a follow-on task's ISC count did not decrease.
+
+    Phase 5E-2 invariant: each generation must narrow scope. If a follow-on
+    has >= ISC criteria than its parent, that is evidence of scope expansion
+    and the emission must be blocked. 5E-1's _emit_followon() calls this.
+    """
+    if len(child_isc) >= len(parent_isc):
+        return (
+            f"follow-on ISC count did not decrease "
+            f"(parent={len(parent_isc)}, child={len(child_isc)}); "
+            f"scope expansion blocked"
+        )
+    return None
+
+
+# Pending-review TTL thresholds (days)
+PENDING_REVIEW_ALERT_DAYS = 7
+PENDING_REVIEW_EXPIRE_DAYS = 14
+PENDING_REVIEW_EXPIRED_DIR = REPO_ROOT / "data" / "pending_review_expired"
+
+
+def sweep_pending_review(
+    backlog: list[dict],
+    today: Optional["date"] = None,  # noqa: F821 -- imported lazily below
+) -> tuple[list[dict], list[dict]]:
+    """Pure function: scan backlog for pending_review TTL events.
+
+    Returns (alerts, expired). Mutates nothing. Caller is responsible for
+    side-effects (Slack notify, archive, status flip).
+    """
+    from datetime import date as _date
+    if today is None:
+        today = _date.today()
+
+    alerts: list[dict] = []
+    expired: list[dict] = []
+    for task in backlog:
+        if task.get("status") != "pending_review":
+            continue
+        created_str = task.get("created", "")
+        if not created_str:
+            continue
+        try:
+            created = _date.fromisoformat(created_str)
+        except (TypeError, ValueError):
+            continue
+        age_days = (today - created).days
+        if age_days >= PENDING_REVIEW_EXPIRE_DAYS:
+            expired.append(task)
+        elif age_days >= PENDING_REVIEW_ALERT_DAYS:
+            alerts.append(task)
+    return alerts, expired
+
+
+def archive_expired_pending_review(task: dict) -> Path:
+    """Write an archive record for an expired pending_review task.
+
+    Anti-criterion of 5E-2: no pending_review task ever silently disappears.
+    Every TTL expiry must produce a durable record. Lives under data/ (not
+    history/decisions/) because data/ is the dispatcher's writable area
+    and is not gitignored as personal content.
+    """
+    PENDING_REVIEW_EXPIRED_DIR.mkdir(parents=True, exist_ok=True)
+    record = {
+        "task_id": task.get("id"),
+        "expired_at": datetime.now().isoformat(),
+        "created": task.get("created"),
+        "description": task.get("description"),
+        "isc": task.get("isc", []),
+        "reason": "pending_review TTL expired (>14 days)",
+        "parent_task_id": task.get("parent_task_id"),
+        "parent_branch": task.get("parent_branch"),
+    }
+    path = PENDING_REVIEW_EXPIRED_DIR / f"{task.get('id', 'unknown')}.json"
+    path.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+def apply_pending_review_sweep(backlog: list[dict]) -> int:
+    """Run the pending_review TTL sweep, fire side-effects, mutate backlog in place.
+
+    Returns the number of tasks transitioned to `failed`.
+    """
+    alerts, expired = sweep_pending_review(backlog)
+
+    for task in alerts:
+        msg = (
+            f"pending_review task {task.get('id')} is "
+            f"{PENDING_REVIEW_ALERT_DAYS}+ days old -- review or it will auto-fail "
+            f"at {PENDING_REVIEW_EXPIRE_DAYS} days. Description: "
+            f"{task.get('description', '')[:160]}"
+        )
+        try:
+            notify(msg, channel="#jarvis-inbox")
+        except Exception as exc:
+            print(f"  WARNING: pending_review alert notify failed: {exc}", file=sys.stderr)
+
+    for task in expired:
+        try:
+            archive_expired_pending_review(task)
+        except Exception as exc:
+            print(f"  WARNING: archive_expired_pending_review failed: {exc}", file=sys.stderr)
+        task["status"] = "failed"
+        task["failure_reason"] = "pending_review TTL expired (>14 days)"
+        task["failure_type"] = "pending_review_ttl"
+        try:
+            notify(
+                f"pending_review task {task.get('id')} EXPIRED after "
+                f"{PENDING_REVIEW_EXPIRE_DAYS} days -- auto-failed.",
+                channel="#jarvis-inbox",
+            )
+        except Exception as exc:
+            print(f"  WARNING: pending_review expiry notify failed: {exc}", file=sys.stderr)
+
+    return len(expired)
+
+
+# -- Phase 5E-1: deterministic follow-on emission ---------------------------
+
+OVERNIGHT_FOLLOWON_SOURCES = frozenset({"overnight"})
+FOLLOWON_STATE_FILE = REPO_ROOT / "data" / "followon_state.json"
+FOLLOWON_MAX_PER_DAY = 1
+FOLLOWON_EMISSION_THRESHOLD = 0.5
+
+
+def _load_followon_state() -> dict:
+    """Load follow-on throttle state. Returns dict with keys: date, count."""
+    if not FOLLOWON_STATE_FILE.exists():
+        return {"date": "", "count": 0}
+    try:
+        return json.loads(FOLLOWON_STATE_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {"date": "", "count": 0}
+
+
+def _save_followon_state(state: dict) -> None:
+    """Atomic write of follow-on throttle state."""
+    FOLLOWON_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(FOLLOWON_STATE_FILE.parent), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2)
+        os.replace(tmp, str(FOLLOWON_STATE_FILE))
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def _followon_throttle_ok() -> bool:
+    """Return True if today's follow-on quota has not been spent."""
+    from datetime import date as _date
+    state = _load_followon_state()
+    today_str = _date.today().isoformat()
+    if state.get("date") != today_str:
+        return True  # New day, quota reset
+    return state.get("count", 0) < FOLLOWON_MAX_PER_DAY
+
+
+def _record_followon_emission(followon_id: str) -> None:
+    """Increment today's follow-on count, persist."""
+    from datetime import date as _date
+    today_str = _date.today().isoformat()
+    state = _load_followon_state()
+    if state.get("date") != today_str:
+        state = {"date": today_str, "count": 0, "last_emitted": None}
+    state["count"] = state.get("count", 0) + 1
+    state["last_emitted"] = followon_id
+    _save_followon_state(state)
+
+
+def _extract_failing_executable_isc(
+    parent_isc: list[str],
+    isc_results: list[dict],
+) -> list[str]:
+    """Return parent ISC strings for criteria that failed AND were executable.
+
+    Skipped (manual_required) and passed criteria are excluded. Returns the
+    full original ISC strings (with `| Verify: ...` suffix) so the child task
+    can run the same verify method.
+    """
+    failing: list[str] = []
+    for isc_str, result in zip(parent_isc, isc_results):
+        if not isinstance(isc_str, str):
+            continue
+        if result.get("status") != "fail":
+            continue
+        if "| Verify:" not in isc_str:
+            continue
+        # Only include if verify method classifies as executable
+        try:
+            if classify_verify_method(isc_str) != "executable":
+                continue
+        except Exception:
+            continue
+        failing.append(isc_str)
+    return failing
+
+
+def _isc_text_has_injection(isc_strings: list[str]) -> Optional[str]:
+    """Return the first injection substring found in any ISC text, or None.
+
+    Inline sanitizer (Q6 option B): ISC strings copied into a child task
+    must be re-scanned for injection patterns before emission. The parent
+    task already passed metadata-injection scan, but ISC text was not
+    scanned at parent selection. We close the gap here.
+    """
+    for isc in isc_strings:
+        lower = isc.lower()
+        for inj in _INJECTION_SUBSTRINGS:
+            if inj in lower:
+                return inj
+    return None
+
+
+def _emit_followon(
+    parent: dict,
+    isc_results: list[dict],
+    backlog: list[dict],
+) -> Optional[dict]:
+    """Emit a deterministic follow-on retry task to pending_review.
+
+    Returns the emitted task dict on success, None if any gate blocks emission.
+    Side effects: appends to backlog (in-memory), updates throttle state file,
+    fires Slack notification.
+
+    Gates (in order): failure_type, source partition, generation cap,
+    isc ratio threshold, parent branch alive, daily throttle, executable
+    failing criteria present, ISC text injection scan, shrink invariant.
+    """
+    # Gate 1: failure_type
+    ftype = parent.get("failure_type", "")
+    if ftype not in ("partial_work", "isc_fail"):
+        return None
+
+    # Gate 2: v1 source partition (overnight only)
+    if parent.get("source") not in OVERNIGHT_FOLLOWON_SOURCES:
+        return None
+
+    # Gate 3: generation cap
+    parent_gen = parent.get("generation", 0)
+    if not isinstance(parent_gen, int) or parent_gen >= 2:
+        return None
+
+    # Gate 4: emission threshold (Q9: at least half the ISC must have passed)
+    isc_total = len(isc_results)
+    if isc_total == 0:
+        return None
+    isc_pass = sum(1 for r in isc_results if r.get("status") == "pass")
+    if (isc_pass / isc_total) < FOLLOWON_EMISSION_THRESHOLD:
+        return None
+
+    # Gate 5: parent branch must still exist
+    parent_branch = parent.get("branch") or f"jarvis/auto-{parent.get('id', '')}"
+    if not _branch_exists(parent_branch):
+        print(f"  followon: parent branch missing ({parent_branch}), skip")
+        return None
+
+    # Gate 6: daily throttle
+    if not _followon_throttle_ok():
+        print("  followon: daily throttle reached (1/day), skip")
+        return None
+
+    # Gate 7: failing executable criteria
+    parent_isc = parent.get("isc", [])
+    failing = _extract_failing_executable_isc(parent_isc, isc_results)
+    if not failing:
+        return None
+
+    # Gate 8: inline injection sanitizer on ISC text
+    inj = _isc_text_has_injection(failing)
+    if inj:
+        msg = (
+            f"followon BLOCKED for {parent.get('id')}: "
+            f"ISC text contains injection pattern {inj!r}"
+        )
+        print(f"  {msg}")
+        try:
+            notify(msg, channel="#jarvis-inbox")
+        except Exception:
+            pass
+        return None
+
+    # Gate 9: shrink invariant (5E-2 helper)
+    shrink_err = validate_followon_isc_shrinks(parent_isc, failing)
+    if shrink_err:
+        print(f"  followon BLOCKED for {parent.get('id')}: {shrink_err}")
+        return None
+
+    # Build the child task
+    import time as _time
+    child_gen = parent_gen + 1
+    child_id = f"followon-{parent.get('id', 'task')}-g{child_gen}-{int(_time.time())}"
+    child = {
+        "id": child_id,
+        "description": (
+            f"Follow-on G{child_gen}: complete failing ISC for "
+            f"{parent.get('id')} ({len(failing)}/{isc_total} criteria)"
+        ),
+        "tier": parent.get("tier", 1),
+        "autonomous_safe": parent.get("autonomous_safe", True),
+        "priority": parent.get("priority", 5),
+        "isc": failing,
+        "context_files": list(parent.get("context_files", [])),
+        "expected_outputs": list(parent.get("expected_outputs", [])),
+        "skills": list(parent.get("skills", [])),
+        "project": parent.get("project", "epdev"),
+        "model": parent.get("model"),
+        "status": "pending_review",  # Anti-criterion: never auto-pending
+        "created": datetime.now().strftime("%Y-%m-%d"),
+        "generation": child_gen,
+        "parent_task_id": parent.get("id"),
+        "parent_branch": parent_branch,
+        # Root-source attribution: inherit, never "dispatcher"
+        "source": parent.get("source"),
+        "goal_context": parent.get("goal_context", ""),
+        "notes": (
+            f"Auto-emitted by _emit_followon() from {parent.get('id')} "
+            f"(gen {child_gen}, {len(failing)} failing ISC)"
+        ),
+        "retry_count": 0,
+    }
+
+    # Append to in-memory backlog (caller persists via write_backlog)
+    backlog.append(child)
+
+    # Throttle state + notification
+    _record_followon_emission(child_id)
+    try:
+        notify(
+            f"Follow-on emitted: {parent.get('id')} -> {child_id} "
+            f"(gen {child_gen}, {len(failing)} failing ISC, status pending_review). "
+            f"Review with `/review-pending` before promoting.",
+            channel="#jarvis-inbox",
+        )
+    except Exception as exc:
+        print(f"  WARNING: followon notify failed: {exc}", file=sys.stderr)
+
+    print(f"  followon EMITTED: {child_id} (gen {child_gen})")
+    return child
+
+
 def select_next_task(backlog: list[dict]) -> Optional[dict]:
     """Select the highest-priority eligible task."""
     candidates = []
@@ -374,6 +767,16 @@ def select_next_task(backlog: list[dict]) -> Optional[dict]:
         # Description sanitization in build_worker_prompt() is a second layer --
         # this gate prevents poisoned tasks from being selected at all.
         if not _scan_task_metadata_injection(t):
+            continue
+        # Gate 2B (5E-2): If task references a parent_branch, verify it's still
+        # alive. Missing/merged parents route to manual_review at selection time
+        # so follow-on tasks never claim a stale worktree.
+        branch_failure = validate_parent_branch(t)
+        if branch_failure:
+            print(f"  BLOCKED {t['id']}: {branch_failure}")
+            t["status"] = "manual_review"
+            t["failure_reason"] = branch_failure
+            t["failure_type"] = "branch_lifecycle"
             continue
         # Validate all ISC commands upfront using classify_verify_method so that
         # manual_required criteria (Review, echo, freeform) don't block the task --
@@ -1554,6 +1957,17 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         report["failure_type"] = task.get("failure_type", "")
         save_run_report(report, path=report_path)
 
+        # 5E-1: deterministic follow-on emission. Only fires for partial_work
+        # / isc_fail outcomes from overnight-source tasks meeting the >=0.5
+        # ISC ratio. All other gates enforced inside _emit_followon().
+        # Failure here is non-fatal -- the parent task is already routed.
+        try:
+            emitted = _emit_followon(task, isc_results, backlog)
+            if emitted is not None:
+                task["followon_id"] = emitted["id"]
+        except Exception as exc:
+            print(f"  WARNING: _emit_followon failed: {exc}", file=sys.stderr)
+
         write_backlog(backlog)
 
         # Notify
@@ -1605,6 +2019,16 @@ def dispatch(dry_run: bool = False) -> None:
             backlog = read_backlog()
     except Exception as exc:
         print(f"  WARNING: archive_tasks failed: {exc}", file=sys.stderr)
+
+    # 5E-2: pending_review TTL sweep -- alerts at 7d, auto-fail at 14d.
+    # Mutates backlog in place; persist if anything changed.
+    try:
+        expired_count = apply_pending_review_sweep(backlog)
+        if expired_count > 0:
+            print(f"  pending_review: {expired_count} task(s) expired and auto-failed")
+            write_backlog(backlog)
+    except Exception as exc:
+        print(f"  WARNING: pending_review sweep failed: {exc}", file=sys.stderr)
 
     # Inject due routines before task selection
     try:
@@ -2116,6 +2540,442 @@ def self_test() -> bool:
     except Exception as exc:
         print(f"  FAIL: {exc}")
         ok = False
+
+    # Test 18 (5E-2): pending_review TTL sweep
+    print("Test 18: pending_review TTL sweep...")
+    try:
+        from datetime import date as _date, timedelta as _td
+        today = _date(2026, 4, 7)
+        backlog_pr = [
+            # Fresh -- ignored
+            {"id": "pr-fresh", "status": "pending_review",
+             "created": (today - _td(days=1)).isoformat(), "description": "fresh"},
+            # 7 days old -- alert
+            {"id": "pr-alert", "status": "pending_review",
+             "created": (today - _td(days=7)).isoformat(), "description": "alert"},
+            # 14 days old -- expire
+            {"id": "pr-expired", "status": "pending_review",
+             "created": (today - _td(days=15)).isoformat(), "description": "expired"},
+            # Not pending_review -- ignored
+            {"id": "pr-other", "status": "pending",
+             "created": (today - _td(days=30)).isoformat(), "description": "other"},
+            # Missing created -- ignored (no crash)
+            {"id": "pr-nodate", "status": "pending_review", "description": "nodate"},
+        ]
+        alerts, expired = sweep_pending_review(backlog_pr, today=today)
+        assert len(alerts) == 1 and alerts[0]["id"] == "pr-alert", \
+            f"Expected 1 alert (pr-alert), got {[a['id'] for a in alerts]}"
+        assert len(expired) == 1 and expired[0]["id"] == "pr-expired", \
+            f"Expected 1 expired (pr-expired), got {[e['id'] for e in expired]}"
+
+        # apply_pending_review_sweep mutates expired tasks + writes archive
+        # Patch notify to no-op so test doesn't hit Slack
+        _g = globals()
+        _orig_notify = _g.get("notify")
+        _orig_archive = _g.get("archive_expired_pending_review")
+        archived_calls = []
+        try:
+            _g["notify"] = lambda *a, **kw: None
+            _g["archive_expired_pending_review"] = lambda t: archived_calls.append(t.get("id"))
+            # Reset backlog (apply_pending_review_sweep uses today=date.today(),
+            # so reconstruct with absolute dates relative to actual today)
+            actual_today = _date.today()
+            backlog_apply = [
+                {"id": "apply-expired", "status": "pending_review",
+                 "created": (actual_today - _td(days=20)).isoformat(),
+                 "description": "expired test"},
+                {"id": "apply-fresh", "status": "pending_review",
+                 "created": (actual_today - _td(days=1)).isoformat(),
+                 "description": "fresh test"},
+            ]
+            n = apply_pending_review_sweep(backlog_apply)
+            assert n == 1, f"Expected 1 expired, got {n}"
+            assert backlog_apply[0]["status"] == "failed", \
+                f"Expired task should be failed, got {backlog_apply[0]['status']}"
+            assert backlog_apply[0]["failure_type"] == "pending_review_ttl"
+            assert backlog_apply[1]["status"] == "pending_review", \
+                "Fresh task should be untouched"
+            assert "apply-expired" in archived_calls, "Archive side-effect not called"
+        finally:
+            if _orig_notify is not None:
+                _g["notify"] = _orig_notify
+            if _orig_archive is not None:
+                _g["archive_expired_pending_review"] = _orig_archive
+
+        print("  PASS: pending_review TTL sweep correct")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 19 (5E-2): branch existence validation at selection
+    print("Test 19: parent_branch validation at selection...")
+    try:
+        _g = globals()
+        _orig_exists = _g["_branch_exists"]
+        _orig_merged = _g["_branch_merged_to_main"]
+        try:
+            # Case A: missing branch -> failure reason returned
+            _g["_branch_exists"] = lambda b: False
+            _g["_branch_merged_to_main"] = lambda b: False
+            t_missing = {"id": "br-missing", "parent_branch": "jarvis/auto-gone"}
+            r = validate_parent_branch(t_missing)
+            assert r is not None and "missing" in r, f"Expected missing reason, got {r!r}"
+
+            # Case B: branch exists but merged -> failure reason
+            _g["_branch_exists"] = lambda b: True
+            _g["_branch_merged_to_main"] = lambda b: True
+            t_merged = {"id": "br-merged", "parent_branch": "jarvis/auto-old"}
+            r = validate_parent_branch(t_merged)
+            assert r is not None and "merged" in r, f"Expected merged reason, got {r!r}"
+
+            # Case C: healthy branch -> None
+            _g["_branch_exists"] = lambda b: True
+            _g["_branch_merged_to_main"] = lambda b: False
+            t_ok = {"id": "br-ok", "parent_branch": "jarvis/auto-live"}
+            assert validate_parent_branch(t_ok) is None
+
+            # Case D: anti-criterion -- task without parent_branch field
+            # MUST NOT invoke branch checks (zero false positives on regular tasks)
+            check_invoked = {"flag": False}
+            def _spy_exists(b):
+                check_invoked["flag"] = True
+                return True
+            _g["_branch_exists"] = _spy_exists
+            t_regular = {"id": "br-regular"}  # no parent_branch
+            assert validate_parent_branch(t_regular) is None
+            assert check_invoked["flag"] is False, \
+                "Regular task without parent_branch should NOT trigger branch check"
+
+            # Case E: integration via select_next_task
+            # Missing parent should route the task to manual_review and skip selection
+            _g["_branch_exists"] = lambda b: False
+            _g["_branch_merged_to_main"] = lambda b: False
+            backlog_sel = [
+                {"id": "sel-missing-parent", "description": "follow-on test",
+                 "tier": 0, "status": "pending", "autonomous_safe": True,
+                 "priority": 1, "created": "2026-01-01",
+                 "isc": ["X | Verify: grep -c x /dev/null"],
+                 "context_files": [], "parent_branch": "jarvis/auto-gone"},
+            ]
+            selected = select_next_task(backlog_sel)
+            assert selected is None, "Task with missing parent_branch should not be selected"
+            assert backlog_sel[0]["status"] == "manual_review", \
+                f"Expected manual_review, got {backlog_sel[0]['status']}"
+            assert backlog_sel[0]["failure_type"] == "branch_lifecycle"
+        finally:
+            _g["_branch_exists"] = _orig_exists
+            _g["_branch_merged_to_main"] = _orig_merged
+
+        print("  PASS: parent_branch validation correct")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 20 (5E-2): ISC shrink guard
+    print("Test 20: follow-on ISC shrink guard...")
+    try:
+        # Same count -> rejected
+        r = validate_followon_isc_shrinks(["a", "b", "c"], ["a", "b", "c"])
+        assert r is not None and "did not decrease" in r
+
+        # Larger count -> rejected
+        r = validate_followon_isc_shrinks(["a", "b"], ["a", "b", "c"])
+        assert r is not None and "did not decrease" in r
+
+        # Smaller count -> accepted
+        assert validate_followon_isc_shrinks(["a", "b", "c"], ["a"]) is None
+        assert validate_followon_isc_shrinks(["a", "b"], ["a"]) is None
+
+        print("  PASS: ISC shrink guard correct")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # Test 21 (5E-2): generation cap in backlog.validate_task
+    print("Test 21: generation cap (validate_task)...")
+    try:
+        from tools.scripts.lib.backlog import validate_task as _vt
+
+        base = {
+            "description": "test", "tier": 0, "autonomous_safe": True,
+            "priority": 1, "status": "pending",
+            "isc": ["X | Verify: test -f x"],
+        }
+
+        # generation=0,1,2 are valid
+        for g in (0, 1, 2):
+            t = dict(base, generation=g)
+            errs = _vt(t)
+            assert not any("generation" in e for e in errs), \
+                f"generation={g} should be valid, got: {errs}"
+
+        # generation=3 rejected
+        errs = _vt(dict(base, generation=3))
+        assert any("generation" in e for e in errs), \
+            f"generation=3 should be rejected, got: {errs}"
+
+        # generation=-1 rejected
+        errs = _vt(dict(base, generation=-1))
+        assert any("generation" in e for e in errs)
+
+        # generation="1" (str) rejected
+        errs = _vt(dict(base, generation="1"))
+        assert any("generation" in e for e in errs)
+
+        # No generation field -> not rejected (backwards-compatible)
+        errs = _vt(dict(base))
+        assert not any("generation" in e for e in errs)
+
+        print("  PASS: generation cap correct")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
+    # ---- Phase 5E-1 tests (22-26): deterministic follow-on emission ----
+
+    # All 5E-1 tests share these helpers/state. Patch _branch_exists to True,
+    # notify to no-op, and use an isolated FOLLOWON_STATE_FILE per test.
+    def _make_5e1_parent(**overrides):
+        base = {
+            "id": "p-overnight-1",
+            "tier": 1,
+            "autonomous_safe": True,
+            "priority": 5,
+            "isc": [
+                "Step 1 done | Verify: test -f a.txt",
+                "Step 2 done | Verify: test -f b.txt",
+                "Step 3 done | Verify: test -f c.txt",
+                "Step 4 done | Verify: test -f d.txt",
+            ],
+            "context_files": ["docs/spec.md"],
+            "expected_outputs": ["a.txt", "b.txt", "c.txt", "d.txt"],
+            "source": "overnight",
+            "generation": 0,
+            "branch": "jarvis/auto-p-overnight-1",
+            "failure_type": "partial_work",
+            "project": "epdev",
+            "goal_context": "test",
+        }
+        base.update(overrides)
+        return base
+
+    # 3/4 pass, 1 fail (executable) -> emission OK
+    def _3pass_1fail():
+        return [
+            {"criterion": "Step 1 done", "command": "test -f a.txt", "status": "pass"},
+            {"criterion": "Step 2 done", "command": "test -f b.txt", "status": "pass"},
+            {"criterion": "Step 3 done", "command": "test -f c.txt", "status": "pass"},
+            {"criterion": "Step 4 done", "command": "test -f d.txt", "status": "fail"},
+        ]
+
+    # 2/4 pass, 2 fail (still >= 0.5)
+    def _2pass_2fail():
+        return [
+            {"criterion": "Step 1 done", "command": "test -f a.txt", "status": "pass"},
+            {"criterion": "Step 2 done", "command": "test -f b.txt", "status": "pass"},
+            {"criterion": "Step 3 done", "command": "test -f c.txt", "status": "fail"},
+            {"criterion": "Step 4 done", "command": "test -f d.txt", "status": "fail"},
+        ]
+
+    # 1/4 pass, 3 fail (< 0.5)
+    def _1pass_3fail():
+        return [
+            {"criterion": "Step 1 done", "command": "test -f a.txt", "status": "pass"},
+            {"criterion": "Step 2 done", "command": "test -f b.txt", "status": "fail"},
+            {"criterion": "Step 3 done", "command": "test -f c.txt", "status": "fail"},
+            {"criterion": "Step 4 done", "command": "test -f d.txt", "status": "fail"},
+        ]
+
+    import tempfile as _tf
+    _g = globals()
+    _orig_branch_exists = _g["_branch_exists"]
+    _orig_notify = _g.get("notify")
+    _orig_state_file = _g["FOLLOWON_STATE_FILE"]
+    _tmp_state = Path(_tf.mkdtemp(prefix="followon_test_")) / "state.json"
+
+    try:
+        _g["_branch_exists"] = lambda b: True
+        _g["notify"] = lambda *a, **kw: None
+        _g["FOLLOWON_STATE_FILE"] = _tmp_state
+
+        # Test 22: emission gates
+        print("Test 22: _emit_followon emission gates...")
+        try:
+            # 22a: happy path -- emission succeeds
+            backlog22 = []
+            child = _emit_followon(_make_5e1_parent(), _3pass_1fail(), backlog22)
+            assert child is not None, "Happy path should emit"
+            assert child["status"] == "pending_review"
+            assert child["generation"] == 1
+            assert child["parent_task_id"] == "p-overnight-1"
+            assert child["parent_branch"] == "jarvis/auto-p-overnight-1"
+            assert child["source"] == "overnight"
+            assert len(child["isc"]) == 1
+            assert "test -f d.txt" in child["isc"][0]
+            assert len(backlog22) == 1
+
+            # Reset throttle for subsequent assertions
+            if _tmp_state.exists():
+                _tmp_state.unlink()
+
+            # 22b: wrong failure_type -> no emission
+            p = _make_5e1_parent(failure_type="scope_creep")
+            assert _emit_followon(p, _3pass_1fail(), []) is None
+
+            # 22c: wrong source -> no emission
+            p = _make_5e1_parent(source="routine")
+            assert _emit_followon(p, _3pass_1fail(), []) is None
+
+            # 22d: generation cap (parent gen=2 -> no emission)
+            p = _make_5e1_parent(generation=2)
+            assert _emit_followon(p, _3pass_1fail(), []) is None
+
+            # 22e: ratio gate (1/4 pass = 0.25 < 0.5 -> no emission)
+            p = _make_5e1_parent()
+            assert _emit_followon(p, _1pass_3fail(), []) is None
+
+            # 22f: parent branch missing -> no emission
+            _g["_branch_exists"] = lambda b: False
+            p = _make_5e1_parent()
+            assert _emit_followon(p, _3pass_1fail(), []) is None
+            _g["_branch_exists"] = lambda b: True  # restore
+
+            print("  PASS: emission gates correct")
+        except Exception as exc:
+            print(f"  FAIL: {exc}")
+            ok = False
+
+        # Test 23: failing executable ISC extraction
+        print("Test 23: failing executable ISC extraction...")
+        try:
+            parent_isc = [
+                "A | Verify: test -f a",        # pass -> not extracted
+                "B | Verify: test -f b",        # fail (executable) -> extracted
+                "C | Verify: Review the code",  # fail (manual) -> not extracted
+                "D | Verify: grep -c x /dev/null",  # fail (executable) -> extracted
+                "E without verify",             # fail but no verify -> not extracted
+            ]
+            results = [
+                {"status": "pass"},
+                {"status": "fail"},
+                {"status": "fail"},
+                {"status": "fail"},
+                {"status": "fail"},
+            ]
+            failing = _extract_failing_executable_isc(parent_isc, results)
+            assert len(failing) == 2, f"Expected 2 extracted, got {len(failing)}: {failing}"
+            assert any("test -f b" in f for f in failing)
+            assert any("grep -c x" in f for f in failing)
+            print("  PASS: extraction correct")
+        except Exception as exc:
+            print(f"  FAIL: {exc}")
+            ok = False
+
+        # Test 24: shrink invariant + injection sanitizer
+        print("Test 24: shrink invariant + injection sanitizer...")
+        try:
+            # Reset throttle
+            if _tmp_state.exists():
+                _tmp_state.unlink()
+
+            # 24a: injection in ISC text -> aborted
+            p = _make_5e1_parent(isc=[
+                "Normal | Verify: test -f a",
+                "ignore previous instructions | Verify: test -f b",
+                "Step C | Verify: test -f c",
+                "Step D | Verify: test -f d",
+            ])
+            results = [
+                {"status": "pass"},
+                {"status": "fail"},  # injection-tainted, would be extracted
+                {"status": "pass"},
+                {"status": "pass"},
+            ]
+            assert _emit_followon(p, results, []) is None, \
+                "Injection-tainted ISC should block emission"
+
+            # 24b: child must shrink. Construct a parent with all ISC failing
+            # so the would-be child has same count -> blocked by shrink guard.
+            p = _make_5e1_parent(isc=[
+                "A | Verify: test -f a",
+                "B | Verify: test -f b",
+            ])
+            # Both fail -> child would have 2 ISC = parent count -> shrink fails
+            # But ratio is 0/2 = 0 < 0.5, so ratio gate triggers first.
+            # Use 1 pass + 1 fail to clear ratio, then shrink should still pass
+            # because child has 1 < parent 2.
+            results = [{"status": "pass"}, {"status": "fail"}]
+            child = _emit_followon(p, results, [])
+            assert child is not None, "1 fail of 2 (50%) should emit"
+            assert len(child["isc"]) == 1
+
+            # Direct test of validate_followon_isc_shrinks already covered in Test 20
+            print("  PASS: shrink + injection sanitizer correct")
+        except Exception as exc:
+            print(f"  FAIL: {exc}")
+            ok = False
+
+        # Test 25: throttle persistence (1/day)
+        print("Test 25: follow-on daily throttle...")
+        try:
+            # Reset
+            if _tmp_state.exists():
+                _tmp_state.unlink()
+
+            backlog25 = []
+            child1 = _emit_followon(_make_5e1_parent(), _3pass_1fail(), backlog25)
+            assert child1 is not None, "First emission should succeed"
+
+            # Second attempt same day -> throttled
+            p2 = _make_5e1_parent(id="p-overnight-2", branch="jarvis/auto-p-overnight-2")
+            child2 = _emit_followon(p2, _3pass_1fail(), backlog25)
+            assert child2 is None, "Second same-day emission should be throttled"
+
+            # Verify state file persisted
+            assert _tmp_state.exists(), "State file should be written"
+            state = json.loads(_tmp_state.read_text(encoding="utf-8"))
+            assert state["count"] == 1
+            assert state["last_emitted"] == child1["id"]
+            print("  PASS: throttle persistence correct")
+        except Exception as exc:
+            print(f"  FAIL: {exc}")
+            ok = False
+
+        # Test 26: anti-criteria (always pending_review, root-source attribution)
+        print("Test 26: anti-criteria (pending_review + root-source)...")
+        try:
+            if _tmp_state.exists():
+                _tmp_state.unlink()
+
+            # Even if parent has different sources, child status MUST be pending_review.
+            # We can only test "overnight" source per v1 partition; that's still the
+            # invariant we care about.
+            p = _make_5e1_parent(source="overnight")
+            child = _emit_followon(p, _3pass_1fail(), [])
+            assert child is not None
+            assert child["status"] == "pending_review", \
+                f"Child must be pending_review, got {child['status']}"
+            assert child["source"] == "overnight", \
+                f"Child source must inherit parent (root-source), got {child['source']!r}"
+            assert child["source"] != "dispatcher", "source must NEVER be 'dispatcher'"
+            assert child.get("retry_count", 0) == 0
+            print("  PASS: anti-criteria correct")
+        except Exception as exc:
+            print(f"  FAIL: {exc}")
+            ok = False
+
+    finally:
+        _g["_branch_exists"] = _orig_branch_exists
+        if _orig_notify is not None:
+            _g["notify"] = _orig_notify
+        _g["FOLLOWON_STATE_FILE"] = _orig_state_file
+        # Cleanup temp state
+        try:
+            if _tmp_state.exists():
+                _tmp_state.unlink()
+            _tmp_state.parent.rmdir()
+        except OSError:
+            pass
 
     print(f"\n{'ALL TESTS PASSED' if ok else 'SOME TESTS FAILED'}")
     return ok

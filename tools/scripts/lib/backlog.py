@@ -143,6 +143,16 @@ def validate_task(task: dict) -> list[str]:
     elif not isinstance(priority, int):
         errors.append("'priority' must be an integer")
 
+    # -- generation (5E-2 hard cap) --
+    # Follow-on tasks track their generation: parent=0, G1=1, G2=2.
+    # Hard-capped at 2 to prevent runaway _emit_followon() loops, scope drift,
+    # and quality degradation. Direct backlog injection that bypasses the
+    # dispatcher's _emit_followon() must still be blocked here.
+    if "generation" in task:
+        gen = task.get("generation")
+        if not isinstance(gen, int) or gen < 0 or gen > 2:
+            errors.append("'generation' must be int 0-2 (hard cap to prevent runaway loops)")
+
     # -- created --
     created = task.get("created")
     if created is None:
