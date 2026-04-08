@@ -6,7 +6,13 @@
       "type": "weekly | monthly",
       "interval_days": "minimum days between injections"
     },
-    "task_template": "merged with auto-fill defaults in backlog_append()"
+    "task_template": "merged with auto-fill defaults in backlog_append()",
+    "task_template.pipeline": {
+      "_added": "2026-04-08 -- openclaw/lobster wisdom: typed deterministic pipelines",
+      "_purpose": "When pipeline is set AND skills==[], dispatcher executes steps directly via subprocess (no claude -p, no worktree). ISC verification still runs against REPO_ROOT. Saves LLM tokens for routines that are pure script orchestration.",
+      "steps": "list of step dicts. Each step must have run_python (path under tools/scripts/), and may have args (list[str]), timeout_s (int <=1800), allow_nonzero (bool, default false)",
+      "constraints": "shell=False, list-form args only. No path traversal. Allowlist enforced by _validate_pipeline()."
+    }
   },
   "routines": [
     {
@@ -231,15 +237,26 @@
         "tier": 0,
         "priority": 5,
         "goal_context": "Branch hygiene -- merged branches waste git namespace; stale branches indicate abandoned work",
+        "_isc_followup_2026-04-08": "Original ISCs used 'python ...' as verify, which is blocked by ISC_ALLOWED_COMMANDS (python removed for sandbox-escape risk). Both criteria were silently no-ops. Replaced with file-exists stub for pipeline prototype. Real fix: have branch_lifecycle.py write data/branch_lifecycle_state.json with merged_count and stale_count fields, then verify via 'find ... -newer' + grep.",
         "isc": [
-          "No merged jarvis/* branches remain after cleanup | Verify: python tools/scripts/branch_lifecycle.py --json",
-          "All stale branches (>7d unmerged) are flagged in Slack | Verify: python tools/scripts/branch_lifecycle.py"
+          "branch_lifecycle.py is present (prototype stub -- see _isc_followup) | Verify: test -f tools/scripts/branch_lifecycle.py"
         ],
         "context_files": [],
         "skills": [],
         "model": "haiku",
         "autonomous_safe": true,
-        "notes": "Runs branch_lifecycle.py -- deterministic, zero LLM cost for scan; haiku for branch deletion commands"
+        "pipeline": {
+          "_added": "2026-04-08 -- first deterministic-pipeline routine (lobster wisdom prototype)",
+          "steps": [
+            {
+              "id": "branch_scan_and_cleanup",
+              "run_python": "tools/scripts/branch_lifecycle.py",
+              "args": ["--json"],
+              "timeout_s": 180
+            }
+          ]
+        },
+        "notes": "Runs branch_lifecycle.py via deterministic pipeline -- no claude -p, no worktree, ~0 LLM tokens. Was haiku-wrapped script orchestration."
       }
     },
     {

@@ -871,6 +871,148 @@ def _log_local_routing_override(task_type: str, tags: list, routed_to: str) -> N
         pass
 
 
+# -- Deterministic pipeline executor (lobster wisdom, 2026-04-08) -----------
+#
+# When a routine declares a `pipeline` field AND has skills==[], the dispatcher
+# can execute its steps directly via subprocess -- no claude -p, no worktree,
+# no LLM tokens. ISC verification still runs against REPO_ROOT.
+#
+# Security boundary: each step's run_python must resolve to a path under
+# tools/scripts/ (no traversal, no shell). Args are list-form only.
+# Prototype routine: weekly-branch-cleanup. See routines.json _schema.
+
+PIPELINE_ALLOWED_PYTHON_PREFIX = (REPO_ROOT / "tools" / "scripts").resolve()
+PIPELINE_MAX_TIMEOUT_S = 1800
+
+
+def _validate_pipeline(pipeline: dict) -> list[str]:
+    """Validate a pipeline dict. Returns list of error strings (empty=valid)."""
+    errors: list[str] = []
+    if not isinstance(pipeline, dict):
+        return ["pipeline must be a dict"]
+    steps = pipeline.get("steps")
+    if not isinstance(steps, list) or not steps:
+        return ["pipeline.steps must be a non-empty list"]
+    for i, step in enumerate(steps):
+        prefix = f"step {i+1}"
+        if not isinstance(step, dict):
+            errors.append(f"{prefix}: must be a dict")
+            continue
+        if "run_python" not in step:
+            errors.append(f"{prefix}: only 'run_python' steps are supported in v1")
+            continue
+        script = step["run_python"]
+        if not isinstance(script, str) or ".." in script or script.startswith("/") or ":" in script:
+            errors.append(f"{prefix}: run_python must be a repo-relative path with no '..' or absolute prefix")
+            continue
+        try:
+            script_path = (REPO_ROOT / script).resolve()
+            script_path.relative_to(PIPELINE_ALLOWED_PYTHON_PREFIX)
+        except (ValueError, OSError):
+            errors.append(f"{prefix}: run_python must resolve under tools/scripts/")
+            continue
+        if not script_path.is_file():
+            errors.append(f"{prefix}: script not found: {script}")
+            continue
+        args = step.get("args", [])
+        if not isinstance(args, list) or not all(isinstance(a, str) for a in args):
+            errors.append(f"{prefix}: args must be a list of strings")
+        timeout_s = step.get("timeout_s", 300)
+        if not isinstance(timeout_s, int) or timeout_s <= 0 or timeout_s > PIPELINE_MAX_TIMEOUT_S:
+            errors.append(f"{prefix}: timeout_s must be int in (0, {PIPELINE_MAX_TIMEOUT_S}]")
+    return errors
+
+
+def _dispatch_pipeline(task: dict, dry_run: bool = False) -> dict:
+    """Execute a deterministic pipeline -- no claude -p, no worktree.
+
+    Each step is run via subprocess with shell=False, list-form args, against
+    an allowlist of scripts under tools/scripts/. On any step failure (nonzero
+    exit, timeout, exec error) the pipeline aborts and returns status=failed.
+
+    Returns a report dict shaped like run_worker() output.
+    """
+    pipeline = task.get("pipeline") or {}
+    report = {
+        "task_id": task["id"],
+        "branch": "pipeline",
+        "model": "deterministic",
+        "source": task.get("source", "unknown"),
+        "started": datetime.now().isoformat(),
+        "prompt_tokens_approx": 0,
+        "pipeline_steps": [],
+    }
+
+    if dry_run:
+        print(f"  [DRY RUN] Would execute pipeline for task: {task['id']}")
+        for i, step in enumerate(pipeline.get("steps", [])):
+            args_str = " ".join(step.get("args", []))
+            print(f"    step {i+1}: python {step.get('run_python')} {args_str}".rstrip())
+        report["status"] = "dry_run"
+        report["completed"] = datetime.now().isoformat()
+        return report
+
+    errors = _validate_pipeline(pipeline)
+    if errors:
+        report["status"] = "failed"
+        report["failure_reason"] = "Pipeline validation failed: " + "; ".join(errors)
+        report["completed"] = datetime.now().isoformat()
+        return report
+
+    print(f"  Executing deterministic pipeline (no LLM) for task: {task['id']}")
+    all_ok = True
+    for i, step in enumerate(pipeline["steps"]):
+        script = step["run_python"]
+        args = list(step.get("args", []))
+        timeout_s = int(step.get("timeout_s", 300))
+        allow_nonzero = bool(step.get("allow_nonzero", False))
+        cmd = [sys.executable, str(REPO_ROOT / script), *args]
+        step_report: dict = {
+            "step": i + 1,
+            "id": step.get("id", f"step_{i+1}"),
+            "script": script,
+            "args": args,
+        }
+        print(f"    step {i+1}: {script} {' '.join(args)}".rstrip())
+        try:
+            proc = subprocess.run(
+                cmd,
+                capture_output=True, text=True, encoding="utf-8",
+                cwd=str(REPO_ROOT), timeout=timeout_s,
+                shell=False,
+            )
+            step_report["exit_code"] = proc.returncode
+            step_report["stdout_tail"] = (proc.stdout or "")[-1000:]
+            step_report["stderr_tail"] = (proc.stderr or "")[-500:]
+            if proc.returncode != 0 and not allow_nonzero:
+                all_ok = False
+                step_report["status"] = "fail"
+            else:
+                step_report["status"] = "ok"
+        except subprocess.TimeoutExpired:
+            step_report["exit_code"] = -1
+            step_report["stdout_tail"] = ""
+            step_report["stderr_tail"] = f"TIMEOUT after {timeout_s}s"
+            step_report["status"] = "fail"
+            all_ok = False
+        except Exception as exc:
+            step_report["exit_code"] = -2
+            step_report["stdout_tail"] = ""
+            step_report["stderr_tail"] = f"EXEC ERROR: {exc}"
+            step_report["status"] = "fail"
+            all_ok = False
+        report["pipeline_steps"].append(step_report)
+        if not all_ok:
+            print(f"    step {i+1} FAILED -- aborting pipeline")
+            break
+
+    report["status"] = "ok" if all_ok else "failed"
+    if not all_ok:
+        report["failure_reason"] = "Pipeline step failed -- see pipeline_steps in run report"
+    report["completed"] = datetime.now().isoformat()
+    return report
+
+
 def _dispatch_local(task: dict, dry_run: bool = False) -> dict:
     """Run a local-model task via call_local(). No worktree created.
 
@@ -1811,6 +1953,47 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         # Update status
         task["status"] = "claimed"
         write_backlog(backlog)
+
+        # Pipeline branch -- deterministic execution, no worktree, no claude -p,
+        # zero LLM tokens. Triggered by routines that declare a `pipeline` field
+        # AND have skills==[]. ISC verification still runs against REPO_ROOT.
+        # Added 2026-04-08 (lobster wisdom prototype). See _dispatch_pipeline.
+        if task.get("pipeline") and not task.get("skills"):
+            report = _dispatch_pipeline(task, dry_run=dry_run)
+            if dry_run:
+                task["status"] = "pending"
+                write_backlog(backlog)
+                return "stop_dry"
+
+            task["status"] = "verifying"
+            write_backlog(backlog)
+            isc_results = verify_isc(task, REPO_ROOT)
+            isc_pass = sum(1 for r in isc_results if r.get("status") == "pass")
+            isc_total = len(isc_results)
+            print(f"  ISC: {isc_pass}/{isc_total} passed")
+            report["isc_results"] = isc_results
+            report["isc_passed"] = isc_pass
+            report["isc_total"] = isc_total
+            save_run_report(report)
+
+            if report.get("status") == "ok" and isc_pass == isc_total:
+                task["status"] = "done"
+                task["completed"] = datetime.now().strftime("%Y-%m-%d")
+                task["branch"] = "pipeline"
+                print(f"  Task {task['id']} DONE (deterministic pipeline)")
+            else:
+                reason = (
+                    report.get("failure_reason")
+                    or f"ISC {isc_pass}/{isc_total} passed (pipeline)"
+                )
+                task["status"] = "failed"
+                task["failure_reason"] = reason
+            write_backlog(backlog)
+            try:
+                notify_completion(task, report, isc_results)
+            except Exception as exc:
+                print(f"  WARNING: notify_completion failed: {exc}", file=sys.stderr)
+            return "continue"
 
         # Local model branch -- stateless inference, no worktree needed
         resolved_model = resolve_model_with_tags(task)
