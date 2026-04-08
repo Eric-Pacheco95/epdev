@@ -20,6 +20,10 @@ REM Suspend check -- exits non-zero if watchdog has suspended this producer
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\check_suspend.py jarvis_dispatcher >> "%LOGFILE%" 2>&1
 if %ERRORLEVEL% EQU 3 exit /b 0
 
+REM Heartbeat -- touch before running so producer_recency measures "scheduler
+REM fired" not "work produced". Idle-Is-Success runs still count as alive.
+echo %date% %time% > "data\dispatcher_heartbeat.txt"
+
 echo [%date% %time%] Dispatcher starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\self_diagnose_wrapper.py -- "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\jarvis_dispatcher.py >> "%LOGFILE%" 2>&1
 echo [%date% %time%] Dispatcher complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1

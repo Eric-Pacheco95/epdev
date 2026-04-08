@@ -29,12 +29,13 @@
   },
   {
     "name": "jarvis_dispatcher",
-    "state_file": "data/dispatcher_runs",
+    "state_file": "data/dispatcher_heartbeat.txt",
     "state_key": null,
-    "state_type": "dir_latest",
+    "state_type": "file_mtime",
     "alert_threshold_hours": 30,
     "first_run_grace_until_utc": "2026-04-06T23:59:59Z",
-    "bat_wrapper": "tools/scripts/run_dispatcher.bat"
+    "bat_wrapper": "tools/scripts/run_dispatcher.bat",
+    "_note": "heartbeat file is touched on every bat invocation (even Idle Is Success) so the watchdog measures 'scheduler fired' not 'work produced'"
   },
   {
     "name": "jarvis_autoresearch",

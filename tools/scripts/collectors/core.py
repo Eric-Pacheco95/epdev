@@ -705,6 +705,65 @@ def _parse_datetime_utc(value: str) -> "datetime":
     return dt
 
 
+def _propose_stale_producer_task(
+    root_dir: Path,
+    entry_name: str,
+    failure_kind: str,
+    detail: str,
+) -> None:
+    """Inject a pending_review backlog entry for a stale/missing producer.
+
+    Replaces the old suspend-sentinel auto-suspension path. The watchdog now
+    notifies via the universal backlog instead of killing the producer, so a
+    human (or dispatcher Tier 2 with human-in-loop) decides the fix.
+
+    failure_kind:
+      "hard_fail" -- state file missing, unreadable, or malformed (priority 1)
+      "soft_stale" -- producer ran recently enough to have state, but is past
+                       its alert_threshold_hours window (priority 2)
+
+    Dedup: routine_id = "producer_recency:{name}:{kind}" so one open row per
+    (producer, failure_kind) sits in the review queue at a time.
+
+    Never raises -- a failure here must not crash the collector snapshot.
+    """
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(root_dir))
+        from tools.scripts.lib.backlog import backlog_append
+
+        priority = 1 if failure_kind == "hard_fail" else 2
+        task = {
+            "description": (
+                "[producer_recency] %s: %s -- %s"
+                % (entry_name, failure_kind, detail)
+            ),
+            "tier": 0,
+            "autonomous_safe": False,
+            "status": "pending_review",
+            "priority": priority,
+            "isc": [
+                "Root cause of %s staleness is identified "
+                "| Verify: Review"
+                % entry_name,
+                "Producer is either fixed, schedule is corrected, or the "
+                "producers.json entry is updated/removed "
+                "| Verify: Review",
+            ],
+            "skills": [],
+            "routine_id": "producer_recency:%s:%s" % (entry_name, failure_kind),
+            "notes": (
+                "Auto-injected by collect_producer_recency watchdog. Watchdog "
+                "no longer writes suspend sentinels; it notifies only. If this "
+                "producer is intentionally paused, resolve by closing this row."
+            ),
+        }
+        backlog_append(task)
+    except Exception:
+        # Watchdog must never break the snapshot. Swallow and continue.
+        pass
+
+
 def collect_producer_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
     """Check each producer in orchestration/producers.json for staleness.
 
@@ -712,7 +771,10 @@ def collect_producer_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> d
       - Determines last-run time via state_type (json_key, file_mtime, dir_latest)
       - Skips producers still within first_run_grace_until_utc
       - Emits a WARN detail entry when age_hours > alert_threshold_hours
-      - Writes a sentinel file to data/producers/{name}.suspend for stale producers
+      - Injects a pending_review backlog entry (hard_fail or soft_stale) so a
+        human can review -- NEVER writes a .suspend sentinel (that path was
+        removed 2026-04-08 after the dispatcher got stuck suspended 41h on a
+        dir_latest false positive).
 
     Returns a single result: value = count of stale/missing producers.
     """
@@ -752,8 +814,10 @@ def collect_producer_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> d
             alert_threshold_hours = entry.get("alert_threshold_hours", 26)
 
             if not state_file_str:
-                issues.append("state file not found: (empty) [%s]" % entry_name)
+                msg = "state file not configured (empty)"
+                issues.append("%s [%s]" % (msg, entry_name))
                 stale_count += 1
+                _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                 continue
 
             state_path = _resolve_path(state_file_str, root_dir)
@@ -761,35 +825,44 @@ def collect_producer_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> d
 
             if state_type == "json_key":
                 if not state_path.is_file():
-                    issues.append("state file not found: %s [%s]" % (state_file_str, entry_name))
+                    msg = "state file not found: %s" % state_file_str
+                    issues.append("%s [%s]" % (msg, entry_name))
                     stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                     continue
                 try:
                     data = json.loads(state_path.read_text(encoding="utf-8", errors="replace"))
                     raw_value = data.get(state_key) if state_key else None
                     if raw_value is None:
-                        issues.append("state key '%s' not found in %s [%s]" % (
-                            state_key, state_file_str, entry_name))
+                        msg = "state key '%s' not found in %s" % (state_key, state_file_str)
+                        issues.append("%s [%s]" % (msg, entry_name))
                         stale_count += 1
+                        _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                         continue
                     last_run_utc = _parse_datetime_utc(str(raw_value))
                 except (json.JSONDecodeError, OSError, ValueError, TypeError) as exc:
-                    issues.append("error reading state for %s: %s" % (entry_name, exc))
+                    msg = "error reading state: %s" % exc
+                    issues.append("%s [%s]" % (msg, entry_name))
                     stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                     continue
 
             elif state_type == "file_mtime":
                 if not state_path.exists():
-                    issues.append("state file not found: %s [%s]" % (state_file_str, entry_name))
+                    msg = "state file not found: %s" % state_file_str
+                    issues.append("%s [%s]" % (msg, entry_name))
                     stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                     continue
                 mtime = state_path.stat().st_mtime
                 last_run_utc = datetime.fromtimestamp(mtime, tz=timezone.utc)
 
             elif state_type == "dir_latest":
                 if not state_path.is_dir():
-                    issues.append("state file not found: %s [%s]" % (state_file_str, entry_name))
+                    msg = "state dir not found: %s" % state_file_str
+                    issues.append("%s [%s]" % (msg, entry_name))
                     stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                     continue
                 newest_mtime = None
                 try:
@@ -800,41 +873,34 @@ def collect_producer_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> d
                             if newest_mtime is None or child_mtime > newest_mtime:
                                 newest_mtime = child_mtime
                 except OSError as exc:
-                    issues.append("error scanning dir %s [%s]: %s" % (
-                        state_file_str, entry_name, exc))
+                    msg = "error scanning dir %s: %s" % (state_file_str, exc)
+                    issues.append("%s [%s]" % (msg, entry_name))
                     stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                     continue
                 if newest_mtime is None:
-                    issues.append("dir is empty: %s [%s]" % (state_file_str, entry_name))
+                    msg = "dir is empty: %s" % state_file_str
+                    issues.append("%s [%s]" % (msg, entry_name))
                     stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                     continue
                 last_run_utc = datetime.fromtimestamp(newest_mtime, tz=timezone.utc)
 
             else:
-                issues.append("unknown state_type '%s' [%s]" % (state_type, entry_name))
+                msg = "unknown state_type '%s'" % state_type
+                issues.append("%s [%s]" % (msg, entry_name))
                 stale_count += 1
+                _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
                 continue
 
-            # Compare age against threshold
+            # Compare age against threshold -- soft-stale is a NOTIFY, not a KILL.
             if last_run_utc is not None:
                 age_hours = (now_utc - last_run_utc).total_seconds() / 3600
                 if age_hours > alert_threshold_hours:
                     stale_count += 1
-                    issues.append("%s stale: %.1fh (threshold: %sh)" % (
-                        entry_name, age_hours, alert_threshold_hours))
-                    # Write sentinel file (idempotent -- preserves mtime of first suspension)
-                    try:
-                        sentinel_dir = root_dir / "data" / "producers"
-                        sentinel_dir.mkdir(parents=True, exist_ok=True)
-                        sentinel_path = sentinel_dir / ("%s.suspend" % entry_name)
-                        if not sentinel_path.exists():
-                            sentinel_msg = (
-                                "suspended by producer_recency watchdog at %s" %
-                                now_utc.isoformat()
-                            )
-                            sentinel_path.write_text(sentinel_msg, encoding="ascii")
-                    except OSError as exc:
-                        issues.append("failed to write sentinel for %s: %s" % (entry_name, exc))
+                    msg = "stale: %.1fh (threshold: %sh)" % (age_hours, alert_threshold_hours)
+                    issues.append("%s %s" % (entry_name, msg))
+                    _propose_stale_producer_task(root_dir, entry_name, "soft_stale", msg)
 
         except Exception as exc:
             issues.append("error: %s [%s]" % (exc, entry_name))
