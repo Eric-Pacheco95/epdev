@@ -918,8 +918,38 @@ RULES:
 - NEVER modify: memory/work/telos/, security/constitutional-rules.md, CLAUDE.md, .env
 - NEVER run git push
 - NEVER create files outside the task scope
-- If you cannot complete the task, explain why in a file: TASK_FAILED.md
 - Use ASCII only (no Unicode dashes or box chars)
+
+ESCALATION (write TASK_FAILED.md and STOP):
+You MUST create TASK_FAILED.md and stop work -- without forcing a partial fix --
+in any of these situations. The file should be 3-10 lines explaining the specific
+blocker and what a human reviewer needs to decide.
+
+  1. AMBIGUOUS SCOPE: An ISC criterion is unclear or has multiple valid
+     interpretations and you cannot pick one without guessing.
+     Example: "ISC says 'add tests' but the module has both unit and integration
+     test directories -- unclear which is intended."
+
+  2. COUPLING DISCOVERED: Completing the task requires touching files outside
+     your declared scope (expected_outputs / context_files).
+     Example: "Renaming foo() requires editing 4 files, but only foo.py is in
+     expected_outputs. The other 3 callers are dynamically dispatched."
+
+  3. CONSTRAINT VIOLATION: An ISC anti-criterion or RULES item conflicts with
+     the only viable implementation path.
+     Example: "Refactoring X requires modifying CLAUDE.md (forbidden by RULES)."
+
+  4. PARTIAL PROGRESS, GENUINE BLOCKER: You completed some criteria but the
+     remaining ones require domain knowledge or a decision you cannot make
+     autonomously. Commit the partial work first, THEN write TASK_FAILED.md.
+     Example: "ISC 2/4 passed; criterion 3 needs API credentials I don't have."
+
+  5. ASSUMPTION FAILURE: A precondition the task assumed turned out to be
+     false (file missing, dependency uninstalled, branch state unexpected).
+
+Do NOT write TASK_FAILED.md for: routine errors you can fix, lint failures,
+test failures you can debug, or minor scope adjustments. Escalation is for
+JUDGMENT calls only -- not for friction.
 
 After completion, print EXACTLY this line (machine-parsed):
 TASK_RESULT: id={task['id']} status=done|failed isc_passed=N/M branch={branch}
@@ -1120,20 +1150,30 @@ def detect_scope_creep(task: dict, branch: str) -> str | None:
             )
         return None
 
-    # Tier 1+: allowed set = expected_outputs + context_files
+    # Tier 1+: scope is defined by expected_outputs (write surface).
+    # context_files is read-only context and is NOT a fallback for scope --
+    # conflating the two disarmed scope_creep for every task that lacked
+    # expected_outputs (the manual_review drought root cause, 2026-04-07).
+    # Autonomous tasks without expected_outputs are now routed to
+    # manual_review with reason="scope undefined" so a human can either
+    # populate expected_outputs or reject the task.
     expected = list(task.get("expected_outputs", []))
     context = list(task.get("context_files", []))
-    allowed = expected + context
 
-    if not expected:
-        print(
-            f"  WARNING: task {task['id']} has no expected_outputs -- "
-            "scope check uses context_files only (may produce false positives)",
-            file=sys.stderr,
+    if not expected and task.get("autonomous_safe", False):
+        return (
+            f"Tier {tier} autonomous task has no expected_outputs declared -- "
+            f"scope undefined; cannot verify the worker stayed within bounds. "
+            f"Worker touched {len(changed)} file(s): "
+            f"{', '.join(changed[:5])}"
+            + (" ..." if len(changed) > 5 else "")
         )
 
+    allowed = expected + context
+
     if not allowed:
-        # No scope defined at all -- skip check to avoid false positives
+        # Manual / human-injected task with no scope at all -- skip check
+        # to avoid false positives. Autonomous path was already routed above.
         return None
 
     # Normalize allowed paths to forward slashes for prefix matching
@@ -1203,11 +1243,17 @@ def handle_task_failure(
 
 # -- Run report persistence -------------------------------------------------
 
-def save_run_report(report: dict) -> Path:
-    """Save run report to data/dispatcher_runs/."""
+def save_run_report(report: dict, path: Path | None = None) -> Path:
+    """Save run report to data/dispatcher_runs/.
+
+    If `path` is provided, overwrite that file (used to update an
+    already-saved report after failure routing has populated failure_type).
+    Otherwise create a new timestamped file.
+    """
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
-    filename = f"{report['task_id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    path = RUNS_DIR / filename
+    if path is None:
+        filename = f"{report['task_id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        path = RUNS_DIR / filename
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     return path
 
@@ -1473,7 +1519,18 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
             except OSError:
                 pass
             handle_task_failure(task, error, backlog, failure_type="worker_request")
-        elif commit_count > 0 and retries_exhausted:
+        elif commit_count > 0 and isc_pass > 0:
+            # Partial work with partial ISC pass routes to manual_review
+            # immediately, without burning retries. Rationale: the worker
+            # made real commits AND made real partial progress (some ISC
+            # criteria passed), so the remaining gap is judgment territory
+            # worth a human look — retrying rarely closes a partial-pass
+            # task because the worker is usually stuck on the same gap.
+            # 2026-04-07: 4-line relaxation from /architecture-review on
+            # 5E-1; primary mechanism for populating the 5D data gate
+            # without building _emit_followon(). Was: `commit_count > 0
+            # and retries_exhausted` -- under-fired because most failures
+            # are short (0/N ISC, no commits) and never reached this gate.
             error = report.get("failure_reason") or f"ISC {isc_pass}/{isc_total} -- partial work on branch"
             handle_task_failure(task, error, backlog, failure_type="partial_work")
         else:
@@ -1489,8 +1546,13 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
                     pass
             handle_task_failure(task, error, backlog, failure_type=ftype)
 
-        # Log failure_type to run report for auditability (red-team H3)
+        # Log failure_type to run report for auditability (red-team H3).
+        # Overwrite the on-disk report so failure_type is persisted -- the
+        # earlier save at the top of this block ran BEFORE failure routing,
+        # so without this re-save, every report on disk had failure_type=""
+        # and the manual_review-drought diagnostic was blocked (2026-04-07).
         report["failure_type"] = task.get("failure_type", "")
+        save_run_report(report, path=report_path)
 
         write_backlog(backlog)
 
@@ -1935,9 +1997,53 @@ def self_test() -> bool:
         assert norm.endswith(".claude/settings.json"), "settings.json pattern sanity"
 
         # Tier 1: no expected_outputs + no context_files -> no allowlist -> skip check -> None
+        # (manual / human-injected task; no autonomous_safe flag)
         t1_no_scope = {"id": "sc-t1-noscope", "tier": 1, "status": "executing"}
         result1 = detect_scope_creep(t1_no_scope, "nonexistent-branch-xyz")
         assert result1 is None, f"Tier 1 with no scope defined should skip check: {result1!r}"
+
+        # Tier 1+ AUTONOMOUS task with no expected_outputs but with file changes
+        # -> route to manual_review with "scope undefined" (2026-04-07 fix for
+        # the manual_review drought: context_files is no longer a fallback for
+        # scope on autonomous tasks).
+        # Monkey-patch git_diff_files to simulate a worker that touched files
+        # without declaring expected_outputs. When this script runs as __main__
+        # (`python jarvis_dispatcher.py --self-test`), the module is loaded under
+        # the __main__ name, so we patch via globals() rather than re-importing.
+        _g = globals()
+        _orig_diff = _g["git_diff_files"]
+        try:
+            _g["git_diff_files"] = lambda branch: ["foo.py", "bar.py"]
+            t1_auto = {
+                "id": "sc-t1-auto-noscope",
+                "tier": 1,
+                "status": "executing",
+                "autonomous_safe": True,
+                "context_files": ["docs/spec.md"],  # context_files set, but no expected_outputs
+            }
+            result_auto = detect_scope_creep(t1_auto, "fake-branch")
+            assert result_auto is not None, (
+                "autonomous tier 1 task without expected_outputs should "
+                f"route to manual_review, got: {result_auto!r}"
+            )
+            assert "scope undefined" in result_auto, (
+                f"violation msg should mention 'scope undefined': {result_auto!r}"
+            )
+
+            # Same task NON-autonomous: should still pass through (uses
+            # context_files as the loose allowlist; foo.py/bar.py not in it,
+            # so it WOULD return a violation, but for a different reason --
+            # we just want to confirm the new gate doesn't trigger here)
+            t1_manual = dict(t1_auto)
+            t1_manual["autonomous_safe"] = False
+            result_manual = detect_scope_creep(t1_manual, "fake-branch")
+            assert result_manual is not None, "manual task should still get tight check"
+            assert "scope undefined" not in result_manual, (
+                "manual task should NOT hit the 'scope undefined' gate: "
+                f"{result_manual!r}"
+            )
+        finally:
+            _g["git_diff_files"] = _orig_diff
 
         print("  PASS: Scope creep detection correct")
     except Exception as exc:

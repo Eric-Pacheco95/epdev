@@ -210,6 +210,26 @@ def backlog_append(
     if errors:
         raise ValueError("Task validation failed:\n" + "\n".join(f"  - {e}" for e in errors))
 
+    # -- Soft warning: autonomous_safe tasks should declare expected_outputs --
+    # Without expected_outputs, the dispatcher's scope_creep gate cannot
+    # verify the worker stayed in bounds and will route the task to
+    # manual_review (see jarvis_dispatcher.detect_scope_creep). Producers
+    # are encouraged to populate expected_outputs at intake to avoid that.
+    # Tier 0 (read-only) and pending_review tasks are exempt.
+    if (
+        task.get("autonomous_safe")
+        and task.get("tier", 0) >= 1
+        and task.get("status") not in ("pending_review", "manual_review", "deferred")
+        and not task.get("expected_outputs")
+    ):
+        import sys as _sys
+        print(
+            f"  WARNING [backlog_append]: task {task['id']} is autonomous_safe "
+            f"tier {task.get('tier')} but has no expected_outputs -- "
+            f"dispatcher will route to manual_review (scope undefined).",
+            file=_sys.stderr,
+        )
+
     # -- Load existing backlog for dedup check --
     existing_tasks: list[dict] = []
     if backlog_path.exists():
