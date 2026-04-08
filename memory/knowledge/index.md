@@ -37,6 +37,7 @@
 | 2026-04-06 | Claude API and Anthropic Product Updates | Sonnet 4.6 ($3/$15) outperforms prior Opus on coding at 1/5 the cost; 1M context GA; Batch API (50% off) + prompt caching (90% off) = up to 95% cost reduction for autonomous pipelines | `ai-infra/2026-04-06_claude-api-updates.md` |
 | 2026-04-06 | Prediction Market Platforms and Calibration Mechanics | Metaculus Brier 0.111 (best public platform); proper scoring rules reward calibration not just accuracy; Polymarket hybrid CLOB + UMA oracle; Manifold real-money mode sunset March 2025 | `ai-infra/2026-04-06_prediction-market-mechanics.md` |
 | 2026-04-06 | Autonomous Coding Agent Capabilities -- Devin, SWE-agent, Claude Code, Cursor | Claude Code 80.8% SWE-bench (highest); mini-SWE-agent 74% in 100 lines; context overflow is silent not fatal; harness-first dominates for solo operators | `ai-infra/2026-04-06_autonomous-coding-agents.md` |
+| 2026-04-08 | Claude Managed Agents — Anthropic's hosted agent runtime | Sandbox-cloud-only + enterprise-fleet-shaped; do not migrate; absorb 3 patterns: typed event taxonomy, declarative permissions.yaml, agent+environment=session decomposition; $0.08/session-hour idle-excluded billing validates Idle Is Success | `ai-infra/2026-04-08_claude-managed-agents.md` |
 
 ## automotive
 
