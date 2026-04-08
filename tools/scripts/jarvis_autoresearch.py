@@ -766,6 +766,59 @@ def post_slack_summary(metrics: dict, run_dir: Path) -> bool:
     return notify("\n".join(lines), severity=sev, bypass_caps=True)
 
 
+# -- Backlog intake ----------------------------------------------------------
+
+def _inject_autoresearch_backlog(metrics: dict, run_dir: Path) -> None:
+    """Inject a pending_review backlog row when this run produced proposals.
+
+    Respects S14 steering rule: triggers on proposal_count, not raw
+    contradiction_count. Dedups per-day via routine_id. Never raises.
+    """
+    try:
+        proposals = metrics.get("proposal_count", 0)
+        if proposals < 1:
+            return
+
+        # Lazy import to avoid top-level import cost if this path is never hit
+        from tools.scripts.lib.backlog import backlog_append
+
+        today = datetime.now().strftime("%Y-%m-%d")
+        contradictions = metrics.get("contradiction_count", 0)
+        coverage = metrics.get("coverage_score", 100)
+
+        task = {
+            "description": (
+                "[autoresearch] %d actionable proposal(s) -- "
+                "contradictions=%d, coverage=%.0f%% (%s)"
+                % (proposals, contradictions, coverage, today)
+            ),
+            "tier": 0,
+            "autonomous_safe": False,
+            "status": "pending_review",
+            "priority": 2,
+            "isc": [
+                "Each proposal is either accepted (action taken), deferred "
+                "with rationale, or rejected "
+                "| Verify: Review",
+            ],
+            "skills": [],
+            "source": "autoresearch",
+            "routine_id": "autoresearch:proposals:%s" % today,
+            "context_files": [
+                str((run_dir / "proposals.md").relative_to(REPO_ROOT)).replace("\\", "/"),
+            ],
+            "notes": (
+                "Auto-injected by jarvis_autoresearch. S14-tagged "
+                "contradictions are intentional through Phase 5 -- review "
+                "proposals individually before action."
+            ),
+        }
+        backlog_append(task)
+    except Exception as exc:
+        # Never block the main autoresearch run on a backlog injection failure
+        print("  WARNING: backlog injection failed: %s" % exc, file=sys.stderr)
+
+
 # -- Main --------------------------------------------------------------------
 
 def main() -> int:
@@ -862,6 +915,13 @@ def main() -> int:
 
         # 8. Slack notification (if significant)
         post_slack_summary(metrics, run_dir)
+
+        # 9. Backlog intake -- inject one pending_review row per run that
+        #    produced actionable proposals. Dedups per-day via routine_id.
+        #    Respects the S14 steering rule: we inject on proposal_count,
+        #    not on raw contradiction_count, so intentional S14 gaps do not
+        #    flood the queue.
+        _inject_autoresearch_backlog(metrics, run_dir)
 
         print("\nIntrospection complete. Review proposals at:")
         print("  %s" % (run_dir / "proposals.md"))

@@ -419,6 +419,61 @@ def write_audit_log(output: dict, test_results: dict | None = None) -> str:
     return str(filepath)
 
 
+def emit_backlog_rows(real_findings: list[dict]) -> int:
+    """Inject one pending_review backlog row per (check, severity-class) group.
+
+    Deduped per-day via routine_id so a daily scheduled scan does not flood
+    the queue. Returns count of rows actually written (post-dedup).
+
+    Never raises -- scan integrity must not depend on backlog availability.
+    """
+    if not real_findings:
+        return 0
+    try:
+        from tools.scripts.lib.backlog import backlog_append
+    except Exception:
+        return 0
+
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    by_check: dict[str, int] = {}
+    for f in real_findings:
+        key = f.get("check", "unknown")
+        by_check[key] = by_check.get(key, 0) + 1
+
+    written = 0
+    for check, count in sorted(by_check.items()):
+        task = {
+            "description": (
+                "[security_scan] %s: %d real finding(s) (%s)"
+                % (check, count, today)
+            ),
+            "tier": 0,
+            "autonomous_safe": False,
+            "status": "pending_review",
+            "priority": 1,
+            "isc": [
+                "Each finding is either remediated, accepted with a "
+                "documented exception, or flagged as a false positive "
+                "| Verify: Review",
+            ],
+            "skills": [],
+            "source": "security-scan",
+            "routine_id": "security_scan:%s:%s" % (check, today),
+            "context_files": ["data/security_scan_latest.json"],
+            "notes": (
+                "Auto-injected by security_scan --emit-backlog. Review the "
+                "full finding detail in data/security_scan_latest.json "
+                "(run with --file to persist)."
+            ),
+        }
+        try:
+            if backlog_append(task) is not None:
+                written += 1
+        except Exception:
+            continue
+    return written
+
+
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Deterministic security scanner")
@@ -427,6 +482,8 @@ def main() -> None:
     parser.add_argument("--run-tests", action="store_true", help="Also run pytest tests/defensive/")
     parser.add_argument("--audit-log", action="store_true", help="Write audit log to history/security/")
     parser.add_argument("--filter-fp", action="store_true", help="Apply false positive filter")
+    parser.add_argument("--emit-backlog", action="store_true",
+                        help="Inject one pending_review backlog row per (check, day) when real findings exist")
     args = parser.parse_args()
 
     start_time = time.time()
@@ -508,6 +565,15 @@ def main() -> None:
     if args.audit_log:
         log_path = write_audit_log(output, test_results)
         print(f"Audit log: {log_path}", file=sys.stderr)
+
+    # Inject into universal backlog if requested
+    if args.emit_backlog:
+        # Only emit for filtered real findings if --filter-fp was used;
+        # otherwise emit for all findings.
+        rows_written = emit_backlog_rows(
+            real_findings if args.filter_fp else all_findings
+        )
+        print(f"Backlog rows injected: {rows_written}", file=sys.stderr)
 
 
 if __name__ == "__main__":
