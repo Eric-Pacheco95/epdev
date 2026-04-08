@@ -450,11 +450,16 @@ def main() -> int:
         exit_code = result.returncode
         combined_output = (result.stdout or "") + "\n" + (result.stderr or "")
 
-        # Tee output to stdout/stderr so .bat log capture still works
+        # Tee output to stdout/stderr so .bat log capture still works.
+        # ASCII-strip first: Task Scheduler stdout is cp1252 on Windows and
+        # any non-encodable char (including U+FFFD from upstream decode) raises
+        # UnicodeEncodeError, killing the wrapper before the runner exits.
+        def _ascii_safe(s: str) -> str:
+            return s.encode("ascii", errors="replace").decode("ascii")
         if result.stdout:
-            sys.stdout.write(result.stdout)
+            sys.stdout.write(_ascii_safe(result.stdout))
         if result.stderr:
-            sys.stderr.write(result.stderr)
+            sys.stderr.write(_ascii_safe(result.stderr))
 
     except subprocess.TimeoutExpired as exc:
         exit_code = 124  # standard timeout exit code
