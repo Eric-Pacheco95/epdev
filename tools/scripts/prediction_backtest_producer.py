@@ -50,6 +50,19 @@ TODAY = date.today().isoformat()
 
 
 # ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+
+def write_log(message: str) -> None:
+    """Append to run log for ISC verification."""
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    log_path = LOGS_DIR / f"prediction_backtest_{TODAY}.log"
+    with open(log_path, "a", encoding="utf-8") as f:
+        ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+        f.write(f"[{ts}] {message}\n")
+
+
+# ---------------------------------------------------------------------------
 # State I/O
 # ---------------------------------------------------------------------------
 
@@ -554,10 +567,12 @@ def main() -> int:
 
     if not selected:
         print(f"Idle: all {len(events)} events already run. Use --force to re-run.")
+        write_log("Idle: all events already run.")
         return 0
 
     print(f"Backtest Producer -- {TODAY}")
     print(f"Running {len(selected)} event(s): {[e['event_id'] for e in selected]}")
+    write_log(f"Start: {len(selected)} events selected: {[e['event_id'] for e in selected]}")
 
     if args.dry_run:
         print("\n[DRY RUN] Would run:")
@@ -577,6 +592,7 @@ def main() -> int:
 
         if claude_output is None:
             print(f"  SKIP: claude invocation failed for {event_id}")
+            write_log(f"SKIP: {event_id} -- claude invocation failed")
             continue
 
         scoring = score_prediction(event, claude_output)
@@ -606,6 +622,7 @@ def main() -> int:
         conf_str = f"{conf:.0%}" if conf is not None else "unknown"
         print(f"  Done: conf={conf_str} align={scoring['alignment_score']:.0%}{flag}")
         print(f"  -> {prediction_path.relative_to(REPO_ROOT)}")
+        write_log(f"Done: {event_id} conf={conf_str} align={scoring['alignment_score']:.0%}{flag}")
 
         results.append({"event": event, "scoring": scoring, "prediction_path": prediction_path})
 
@@ -613,8 +630,10 @@ def main() -> int:
         notify_slack(results)
         print(f"\nProducer complete: {len(results)}/{len(selected)} events run.")
         print("All outputs require review before calibration promotion.")
+        write_log(f"Complete: {len(results)}/{len(selected)} events run.")
     else:
         print("\nProducer complete: 0 events run (all failed or skipped).")
+        write_log("Complete: 0 events run (all failed or skipped).")
 
     return 0
 
