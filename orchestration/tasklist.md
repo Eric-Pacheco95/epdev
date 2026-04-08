@@ -60,14 +60,15 @@
 
 ### Morning Feed Actions (2026-04-06)
 
-- [x] **Wire Claude Code "defer" into dispatcher (doc)** — autonomous-rules.md updated: `deferred` replaces `manual_required` as the three-state gate pattern using native PreToolUse `{"decision": "defer"}`. Full dispatcher wiring (validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface) requires dedicated Phase 5C session + spike to validate `claude -p --resume` e2e. (2026-04-06)
+- [x] **Wire Claude Code "defer" into dispatcher (doc)** — autonomous-rules.md updated: `deferred` replaces `manual_required` as the three-state gate pattern using native PreToolUse `{"decision": "defer"}`. Doc-only scope. (2026-04-06)
+- [ ] **Wire Claude Code "defer" into dispatcher (code)** — validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface. Requires `claude -p --resume` e2e spike first. (split from doc task 2026-04-08)
 - [x] **Supply chain audit (Axios/LiteLLM)** — CLEAN. Zero Axios (direct or transitive) in either repo. Zero LiteLLM — crypto-bot uses OpenAI SDK directly. .env files not tracked (gitignore working). No action needed. (2026-04-06)
 - [x] **OpenClaw dependency check** — Grep confirmed: 0 references in .claude/, settings.json, or any code/config. Only appears in research/knowledge docs. Clean. (2026-04-06)
 - [x] **scan-for-secrets pre-publish** — ABSORB-IDEA. Tool is v0.3 (48h old, pre-1.0, fails maturity gate). Core algo trivial (known-value + escaped variant search). Pattern to lift: build `secret_scanner.py` combining known-value scan + regex key patterns (~5 formats). Wire as pre-publish gate in content pipeline. (2026-04-06)
 
 ### ISC Producer (from architecture review 2026-04-06)
 
-- [x] **Build ISC producer** — `tools/scripts/isc_producer.py` built and verified. 21 PRDs scanned in 64s. 8/8 ISC PASS. Cross-model review: 4 High findings fixed (archive exclusion, dedup hash, anti-criterion near-miss, timeout flag). Pending: Task Scheduler entry. (2026-04-06)
+- [x] **Build ISC producer** — `tools/scripts/isc_producer.py` built and verified. 21 PRDs scanned in 64s. 8/8 ISC PASS. Cross-model review: 4 High findings fixed (archive exclusion, dedup hash, anti-criterion near-miss, timeout flag). Scheduled as `\Jarvis\Jarvis-ISCProducer`; wired into universal backlog via `inject_batch_summary()` + `create_backlog_tasks()` (2026-04-08, commit `2804c77`). (2026-04-06)
 
 ### Parked (No demand signal within 60 days — research saved)
 
@@ -318,7 +319,7 @@
 
 ## Phase 4: Autonomous self-improvement (background Jarvis)
 
-> **PRD / ISC:** `memory/work/jarvis/PRD.md` — **state:** `memory/work/jarvis/STATE.md`  
+> **PRD / ISC:** Phase 4 PRDs archived; successor is `memory/work/jarvis/PRD_phase5.md` — **state:** `memory/work/jarvis/STATE.md`  
 > **Intent:** Jarvis **self-improves** via automation that does **not** depend on human chat sessions: measure progress toward ideal state, harvest **curated** external patterns (web, GitHub, YouTube, Claude docs), run **[Karpathy-style bounded autoresearch](https://github.com/karpathy/autoresearch)** over **TELOS + learning signals + session history** (writes proposals only — see PRD §4D), and **notify Slack** by importance (`memory/work/slack-routing.md`). Human sessions approve merges, secrets, and TELOS changes.
 
 ### Phase 4A — Ideal-state loop & heartbeat (extends 3E)
@@ -345,7 +346,7 @@
 
 ### Phase 4D — Capstone: internal autoresearch (Karpathy-inspired)
 
-> Pattern from [karpathy/autoresearch](https://github.com/karpathy/autoresearch): human-steered **program**, bounded runs, **one writable surface** for the agent (here: review tree only — not live TELOS). Full spec: `memory/work/jarvis/PRD.md` §4D.
+> Pattern from [karpathy/autoresearch](https://github.com/karpathy/autoresearch): human-steered **program**, bounded runs, **one writable surface** for the agent (here: review tree only — not live TELOS). Full spec: `memory/work/jarvis/autoresearch_program.md`.
 >
 > **Two runners:** `overnight_runner.py` iterates on code quality (6 dimensions). `jarvis_autoresearch.py` iterates on TELOS/signal alignment (the actual PRD 4D capstone).
 

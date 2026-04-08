@@ -52,7 +52,7 @@ Load documentation on-demand, not upfront:
 | Self-healing | `tests/self-heal/README.md` |
 | Defensive testing | `tests/defensive/README.md` |
 | Project status | `orchestration/tasklist.md` |
-| Phase 4 autonomous Jarvis | `memory/work/jarvis/PRD.md` |
+| Phase 5 autonomous Jarvis | `memory/work/jarvis/PRD_phase5.md` |
 | Autonomous systems | `orchestration/autonomous-rules.md` |
 | Decision rationale | `history/decisions/` |
 
