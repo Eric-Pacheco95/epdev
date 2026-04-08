@@ -366,3 +366,53 @@ events:
     status: approved
     at_time_context: >
       Elon Musk unveiled the Cybertruck in November 2019 stating production would begin in late 2021. As of January 2021, the official timeline had not been revised and Tesla had collected over 1 million $100 refundable reservations. Tesla had recently exceeded its own Model Y production ramp timeline, improving credibility for near-term delivery promises. Cybertruck prototypes had been spotted testing on public roads and the Giga Texas facility was under construction. No formal delay announcement had been issued and Musk had not publicly updated the production target.
+
+  - event_id: plan-wework-ipo-collapse-2019
+    description: "Will WeWork successfully complete its IPO in 2019 and maintain a valuation above $20B?"
+    domain: planning
+    knowledge_cutoff_date: "2019-08-14"
+    known_outcome: "WeWork's IPO was suspended in September 2019. Valuation collapsed from $47B to ~$8B. Adam Neumann resigned as CEO. SoftBank took control."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      WeWork filed its S-1 prospectus on August 14, 2019, revealing $1.61B in losses for 2018 on $1.82B revenue. Valuation peaked at $47B after SoftBank's January 2019 investment. Governance concerns emerged: Adam Neumann's dual-class shares, personal loans from the company, self-dealing on real estate leases, and the name trademark sale. IPO roadshow scheduled for September. SoftBank had committed $1.5B contingent on IPO. Competitors IWG/Regus traded at 2x revenue vs WeWork's implied 26x. Analysts at JP Morgan and Goldman Sachs were underwriters despite concerns.
+
+  - event_id: plan-spacex-crew-dragon-2020
+    description: "Will SpaceX successfully launch astronauts to the ISS in 2020?"
+    domain: planning
+    knowledge_cutoff_date: "2020-01-01"
+    known_outcome: "SpaceX Demo-2 launched May 30, 2020, carrying astronauts Bob Behnken and Doug Hurley to the ISS. First crewed orbital launch from US soil since 2011."
+    difficulty: medium
+    status: approved
+    at_time_context: >
+      SpaceX completed Demo-1 (uncrewed) in March 2019. The Crew Dragon capsule exploded during a static fire abort test in April 2019, delaying the crewed mission. In-flight abort test planned for January 2020. NASA Commercial Crew Program target was 'early 2020' for Demo-2 crewed flight with Bob Behnken and Doug Hurley. Parachute system required additional testing. Boeing Starliner (competitor) had its own uncrewed test scheduled for December 2019. Both programs had faced delays. No US crewed orbital launch since Space Shuttle retirement in 2011.
+
+  - event_id: tech-tiktok-ban-us-2020
+    description: "Will TikTok be effectively banned from operating in the United States by end of 2020?"
+    domain: technology
+    knowledge_cutoff_date: "2020-08-03"
+    known_outcome: "TikTok was NOT banned in 2020. US federal courts blocked Trump's executive orders. The Oracle/Walmart deal was never finalized. TikTok continued operating with 100M+ US users."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      On August 1, 2020, Trump threatened to ban TikTok within 45 days unless ByteDance sold its US operations. On August 3, Trump signed an executive order giving ByteDance 90 days to divest. Microsoft confirmed it was in talks to acquire TikTok's US, Canada, Australia, and New Zealand operations. Oracle and Walmart also expressed interest. TikTok had 100M+ US users. National security concerns: potential CCP access to user data, content moderation policies. India had already banned TikTok in June 2020. ByteDance CEO Kevin Mayer (former Disney exec) sent a public letter disputing claims.
+
+  - event_id: mkt-sp500-covid-recovery-2020
+    description: "Will the S&P 500 recover to its pre-COVID all-time high of 3,386 by end of 2020?"
+    domain: market
+    knowledge_cutoff_date: "2020-04-01"
+    known_outcome: "Yes. The S&P 500 recovered to new all-time highs by August 18, 2020 (3,389), driven by Fed stimulus, tech sector strength, and vaccine optimism. It closed 2020 at 3,756."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      S&P 500 hit all-time high of 3,386 on February 19, 2020. COVID-19 caused the fastest bear market in history: down 34% by March 23, 2020 (2,237). As of April 1, 2020, the index was at ~2,527 -- recovering somewhat from the March bottom. Fed announced unlimited QE on March 23. Congress passed $2.2T CARES Act March 27. US had 200,000+ confirmed COVID cases, lockdowns spreading. Unemployment claims hit 6.6M in the week ending March 27 (record). Most economists forecast 2008-style prolonged recovery or worse. 10-year Treasury yield at 0.65%. Oil prices negative futures in April.
+
+  - event_id: mkt-gamestop-squeeze-jan2021
+    description: "Will institutional short sellers successfully maintain their GameStop short positions against retail buying pressure in January 2021?"
+    domain: market
+    knowledge_cutoff_date: "2021-01-20"
+    known_outcome: "Short sellers lost. GME surged from $43 on Jan 20 to $483 on Jan 28. Melvin Capital lost ~$6.8B. Robinhood restricted buying on Jan 28. Short sellers ultimately lost an estimated $5B+ in January alone."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      GameStop (GME) stock rose from $19 on Jan 12 to $43 on Jan 20, 2021. WallStreetBets subreddit (2M+ members) was coordinating a short squeeze. Short interest was ~140% of the float -- one of the highest in history. Melvin Capital and Citron Research had publicly disclosed large short positions. Ryan Cohen (Chewy founder) joined the board in January, sparking renewed optimism. Institutional shorts had been in place since GME was trading at $4-5 in 2019-2020. Most analysts viewed GME as a failing brick-and-mortar retailer losing to digital gaming. Robinhood and other brokers still allowed both buying and selling.

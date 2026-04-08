@@ -209,6 +209,36 @@
       "prediction_file": "data\\predictions\\backtest\\2026-04-05-plan-tesla-cybertruck-2021.md",
       "signal_file": "memory\\learning\\signals\\2026-04-05_prediction-backtest-plan-tesla-cybertruck-2021.md",
       "suspect_leakage": false
+    },
+    "plan-wework-ipo-collapse-2019": {
+      "date": "2026-04-08",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-08-plan-wework-ipo-collapse-2019.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-08_prediction-backtest-plan-wework-ipo-collapse-2019.md",
+      "suspect_leakage": false
+    },
+    "plan-spacex-crew-dragon-2020": {
+      "date": "2026-04-08",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-08-plan-spacex-crew-dragon-2020.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-08_prediction-backtest-plan-spacex-crew-dragon-2020.md",
+      "suspect_leakage": false
+    },
+    "tech-tiktok-ban-us-2020": {
+      "date": "2026-04-08",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-08-tech-tiktok-ban-us-2020.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-08_prediction-backtest-tech-tiktok-ban-us-2020.md",
+      "suspect_leakage": false
+    },
+    "mkt-sp500-covid-recovery-2020": {
+      "date": "2026-04-08",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-08-mkt-sp500-covid-recovery-2020.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-08_prediction-backtest-mkt-sp500-covid-recovery-2020.md",
+      "suspect_leakage": false
+    },
+    "mkt-gamestop-squeeze-jan2021": {
+      "date": "2026-04-08",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-08-mkt-gamestop-squeeze-jan2021.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-08_prediction-backtest-mkt-gamestop-squeeze-jan2021.md",
+      "suspect_leakage": false
     }
   }
 }
