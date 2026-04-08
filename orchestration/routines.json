@@ -26,7 +26,7 @@
         "description": "Run /security-audit and produce structured report of findings",
         "project": "epdev",
         "repo_path": "C:/Users/ericp/Github/epdev",
-        "tier": 0,
+        "tier": 1,
         "priority": 2,
         "goal_context": "Continuous security posture -- identify any new gaps since last audit",
         "isc": [
@@ -36,12 +36,16 @@
         "context_files": [
           "security/constitutional-rules.md"
         ],
+        "expected_outputs": [
+          "history/security/",
+          "security/audits/"
+        ],
         "skills": [
           "security-audit"
         ],
         "model": "opus",
         "autonomous_safe": true,
-        "notes": "Routine-injected by routines engine"
+        "notes": "Routine-injected by routines engine. Tier 1 because /security-audit writes a dated report to history/security/; expected_outputs declares the write surface for scope_creep."
       }
     },
     {
@@ -55,7 +59,7 @@
         "description": "Run /learning-capture synthesis pass over accumulated signals",
         "project": "epdev",
         "repo_path": "C:/Users/ericp/Github/epdev",
-        "tier": 0,
+        "tier": 1,
         "priority": 3,
         "goal_context": "Learning compounds -- distill recent signals into a synthesis document; update TELOS if warranted",
         "isc": [
@@ -66,12 +70,16 @@
           "memory/learning/signals/",
           "memory/work/TELOS.md"
         ],
+        "expected_outputs": [
+          "memory/learning/synthesis/",
+          "memory/learning/signals/"
+        ],
         "skills": [
           "learning-capture"
         ],
         "model": "sonnet",
         "autonomous_safe": true,
-        "notes": "Routine-injected by routines engine"
+        "notes": "Routine-injected by routines engine. Tier 1 because /learning-capture writes a synthesis doc and may move/annotate signal files; expected_outputs declares the write surface for scope_creep."
       }
     },
     {
@@ -297,7 +305,7 @@
         "description": "Run python tools/scripts/dream.py --autonomous to consolidate memory and merge cross-tier duplicates",
         "project": "epdev",
         "repo_path": "C:/Users/ericp/Github/epdev",
-        "tier": 0,
+        "tier": 1,
         "priority": 4,
         "goal_context": "Memory hygiene -- merge duplicates, prune stale pointers, promote synthesis themes; cross-tier merge added 2026-04-07",
         "isc": [
@@ -306,12 +314,22 @@
           "Cross-tier merges (if any) wrote donor files to memory/learning/signals/pruned/ not unlinked | Verify: ls memory/learning/signals/pruned/"
         ],
         "context_files": [],
+        "expected_outputs": [
+          "data/dream_last_report.md",
+          "data/dream_last_run.txt",
+          "data/dream.lock",
+          "data/dream_snapshots/",
+          "memory/MEMORY.md",
+          "memory/auto-memory/",
+          "memory/learning/signals/",
+          "history/changes/dream_log.md"
+        ],
         "skills": [
           "dream"
         ],
         "model": "haiku",
         "autonomous_safe": true,
-        "notes": "Deterministic worker -- haiku for any LLM-touched decisions; mostly stdlib + embedding service"
+        "notes": "Deterministic worker -- haiku for any LLM-touched decisions; mostly stdlib + embedding service. Tier 1 because dream.py writes report/log/index/pruned files; expected_outputs declares the write surface for scope_creep."
       }
     },
     {
