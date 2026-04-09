@@ -180,25 +180,23 @@ Output: numbered list with effort estimates (S/M/L) and priority order. Do NOT b
 
 ## Step 3.6: PERSONAL (only if --personal flag)
 
-Override classification defaults for individual builder audience:
-
 **Classification overrides:**
-- **KEEP**: learning system scaffold (strip existing data), dispatcher scaffold (strip personal paths), steering rules architecture + `/update-steering-rules` (3-5 template rules), content pipeline (`/extract-wisdom` > `/synthesize-signals` > `/write-essay`), security layer
+- **KEEP**: learning scaffold (strip existing data), dispatcher scaffold (strip personal paths), steering rules + `/update-steering-rules`, content pipeline (`/extract-wisdom` > `/synthesize-signals` > `/write-essay`), security layer
 - **STRIP**: personal TELOS content, memories, MCP configs, predictions, project-specific orchestration
 - **ADAPT**: `/learning-capture`, `/synthesize-signals` — remove personal signal categories, keep generic structure
 
 **Repo structure overrides:**
-- Replace `templates/` bank artifacts (KYC, AML) with personal builder artifacts (daily log, weekly review, project kickoff)
-- Replace `knowledge/regulatory/` with `knowledge/examples/` containing 2-3 sample research briefs
-- Generate `README.md` as a "Getting Started" onboarding guide: what to do in your first 5 sessions, how the learning loop works, how to add your first skill, how to run the dispatcher
-- Include a `QUICKSTART.md` with: clone → set API key → first `/extract-wisdom` → first `/learning-capture` → check `memory/learning/signals/`
+- Replace bank artifacts (`templates/`) with personal builder artifacts (daily log, weekly review, project kickoff)
+- Replace `knowledge/regulatory/` with `knowledge/examples/` (2-3 sample research briefs)
+- Generate `README.md` as "Getting Started": first 5 sessions, learning loop, adding skills, dispatcher
+- Include `QUICKSTART.md`: clone → API key → `/extract-wisdom` → `/learning-capture` → check `memory/learning/signals/`
 
-**Gap analysis (like --enterprise but for solo builders):**
-1. What daily workflows would a solo dev/creator want automated? (journal → signal, research → brief, content → publish)
-2. What's the minimum viable skill set to feel the learning loop working? (extract-wisdom, learning-capture, synthesize-signals, research)
-3. What onboarding friction exists? (too many skills, unclear starting point, no example data)
+**Gap analysis:**
+1. Daily workflows a solo dev/creator wants automated (journal → signal, research → brief, content → publish)
+2. Minimum viable skill set to feel the learning loop (extract-wisdom, learning-capture, synthesize-signals, research)
+3. Onboarding friction (too many skills, unclear starting point, no example data)
 
-Output: onboarding friction report + proposed starter skill set. Do NOT build — present proposal for approval.
+Output: onboarding friction report + proposed starter skill set. Do NOT build — present for approval.
 
 ## Step 4: VALIDATE
 
