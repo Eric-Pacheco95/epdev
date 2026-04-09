@@ -323,7 +323,8 @@
       "description": "One or more producers are reporting unhealthy -- review producer_health detail and fix/pause the offender",
       "skills": [],
       "isc": [
-        "All producers listed in orchestration/producers.json report healthy | Verify: Review"
+        "All producers listed in orchestration/producers.json report healthy | Verify: python tools/scripts/verify_producer_health.py",
+        "No producer has been stale longer than 26h without an approved backlog row documenting the gap | Verify: Review"
       ],
       "context_files": ["orchestration/producers.json"],
       "model": "sonnet",
@@ -333,7 +334,8 @@
       "description": "producer_recency watchdog reported stale producer(s) -- a corresponding pending_review row has already been injected by the watchdog; this entry is belt-and-suspenders coverage in case the watchdog inject fails",
       "skills": [],
       "isc": [
-        "The stale producer is either fixed, schedule corrected, or producers.json updated | Verify: Review"
+        "The stale producer is either fixed, schedule corrected, or producers.json updated | Verify: python tools/scripts/verify_producer_health.py",
+        "No stale producer row remains open in pending_review without a human-approved plan | Verify: Review"
       ],
       "context_files": ["orchestration/producers.json", "tools/scripts/collectors/core.py"],
       "model": "sonnet",
