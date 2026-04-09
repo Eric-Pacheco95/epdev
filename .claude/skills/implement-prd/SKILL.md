@@ -125,12 +125,9 @@ Non-optional gate once all ISC items are built/blocked.
 
 ### VERIFY PHASE: Full pass
 
-- **Re-read the PRD file from disk before executing any verify methods.** Do not rely on the ISC list extracted at Step 1 if BUILD took multiple turns or auto-compaction may have fired between then and now — verify command text must come from the on-disk PRD, which is the source of truth. If the on-disk verify command differs from your in-memory copy, trust the file.
-- Run the full VERIFY phase: execute every ISC verify method in sequence and record pass/fail for each
-- **Structured Evidence**: For each ISC item, record three fields in the VERIFY RESULTS table:
-  - Evidence type: CLI output | test result | file exists | grep match | manual review
-  - Source: the exact command or file path that produced the evidence
-  - Content: the actual output snippet proving pass/fail (truncate to key lines if verbose)
+- **Re-read PRD from disk before executing verify methods** — auto-compaction may have fired; on-disk PRD is the source of truth; trust file over in-memory copy.
+- Run every ISC verify method in sequence, record pass/fail.
+- **Structured Evidence** per ISC item: (1) Evidence type (CLI output | test result | file exists | grep match | manual review), (2) Source (exact command/path), (3) Content (output snippet proving pass/fail, truncated)
 - Mark completed ISC checkboxes in the PRD (`- [ ]` → `- [x]`) only after the verify method passes AND structured evidence is recorded
 - Find the corresponding task in `orchestration/tasklist.md` and mark it complete (`[ ]` → `[x]`) with a one-line completion note
 - Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
