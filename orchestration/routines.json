@@ -12,6 +12,12 @@
       "_purpose": "When pipeline is set AND skills==[], dispatcher executes steps directly via subprocess (no claude -p, no worktree). ISC verification still runs against REPO_ROOT. Saves LLM tokens for routines that are pure script orchestration.",
       "steps": "list of step dicts. Each step must have run_python (path under tools/scripts/), and may have args (list[str]), timeout_s (int <=1800), allow_nonzero (bool, default false)",
       "constraints": "shell=False, list-form args only. No path traversal. Allowlist enforced by _validate_pipeline()."
+    },
+    "task_template.inline": {
+      "_added": "2026-04-09 -- inline routing for producer routines",
+      "_purpose": "When inline=true, dispatcher runs the worker on REPO_ROOT instead of an isolated worktree. Designed for producer routines that write to data/ outputs and don't need filesystem isolation. Refuses if REPO_ROOT working tree is dirty (cross-session safety). JARVIS_WORKTREE_ROOT is set to REPO_ROOT in the worker subprocess so the file containment guard still fires within the repo. Branch jarvis/auto-{id} is still created on REPO_ROOT.",
+      "when_to_use": "Producer-style routines that (a) write only to data/ or other gitignored / output-only paths, (b) don't need parallelism with other dispatcher tasks, (c) benefit from reading current REPO_ROOT state directly (no worktree clone lag).",
+      "when_not_to_use": "Routines that touch memory/, security/, CLAUDE.md, or any source-of-truth file -- those should keep worktree isolation."
     }
   },
   "routines": [
@@ -147,7 +153,8 @@
         "skills": [],
         "model": "sonnet",
         "autonomous_safe": true,
-        "notes": "Two-step pipeline: (1) prediction_event_generator.py generates + auto-approves events, (2) prediction_backtest_producer.py runs backtests + posts Slack review summary. Human reviews via Slack reply."
+        "inline": true,
+        "notes": "Two-step pipeline: (1) prediction_event_generator.py generates + auto-approves events, (2) prediction_backtest_producer.py runs backtests + posts Slack review summary. Human reviews via Slack reply. inline=true: writes only to data/, no need for worktree isolation."
       }
     },
     {
@@ -176,7 +183,8 @@
         "skills": [],
         "model": "sonnet",
         "autonomous_safe": true,
-        "notes": "Runs prediction_backtest_producer.py -- outputs tagged pending_review, require Eric approval before calibration use"
+        "inline": true,
+        "notes": "Runs prediction_backtest_producer.py -- outputs tagged pending_review, require Eric approval before calibration use. inline=true: writes only to data/."
       }
     },
     {
@@ -204,7 +212,8 @@
         "skills": [],
         "model": "haiku",
         "autonomous_safe": true,
-        "notes": "Runs prediction_review_task.py -- low-cost Slack surface task"
+        "inline": true,
+        "notes": "Runs prediction_review_task.py -- low-cost Slack surface task. inline=true: writes only to data/logs."
       }
     },
     {
@@ -234,7 +243,8 @@
         "skills": [],
         "model": "haiku",
         "autonomous_safe": true,
-        "notes": "Runs prediction_calibration.py -- checks threshold before executing; haiku for counting, sonnet for analysis"
+        "inline": true,
+        "notes": "Runs prediction_calibration.py -- checks threshold before executing; haiku for counting, sonnet for analysis. inline=true: writes only to data/."
       }
     },
     {
@@ -362,7 +372,8 @@
         "skills": [],
         "model": "haiku",
         "autonomous_safe": true,
-        "notes": "Lightweight audit -- haiku can count and report; escalates stale items to Slack"
+        "inline": true,
+        "notes": "Lightweight audit -- haiku can count and report; escalates stale items to Slack. inline=true: read-only audit, no source-of-truth writes."
       }
     }
   ]

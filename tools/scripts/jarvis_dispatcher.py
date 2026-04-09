@@ -1888,6 +1888,72 @@ def _emit_dispatcher_event(task: dict, event_type: str) -> None:
         print(f"  WARNING: _emit_dispatcher_event failed: {exc}", file=sys.stderr)
 
 
+# -- Inline routing helpers --------------------------------------------------
+#
+# Inline mode runs the worker on REPO_ROOT instead of a worktree. Triggered
+# by tasks with `inline: true`. Designed for producer routines that write to
+# data/ outputs and don't need filesystem isolation. Refuses if REPO_ROOT
+# working tree is dirty (cross-session safety -- see steering rule
+# "before editing any file outside the current working repo, run git status").
+# JARVIS_WORKTREE_ROOT is set to REPO_ROOT in the worker subprocess so the
+# file containment guard still fires within the repo.
+
+def _inline_setup(branch: str) -> tuple[bool, str | None, str]:
+    """Prepare REPO_ROOT for inline task execution.
+
+    Returns (ok, original_branch, message). Refuses (ok=False) if the working
+    tree is dirty or HEAD is detached. On success, checks out `branch`
+    (creating it if needed) and returns the prior branch name for restore.
+    """
+    try:
+        st = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=15,
+        )
+        if st.returncode != 0:
+            return False, None, f"git status failed: {st.stderr.strip()}"
+        if st.stdout.strip():
+            return False, None, "REPO_ROOT working tree dirty -- inline requires clean tree"
+        head = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=15,
+        )
+        if head.returncode != 0:
+            return False, None, f"git rev-parse failed: {head.stderr.strip()}"
+        original = head.stdout.strip()
+        if not original or original == "HEAD":
+            return False, None, "REPO_ROOT HEAD detached"
+        co = subprocess.run(
+            ["git", "checkout", "-b", branch],
+            cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=30,
+        )
+        if co.returncode != 0:
+            co2 = subprocess.run(
+                ["git", "checkout", branch],
+                cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=30,
+            )
+            if co2.returncode != 0:
+                return False, original, (
+                    f"git checkout failed: {co.stderr.strip() or co2.stderr.strip()}"
+                )
+        return True, original, "ok"
+    except Exception as exc:
+        return False, None, f"inline setup error: {exc}"
+
+
+def _inline_cleanup(original_branch: str | None) -> None:
+    """Restore the original branch on REPO_ROOT after inline run."""
+    if not original_branch:
+        return
+    try:
+        subprocess.run(
+            ["git", "checkout", original_branch],
+            cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=30,
+        )
+    except Exception as exc:
+        print(f"  WARNING: _inline_cleanup failed: {exc}", file=sys.stderr)
+
+
 # -- Notification -----------------------------------------------------------
 
 def notify_completion(task: dict, report: dict, isc_results: list[dict]) -> None:
@@ -2072,6 +2138,8 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
     """
     branch = f"jarvis/auto-{task['id']}"
     wt_path = None
+    inline = bool(task.get("inline"))
+    inline_original_branch: str | None = None
     report = {}
 
     try:
@@ -2155,12 +2223,26 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
                 return "continue"
 
         if not dry_run:
-            # Create worktree
-            wt_path = worktree_setup(branch, worktree_dir=WORKTREE_DIR)
-            if wt_path is None:
-                handle_task_failure(task, "Failed to create worktree", backlog)
-                write_backlog(backlog)
-                return "continue"
+            if inline:
+                # Inline branch -- run worker on REPO_ROOT, no worktree.
+                ok, inline_original_branch, msg = _inline_setup(branch)
+                if not ok:
+                    print(f"  INLINE SETUP REFUSED: {msg}")
+                    task["status"] = "pending"
+                    task["notes"] = (task.get("notes") or "") + (
+                        f"\nInline refused {datetime.now().strftime('%Y-%m-%d %H:%M')}: {msg}"
+                    )
+                    write_backlog(backlog)
+                    return "continue"
+                wt_path = REPO_ROOT
+                print(f"  Inline mode on REPO_ROOT (was on {inline_original_branch}, now on {branch})")
+            else:
+                # Create worktree
+                wt_path = worktree_setup(branch, worktree_dir=WORKTREE_DIR)
+                if wt_path is None:
+                    handle_task_failure(task, "Failed to create worktree", backlog)
+                    write_backlog(backlog)
+                    return "continue"
 
         # Acquire global claude -p mutex (prevents contention with overnight/autoresearch)
         if not dry_run and not acquire_claude_lock("dispatcher"):
@@ -2308,9 +2390,14 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         release_claude_lock()
         release_lock()
         if wt_path and not dry_run:
-            # Only remove the worktree checkout (frees disk), branch stays.
-            # Consolidation script can still read the branch commits.
-            worktree_cleanup(worktree_dir=WORKTREE_DIR)
+            if inline:
+                # Inline mode: restore original branch on REPO_ROOT.
+                # Branch ref stays so consolidation can merge it.
+                _inline_cleanup(inline_original_branch)
+            else:
+                # Only remove the worktree checkout (frees disk), branch stays.
+                # Consolidation script can still read the branch commits.
+                worktree_cleanup(worktree_dir=WORKTREE_DIR)
 
 
 def dispatch(dry_run: bool = False) -> None:
