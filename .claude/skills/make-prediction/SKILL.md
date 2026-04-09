@@ -94,11 +94,7 @@ Apply domain lens (auto-detected or from flag), then anchor the prediction:
 3. **Identify the reference class**: "Of N historical situations like this, what % resulted in outcome X?"
    - If a clear reference class exists, state the base rate
    - If no reference class exists, state: "No clear reference class — estimate is unanchored" and note this increases uncertainty
-3.5. **Check domain priors**: If domain knowledge articles were loaded in Step 0, scan them for:
-   - Prior research findings that refine or challenge the reference class base rate
-   - Known domain-specific factors that should weight scenario probabilities
-   - Open questions from prior research that this prediction might resolve
-   Reference specific prior findings when they inform the analysis (e.g., "Per prior research on DeFi lending (2026-04-03), Aave v3 dominates TVL — this affects scenario likelihood.")
+3.5. **Check domain priors**: If articles loaded in Step 0, scan for prior findings that refine the reference class, domain factors that weight scenario probabilities, and open questions this prediction might resolve. Reference specific findings when they inform the analysis.
 4. **State the starting probability anchor** from the reference class base rate
 
 ### Domain-Specific ORIENT
