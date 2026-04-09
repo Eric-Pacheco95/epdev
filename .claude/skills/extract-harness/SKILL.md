@@ -169,14 +169,13 @@ The target CLAUDE.md MUST include steering rules that make Claude actively write
 ## Step 3.5: ENTERPRISE (only if --enterprise flag)
 
 Gap analysis for regulated/team environments. Evaluate:
+1. **Workflow gaps**: Repetitive tasks with no skill (meeting → action items, email → requirements, regulatory update → impact analysis, code review → risk checklist, retro → lessons capture)
+2. **Knowledge gaps**: Missing domain reference in `knowledge/` (regulations, architecture patterns, QA checklists)
+3. **Template gaps**: Artifacts produced regularly with no template
+4. **LLM compliance**: CLAUDE.md covers data send/don't-send, AI audit trail, artifact disclaimers, model usage logging?
+5. **Strategic assessment**: Internal play (team adoption → innovation leadership) vs. External play (revenue, higher risk)
 
-1. **Workflow gaps**: Repetitive tasks target users (BA/BSA/junior dev) do daily with no current skill — e.g., meeting → action items, email → requirements, regulatory update → impact analysis, code review → risk checklist, retro → lessons capture.
-2. **Knowledge gaps**: Domain reference missing from `knowledge/` — regulations, architecture patterns, QA checklists.
-3. **Template gaps**: Artifact formats produced regularly with no template.
-4. **LLM compliance**: Does CLAUDE.md cover: data send/don't-send rules, AI decision audit trail, artifact disclaimers, model usage logging?
-5. **Strategic assessment** (two paths): Internal play (team adoption → innovation leadership) vs. External play (sell to enterprises → revenue, higher risk).
-
-Output: numbered list with effort estimates (S/M/L) and priority order. Do NOT build — present proposal, then add approved items to `docs/backlog.md`.
+Output: numbered list with effort (S/M/L) and priority. Do NOT build — present proposal, add approved to `docs/backlog.md`.
 
 ## Step 3.6: PERSONAL (only if --personal flag)
 
