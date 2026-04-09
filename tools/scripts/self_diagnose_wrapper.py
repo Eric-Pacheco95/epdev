@@ -320,8 +320,34 @@ def notify_failure(runner_name: str, diagnosis: str,
 
 # -- Backlog injection -------------------------------------------------------
 
+_TEST_REF_RE = re.compile(
+    r"\btests[/\\][\w/\\\-.]+\.py(?:::[\w_]+)?",
+)
+
+
+def _extract_failing_test_refs(output: str) -> list[str]:
+    """Extract pytest test path references from a failure output blob.
+
+    Matches `tests/.../foo.py` and `tests/.../foo.py::test_name` patterns.
+    Returns deduped list with forward-slash normalized paths. Used by the
+    self-heal ISC builder to construct exact `pytest <ref>` re-run criteria
+    instead of relying on the generic runner --test sanity gate.
+    """
+    if not output:
+        return []
+    refs = []
+    seen = set()
+    for m in _TEST_REF_RE.finditer(output):
+        ref = m.group(0).replace("\\", "/")
+        if ref not in seen:
+            seen.add(ref)
+            refs.append(ref)
+    return refs
+
+
 def append_self_heal_task(runner_name: str, diagnosis: str,
-                          log_path: Path) -> str | None:
+                          log_path: Path,
+                          failure_output: str = "") -> str | None:
     """Append a Tier 1 self-heal task to the dispatcher backlog.
 
     Only appended when REQUIRES_HUMAN is 'no' in the diagnosis.
@@ -344,13 +370,31 @@ def append_self_heal_task(runner_name: str, diagnosis: str,
     runner_script = "tools/scripts/%s.py" % runner_name
     runner_path = REPO_ROOT / runner_script
 
-    # Build ISC: verify the runner exits cleanly after the fix
+    # Build ISC. The previous generic `<runner> --test` sanity gate is too
+    # loose -- it only verifies the runner self-test, not the failing artifact.
+    # When the failure output names specific test files / cases, add a
+    # `pytest <ref>` ISC for each so the heal worker has to actually fix the
+    # named artifact (not just leave the runner's self-test passing).
+    isc = []
+    test_refs = _extract_failing_test_refs(failure_output) + \
+        _extract_failing_test_refs(diagnosis)
+    seen_ref = set()
+    for ref in test_refs:
+        if ref in seen_ref:
+            continue
+        seen_ref.add(ref)
+        isc.append(
+            "Failing test passes after fix: %s | Verify: python -m pytest %s -q --tb=no"
+            % (ref, ref)
+        )
+    # Always include the generic runner sanity gate (when the script exists)
+    # as a regression check in addition to the specific test ISC above.
     if runner_path.is_file():
         verify_cmd = "python %s --test" % runner_script
-        isc = [
-            "%s exits cleanly after fix | Verify: %s" % (runner_name, verify_cmd),
-        ]
-    else:
+        isc.append(
+            "%s exits cleanly after fix | Verify: %s" % (runner_name, verify_cmd)
+        )
+    if not isc:
         isc = [
             "%s failure resolved | Verify: manual smoke test" % runner_name,
         ]
@@ -541,8 +585,11 @@ def main() -> int:
                            diagnosis, playbook_category)
     print("self-diagnose: failure logged to %s" % log_path.relative_to(REPO_ROOT))
 
-    # 6b. Inject self-heal task into dispatcher backlog (if REQUIRES_HUMAN: no)
-    task_id = append_self_heal_task(runner_name, diagnosis, log_path)
+    # 6b. Inject self-heal task into dispatcher backlog (if REQUIRES_HUMAN: no).
+    # Pass combined_output so the ISC builder can extract specific failing test
+    # references and build `pytest <ref>` criteria, not just a generic --test gate.
+    task_id = append_self_heal_task(runner_name, diagnosis, log_path,
+                                    failure_output=combined_output)
     if task_id:
         print("self-diagnose: backlog task queued -> %s" % task_id)
     else:
