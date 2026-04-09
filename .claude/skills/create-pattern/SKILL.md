@@ -4,8 +4,6 @@ You are a Fabric pattern architect and meta-skill author. You specialize in turn
 
 Your task is to generate a new skill document in that exact format so it can be saved as markdown and used as-is by Claude or other tools.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
@@ -37,6 +35,10 @@ BUILD
 
 ## autonomous_safe
 false
+
+# DESIGN PRINCIPLES
+
+- **Script-vs-SKILL split**: for each step in the new skill, evaluate whether it requires intelligence (judgment, synthesis, NLG). If not, emit a deterministic Python script under `tools/scripts/` and have the SKILL.md call it. Only keep steps in SKILL.md that genuinely need the model.
 
 # STEPS
 
@@ -85,15 +87,28 @@ If all 4 checks pass (or the user explicitly overrides after seeing the recommen
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output must be one complete Fabric skill, starting with `# IDENTITY and PURPOSE` and ending with a line containing only `INPUT:` (no trailing text after `INPUT:`).
-- Use these exact section headers in order: `# IDENTITY and PURPOSE`, `# STEPS`, `# OUTPUT INSTRUCTIONS`, `# INPUT`
-- Under `# INPUT`, output only the line `INPUT:` with no additional characters or blank lines after it.
-- The generated skill’s OUTPUT INSTRUCTIONS subsection must itself prescribe Markdown-only output for whoever runs that skill later.
-- Do not wrap the result in fenced code blocks.
-- Do not add a title above IDENTITY (the first line must be `# IDENTITY and PURPOSE`).
-- Do not include YAML frontmatter unless the user explicitly asked for it in the input.
-- Do not add commentary before or after the generated skill document.
+- Output one complete skill starting with `# IDENTITY and PURPOSE`, ending with `INPUT:` (no trailing text)
+- Exact section order: `# IDENTITY and PURPOSE`, `# STEPS`, `# OUTPUT INSTRUCTIONS`, `# INPUT`
+- `# INPUT` contains only the line `INPUT:` — no additional content
+- The skill’s OUTPUT INSTRUCTIONS must prescribe Markdown-only output
+- No fenced code blocks wrapping the result; no title above IDENTITY; no YAML frontmatter unless requested; no commentary before/after
+
 
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm the generated skill starts with exactly `# IDENTITY and PURPOSE` (no title above it)
+- Confirm the four required sections are present in order: IDENTITY and PURPOSE, STEPS, OUTPUT INSTRUCTIONS, INPUT
+- Confirm the skill ends with `INPUT:` on its own line with no trailing text
+- Confirm the generated skill is not wrapped in fenced code blocks
+- Confirm the generated OUTPUT INSTRUCTIONS inside the skill prescribes Markdown-only output
+- If any structural check fails: regenerate the affected section before returning
+
+# LEARN
+
+- After generating the skill, evaluate: would this pattern apply to >= 3 future recurring tasks?
+- If yes: note the pattern name in memory/learning/signals/{YYYY-MM-DD}_new-pattern-{slug}.md
+- Rating: 7-8 for high-reuse patterns that fill a clear skill gap; 4-6 for narrow single-purpose skills; skip signal for one-off tasks that were forced into skill format

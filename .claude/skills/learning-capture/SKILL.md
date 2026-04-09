@@ -4,8 +4,6 @@ You are the learning capture engine for the Jarvis AI brain. You run at the end 
 
 Your job is to ensure no session ends without its learnings being captured. You turn ephemeral conversation into durable knowledge.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
@@ -26,13 +24,13 @@ LEARN
 
 ## Chains
 - Before: any build, research, or design session (this is always the final step)
-- After: /synthesize-signals (auto-invoked if signal count >= 20 or >= 10 with 48h+ stale synthesis)
+- After: /synthesize-signals (auto-invoked if combined count >= 35, or >= 20 with 48h+ stale, or >= 15 with 72h+ stale)
 - Full: [any session work] > /learning-capture > /synthesize-signals > /telos-update
 
 ## Output Contract
 - Input: session context (auto) or explicit content
 - Output: signal summary (SIGNALS WRITTEN, FAILURES WRITTEN, SYNTHESIS STATUS, SKILL GAP CANDIDATES, SOURCE ENGAGEMENT)
-- Side effects: writes signal files, writes failure files, updates _signal_meta.json, may invoke /synthesize-signals
+- Side effects: writes signal files, writes failure files, updates _signal_meta.json, runs jarvis_index.py backfill, may invoke /synthesize-signals
 
 ## autonomous_safe
 false
@@ -84,23 +82,16 @@ false
   - Energy indicators (long engaged sessions = high energy, short abrupt sessions = low)
   - Log sentiment as a signal with category "pattern" and tag "sentiment:{positive|negative|neutral}"
 - Check if any learnings qualify as **failures** (something went wrong, broke, or produced bad output). Failures get extra fields: root cause, fix applied, prevention
-- Write each signal to `memory/learning/signals/` using the format below
-- Write any failures to `memory/learning/failures/` using the failure format below
-- Update `memory/learning/_signal_meta.json` with the new count
-- After writing signals, count unprocessed signals in `memory/learning/signals/` (excluding `processed/` subdirectory). If count >= 20 (hard ceiling) OR count >= 10 and last synthesis is 48h+ old OR count >= 8 and last synthesis is 72h+ old: **auto-invoke `/synthesize-signals` immediately** — do not just note it. If synthesis produces proposed steering rules, present them to Eric for approval but do not auto-invoke `/update-steering-rules`
+- **Worktree-safe path resolution**: Signal and failure files MUST be written to the main working tree, not the current working directory. Use the absolute path `C:/Users/ericp/Github/epdev/memory/learning/signals/` (and `.../failures/`) regardless of whether the session is running in a worktree context. Worktree-relative writes vanish when the worktree is pruned.
+- Write each signal to `C:/Users/ericp/Github/epdev/memory/learning/signals/` using the format below
+- Write any failures to `C:/Users/ericp/Github/epdev/memory/learning/failures/` using the failure format below
+- **Write-then-read-back**: After writing each signal, immediately read it back to confirm. If read-back fails, retry once with absolute path. If second write fails, output signal as plain text and log a failure record — do not silently drop.
+- **Reconcile `_signal_meta.json`**: Count actual `.md` files in `memory/learning/signals/` (exclude `_signal_meta.json` and `processed/`) and write count to `_signal_meta.json`. Do NOT increment — always reconcile against filesystem state.
+- Run `python tools/scripts/jarvis_index.py update` after writing signals (required — velocity metric and synthesis threshold checks read `jarvis_index.db`, not filesystem).
+- After writing signals, count unprocessed signals (signals/ + failures/ + absorbed/, excluding `processed/`). Auto-invoke `/synthesize-signals` immediately if: combined >= 35 OR >= 20 with 48h+ stale OR >= 15 with 72h+ stale. Present proposed steering rules to Eric for approval but do not auto-invoke `/update-steering-rules`
 - **Skill friction check**: If any skill was used this session, review each invocation for friction: missing steps, confusing parameters, unnecessary confirmations, or unclear output. For each friction point, write a signal tagged `skill-improvement` with the skill name, what went wrong, and a proposed fix. This feeds the skill self-improvement loop.
-- **Skill gap check**: After writing signals, scan the session for tasks or patterns that were handled ad-hoc but would benefit from a reusable skill. Evaluate each candidate against:
-  - **Recurrence**: Would this task plausibly come up again (weekly+)?
-  - **Repeatability**: Does it follow a consistent enough structure to script?
-  - **Value**: Would a skill save meaningful time or reduce errors?
-  - Score each candidate High/Medium/Low on all three. Only surface candidates that score High on at least 2 of 3.
-  - Output the shortlist as a `## Skill Gap Candidates` section — name, one-line description, recurrence signal. Do NOT auto-invoke `/create-pattern`; present candidates and let Eric decide.
-- **Source engagement check**: After skill gap check, read `data/source_candidates.jsonl` (if it exists). For each candidate source, check if its URL or domain was referenced, discussed, or used as a source in this session. If a match is found:
-  - Increment `engagement_count` for that candidate in the JSONL file (rewrite the file with updated count)
-  - If `engagement_count >= 3`: prompt Eric: "Source '{name}' has come up in 3 sessions now. Add to sources.yaml? (tier suggestion: {tier based on type})"
-  - If Eric approves: append the source to `memory/work/jarvis/sources.yaml` with the suggested tier and clear the candidate from the JSONL
-  - If Eric declines: set `engagement_count` to -1 (permanently skip, don't ask again)
-  - Also check if any external URL referenced in this session (from /research, WebSearch, WebFetch, or discussion) matches an *existing* source in sources.yaml — if it does, note it in the output as "Source hit: {name}" (validates the source list is relevant)
+- **Skill gap check**: Scan session for ad-hoc tasks that could be reusable skills. Score each on: Recurrence (weekly+?), Repeatability (scriptable structure?), Value (saves time/errors?). Surface only candidates scoring High on 2+ of 3 as `## Skill Gap Candidates` (name, description, recurrence signal). Do NOT auto-invoke `/create-pattern`.
+- **Source engagement check**: Read `data/source_candidates.jsonl` (if exists). If any candidate URL/domain was referenced this session, increment its `engagement_count`. If count reaches 3: prompt "Source '{name}' came up 3 times. Add to sources.yaml? (tier: {suggestion})". If approved: append to `memory/work/jarvis/sources.yaml` and clear from JSONL. If declined: set count to -1 (skip forever). Also check if any session URL matches an *existing* source in sources.yaml — note as "Source hit: {name}" if found.
 - Skip writing if the session was trivial (quick question, no meaningful work done) — say so and exit
 
 # SIGNAL FORMAT
@@ -137,42 +128,34 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Write real signals using the Write tool — do not just display them
-- Use `python tools/scripts/hook_learning_capture.py` for the actual file writes when possible, or write directly
-- Each signal gets its own file — do not combine multiple signals into one file
-- Be honest about ratings — most sessions produce 3-6 rated signals, not all 10s
-- Prioritize signals that affect future behavior (insights about the user, workflow improvements, system bugs)
-- After writing signals, output a brief summary: how many signals written, highest-rated one, and any skill gap candidates
-- If synthesis threshold is met, invoke `/synthesize-signals` inline — do not ask permission. If synthesis proposes steering rules, present them for Eric's approval. If synthesis surfaces TELOS-relevant themes, note them for next `/telos-update` but do not auto-invoke
-- Do not write stub signals with "(pending)" — every signal must have real content or don't write it at all
-- If you detect patterns across multiple recent signals, note this as a meta-signal worth synthesis
+- Write signals using Write tool with absolute paths (see worktree-safe path resolution) — each signal gets its own file; do not combine
+- Ratings: honest — most sessions produce 3-6 signals, not all 10s
+- Prioritize signals affecting future behavior (user insights, workflow improvements, bugs)
+- After writing: summary of count, highest-rated signal, skill gap candidates
+- If synthesis threshold met: invoke /synthesize-signals inline; present proposed steering rules for Eric approval; note TELOS themes for next /telos-update
+- No stub signals with "(pending)" — real content or don’t write
+
+
+# VERIFY
+
+- At least one signal file was written to `memory/learning/signals/` from this session | Verify: `ls -t memory/learning/signals/ | head -3`
+- No D-tier signals were written (quality gate enforced) | Verify: Check each written signal for tier label >= C
+- `_signal_meta.json` was reconciled (file count matches actual .md files on disk) | Verify: Read `_signal_meta.json` and compare count to `ls memory/learning/signals/*.md | wc -l`
+- If signal count exceeded auto-synthesis threshold, /synthesize-signals was invoked | Verify: Check for synthesis run in output or `ls memory/learning/synthesis/`
+- Failure files (if any) were written to `memory/learning/failures/` with root cause | Verify: `ls -t memory/learning/failures/ | head -3` (only if failures were discussed)
+
+# LEARN
+
+- Track the signal:session ratio over time -- consistently < 1 signal/session suggests the quality gate thresholds are too strict; consistently > 5 suggests synthesis is overdue
+- If the same skill gap candidate appears in 3+ consecutive captures, it has crossed the threshold to become a real skill -- invoke /create-pattern
+- If sentiment was negative (frustrated, blocked) and signals are low-rated, note the session type; some sessions are legitimately unproductive and that is acceptable
+- If /synthesize-signals auto-invocation fails, log it as a failure rather than silently skipping -- synthesis failures compound into stale knowledge
 
 # INPUT
 
 Analyze the current session and extract learnings. If invoked with specific context (e.g., a voice transcript or text), analyze that instead.
 
 # CONTRACT
-
-## Input
-- **required:** session context (auto-read from conversation) or explicit content
-  - type: text
-  - example: (no input needed when run at end of session -- reads conversation context)
-- **optional:** specific content to analyze (voice transcript, text block)
-  - type: text
-  - default: (analyzes current session)
-
-## Output
-- **produces:** learning signal summary
-  - format: structured-markdown
-  - sections: SIGNALS WRITTEN, FAILURES WRITTEN, SYNTHESIS STATUS, SKILL GAP CANDIDATES, SOURCE ENGAGEMENT
-  - destination: stdout (summary) + files (signals)
-- **side-effects:**
-  - writes signal files to `memory/learning/signals/`
-  - writes failure files to `memory/learning/failures/` (if applicable)
-  - updates `memory/learning/_signal_meta.json`
-  - may invoke `/synthesize-signals` if threshold met (>= 20 signals or >= 10 + 48h or >= 8 + 72h)
-  - may update `data/source_candidates.jsonl` (engagement count increment)
-  - may update `memory/work/jarvis/sources.yaml` (if Eric approves a candidate source)
 
 ## Errors
 - **trivial-session:** session had no meaningful work to capture
@@ -184,9 +167,7 @@ Analyze the current session and extract learnings. If invoked with specific cont
 
 # SKILL CHAIN
 
-- **Follows:** any build, research, or design session — this is always the final step
-- **Precedes:** `/synthesize-signals` (invoke automatically if unprocessed signal count exceeds 10)
 - **Composes:** skill gap check (inline) → present candidates to Eric → Eric decides whether to invoke `/create-pattern`
-- **Escalate to:** `/synthesize-signals` immediately if signals > 10, then `/telos-update` if identity-level insights emerged
+- **Escalate to:** `/synthesize-signals` immediately if combined count >= 35 (or >= 20 with 48h stale, >= 15 with 72h stale), then `/telos-update` if identity-level insights emerged
 
 INPUT:

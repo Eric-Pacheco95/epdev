@@ -3,6 +3,14 @@
   "root_dir": "C:/Users/ericp/Github/epdev",
   "collectors": [
     {
+      "name": "producer_recency",
+      "type": "producer_recency",
+      "thresholds": {
+        "warn_above": 1
+      },
+      "isc_ref": "producer-watchdog:ISC-2+3 producer_recency collector + sentinel write"
+    },
+    {
       "name": "signal_count",
       "type": "manifest_signal_count",
       "thresholds": {}
@@ -188,10 +196,29 @@
       "thresholds": { "warn_below": 0.8, "crit_below": 0.5 }
     },
     {
+      "name": "backlog_pending_review_count",
+      "type": "backlog_health_metric",
+      "metric": "backlog_pending_review_count",
+      "thresholds": { "warn_above": 5, "crit_above": 15 }
+    },
+    {
+      "name": "backlog_manual_review_count",
+      "type": "backlog_health_metric",
+      "metric": "backlog_manual_review_count",
+      "thresholds": { "warn_above": 2, "crit_above": 5 }
+    },
+    {
       "name": "network_connections",
       "type": "system_resources",
       "thresholds": { "warn_above": 60, "crit_above": 100 },
       "min_delta": 15
+    },
+    {
+      "name": "stale_branches",
+      "type": "stale_branches",
+      "ttl_days": 7,
+      "thresholds": { "warn_above": 0, "crit_above": 3 },
+      "isc_ref": "Phase5D: branch lifecycle tracker -- flag stale jarvis/* branches"
     }
   ],
   "alert_routing": {
@@ -251,6 +278,78 @@
       "context_files": [],
       "model": "sonnet",
       "min_severity": "CRIT"
+    },
+    "autonomous_signal_rate": {
+      "description": "Autonomous signal volume spike -- check per-producer breakdown in heartbeat detail, throttle or pause offending producer",
+      "skills": [],
+      "isc": [
+        "Autonomous signal rate is below warn threshold (10/day) | Verify: python -c \"import json; d=json.load(open('data/heartbeat_latest.json')); print(d.get('autonomous_signal_rate',{}).get('value',0) < 10)\""
+      ],
+      "context_files": ["orchestration/autonomous-rules.md"],
+      "model": "haiku",
+      "min_severity": "WARN"
+    },
+    "stale_branches": {
+      "description": "Stale Jarvis branches need merge or discard -- run branch_lifecycle.py --notify for details",
+      "skills": [],
+      "isc": [
+        "No stale jarvis/* branches older than 7 days | Verify: python tools/scripts/branch_lifecycle.py --json"
+      ],
+      "context_files": [],
+      "model": "haiku",
+      "min_severity": "WARN"
+    },
+    "_collector_health": {
+      "description": "Heartbeat collector(s) failed to produce a value -- review _collector_health detail and fix the broken collector",
+      "skills": [],
+      "isc": [
+        "All heartbeat collectors return a numeric value (no errors) | Verify: python -c \"import json; d=json.load(open('data/heartbeat_latest.json')); print(all(m.get('value') is not None for m in d.get('metrics',[])))\""
+      ],
+      "context_files": ["tools/scripts/collectors/"],
+      "model": "sonnet",
+      "min_severity": "CRIT"
+    },
+    "network_connections": {
+      "description": "TCP connection count crossed threshold -- use lib/net_util attribution to find the leaking process before recommending action",
+      "skills": [],
+      "isc": [
+        "TCP connection count is back under the warn threshold, or the leaking process is identified and documented | Verify: Review"
+      ],
+      "context_files": ["tools/scripts/lib/net_util.py"],
+      "model": "sonnet",
+      "min_severity": "CRIT"
+    },
+    "producer_health": {
+      "description": "One or more producers are reporting unhealthy -- review producer_health detail and fix/pause the offender",
+      "skills": [],
+      "isc": [
+        "All producers listed in orchestration/producers.json report healthy | Verify: python tools/scripts/verify_producer_health.py",
+        "No producer has been stale longer than 26h without an approved backlog row documenting the gap | Verify: Review"
+      ],
+      "context_files": ["orchestration/producers.json"],
+      "model": "sonnet",
+      "min_severity": "WARN"
+    },
+    "producer_recency": {
+      "description": "producer_recency watchdog reported stale producer(s) -- a corresponding pending_review row has already been injected by the watchdog; this entry is belt-and-suspenders coverage in case the watchdog inject fails",
+      "skills": [],
+      "isc": [
+        "The stale producer is either fixed, schedule corrected, or producers.json updated | Verify: python tools/scripts/verify_producer_health.py",
+        "No stale producer row remains open in pending_review without a human-approved plan | Verify: Review"
+      ],
+      "context_files": ["orchestration/producers.json", "tools/scripts/collectors/core.py"],
+      "model": "sonnet",
+      "min_severity": "CRIT"
+    },
+    "signal_volume": {
+      "description": "Signal volume (raw+processed) crossed threshold -- likely an autonomous producer is over/under producing",
+      "skills": [],
+      "isc": [
+        "Signal volume is back within warn thresholds, or the offending producer is throttled/paused | Verify: Review"
+      ],
+      "context_files": ["memory/learning/signals/"],
+      "model": "haiku",
+      "min_severity": "WARN"
     }
   },
   "daily_alert_caps": {

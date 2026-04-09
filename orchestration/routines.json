@@ -6,7 +6,19 @@
       "type": "weekly | monthly",
       "interval_days": "minimum days between injections"
     },
-    "task_template": "merged with auto-fill defaults in backlog_append()"
+    "task_template": "merged with auto-fill defaults in backlog_append()",
+    "task_template.pipeline": {
+      "_added": "2026-04-08 -- openclaw/lobster wisdom: typed deterministic pipelines",
+      "_purpose": "When pipeline is set AND skills==[], dispatcher executes steps directly via subprocess (no claude -p, no worktree). ISC verification still runs against REPO_ROOT. Saves LLM tokens for routines that are pure script orchestration.",
+      "steps": "list of step dicts. Each step must have run_python (path under tools/scripts/), and may have args (list[str]), timeout_s (int <=1800), allow_nonzero (bool, default false)",
+      "constraints": "shell=False, list-form args only. No path traversal. Allowlist enforced by _validate_pipeline()."
+    },
+    "task_template.inline": {
+      "_added": "2026-04-09 -- inline routing for producer routines",
+      "_purpose": "When inline=true, dispatcher runs the worker on REPO_ROOT instead of an isolated worktree. Designed for producer routines that write to data/ outputs and don't need filesystem isolation. Refuses if REPO_ROOT working tree is dirty (cross-session safety). JARVIS_WORKTREE_ROOT is set to REPO_ROOT in the worker subprocess so the file containment guard still fires within the repo. Branch jarvis/auto-{id} is still created on REPO_ROOT.",
+      "when_to_use": "Producer-style routines that (a) write only to data/ or other gitignored / output-only paths, (b) don't need parallelism with other dispatcher tasks, (c) benefit from reading current REPO_ROOT state directly (no worktree clone lag).",
+      "when_not_to_use": "Routines that touch memory/, security/, CLAUDE.md, or any source-of-truth file -- those should keep worktree isolation."
+    }
   },
   "routines": [
     {
@@ -20,60 +32,74 @@
         "description": "Run /security-audit and produce structured report of findings",
         "project": "epdev",
         "repo_path": "C:/Users/ericp/Github/epdev",
-        "tier": 0,
+        "tier": 1,
         "priority": 2,
         "goal_context": "Continuous security posture -- identify any new gaps since last audit",
         "isc": [
           "A new security audit report exists in history/security/ dated today | Verify: find history/security -name '*audit*' -newer data/routine_state.json",
-          "No prompt-injection vulnerability introduced since last audit | Verify: grep -r 'CRITICAL' history/security/ --include='*audit*' -l || echo none"
+          "No CRITICAL findings left unresolved | Verify: Review security audit output for CRITICAL severity items"
         ],
         "context_files": [
           "security/constitutional-rules.md"
+        ],
+        "expected_outputs": [
+          "history/security/",
+          "security/audits/"
         ],
         "skills": [
           "security-audit"
         ],
         "model": "opus",
         "autonomous_safe": true,
-        "notes": "Routine-injected by routines engine"
+        "notes": "Routine-injected by routines engine. Tier 1 because /security-audit writes a dated report to history/security/; expected_outputs declares the write surface for scope_creep."
       }
     },
     {
       "routine_id": "weekly-synthesis",
       "enabled": true,
       "schedule": {
-        "type": "weekly",
-        "interval_days": 7
+        "type": "interval",
+        "interval_days": 3
+      },
+      "condition": {
+        "type": "file_count_min",
+        "glob": "memory/learning/signals/*.md",
+        "min": 1,
+        "description": "skip synthesis if no signals queued"
       },
       "task_template": {
-        "description": "Run /learning-capture synthesis pass over accumulated signals",
+        "description": "Run /synthesize-signals to distill accumulated learning signals into a synthesis doc",
         "project": "epdev",
         "repo_path": "C:/Users/ericp/Github/epdev",
-        "tier": 0,
+        "tier": 1,
         "priority": 3,
-        "goal_context": "Learning compounds -- distill recent signals into a synthesis document; update TELOS if warranted",
+        "goal_context": "Learning compounds -- threshold model is 10 signals / 72h. This routine fires every 3 days so the worst case is one missed cycle. If no signals are queued, /synthesize-signals exits Idle Is Success.",
         "isc": [
-          "A new synthesis document exists in memory/learning/synthesis/ dated today | Verify: find memory/learning/synthesis -name '*.md' -newer data/routine_state.json",
-          "Synthesis covers at least 5 signals (documented in the synthesis file) | Verify: grep -c 'signal\\|Signal' memory/learning/synthesis/*.md || echo 0"
+          "A new synthesis document exists in memory/learning/synthesis/ dated today, OR worker reports Idle Is Success when no unprocessed signals queued | Verify: python tools/scripts/verify_synthesis_routine.py",
+          "Most recent synthesis doc cites >= 2 real source signals across >= 2 themes (anti-criterion: blocks hallucinated-themes fidelity failure) | Verify: python tools/scripts/verify_synthesis_recall.py"
         ],
         "context_files": [
           "memory/learning/signals/",
           "memory/work/TELOS.md"
         ],
+        "expected_outputs": [
+          "memory/learning/synthesis/",
+          "memory/learning/signals/"
+        ],
         "skills": [
-          "learning-capture"
+          "synthesize-signals"
         ],
         "model": "sonnet",
         "autonomous_safe": true,
-        "notes": "Routine-injected by routines engine"
+        "notes": "Routine-injected by routines engine. Switched 2026-04-08: skill learning-capture -> synthesize-signals (skill mismatch -- learning-capture is for new signals, synthesize-signals is for distillation). interval 7 -> 3 to match the 72h tier in hook_session_start. routine_id kept stable for state continuity. Tier 1 + expected_outputs declares the write surface for scope_creep."
       }
     },
     {
-      "routine_id": "monthly-steering-audit",
+      "routine_id": "biweekly-steering-audit",
       "enabled": true,
       "schedule": {
-        "type": "monthly",
-        "interval_days": 30
+        "type": "biweekly",
+        "interval_days": 14
       },
       "task_template": {
         "description": "Run /update-steering-rules --audit to prune, merge, and categorize steering rules in CLAUDE.md",
@@ -85,6 +111,7 @@
         "isc": [
           "CLAUDE.md steering rule count is at or below 45 after audit | Verify: grep -c '^- ' CLAUDE.md",
           "CLAUDE.md file size is at or below 20KB after audit | Verify: find . -name 'CLAUDE.md' -size -20k",
+          "All [MODEL-DEP] tagged rules reviewed against current Claude Code behavior -- remove if model limitation is fixed | Verify: grep -c MODEL-DEP CLAUDE.md returns 0 or each is confirmed still needed",
           "A history/decisions/ entry documents the steering audit rationale | Verify: find history/decisions -name '*steering*' -newer data/routine_state.json"
         ],
         "context_files": [
@@ -96,6 +123,257 @@
         "model": "opus",
         "autonomous_safe": false,
         "notes": "Routine-injected by routines engine -- tier 1, human review recommended"
+      }
+    }
+    ,
+    {
+      "routine_id": "prediction-event-generation",
+      "enabled": true,
+      "schedule": {
+        "type": "nightly",
+        "interval_days": 1
+      },
+      "task_template": {
+        "description": "Run prediction pipeline: (1) python tools/scripts/prediction_event_generator.py to generate+approve events, (2) python tools/scripts/prediction_backtest_producer.py to run backtests and post Slack review summary",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 2,
+        "priority": 6,
+        "goal_context": "Autonomous prediction calibration -- generate domain-balanced pre-2022 events, run backtests, post Slack summary for Eric to review verdicts. Pipeline auto-approves events; human gate is at the review stage.",
+        "isc": [
+          "At least 1 new backtest prediction file written to data/predictions/backtest/ | Verify: find data/predictions/backtest -name '*.md' -newer data/backtest_state.json",
+          "Slack summary posted with per-event verdict prompts | Verify: grep -c 'Backtest Review Summary' data/logs/prediction_backtest_*.log || echo check-slack",
+          "All events have knowledge_cutoff_date before 2022-01-01 (anti-criterion) | Verify: grep 'knowledge_cutoff_date' data/backtest_events.yaml | grep -v '201\\|202[01]'"
+        ],
+        "context_files": [
+          "data/backtest_events.yaml",
+          "data/calibration.json",
+          "memory/work/telos/GOALS.md"
+        ],
+        "skills": [],
+        "model": "sonnet",
+        "autonomous_safe": true,
+        "inline": true,
+        "notes": "Two-step pipeline: (1) prediction_event_generator.py generates + auto-approves events, (2) prediction_backtest_producer.py runs backtests + posts Slack review summary. Human reviews via Slack reply. inline=true: writes only to data/, no need for worktree isolation."
+      }
+    },
+    {
+      "routine_id": "prediction-backtest",
+      "enabled": false,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Run prediction backtest producer -- execute up to 3 unrun historical events from backtest_events.yaml",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 2,
+        "priority": 5,
+        "goal_context": "Prediction calibration bootstrap -- run constrained historical predictions to build accuracy signal base",
+        "isc": [
+          "At least 1 new backtest prediction file written to data/predictions/backtest/ | Verify: find data/predictions/backtest -name '*.md' -newer data/backtest_state.json",
+          "All output files carry backtested=true and leakage_risk=HIGH in frontmatter | Verify: grep -l 'backtested: true' data/predictions/backtest/*.md",
+          "backtest_state.json updated with run date for each executed event | Verify: Read data/backtest_state.json"
+        ],
+        "context_files": [
+          "data/backtest_events.yaml",
+          "data/backtest_state.json"
+        ],
+        "skills": [],
+        "model": "sonnet",
+        "autonomous_safe": true,
+        "inline": true,
+        "notes": "Runs prediction_backtest_producer.py -- outputs tagged pending_review, require Eric approval before calibration use. inline=true: writes only to data/."
+      }
+    },
+    {
+      "routine_id": "prediction-weekly-review",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Run prediction weekly review task -- surface due predictions and backtest reviews in Slack",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 1,
+        "priority": 3,
+        "goal_context": "Close the prediction resolution loop -- Eric resolves via Slack reply to keep calibration data flowing",
+        "isc": [
+          "Slack notification posted to #epdev listing all predictions due within 30 days | Verify: Check #epdev Slack for prediction_review message dated today",
+          "Log file written to data/logs/prediction_review_{date}.log | Verify: find data/logs -name 'prediction_review_*' -newer data/routine_state.json",
+          "No forward prediction open for >90 days without a resolution prompt | Verify: Read log file (anti-criterion)"
+        ],
+        "context_files": [
+          "data/predictions/"
+        ],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "inline": true,
+        "notes": "Runs prediction_review_task.py -- low-cost Slack surface task. inline=true: writes only to data/logs."
+      }
+    },
+    {
+      "routine_id": "prediction-calibration-check",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Run prediction calibration loop -- compute per-domain accuracy and bias adjustments",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 1,
+        "priority": 4,
+        "goal_context": "Calibration feedback -- compute domain-specific accuracy and inject adjustments into /make-prediction",
+        "isc": [
+          "data/calibration.json exists with per-domain adjustment values | Verify: Read data/calibration.json",
+          "data/calibration_narrative.md exists with prose bias summary | Verify: test -f data/calibration_narrative.md",
+          "Calibration adjustments are within [-0.15, +0.15] bounds | Verify: python -c \"import json; d=json.load(open('data/calibration.json')); assert all(-0.15<=v['adjustment']<=0.15 for v in d['domains'].values())\"",
+          "No calibration signal written without >= 20 forward-looking resolved predictions | Verify: Check calibration.json threshold field (anti-criterion)"
+        ],
+        "context_files": [
+          "data/predictions/",
+          "data/calibration.json"
+        ],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "inline": true,
+        "notes": "Runs prediction_calibration.py -- checks threshold before executing; haiku for counting, sonnet for analysis. inline=true: writes only to data/."
+      }
+    },
+    {
+      "routine_id": "weekly-branch-cleanup",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Run branch lifecycle scan -- delete merged branches, flag stale ones for review",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 5,
+        "goal_context": "Branch hygiene -- merged branches waste git namespace; stale branches indicate abandoned work",
+        "_isc_followup_2026-04-08": "Original ISCs used 'python ...' as verify, which is blocked by ISC_ALLOWED_COMMANDS (python removed for sandbox-escape risk). Both criteria were silently no-ops. Replaced with file-exists stub for pipeline prototype. Real fix: have branch_lifecycle.py write data/branch_lifecycle_state.json with merged_count and stale_count fields, then verify via 'find ... -newer' + grep.",
+        "isc": [
+          "branch_lifecycle.py is present (prototype stub -- see _isc_followup) | Verify: test -f tools/scripts/branch_lifecycle.py"
+        ],
+        "context_files": [],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "pipeline": {
+          "_added": "2026-04-08 -- first deterministic-pipeline routine (lobster wisdom prototype)",
+          "steps": [
+            {
+              "id": "branch_scan_and_cleanup",
+              "run_python": "tools/scripts/branch_lifecycle.py",
+              "args": ["--json"],
+              "timeout_s": 180
+            }
+          ]
+        },
+        "notes": "Runs branch_lifecycle.py via deterministic pipeline -- no claude -p, no worktree, ~0 LLM tokens. Was haiku-wrapped script orchestration."
+      }
+    },
+    {
+      "routine_id": "weekly-doc-sync",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Doc-sync check -- verify tasklist checkboxes match actual artifacts, file paths are current, counts are accurate",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 6,
+        "goal_context": "Tasklist is Eric's primary trust tool -- stale checkboxes erode trust and cause duplicate work",
+        "isc": [
+          "No tasklist items marked [x] reference files that don't exist | Verify: grep -oP '`[^`]+`' orchestration/tasklist.md | head -20",
+          "Phase status line in tasklist matches actual completion state | Verify: Read orchestration/tasklist.md"
+        ],
+        "context_files": [
+          "orchestration/tasklist.md"
+        ],
+        "skills": [],
+        "model": "sonnet",
+        "autonomous_safe": true,
+        "notes": "Read-only audit -- reports discrepancies, does not auto-fix"
+      }
+    },
+    {
+      "routine_id": "daily-dream",
+      "enabled": true,
+      "schedule": {
+        "type": "nightly",
+        "interval_days": 1
+      },
+      "task_template": {
+        "description": "Run python tools/scripts/dream.py --autonomous to consolidate memory and merge cross-tier duplicates",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 1,
+        "priority": 4,
+        "goal_context": "Memory hygiene -- merge duplicates, prune stale pointers, promote synthesis themes; cross-tier merge added 2026-04-07",
+        "isc": [
+          "data/dream_last_report.md exists with today's date | Verify: Read data/dream_last_report.md",
+          "data/dream_last_run.txt mtime is within last 36h | Verify: stat data/dream_last_run.txt",
+          "Cross-tier merges (if any) wrote donor files to memory/learning/signals/pruned/ not unlinked | Verify: ls memory/learning/signals/pruned/"
+        ],
+        "context_files": [],
+        "expected_outputs": [
+          "data/dream_last_report.md",
+          "data/dream_last_run.txt",
+          "data/dream.lock",
+          "data/dream_snapshots/",
+          "memory/MEMORY.md",
+          "memory/auto-memory/",
+          "memory/learning/signals/",
+          "history/changes/dream_log.md"
+        ],
+        "skills": [
+          "dream"
+        ],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "notes": "Deterministic worker -- haiku for any LLM-touched decisions; mostly stdlib + embedding service. Tier 1 because dream.py writes report/log/index/pruned files; expected_outputs declares the write surface for scope_creep."
+      }
+    },
+    {
+      "routine_id": "weekly-backlog-health",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Backlog health review -- surface stuck tasks, stale pending_review items, and backlog composition stats",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 5,
+        "goal_context": "Pipeline health depends on backlog flow -- stuck tasks and stale reviews block forward progress",
+        "isc": [
+          "No pending_review tasks older than 7 days exist in backlog | Verify: python -c \"import json,datetime; tasks=[json.loads(l) for l in open('orchestration/task_backlog.jsonl')]; print([t['id'] for t in tasks if t.get('status')=='pending_review'])\"",
+          "Backlog composition stats posted to Slack (pending/done/failed counts) | Verify: check #epdev for backlog_health message"
+        ],
+        "context_files": [
+          "orchestration/task_backlog.jsonl"
+        ],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "inline": true,
+        "notes": "Lightweight audit -- haiku can count and report; escalates stale items to Slack. inline=true: read-only audit, no source-of-truth writes."
       }
     }
   ]

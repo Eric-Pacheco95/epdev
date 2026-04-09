@@ -48,6 +48,22 @@ TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
 ABSORBED_DIR = REPO_ROOT / "memory" / "learning" / "absorbed"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
+G2_STREAK_FILE = REPO_ROOT / "data" / "g2_streak.json"
+CRYPTO_BOT_ROOT = Path("C:/Users/ericp/Github/crypto-bot")
+
+# Signal filename keywords that indicate non-G2 activity
+NON_G2_SIGNAL_KEYWORDS = [
+    # G1: financial independence / side hustles
+    "crypto", "trading", "revenue", "side-hustle", "income", "business",
+    # G3: guitar / music
+    "guitar", "music", "band", "practice", "song", "chord", "improv",
+    # G4: health / gym
+    "gym", "workout", "health", "fitness", "exercise",
+    # G5: bank automation
+    "bank-auto", "rpa", "corporate",
+    # G6: self-discovery / balance
+    "therapy", "balance", "social",
+]
 
 # Dynamic synthesis threshold:
 #   >= 35 signals: always trigger (hard ceiling; raised from 20 for auto-signal producers)
@@ -271,6 +287,69 @@ def _count_pending_absorb_proposals() -> int:
     return count
 
 
+def _has_non_g2_activity_today() -> bool:
+    """Return True if today has any non-G2 signal file or crypto-bot commit."""
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    # Check signal filenames for non-G2 keywords
+    if SIGNALS_DIR.is_dir():
+        for p in SIGNALS_DIR.glob(f"{today_str}_*.md"):
+            name_lower = p.name.lower()
+            if any(kw in name_lower for kw in NON_G2_SIGNAL_KEYWORDS):
+                return True
+
+    # Check crypto-bot repo for today's commits
+    if CRYPTO_BOT_ROOT.is_dir():
+        try:
+            result = subprocess.run(
+                ["git", "log", "--oneline", f"--since={today_str}"],
+                capture_output=True, text=True, encoding="utf-8",
+                timeout=5, cwd=str(CRYPTO_BOT_ROOT),
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return True
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
+    return False
+
+
+def _g2_streak_check() -> list[str]:
+    """Warn if G2-only streak >= 5 consecutive days. Updates state once per day."""
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    state: dict = {"last_checked_date": "", "current_streak_days": 0, "last_non_g2_date": ""}
+    if G2_STREAK_FILE.is_file():
+        try:
+            state = json.loads(G2_STREAK_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Update once per day only
+    if state.get("last_checked_date") != today_str:
+        if _has_non_g2_activity_today():
+            state["current_streak_days"] = 0
+            state["last_non_g2_date"] = today_str
+        else:
+            state["current_streak_days"] = state.get("current_streak_days", 0) + 1
+        state["last_checked_date"] = today_str
+        try:
+            G2_STREAK_FILE.parent.mkdir(parents=True, exist_ok=True)
+            G2_STREAK_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        except OSError:
+            pass
+
+    streak = state.get("current_streak_days", 0)
+    last_non_g2 = state.get("last_non_g2_date") or "none recorded"
+
+    if streak >= 5:
+        return [
+            f"  >>> G2-only streak: {streak} days (last non-G2 activity: {last_non_g2})",
+            "      S14: confirm G1/G3/G4 have capture paths before continuing G2 work",
+        ]
+    return []
+
+
 _PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
 
 
@@ -307,28 +386,30 @@ def _git_safety_check() -> list[str]:
     except (OSError, subprocess.TimeoutExpired):
         pass
 
-    # 2. Check HTTPS connection count (network impact from MCP servers)
+    # 2. Check TCP connection count + identify top process holders.
+    # Per-process attribution prevents misattributing leaks to Claude when
+    # the actual culprit is another dev server on the same host
+    # (2026-04-08: dashboard.app:app uvicorn leaked 337 of 376 connections).
     try:
-        result = subprocess.run(
-            ["netstat", "-n"],
-            capture_output=True, text=True, encoding="utf-8", timeout=10,
-        )
-        if result.returncode == 0:
-            https_count = sum(
-                1 for ln in result.stdout.splitlines()
-                if "ESTABLISHED" in ln and ":443" in ln
-            )
-            if https_count >= 70:
+        from tools.scripts.lib.net_util import get_https_summary, format_top_holders
+        https_count, holders = get_https_summary(top_n=3)
+        if https_count is not None:
+            top_str = format_top_holders(holders)
+            if https_count >= 200:
                 warnings.append(
-                    f"  >>> {https_count} HTTPS connections active -- "
-                    "CRITICAL network impact; close idle Claude sessions immediately"
+                    f"  >>> {https_count} TCP connections active -- "
+                    f"CRITICAL: top holders = {top_str}"
                 )
-            elif https_count >= 40:
                 warnings.append(
-                    f"  >>> {https_count} HTTPS connections active -- "
-                    "elevated network usage; consider closing idle sessions"
+                    "      ACTION: identify the top holder above and restart "
+                    "or close it; this is rarely Claude itself"
                 )
-    except (OSError, subprocess.TimeoutExpired):
+            elif https_count >= 100:
+                warnings.append(
+                    f"  >>> {https_count} TCP connections active -- "
+                    f"elevated; top holders = {top_str}"
+                )
+    except (OSError, subprocess.TimeoutExpired, ImportError):
         pass
 
     # 3. Check for uncommitted changes
@@ -407,6 +488,15 @@ def main() -> None:
             print(_ascii_safe(w))
         print()
 
+    # G2 streak warning (fires at >= 5 consecutive G2-only days)
+    g2_warnings = _g2_streak_check()
+    if g2_warnings:
+        print("Goal Balance Warning")
+        print("-" * 40)
+        for w in g2_warnings:
+            print(_ascii_safe(w))
+        print()
+
     # TELOS context (focus only — mood/energy omitted to save context)
     print("TELOS Status")
     print("-" * 40)
@@ -455,6 +545,22 @@ def main() -> None:
         print("-" * 40)
         print(f"  >>> {pending} TELOS proposal(s) pending from /absorb -- run `/absorb --review`")
         print()
+
+    # Pending /dream report
+    dream_report = REPO_ROOT / "data" / "dream_last_report.md"
+    dream_last_run = REPO_ROOT / "data" / "dream_last_run.txt"
+    if dream_report.exists():
+        try:
+            report_text = dream_report.read_text(encoding="utf-8", errors="replace")
+            # Surface only if there were actual changes (not just "memory is clean")
+            if any(k in report_text for k in ["[MERGE", "[STALE", "[DATES"]):
+                last_run = dream_last_run.read_text().strip() if dream_last_run.exists() else "unknown"
+                print("Dream consolidation report")
+                print("-" * 40)
+                print(f"  >>> /dream ran at {last_run} and made changes -- run `/dream --dry-run` to review")
+                print()
+        except Exception:
+            pass
 
     # Recent security events
     print("Recent security events (last 7 days)")

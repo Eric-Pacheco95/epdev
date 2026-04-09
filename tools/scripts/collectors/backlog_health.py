@@ -45,7 +45,7 @@ def collect_backlog_health(backlog_path: Path = None) -> list:
             _result("backlog_total_count", None, "count", error_detail),
         ]
 
-    counts = {"pending": 0, "failed": 0, "done": 0, "other": 0}
+    counts = {"pending": 0, "pending_review": 0, "manual_review": 0, "failed": 0, "done": 0, "other": 0}
     total = 0
 
     try:
@@ -69,6 +69,8 @@ def collect_backlog_health(backlog_path: Path = None) -> list:
         error_detail = "read error: %s" % exc
         return [
             _result("backlog_pending_count", None, "count", error_detail),
+            _result("backlog_pending_review_count", None, "count", error_detail),
+            _result("backlog_manual_review_count", None, "count", error_detail),
             _result("backlog_failed_count", None, "count", error_detail),
             _result("backlog_done_count", None, "count", error_detail),
             _result("backlog_success_rate", None, "ratio", error_detail),
@@ -87,7 +89,11 @@ def collect_backlog_health(backlog_path: Path = None) -> list:
 
     return [
         _result("backlog_pending_count", counts["pending"], "count",
-                "%d tasks pending" % counts["pending"]),
+                "%d tasks pending (dispatcher-eligible)" % counts["pending"]),
+        _result("backlog_pending_review_count", counts["pending_review"], "count",
+                "%d tasks awaiting human review" % counts["pending_review"]),
+        _result("backlog_manual_review_count", counts["manual_review"], "count",
+                "%d tasks in manual review (dispatcher failures)" % counts["manual_review"]),
         _result("backlog_failed_count", counts["failed"], "count",
                 "%d tasks failed" % counts["failed"]),
         _result("backlog_done_count", counts["done"], "count",

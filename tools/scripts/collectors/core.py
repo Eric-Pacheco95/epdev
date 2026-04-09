@@ -12,6 +12,7 @@ Collector types:
   dir_count           — count subdirectories
   disk_usage          — directory size in MB
   hook_output_size    — run a hook script and measure output chars
+  stale_branches      — count stale Jarvis autonomous branches
 """
 
 from __future__ import annotations
@@ -233,9 +234,10 @@ def collect_file_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
     ext = cfg.get("ext", ".md")
 
     if target.is_file():
-        # Single file recency
+        # Single file recency — clamp to 0 so clock skew or filesystem
+        # timestamp rounding never produces a nonsensical negative value.
         mtime = datetime.fromtimestamp(target.stat().st_mtime, tz=timezone.utc)
-        days = (datetime.now(timezone.utc) - mtime).days
+        days = max(0, (datetime.now(timezone.utc) - mtime).days)
         return _result(name, days, "days_since")
 
     if not target.is_dir():
@@ -252,7 +254,7 @@ def collect_file_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
 
     if newest_mtime is None:
         return _result(name, None, "days_since", f"no {ext} files found in {cfg['path']}")
-    days = (datetime.now(timezone.utc) - newest_mtime).days
+    days = max(0, (datetime.now(timezone.utc) - newest_mtime).days)
     return _result(name, days, "days_since")
 
 
@@ -546,7 +548,11 @@ def collect_manifest_signal_velocity(cfg: dict, root_dir: Path, _prev: dict = No
 # ── manifest_autonomous_signal_rate ───────────────────────────────
 
 def collect_manifest_autonomous_signal_rate(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
-    """Count autonomous signals from manifest DB source field."""
+    """Count autonomous signals from manifest DB source field.
+
+    Returns rate per day plus per-category breakdown so volume spikes
+    from specific producers (prediction, heartbeat, overnight) are visible.
+    """
     name = cfg.get("name", "autonomous_signal_rate")
     window = cfg.get("window_days", 7)
     db_path = root_dir / "data" / "jarvis_index.db"
@@ -568,10 +574,43 @@ def collect_manifest_autonomous_signal_rate(cfg: dict, root_dir: Path, _prev: di
             "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL AND date >= ?",
             (cutoff,)
         ).fetchone()[0]
+
+        # Per-category breakdown for autonomous signals (identifies which
+        # producer is spiking: prediction-accuracy, heartbeat, etc.)
+        cat_rows = conn.execute(
+            "SELECT COALESCE(category, 'uncategorized'), COUNT(*) FROM signals "
+            "WHERE deleted_at IS NULL AND source = 'autonomous' AND date >= ? "
+            "GROUP BY category ORDER BY COUNT(*) DESC LIMIT 5",
+            (cutoff,)
+        ).fetchall()
+
+        # Also count by filename prefix pattern to catch producer origin
+        # (e.g., prediction-*, backtest-*, heartbeat-*)
+        prefix_rows = conn.execute(
+            "SELECT "
+            "  CASE "
+            "    WHEN filename LIKE 'prediction-%' OR filename LIKE '%prediction%' THEN 'prediction' "
+            "    WHEN filename LIKE 'backtest-%' OR filename LIKE '%backtest%' THEN 'backtest' "
+            "    WHEN filename LIKE 'heartbeat-%' OR filename LIKE '%heartbeat%' THEN 'heartbeat' "
+            "    WHEN filename LIKE 'overnight-%' OR filename LIKE '%overnight%' THEN 'overnight' "
+            "    WHEN filename LIKE 'dispatch-%' OR filename LIKE '%dispatch%' THEN 'dispatcher' "
+            "    ELSE 'other' "
+            "  END as producer, COUNT(*) "
+            "FROM signals WHERE deleted_at IS NULL AND source = 'autonomous' AND date >= ? "
+            "GROUP BY producer ORDER BY COUNT(*) DESC",
+            (cutoff,)
+        ).fetchall()
         conn.close()
+
         rate = round(count / max(window, 1), 2)
-        return _result(name, rate, "per_day",
-                       "%d autonomous signals in last %dd (%d total)" % (count, window, total))
+        cat_parts = ["%s=%d" % (c, n) for c, n in cat_rows]
+        prod_parts = ["%s=%d" % (p, n) for p, n in prefix_rows if n > 0]
+        detail = "%d autonomous in last %dd (%d total), rate=%.1f/day, by_category=[%s], by_producer=[%s]" % (
+            count, window, total, rate,
+            ", ".join(cat_parts) if cat_parts else "none",
+            ", ".join(prod_parts) if prod_parts else "none",
+        )
+        return _result(name, rate, "per_day", detail)
     except Exception as exc:
         return _result(name, None, "per_day",
                        "manifest_autonomous_signal_rate error: %s" % exc)
@@ -645,6 +684,231 @@ def collect_producer_health(cfg: dict, root_dir: Path, _prev: dict = None) -> di
         return _result(name, None, "count", "producer_health error: %s" % exc)
 
 
+# ── producer_recency ────────────────────────────────────────────────
+
+def _parse_datetime_utc(value: str) -> "datetime":
+    """Parse a date string ('2026-04-04') or ISO datetime to a timezone-aware UTC datetime."""
+    value = value.strip()
+    # Date-only: YYYY-MM-DD -- use end-of-day (23:59:59 UTC) to give producer benefit of the doubt
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", value):
+        dt = datetime.strptime(value, "%Y-%m-%d")
+        return dt.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+    # ISO datetime with trailing Z
+    if value.endswith("Z"):
+        value = value[:-1] + "+00:00"
+    # Python 3.7+ fromisoformat handles +HH:MM offsets
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt
+
+
+def _propose_stale_producer_task(
+    root_dir: Path,
+    entry_name: str,
+    failure_kind: str,
+    detail: str,
+) -> None:
+    """Inject a pending_review backlog entry for a stale/missing producer.
+
+    Replaces the old suspend-sentinel auto-suspension path. The watchdog now
+    notifies via the universal backlog instead of killing the producer, so a
+    human (or dispatcher Tier 2 with human-in-loop) decides the fix.
+
+    failure_kind:
+      "hard_fail" -- state file missing, unreadable, or malformed (priority 1)
+      "soft_stale" -- producer ran recently enough to have state, but is past
+                       its alert_threshold_hours window (priority 2)
+
+    Dedup: routine_id = "producer_recency:{name}:{kind}" so one open row per
+    (producer, failure_kind) sits in the review queue at a time.
+
+    Never raises -- a failure here must not crash the collector snapshot.
+    """
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(root_dir))
+        from tools.scripts.lib.backlog import backlog_append
+
+        priority = 1 if failure_kind == "hard_fail" else 2
+        task = {
+            "description": (
+                "[producer_recency] %s: %s -- %s"
+                % (entry_name, failure_kind, detail)
+            ),
+            "tier": 0,
+            "autonomous_safe": False,
+            "status": "pending_review",
+            "priority": priority,
+            "isc": [
+                "Root cause of %s staleness is identified "
+                "| Verify: Review"
+                % entry_name,
+                "Producer is either fixed, schedule is corrected, or the "
+                "producers.json entry is updated/removed "
+                "| Verify: Review",
+            ],
+            "skills": [],
+            "routine_id": "producer_recency:%s:%s" % (entry_name, failure_kind),
+            "notes": (
+                "Auto-injected by collect_producer_recency watchdog. Watchdog "
+                "no longer writes suspend sentinels; it notifies only. If this "
+                "producer is intentionally paused, resolve by closing this row."
+            ),
+        }
+        backlog_append(task)
+    except Exception:
+        # Watchdog must never break the snapshot. Swallow and continue.
+        pass
+
+
+def collect_producer_recency(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Check each producer in orchestration/producers.json for staleness.
+
+    For each producer:
+      - Determines last-run time via state_type (json_key, file_mtime, dir_latest)
+      - Skips producers still within first_run_grace_until_utc
+      - Emits a WARN detail entry when age_hours > alert_threshold_hours
+      - Injects a pending_review backlog entry (hard_fail or soft_stale) so a
+        human can review -- NEVER writes a .suspend sentinel (that path was
+        removed 2026-04-08 after the dispatcher got stuck suspended 41h on a
+        dir_latest false positive).
+
+    Returns a single result: value = count of stale/missing producers.
+    """
+    name = cfg.get("name", "producer_recency")
+    producers_path = root_dir / "orchestration" / "producers.json"
+
+    if not producers_path.is_file():
+        return _result(name, None, "count", "producers.json not found: orchestration/producers.json")
+
+    try:
+        producers = json.loads(producers_path.read_text(encoding="utf-8", errors="replace"))
+    except (json.JSONDecodeError, OSError) as exc:
+        return _result(name, None, "count", "failed to read producers.json: %s" % exc)
+
+    now_utc = datetime.now(timezone.utc)
+    issues = []
+    stale_count = 0
+
+    for entry in producers:
+        entry_name = entry.get("name", "unknown")
+        try:
+            # Grace period check
+            grace_str = entry.get("first_run_grace_until_utc")
+            if grace_str:
+                try:
+                    grace_until = _parse_datetime_utc(grace_str)
+                    if grace_until > now_utc:
+                        continue
+                except (ValueError, TypeError):
+                    # Malformed grace field -- skip staleness check conservatively
+                    issues.append("malformed grace period for %s: %s" % (entry_name, grace_str))
+                    continue
+
+            state_type = entry.get("state_type", "json_key")
+            state_file_str = entry.get("state_file", "")
+            state_key = entry.get("state_key")
+            alert_threshold_hours = entry.get("alert_threshold_hours", 26)
+
+            if not state_file_str:
+                msg = "state file not configured (empty)"
+                issues.append("%s [%s]" % (msg, entry_name))
+                stale_count += 1
+                _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                continue
+
+            state_path = _resolve_path(state_file_str, root_dir)
+            last_run_utc = None
+
+            if state_type == "json_key":
+                if not state_path.is_file():
+                    msg = "state file not found: %s" % state_file_str
+                    issues.append("%s [%s]" % (msg, entry_name))
+                    stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                    continue
+                try:
+                    data = json.loads(state_path.read_text(encoding="utf-8", errors="replace"))
+                    raw_value = data.get(state_key) if state_key else None
+                    if raw_value is None:
+                        msg = "state key '%s' not found in %s" % (state_key, state_file_str)
+                        issues.append("%s [%s]" % (msg, entry_name))
+                        stale_count += 1
+                        _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                        continue
+                    last_run_utc = _parse_datetime_utc(str(raw_value))
+                except (json.JSONDecodeError, OSError, ValueError, TypeError) as exc:
+                    msg = "error reading state: %s" % exc
+                    issues.append("%s [%s]" % (msg, entry_name))
+                    stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                    continue
+
+            elif state_type == "file_mtime":
+                if not state_path.exists():
+                    msg = "state file not found: %s" % state_file_str
+                    issues.append("%s [%s]" % (msg, entry_name))
+                    stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                    continue
+                mtime = state_path.stat().st_mtime
+                last_run_utc = datetime.fromtimestamp(mtime, tz=timezone.utc)
+
+            elif state_type == "dir_latest":
+                if not state_path.is_dir():
+                    msg = "state dir not found: %s" % state_file_str
+                    issues.append("%s [%s]" % (msg, entry_name))
+                    stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                    continue
+                newest_mtime = None
+                try:
+                    for child in state_path.iterdir():
+                        # Check files first; fall back to subdir mtime if no files exist
+                        if child.is_file() or child.is_dir():
+                            child_mtime = child.stat().st_mtime
+                            if newest_mtime is None or child_mtime > newest_mtime:
+                                newest_mtime = child_mtime
+                except OSError as exc:
+                    msg = "error scanning dir %s: %s" % (state_file_str, exc)
+                    issues.append("%s [%s]" % (msg, entry_name))
+                    stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                    continue
+                if newest_mtime is None:
+                    msg = "dir is empty: %s" % state_file_str
+                    issues.append("%s [%s]" % (msg, entry_name))
+                    stale_count += 1
+                    _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                    continue
+                last_run_utc = datetime.fromtimestamp(newest_mtime, tz=timezone.utc)
+
+            else:
+                msg = "unknown state_type '%s'" % state_type
+                issues.append("%s [%s]" % (msg, entry_name))
+                stale_count += 1
+                _propose_stale_producer_task(root_dir, entry_name, "hard_fail", msg)
+                continue
+
+            # Compare age against threshold -- soft-stale is a NOTIFY, not a KILL.
+            if last_run_utc is not None:
+                age_hours = (now_utc - last_run_utc).total_seconds() / 3600
+                if age_hours > alert_threshold_hours:
+                    stale_count += 1
+                    msg = "stale: %.1fh (threshold: %sh)" % (age_hours, alert_threshold_hours)
+                    issues.append("%s %s" % (entry_name, msg))
+                    _propose_stale_producer_task(root_dir, entry_name, "soft_stale", msg)
+
+        except Exception as exc:
+            issues.append("error: %s [%s]" % (exc, entry_name))
+
+    detail = "; ".join(issues) if issues else None
+    return _result(name, stale_count, "count", detail)
+
+
 # ── backlog_health ─────────────────────────────────────────────────
 
 # Cache for backlog_health results to avoid repeated file reads in a single snapshot
@@ -666,6 +930,8 @@ def _get_backlog_health_data(root_dir: Path) -> list[dict]:
         # Return error results for all 5 metrics
         _backlog_health_cache = [
             _result("backlog_pending_count", None, "count", f"backlog_health error: {exc}"),
+            _result("backlog_pending_review_count", None, "count", f"backlog_health error: {exc}"),
+            _result("backlog_manual_review_count", None, "count", f"backlog_health error: {exc}"),
             _result("backlog_failed_count", None, "count", f"backlog_health error: {exc}"),
             _result("backlog_done_count", None, "count", f"backlog_health error: {exc}"),
             _result("backlog_success_rate", None, "ratio", f"backlog_health error: {exc}"),
@@ -733,23 +999,47 @@ def collect_system_resources(cfg: dict, root_dir: Path, _prev: dict = None) -> d
     except (OSError, subprocess.TimeoutExpired):
         pass
 
-    # Count established HTTPS connections (port 443)
+    # Count established TCP connections + identify top process holders.
+    # Per-process attribution prevents the "blame Claude" misattribution bug
+    # where a leaking dev server triggered "close idle Claude sessions" alerts
+    # while Claude itself was holding only ~5 connections (2026-04-08 incident).
+    top_holders_str = "no per-process data"
     try:
-        result = subprocess.run(
-            ["netstat", "-n"],
-            capture_output=True, text=True, encoding="utf-8", timeout=10,
-        )
-        if result.returncode == 0:
-            for ln in result.stdout.splitlines():
-                if "ESTABLISHED" in ln and ":443" in ln:
-                    https_connections += 1
-    except (OSError, subprocess.TimeoutExpired):
+        from tools.scripts.lib.net_util import get_https_summary, format_top_holders
+        ps_total, holders = get_https_summary(top_n=3)
+        if ps_total is not None:
+            https_connections = ps_total
+            top_holders_str = format_top_holders(holders)
+        else:
+            # Fallback to legacy netstat-only count if PowerShell unavailable
+            result = subprocess.run(
+                ["netstat", "-n"],
+                capture_output=True, text=True, encoding="utf-8", timeout=10,
+            )
+            if result.returncode == 0:
+                for ln in result.stdout.splitlines():
+                    if "ESTABLISHED" in ln and ":443" in ln:
+                        https_connections += 1
+    except (OSError, subprocess.TimeoutExpired, ImportError):
         pass
 
-    detail = "claude=%d, node=%d, https_connections=%d" % (
-        claude_count, node_count, https_connections
+    detail = "claude=%d, node=%d, total=%d; top: %s" % (
+        claude_count, node_count, https_connections, top_holders_str
     )
     return _result(name, https_connections, "count", detail)
+
+
+# ── stale_branches ─────────────────────────────────────────────────
+
+def _collect_stale_branches(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Thin wrapper — delegates to branch_lifecycle.collect_stale_branches()."""
+    try:
+        sys.path.insert(0, str(root_dir))
+        from tools.scripts.branch_lifecycle import collect_stale_branches
+        return collect_stale_branches(cfg, root_dir, _prev)
+    except Exception as exc:
+        return _result(cfg.get("name", "stale_branches"), None, "count",
+                       "stale_branches import error: %s" % exc)
 
 
 # ── Dispatcher ──────────────────────────────────────────────────────
@@ -769,6 +1059,7 @@ COLLECTOR_TYPES = {
     "scheduled_tasks": collect_scheduled_tasks,
     "auth_health": collect_auth_health,
     "producer_health": collect_producer_health,
+    "producer_recency": collect_producer_recency,
     "autonomous_signal_rate": collect_autonomous_signal_rate,
     "signal_volume": collect_signal_volume,
     "manifest_signal_count": collect_manifest_signal_count,
@@ -776,6 +1067,7 @@ COLLECTOR_TYPES = {
     "manifest_autonomous_signal_rate": collect_manifest_autonomous_signal_rate,
     "backlog_health_metric": collect_backlog_health_metric,
     "system_resources": collect_system_resources,
+    "stale_branches": _collect_stale_branches,
 }
 
 

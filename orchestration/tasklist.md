@@ -1,7 +1,7 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-03-31 (Doc-sync: fixed stale checkboxes, completion summary, Phase 5A/5B items validated)
+> Last updated: 2026-04-07 (Doc-sync: 5C marked complete, skill count 47, vacation-week overnight hardening landed)
 
 ## Priority Backlog (ordered by value/effort)
 
@@ -50,6 +50,26 @@
 - [x] **`/capture-recording` skill** — Guitar recording analysis via Gemini API. SKILL.md orchestration + Python CLI (`analyze_recording.py`). Solo/band/batch modes, MUSIC.md goal loading, token tracking. 12/12 ISC items passed. PRD: `memory/work/capture-recording/PRD.md`. (2026-03-28)
 - [x] **`/absorb` skill** — External content ingestion + dual-lens analysis + TELOS routing. All 5 phases complete: 29/29 ISC PASS. Poller, voice processor, session hook, autonomous enforcement all wired. PRD: `memory/work/absorb/PRD.md`. `/voice-capture` deprecated. (2026-03-30)
 
+### Tier 3: Firecrawl Integration (Research Pipeline Enhancement)
+
+> **Context:** Smoke test passed 2026-04-05 (4/6 PASS). Firecrawl solves JS SPA rendering gap (React apps WebFetch gets empty shells from) and Medium paywalls. Reddit explicitly blocked by Firecrawl. Direct API, not MCP (reduces context bloat). Results: `memory/work/firecrawl_smoke_results.json`
+
+- [x] **Firecrawl API wrapper** — `tools/scripts/lib/firecrawl.py` shipped 2026-04-07. `scrape(url)` returns `ScrapeResult` dataclass (ok, markdown, content_len, elapsed_s, error, injection_hits). Lifts INJECTION_SUBSTRINGS list + ASCII-safe encode from smoke test. Timeout + RequestException + non-200 + JSON decode error paths all covered. CLI smoke: `python -m tools.scripts.lib.firecrawl <url>`. (2026-04-07)
+- [x] **Update `/research` waterfall** — `.claude/skills/research/SKILL.md` Step 2.5 added with `from tools.scripts.lib.firecrawl import scrape` snippet. Fallback chain updated: tavily_extract -> Firecrawl -> WebFetch -> WebSearch. Reddit explicitly excluded (Firecrawl blocks). (2026-04-07)
+- [x] **Validation** — Smoke-tested wrapper against `https://linear.app/changelog` (JS SPA): 65,570 chars extracted in 1.2s, zero injection false positives. Confirms wrapper solves WebFetch empty-shell gap. (2026-04-07)
+
+### Morning Feed Actions (2026-04-06)
+
+- [x] **Wire Claude Code "defer" into dispatcher (doc)** — autonomous-rules.md updated: `deferred` replaces `manual_required` as the three-state gate pattern using native PreToolUse `{"decision": "defer"}`. Doc-only scope. (2026-04-06)
+- [ ] **Wire Claude Code "defer" into dispatcher (code)** — validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface. Requires `claude -p --resume` e2e spike first. (split from doc task 2026-04-08)
+- [x] **Supply chain audit (Axios/LiteLLM)** — CLEAN. Zero Axios (direct or transitive) in either repo. Zero LiteLLM — crypto-bot uses OpenAI SDK directly. .env files not tracked (gitignore working). No action needed. (2026-04-06)
+- [x] **OpenClaw dependency check** — Grep confirmed: 0 references in .claude/, settings.json, or any code/config. Only appears in research/knowledge docs. Clean. (2026-04-06)
+- [x] **scan-for-secrets pre-publish** — ABSORB-IDEA. Tool is v0.3 (48h old, pre-1.0, fails maturity gate). Core algo trivial (known-value + escaped variant search). Pattern to lift: build `secret_scanner.py` combining known-value scan + regex key patterns (~5 formats). Wire as pre-publish gate in content pipeline. (2026-04-06)
+
+### ISC Producer (from architecture review 2026-04-06)
+
+- [x] **Build ISC producer** — `tools/scripts/isc_producer.py` built and verified. 21 PRDs scanned in 64s. 8/8 ISC PASS. Cross-model review: 4 High findings fixed (archive exclusion, dedup hash, anti-criterion near-miss, timeout flag). Scheduled as `\Jarvis\Jarvis-ISCProducer`; wired into universal backlog via `inject_batch_summary()` + `create_backlog_tasks()` (2026-04-08, commit `2804c77`). (2026-04-06)
+
 ### Parked (No demand signal within 60 days — research saved)
 
 > Items below failed the enthusiasm filter: no specific project, no specific user, no specific ship date. Research is preserved. Revisit when a real project creates demand.
@@ -76,13 +96,13 @@
 | 4->5 | **GATE PASSED** | 0 |
 | 5A | **COMPLETE** | 0 |
 | 5B | **COMPLETE** | 0 |
-| 5C | In progress | 3 of 5 done (task gate, heartbeat feeder, decisions channel) |
+| 5C | **COMPLETE** | All sub-phases done (5C-1 through 5C-5C); only "ISC template library" deferred |
 
 ## Active Projects
 
 | Project | Status | Health | Owner | Next Action |
 |---------|--------|--------|-------|-------------|
-| epdev-jarvis-setup | active | green | epdev | Phase 4 COMPLETE, Phase 4→5 gate PASSED — Phase 5A next |
+| epdev-jarvis-setup | active | green | epdev | Phase 5C COMPLETE (5C-5C deferred by design), assessing 5D readiness |
 | crypto-bot | active | yellow | epdev | Paper trading → production gate — see `memory/work/crypto_trading_bot/project_state.md` |
 | jarvis-app | active | green | epdev | Sprint 1+2+3 COMPLETE (app shell, vitals, drill-down, tab restructure) — see `memory/work/jarvis-app/PRD.md` |
 
@@ -299,7 +319,7 @@
 
 ## Phase 4: Autonomous self-improvement (background Jarvis)
 
-> **PRD / ISC:** `memory/work/jarvis/PRD.md` — **state:** `memory/work/jarvis/STATE.md`  
+> **PRD / ISC:** Phase 4 PRDs archived; successor is `memory/work/jarvis/PRD_phase5.md` — **state:** `memory/work/jarvis/STATE.md`  
 > **Intent:** Jarvis **self-improves** via automation that does **not** depend on human chat sessions: measure progress toward ideal state, harvest **curated** external patterns (web, GitHub, YouTube, Claude docs), run **[Karpathy-style bounded autoresearch](https://github.com/karpathy/autoresearch)** over **TELOS + learning signals + session history** (writes proposals only — see PRD §4D), and **notify Slack** by importance (`memory/work/slack-routing.md`). Human sessions approve merges, secrets, and TELOS changes.
 
 ### Phase 4A — Ideal-state loop & heartbeat (extends 3E)
@@ -326,7 +346,7 @@
 
 ### Phase 4D — Capstone: internal autoresearch (Karpathy-inspired)
 
-> Pattern from [karpathy/autoresearch](https://github.com/karpathy/autoresearch): human-steered **program**, bounded runs, **one writable surface** for the agent (here: review tree only — not live TELOS). Full spec: `memory/work/jarvis/PRD.md` §4D.
+> Pattern from [karpathy/autoresearch](https://github.com/karpathy/autoresearch): human-steered **program**, bounded runs, **one writable surface** for the agent (here: review tree only — not live TELOS). Full spec: `memory/work/jarvis/autoresearch_program.md`.
 >
 > **Two runners:** `overnight_runner.py` iterates on code quality (6 dimensions). `jarvis_autoresearch.py` iterates on TELOS/signal alignment (the actual PRD 4D capstone).
 
@@ -428,7 +448,7 @@
 
 **5C-1: Two-stage quality gate convergence**
 - [x] **Converge task_gate.py + backlog_append()** — Done in 5C-3: task_gate keeps routing logic, delegates writes to backlog_append(). Stale ISC allowlist removed.
-- [ ] **Stage 2 dispatch gate hardening** — `select_next_task()` already checks autonomous_safe, deps, context_files, ISC commands. Add: injection scanning on task metadata (P1 from red-team), JARVIS_SESSION_TYPE assertion, .claude/settings.json write protection in autonomous sessions
+- [x] **Stage 2 dispatch gate hardening** — All 3 items implemented: `_scan_task_metadata_injection()` in select_next_task (line 328), JARVIS_SESSION_TYPE assertion (line 966), settings.json + CLAUDE.md write protection in validate_tool_use.py. PreToolUse hook matcher broadened from Bash-only to all tools (2026-04-05). (2026-04-05)
 
 **5C-2: Routines engine (first new intake source)**
 - [x] **Routines config** — `orchestration/routines.json`: schedule, task template, dedup key. Day-one routines: weekly security audit, weekly synthesis, monthly steering audit
@@ -444,7 +464,7 @@
 **5C-5A: Fix overnight runner (prerequisite)**
 - [x] **Rate limit detection** — Detect "hit your limit" in claude -p output, abort remaining dimensions, log clearly
 - [x] **Self-test state isolation** — Self-test no longer overwrites production overnight_state.json
-- [ ] **Validate real production run** — Confirm next overnight run produces non-zero kept counts (requires limit headroom at 4am)
+- [x] **Validate real production run** — VALIDATED: 7 runs completed, all 6 dimensions active, 159 total kept changes (scaffolding:28, codebase_health:53, knowledge_synthesis:19, external_monitoring:26, prompt_quality:30, cross_project:3). Last run: 2026-04-05. (2026-04-05)
 
 **5C-5B: Dispatcher budget controls (independent)**
 - [x] **max_tasks_per_source_per_day** — 3 per source per day; checked via run report history before execution
@@ -453,35 +473,46 @@
 - [x] **Rate limit detection** — Detect "hit your limit" in claude -p output; return task to pending, don't count as failure
 
 **5C-5C: Overnight producer interface (deferred until 3+ real production runs)**
-- [ ] **Overnight runner emits backlog task** — After iterations complete, emit single pending_review task with recommendations via backlog_append()
-- [ ] **ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs)
-- [ ] **Human review gate** — Overnight-sourced tasks require autonomous_safe: false until reviewed
+- [x] **Overnight runner emits backlog task** — `inject_review_task()` at line 544: creates `pending_review` task via `backlog_append()` after each run with kept changes. Deduplicates by `routine_id`. 3 review tasks created (Apr 3-5). (2026-04-05, discovered already built)
+- [ ] **ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs). Current: ISC generated inline per-branch, functional but not templated
+- [x] **Human review gate** — Tasks created with `autonomous_safe: false` + `status: pending_review`. Security failures skip task injection entirely. (2026-04-05, discovered already built)
 
 ### Phase 5D — Hardening + Quality (2-3 sessions, data-dependent)
 
 > **Prerequisite:** Let pipeline run organically. Collect 15+ tasks with diverse outcomes before optimizing.
 
-- [ ] **Branch lifecycle tracker** — Flag `jarvis/auto-*` and `jarvis/overnight-*` branches with no merge/discard decision after 7 days. Deterministic, zero LLM cost. Real gap found by arch review: 5 orphaned branches in production today
-- [ ] **Autonomous signal rate monitoring** — 4E item, now critical for Phase 5 safety. Alert on volume spikes from autonomous producers (heartbeat, overnight, dispatcher)
+- [x] **Branch lifecycle tracker** — `tools/scripts/branch_lifecycle.py`: scans `jarvis/auto-*` and `jarvis/overnight-*` branches, flags stale (>7d, not merged), reports merged (safe to delete). Heartbeat collector `stale_branches` wired with warn>0, crit>3. CLI: `--json`, `--notify` (Slack), `--self-test` (5 tests pass). (2026-04-05)
+- [x] **Autonomous signal rate monitoring** — Enhanced `manifest_autonomous_signal_rate` collector with per-category and per-producer breakdown (prediction, backtest, heartbeat, overnight, dispatcher). Remediation_map entries added for both `autonomous_signal_rate` and `stale_branches`. Thresholds: warn>10/day, crit>20/day. (2026-04-05)
+- [x] **Memory dedup v1 — cross-tier merge + index GC** (2026-04-07) — Architecture-reviewed (3 sonnet agents), reduced from full memory_audit_producer proposal. Shipped: `tools/scripts/jarvis_config.py` (PROTECTED_FILES shared constant), dream.py Phase 3 cross-tier merge with bidirectional provenance (`source:` match + similarity ≥0.85) + move-to-`signals/pruned/` instead of unlink, jarvis_heartbeat.py rolling-file pattern (atomic `os.replace`, per-metric lock, lifetime crossing counter), embedding_service.py TELOS exclusion (privacy fix — `memory/work/telos/` was being indexed into ChromaDB), vector dim+norm validation, **`purge_orphaned()` run on every index() — closed memory-leak class bug**, dream registered in producers.json (36h alert) + routines.json (daily-dream, haiku, autonomous-safe). **Surprise root cause:** today's "18 phantom duplicates" were stale ChromaDB rows for deleted files, NOT real cross-tier dupes. Post-GC report: 0 dupes, 23 informational related pairs. 46 orphaned rows purged + 3 TELOS rows excluded. Remaining: full re-index pending Ollama uptime.
+  - **v2 backlog (trigger-gated, do not pre-build):**
+    - `memaudit-v2-producer` — full memory_audit_producer.py if dream patch leaves >5 unresolved cross-tier dupes/week for 2 consecutive weeks
+    - `memaudit-v2-search` — memory_search.py hybrid retrieval router when 2nd skill hits a documented retrieval miss
+    - `memaudit-v2-dedup` — producer_dedup.py write-time guard when a 2nd producer (beyond heartbeat) creates ≥3 near-duplicates/week
+    - `memaudit-v2-refs` — Phase A reference integrity audit if a stale-pointer incident causes a real failure
+    - `memaudit-v2-decay` — Phase B TTL decay if Eric reports acting on stale memory ≥2 times
+    - `memaudit-v2-versioning` — versioned embedding index when nomic-embed-text upgraded OR corpus exceeds 1000 files
+    - `memaudit-v2-contradict` — Phase D LLM contradiction detection: re-evaluate after 90 days; needs separate PRD
+    - `memaudit-threshold-recal` — empirically recalibrate 0.92 dupe threshold; one real cross-tier dupe sits at 0.919 today (`2026-03-27_slack-epdev-routing.md` ↔ `slack-routing.md`)
 - [ ] **Two-layer verification (data-gated)** — Second `claude -p` review of worker output if ISC quality proves insufficient. Only build after 15+ task outcomes show ISC-pass-but-bad-quality pattern. Aron's CEO-checks-worker pattern, adapted
 - [ ] **Worker prompt optimization (data-gated)** — Analyze run reports: what context did workers actually use vs ignore? Only build after 15+ runs provide calibration data
+  - Hypothesis parked 2026-04-07: test prompt valence (neutral / supportive / urgent) as a worker prompt variable, n>=15 outcomes per arm. Source: dair_ai recap of NeurIPS workshop paper finding neutral prompts maximize reliability while supportive/threatening introduce variance — model-specific, untested on Claude
 - [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources (moved from 5C -- requires pipeline stability first)
 
 ### Phase 5E — Self-Correcting Pipeline (after 5D + 15 diverse task outcomes including 3+ manual_review)
 
 > **Prerequisite:** 15+ dispatcher tasks with diverse outcomes (done, failed, manual_review, retried). Architecture review: `memory/work/_arch-review-20260403/` (3-agent convergence on design constraints).
 
-**5E-1: Deterministic follow-on (partial-ISC retry)**
-- [ ] **`generation` field in task schema** — Hard cap at 2 (parent -> G1 -> G2 -> terminal). Prevents runaway loops, scope drift, quality degradation simultaneously
-- [ ] **`_emit_followon()` in dispatcher** — DECIDE function after write_backlog(), before notify_completion(). Extracts failing ISC criteria from verify_isc() results. Never derives from worker output
-- [ ] **Root-source attribution** — Follow-on tasks trace budget to original producer source, not "dispatcher". Prevents budget circumvention
-- [ ] **Always `pending_review`** — Follow-on tasks never enter `pending` autonomously. Max 1 follow-on per dispatch run
-- [ ] **Slack notification includes follow-on task ID** — Eric knows what to review
+**5E-1: Deterministic follow-on (partial-ISC retry)** — BUILT 2026-04-07 (commit `26e90d0`), awaiting 14-day falsification (target 2026-04-21). PRD: `memory/work/jarvis/PRD_phase5e1.md`. 26/26 self-tests pass.
+- [x] **`generation` field in task schema** — Hard cap at 2, enforced in `backlog.validate_task` AND `_emit_followon()` Gate 3
+- [x] **`_emit_followon()` in dispatcher** — 9 sequential gates (failure_type, source=overnight, gen<2, isc_pass/total>=0.5, branch exists, daily throttle, executable-fail subset, injection sanitizer, shrink invariant)
+- [x] **Root-source attribution** — child inherits `parent.source`, never set to "dispatcher"
+- [x] **Always `pending_review`** — anti-criterion enforced; throttle=1/day via `data/followon_state.json`
+- [x] **Slack notification includes follow-on task ID** — `parent_id → followon_id` lineage in notify
 
-**5E-2: Pipeline lifecycle + observability**
-- [ ] **`pending_review` TTL** — 7-day TTL in archive sweep. Stale pending_review tasks escalate to Slack alert, then auto-fail
-- [ ] **Branch existence validation at selection time** — If task references parent_branch, verify it exists before claiming. Expired branch -> manual_review
-- [ ] **Follow-on ISC count must decrease per generation** — If G1 fails more ISC than parent, route to manual_review (evidence of scope expansion)
+**5E-2: Pipeline lifecycle + observability** — BUILT 2026-04-07 (commit `26e90d0`), awaiting 7-day falsification (target 2026-04-14). PRD: `memory/work/jarvis/PRD_phase5e2.md`.
+- [x] **`pending_review` TTL** — `sweep_pending_review()` + `apply_pending_review_sweep()`: 7d Slack alert, 14d auto-fail with archive to `data/pending_review_expired/`
+- [x] **Branch existence validation at selection time** — `validate_parent_branch()` invoked in `select_next_task()`; missing or merged-to-main routes to manual_review with `failure_type=branch_lifecycle`
+- [x] **Follow-on ISC count must decrease per generation** — `validate_followon_isc_shrinks()` standalone helper, wired into 5E-1 Gate 9
 
 **5E-3: LLM-assisted follow-on (deferred within 5E)**
 - [ ] **FOLLOW_UP staging gate** — Worker FOLLOW_UP lines go to `data/followon_pending/` staging file, not directly to backlog. Requires human review before promotion (CLAUDE.md data-source checklist)
@@ -501,9 +532,9 @@
 
 > **Skill:** `/make-prediction` (v1 live, 2026-04-03). **Goal:** 50+ tracked predictions for calibration learning, then autonomous backtesting.
 
-- [ ] **Prediction review scheduled task** — Weekly/monthly scan of `data/predictions/` for signposts approaching due dates. Surface due-for-review predictions in session start or Slack. Eric resolves interactively. **Trigger:** 10+ tracked predictions in `data/predictions/`. Backlog: `task-1775191309568356`
-- [ ] **Prediction backtesting pipeline** — Autonomous producer: select historical events, run `/make-prediction` constrained to historical knowledge, score against known outcomes. Requires seed list of 20+ historical events, knowledge-constraining prompt wrapper, scoring logic. **Trigger:** `/make-prediction` v1 validated + dispatcher operational + Phase 5 stable. Backlog: `task-1775191309566355`
-- [ ] **Prediction calibration feedback loop** — After 20+ resolved predictions, analyze accuracy patterns by domain. Write calibration adjustment file that `/make-prediction` reads at CALIBRATE step. **Trigger:** 20+ resolved predictions via `/review-prediction`. Backlog: `task-1775191309569355`
+- [x] **Prediction review scheduled task** — `prediction_review_task.py` posts weekly Slack digest of predictions due within 30 days. Routine `prediction-weekly-review` in routines.json. Haiku model for cost efficiency. (2026-04-05)
+- [x] **Prediction backtesting pipeline** — `prediction_backtest_producer.py` + `prediction_resolver.py`. 35 backtest predictions across 3 domains (10 geo, 10 market, 10 tech, 5 planning). 59 resolutions scored. Events sourced from `data/backtest_events.yaml` (35 events). Routine `prediction-backtest` in routines.json. (2026-04-05)
+- [x] **Prediction calibration feedback loop** — `prediction_calibration.py` computes per-domain accuracy and overconfidence adjustments. `data/calibration.json` active with 3 domains: geo (adj +0.058, n=7), market (adj +0.061, n=9), tech (adj +0.15 clamped, n=9). 25 resolved predictions (above 20 threshold). Routine `prediction-calibration-check` in routines.json. (2026-04-05)
 
 ---
 
@@ -514,6 +545,8 @@
 
 - [ ] TBD — defined after Phase 5 completion gate passes
 - [ ] **Local embedding + vector search for memory** — DEFERRED from Phase 5. Add semantic retrieval layer (nomic-embed-text + numpy/cosine, no ChromaDB) alongside grep. Triggers: file count > 400 OR 5+ documented grep retrieval failures. Research: `memory/work/local-embeddings/research_brief.md`. Architecture review: `memory/work/_arch-review-20260402b/`. Decision: premature at 126 files; grep + Claude's native semantic reasoning is sufficient at current scale
+- [ ] **Harness hill-climbing eval loop (Trace Grader)** — DEFERRED to Phase 6. Phase 1: wire report.md TSV delta table into Slack review message (fixes zero-merge bottleneck; `total_reviewed_by_human: 0`, `total_merged_to_main: 0` across 10 runs). Phase 2 (gated on ~30 merged runs): build `tools/scripts/grade_overnight.py` (~200 lines, zero LLM calls) — grade against `git diff --stat {branch}` (NOT OVERNIGHT_RESULT line which is agent-controlled), `autonomous_safe: false` hardcoded on all injected tasks, `routine_id: "grader-{dim}"` dedup to prevent cascade. Architecture review: `history/decisions/2026-04-08-arch-review-trace-grader.md`. Key risk: OVERNIGHT_RESULT line poisoning; key insight: LangChain analogy holds for "measure systematically" but not grading mechanism (no reference answer for open-ended improvement runs). Trigger: Phase 5 completion gate + merge volume evidence.
+- [ ] **Evaluate ACP / acpx for overnight runner + dispatcher worker spawning** — DEFERRED to Phase 6. Source: openclaw/acpx (Agent Client Protocol — headless CLI client for stateful agent sessions, replaces "scraping PTY sessions" with structured protocol). Current state: `jarvis_dispatcher.generate_worker_prompt()` and `overnight_runner.build_dimension_prompt()` both spawn `claude -p` subprocesses; rate-limit detection is via stdout grep (`[MODEL-DEP]` rule). Trigger to revisit: (a) `claude -p` rate-limit handling becomes fragile after 15+ task outcomes, OR (b) need stateful multi-turn worker sessions (Phase 5E two-layer verification), OR (c) need to delegate to non-Claude coding agents (codex, etc.) without rewriting subprocess code. Acceptance check before adoption: ACP must not introduce a new auth surface, must work with `JARVIS_SESSION_TYPE=autonomous` env var for write-guard activation, and must preserve the `_worker_prompt.txt` artifact for audit. Per "absorb over adopt" steering rule — do not adopt until existing `claude -p` proves insufficient. Reference: `https://github.com/openclaw/acpx`. Wisdom-extraction context: 2026-04-08 OpenClaw architecture review.
 
 ---
 

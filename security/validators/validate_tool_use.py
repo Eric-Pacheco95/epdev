@@ -130,22 +130,27 @@ def _blocked_rm_rf(cmd: str) -> bool:
     if not re.search(r"\brm\b", cmd):
         return False
     compact = re.sub(r"\s+", " ", cmd)
-    if not re.search(r"-[a-z]*rf[a-z]*|-[a-z]*fr[a-z]*|-r\s+-f\b", compact, re.IGNORECASE):
+    # Match -rf, -fr, or split -r -f flags
+    _RF = r"(?:-[a-z]*rf[a-z]*|-[a-z]*fr[a-z]*|-r\s+-f)"
+    if not re.search(_RF, compact, re.IGNORECASE):
         return False
+    # rm (-rf|-fr) /  -- absolute root
     if (
-        re.search(r"\brm\b[^;]*-rf[^;]*\s/\s", compact)
-        or re.search(r"\brm\b[^;]*-rf[^;]*\s/\s*[\"']", compact)
-        or re.search(r"\brm\b[^;]*-rf[^;]*\s/\s*$", compact)
+        re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s/\s", compact)
+        or re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s/\s*[\"']", compact)
+        or re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s/\s*$", compact)
     ):
         return True
+    # rm (-rf|-fr) ~  -- home directory
     if (
-        re.search(r"\brm\b[^;]*-rf[^;]*\s~\s*$", compact)
-        or re.search(r"\brm\b[^;]*-rf[^;]*\s~\s*[;&|]", compact)
-        or re.search(r"\brm\b[^;]*-rf[^;]*[\"']~[\"']", compact)
+        re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s~\s*$", compact)
+        or re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s~\s*[;&|]", compact)
+        or re.search(r"\brm\b[^;]*" + _RF + r"""[^;]*[\"']~[\"']""", compact)
     ):
         return True
-    if re.search(r"\brm\b[^;]*-rf[^;]*\s\*\s*;?", compact) or re.search(
-        r"\brm\b[^;]*-rf[^;]*\s\*[\"']", compact
+    # rm (-rf|-fr) *  -- wildcard
+    if re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s\*\s*;?", compact) or re.search(
+        r"\brm\b[^;]*" + _RF + r"""[^;]*\s\*[\"']""", compact
     ):
         return True
     return False
@@ -285,6 +290,33 @@ CONTEXT_PROFILES_PATH_PATTERN = re.compile(
     r"orchestration[/\\]context_profiles[/\\]", re.IGNORECASE
 )
 
+# Static producer configs -- title field flows into worker prompt notes unsanitized.
+# A tampered title enables prompt injection into every worker spawned for that topic.
+RESEARCH_TOPICS_PATH_PATTERN = re.compile(
+    r"orchestration[/\\]research_topics\.json$", re.IGNORECASE
+)
+
+# Producer registry -- controls which producers run and whether alerts fire.
+# Guard is autonomous-session-only; interactive sessions are operator-controlled.
+# A prompt-injected autonomous worker could tamper to suppress alerts or unsuspend producers.
+PRODUCERS_REGISTRY_PATH_PATTERN = re.compile(
+    r"orchestration[/\\]producers\.json$", re.IGNORECASE
+)
+
+# Claude Code session settings -- controls allowed tools, hook commands, MCP servers.
+# A compromised worker rewriting settings.json could escalate its own permissions.
+# Guard is autonomous-session-only; interactive sessions are operator-controlled.
+SETTINGS_PATH_PATTERN = re.compile(
+    r"\.claude[/\\]settings\.json$", re.IGNORECASE
+)
+
+# Root instruction file -- controls identity, steering rules, and skill routing.
+# An autonomous worker modifying CLAUDE.md could weaken security rules, alter
+# model routing, or inject persistent instructions into every future session.
+CLAUDE_MD_PATH_PATTERN = re.compile(
+    r"CLAUDE\.md$", re.IGNORECASE
+)
+
 # Secrets patterns for Read tool blocking (autonomous sessions)
 _SECRET_FILE_PATTERNS = re.compile(
     r"(?:^|[/\\])\.env(?:[/\\]|$)"
@@ -298,7 +330,15 @@ _SECRET_FILE_PATTERNS = re.compile(
 
 
 def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None:
-    """Block Write/Edit to memory/work/telos/ or context_profiles/ in autonomous sessions.
+    """Block Write/Edit to protected paths in autonomous sessions.
+
+    Protected paths: TELOS, context_profiles, research_topics, producers,
+    settings.json, CLAUDE.md.
+
+    IMPORTANT: Any new autonomous entry point (script that calls claude -p or
+    spawns a worker) MUST set JARVIS_SESSION_TYPE=autonomous in the subprocess
+    env. Without it, all protections in this function are bypassed (fail-open).
+    See jarvis_dispatcher.py line 963 for the assertion pattern to copy.
 
     Returns a block result if the write should be blocked, None otherwise.
     """
@@ -323,6 +363,42 @@ def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None
             "block",
             f"Autonomous sessions MUST NOT write to memory/work/telos/. "
             f"TELOS proposals must be queued for interactive review. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if RESEARCH_TOPICS_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to orchestration/research_topics.json. "
+            f"Topic titles flow into worker prompt notes -- tampering enables prompt injection. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if PRODUCERS_REGISTRY_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to orchestration/producers.json. "
+            f"This file controls which producers run and whether watchdog alerts fire -- "
+            f"tampering can silently disable all producer monitoring. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if SETTINGS_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to .claude/settings.json. "
+            f"This file controls allowed tools, hook commands, and MCP servers -- "
+            f"a compromised worker rewriting it could escalate its own permissions. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if CLAUDE_MD_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to CLAUDE.md. "
+            f"This root instruction file controls identity, steering rules, and "
+            f"skill routing -- autonomous modification could weaken security or "
+            f"inject persistent instructions into every future session. "
             f"Blocked: {tool} to {file_path}"
         )
 

@@ -2,8 +2,6 @@
 
 You are the guitar recording analysis skill for the Jarvis AI brain. You orchestrate the full pipeline: load musical context from MUSIC.md, invoke the Python CLI for Gemini-powered analysis, write output to the recordings archive, update practice log, and log token usage.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
@@ -95,6 +93,21 @@ Summary: analysis path, key finding, tokens, MUSIC.md updated, token log updated
 - GEMINI_API_KEY loaded from .env, never logged
 - Uploaded files deleted immediately (48h TTL backup)
 - No audio content in logs — only analysis text
+
+# VERIFY
+
+- Analysis file written to expected path (recordings/analyses/{date}_{stem}.md) | Verify: Check output for file path confirmation
+- MUSIC.md Recordings table updated with new row (date, filename, type, level, feedback) | Verify: tail -3 memory/work/telos/MUSIC.md
+- Token log entry appended to token_log.jsonl | Verify: tail -1 memory/work/telos/recordings/analyses/token_log.jsonl
+- No GEMINI_API_KEY value appears in analysis file or logs | Verify: grep -c GEMINI_API_KEY memory/work/telos/recordings/analyses/token_log.jsonl
+- Batch synthesis file written when --batch flag used | Verify: Check batch_results.json and synthesis_{date}.md existence
+
+# LEARN
+
+- If the same technical weakness (timing, dynamics, bends) appears in 3+ consecutive analyses, surface it to Eric as a focus area via /telos-update
+- Track token cost per recording in token_log.jsonl -- if cost per session exceeds expected range, note in /learning-capture
+- If audio quality issues (guitar inaudible, clipping) appear frequently, suggest setup improvements in the analysis
+- If batch synthesis reveals recurring themes across sessions, capture as a learning signal
 
 # INPUT
 

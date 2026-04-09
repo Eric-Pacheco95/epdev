@@ -1,0 +1,97 @@
+---
+date: 2026-04-05
+event_id: geo-nato-finland-sweden-2022
+domain: geopolitics
+knowledge_cutoff_date: 2022-05-01
+backtested: true
+leakage_risk: HIGH
+weight: 0.5
+status: "resolved"
+known_outcome: "Both applied for NATO membership in May 2022. Finland joined April 4 2023. Sweden joined March 7 2024."
+difficulty: low
+primary_confidence: 0.92
+alignment_score: 0.417
+suspect_leakage: true
+score_method: keyword-alignment-v1
+[SUSPECT LEAKAGE]
+resolved_date: "2026-04-05"
+outcome_label: "correct"
+resolution_note: "geo-nato-finland-sweden-2022"---
+
+# Backtest Prediction: Will Finland and Sweden apply to join NATO following Russia's invasion of Ukraine?
+
+> **BACKTESTED** -- Knowledge constrained to 2022-05-01.
+> Leakage risk: HIGH. Weight: 0.5. Requires human review before calibration use.
+
+**[SUSPECT LEAKAGE]** Model confidence > 85% on a historical event. This signal requires Eric review before calibration promotion. Exclude from calibration if leakage is confirmed.
+
+## Known Outcome
+
+Both applied for NATO membership in May 2022. Finland joined April 4 2023. Sweden joined March 7 2024.
+
+## Model Prediction (as of 2022-05-01)
+
+## Outcomes
+
+**1. Both Finland and Sweden apply to join NATO within 2022**
+**Probability: 78%**
+The signals are overwhelmingly aligned. Finnish public opinion swung from ~26% to ~76% in weeks â€” a seismic shift in a country that maintained neutrality for 75 years specifically to manage the Russia relationship. Finland's President NiinistÃ¶ and PM Marin have both signaled openness publicly. Sweden's Social Democrats are conducting an internal review that looks more like building political cover for a reversal than a genuine open question. The Nordic cooperation dynamic is critical: Finland moving alone is conceivable, but Sweden staying out while Finland joins would break the implicit Nordic security pact. NATO leadership is publicly welcoming. The political window is open and closing â€” delay risks losing the public mandate.
+
+**2. Finland applies, Sweden delays or declines**
+**Probability: 12%**
+Finland's domestic consensus is far stronger. The Social Democrats in Sweden have a deeper ideological attachment to non-alignment, and there's a September 2022 election that could complicate timing. Finland could move first, with Sweden following later or not at all. This is the most plausible split outcome.
+
+**3. Both apply but one or both applications are blocked (Turkey veto or other)**
+**Probability: 5%**
+Turkey's Erdogan has signaled displeasure over Nordic support for Kurdish groups. NATO requires unanimous consent. A full block is unlikely â€” the US and UK would broker a deal â€” but a prolonged delay that functionally stalls accession is possible.
+
+**4. Neither applies in 2022**
+**Probability: 4%**
+Requires a dramatic de-escalation in Ukraine or a credible Russian threat that reverses public opinion. Neither seems plausible as of today. The political momentum is too strong.
+
+**5. Both apply but withdraw or suspend applications**
+**Probability: 1%**
+Essentially requires a ceasefire plus Russian security guarantees that restore the pre-invasion status quo. Near-zero probability given the scale of the rupture.
+
+## Primary Prediction
+
+**Both Finland and Sweden apply to join NATO within 2022 â€” 78%.**
+
+Finland is the higher-confidence component (~92% individually). Sweden is the swing factor, but the Nordic coordination logic and the political cover of moving together make a joint application the modal outcome.
+
+## Signposts
+
+1. **Finland's parliamentary white paper / security review completion** â€” If Finland's government formally recommends application in the coming weeks, Sweden's timeline compresses dramatically. Watch for a Finnish announcement in May.
+
+2. **Swedish Social Democrat party position reversal** â€” The party's internal review is the gating factor for Sweden. A formal reversal of non-alignment policy would move this from 78% toward 90%+. Continued ambiguity past June would shift probability toward the "Finland only" outcome.
+
+3. **Turkey's specific demands and US/UK brokering response** â€” If Erdogan escalates from signaling to formal veto threat with concrete preconditions (e.g., extradition of Kurdish figures), the "blocked" outcome rises. Watch for bilateral meetings between Ankara and Washington.
+
+## Confidence Note
+
+As of 2022-05-01, the formal applications have not yet been submitted. My estimate is based on: public polling data, official statements from Finnish and Swedish leadership, NATO Secretary General's public comments, historical Nordic security coordination patterns, and Turkey's early signaling. The strongest uncertainty is Sweden's domestic politics â€” the Social Democrat reversal is probable but not yet confirmed. The Turkey risk is real but likely manageable given US leverage. I have no visibility into private diplomatic channels that may have already resolved or complicated these dynamics.
+
+---
+*Generated by prediction_backtest_producer.py on 2026-04-05*
+
+
+---
+
+## Resolution (2026-04-05)
+
+**Verdict**: REVIEWED
+**Date resolved**: 2026-04-05
+**Note**: geo-nato-finland-sweden-2022
+**Resolved by**: Eric (via Slack reply)
+*Logged at 2026-04-06T00:33:18Z*
+
+
+---
+
+## Resolution (2026-04-05)
+
+**Verdict**: CORRECT
+**Date resolved**: 2026-04-05
+**Note**: (none)
+**Resolved by**: Eric (via Slack reply)
+*Logged at 2026-04-06T01:02:08Z*

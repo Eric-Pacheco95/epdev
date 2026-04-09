@@ -55,6 +55,18 @@ OUTPUT_BASE = REPO_ROOT / "memory" / "work" / "jarvis" / "autoresearch"
 SIGNAL_THRESHOLD_CONTRADICTIONS = 3
 SIGNAL_THRESHOLD_COVERAGE = 50  # percent
 
+# Cross-project repos that count toward TELOS coverage (G2/G5 indirect work).
+# Each entry is a path; if it exists and is a git repo, recent commits are
+# included as External Project Evidence and credited toward goal coverage.
+EXTERNAL_PROJECT_REPOS = [
+    {
+        "path": Path(r"C:\Users\ericp\Github\claude-workbench"),
+        "credit_goals": ["G5", "G2"],  # day-job AI mastery, AI-augmented life
+        "rationale": "Day-job AI workflow harness; G5 pursued indirectly here",
+    },
+]
+EXTERNAL_EVIDENCE_DAYS = 30
+
 
 # -- File gathering (read-only, time-bounded) --------------------------------
 
@@ -133,6 +145,95 @@ def read_synthesis_recent(count: int = 5) -> list[dict]:
     return result
 
 
+def read_prior_proposals(days: int = 14, max_runs: int = 5) -> list[dict]:
+    """Read recent run-*/proposals.md files to dedup against prior proposals.
+
+    Prevents the "already-applied edit" failure mode where autoresearch
+    proposes the same TELOS change multiple days in a row because it has no
+    memory of what it already suggested (or what Eric already merged).
+    """
+    if not OUTPUT_BASE.is_dir():
+        return []
+
+    cutoff = datetime.now() - timedelta(days=days)
+    candidates = []
+    for run_dir in OUTPUT_BASE.glob("run-*"):
+        proposals_file = run_dir / "proposals.md"
+        if not proposals_file.is_file():
+            continue
+        try:
+            mtime = datetime.fromtimestamp(proposals_file.stat().st_mtime)
+            if mtime >= cutoff:
+                candidates.append((proposals_file, mtime, run_dir.name))
+        except OSError:
+            pass
+
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    candidates = candidates[:max_runs]
+
+    result = []
+    for f, mtime, run_name in candidates:
+        try:
+            content = f.read_text(encoding="utf-8", errors="replace")
+            if len(content) > 1500:
+                content = content[:1500] + "\n[... truncated]"
+            result.append({
+                "run": run_name,
+                "date": mtime.strftime("%Y-%m-%d"),
+                "content": content,
+            })
+        except OSError:
+            pass
+    return result
+
+
+def read_external_project_evidence() -> list[dict]:
+    """Read recent git log from configured cross-project repos.
+
+    These commits count toward TELOS goal coverage when the goal is pursued
+    indirectly in a sibling repo (e.g., G5 day-job AI mastery via
+    claude-workbench). Each entry carries the credit_goals list so the
+    analysis prompt can attribute evidence correctly.
+    """
+    result = []
+    for repo_cfg in EXTERNAL_PROJECT_REPOS:
+        repo_path = repo_cfg["path"]
+        if not (repo_path / ".git").is_dir():
+            continue
+        try:
+            proc = subprocess.run(
+                [
+                    "git", "log",
+                    f"--since={EXTERNAL_EVIDENCE_DAYS} days ago",
+                    "--pretty=format:%h %ad %s",
+                    "--date=short",
+                ],
+                cwd=str(repo_path),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=30,
+            )
+            log = proc.stdout.strip()
+        except (subprocess.TimeoutExpired, OSError):
+            log = ""
+
+        if not log:
+            continue
+
+        # Cap to 20 commits to bound prompt size
+        lines = log.splitlines()[:20]
+        result.append({
+            "repo": repo_path.name,
+            "credit_goals": repo_cfg["credit_goals"],
+            "rationale": repo_cfg["rationale"],
+            "commit_count": len(lines),
+            "log": "\n".join(lines),
+        })
+    return result
+
+
 def gather_inputs() -> dict:
     """Gather all read-scope inputs. Returns structured dict."""
     telos = read_telos_files()
@@ -141,6 +242,8 @@ def gather_inputs() -> dict:
     raw_signals = read_recent_files(SIGNALS_DIR, days=7, max_files=10)
     failures = read_recent_files(FAILURES_DIR, days=14, max_files=10)
     sessions = read_recent_files(SESSION_DIR, days=7, max_files=5)
+    prior_proposals = read_prior_proposals(days=14, max_runs=5)
+    external_evidence = read_external_project_evidence()
 
     return {
         "telos": telos,
@@ -149,6 +252,8 @@ def gather_inputs() -> dict:
         "raw_signals": raw_signals,
         "failures": failures,
         "sessions": sessions,
+        "prior_proposals": prior_proposals,
+        "external_evidence": external_evidence,
         "scope_summary": {
             "telos_files": len(telos),
             "synthesis_docs": len(synthesis),
@@ -156,6 +261,8 @@ def gather_inputs() -> dict:
             "raw_signals_7d": len(raw_signals),
             "failures_14d": len(failures),
             "sessions_7d": len(sessions),
+            "prior_proposals": len(prior_proposals),
+            "external_repos": len(external_evidence),
         },
     }
 
@@ -191,7 +298,19 @@ def call_claude(prompt: str, system: str = "") -> str:
             env=env,
         )
         if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
+            output = result.stdout.strip()
+            # Rate limit guard (steering rule [MODEL-DEP]):
+            # claude -p returns exit 0 with the rate-limit message in stdout
+            # when the Claude Max usage limit is hit. Treat as error so
+            # callers (auto_apply_telos, analysis pass) do not act on it.
+            rate_limit_phrases = (
+                "hit your limit", "rate limit", "quota exceeded",
+                "too many requests", "usage limit resets",
+            )
+            output_lower = output.lower()
+            if any(p in output_lower for p in rate_limit_phrases):
+                return "(claude -p rate-limited: %s)" % output[:200]
+            return output
         if result.stderr.strip():
             return "(claude -p error: %s)" % result.stderr.strip()[:200]
         return "(claude -p returned empty response)"
@@ -243,7 +362,15 @@ For each TELOS goal (from GOALS.md):
 - Weight: <percentage>
 - Recent evidence: YES | NO | PARTIAL
 - Last signal date: <date or "none found">
+- External evidence: <repo name + commit count if this goal is in a credit_goals list, else "none">
 - Notes: <brief>
+
+When scoring coverage_score, credit external project evidence: if a goal has
+no in-repo signals but an external repo in the External Project Evidence
+section lists it in credit_goals with >=1 commit in the last 30 days, count
+that goal as PARTIAL (not NO) and credit it at half weight. A goal pursued
+indirectly in a sibling repo is not a coverage gap -- it is intentional
+routing.
 
 === OPEN QUESTIONS ===
 Numbered list. Each: a question that the data raises but cannot answer.
@@ -261,8 +388,14 @@ For each proposed TELOS update:
 DEDUP RULES (mandatory before creating any proposal):
 - Check the CURRENT TASKS section below. Do NOT propose changes that duplicate
   existing unchecked tasklist items or open validations.
-- If a proposal overlaps with an existing task, skip it or reference the task
-  instead of creating a duplicate.
+- Check the PRIOR PROPOSALS section below (last 14 days of run-*/proposals.md).
+  Do NOT propose changes that were already proposed in a prior run OR that
+  appear to have been already applied to the current TELOS files. Before
+  proposing any TELOS edit, verify the current TELOS content does NOT already
+  reflect the change you are about to propose. If the change is already live,
+  the proposal is stale -- skip it.
+- If a proposal overlaps with an existing task or prior proposal, skip it or
+  reference the earlier one instead of creating a duplicate.
 - Generating zero proposals is a valid outcome. Silence means the system is healthy.
 
 Keep analysis grounded in evidence. Do not speculate beyond what signals show.
@@ -301,6 +434,21 @@ Use ASCII only (no Unicode dashes, arrows, or box characters)."""
             parts.append("### %s (%s)\n%s\n" % (s["name"], s["mtime"],
                                                   s["content"]))
 
+    if inputs.get("external_evidence"):
+        parts.append("\n## External Project Evidence (cross-repo commits, last 30 days)\n")
+        parts.append("These commits count toward TELOS coverage for the goals listed in credit_goals.\n")
+        for ext in inputs["external_evidence"]:
+            parts.append("### %s -- credit_goals: %s (%d commits)\n" % (
+                ext["repo"], ", ".join(ext["credit_goals"]), ext["commit_count"]))
+            parts.append("Rationale: %s\n" % ext["rationale"])
+            parts.append("```\n%s\n```\n" % ext["log"])
+
+    if inputs.get("prior_proposals"):
+        parts.append("\n## Prior Proposals (last 14 days of autoresearch runs)\n")
+        parts.append("Dedup against these. Do NOT re-propose items already listed OR already applied to current TELOS.\n")
+        for pp in inputs["prior_proposals"]:
+            parts.append("### %s (%s)\n%s\n" % (pp["run"], pp["date"], pp["content"]))
+
     parts.append("\n## Scope Summary\n")
     scope = inputs["scope_summary"]
     parts.append("- TELOS files read: %d" % scope["telos_files"])
@@ -309,6 +457,8 @@ Use ASCII only (no Unicode dashes, arrows, or box characters)."""
     parts.append("- Raw signals (7d): %d" % scope["raw_signals_7d"])
     parts.append("- Failures (14d): %d" % scope["failures_14d"])
     parts.append("- Sessions (7d): %d" % scope["sessions_7d"])
+    parts.append("- Prior proposals (14d): %d" % scope.get("prior_proposals", 0))
+    parts.append("- External repos with recent commits: %d" % scope.get("external_repos", 0))
 
     # Include current tasklist for dedup
     tasklist_path = REPO_ROOT / "orchestration" / "tasklist.md"
@@ -616,6 +766,59 @@ def post_slack_summary(metrics: dict, run_dir: Path) -> bool:
     return notify("\n".join(lines), severity=sev, bypass_caps=True)
 
 
+# -- Backlog intake ----------------------------------------------------------
+
+def _inject_autoresearch_backlog(metrics: dict, run_dir: Path) -> None:
+    """Inject a pending_review backlog row when this run produced proposals.
+
+    Respects S14 steering rule: triggers on proposal_count, not raw
+    contradiction_count. Dedups per-day via routine_id. Never raises.
+    """
+    try:
+        proposals = metrics.get("proposal_count", 0)
+        if proposals < 1:
+            return
+
+        # Lazy import to avoid top-level import cost if this path is never hit
+        from tools.scripts.lib.backlog import backlog_append
+
+        today = datetime.now().strftime("%Y-%m-%d")
+        contradictions = metrics.get("contradiction_count", 0)
+        coverage = metrics.get("coverage_score", 100)
+
+        task = {
+            "description": (
+                "[autoresearch] %d actionable proposal(s) -- "
+                "contradictions=%d, coverage=%.0f%% (%s)"
+                % (proposals, contradictions, coverage, today)
+            ),
+            "tier": 0,
+            "autonomous_safe": False,
+            "status": "pending_review",
+            "priority": 2,
+            "isc": [
+                "Each proposal is either accepted (action taken), deferred "
+                "with rationale, or rejected "
+                "| Verify: Review",
+            ],
+            "skills": [],
+            "source": "autoresearch",
+            "routine_id": "autoresearch:proposals:%s" % today,
+            "context_files": [
+                str((run_dir / "proposals.md").relative_to(REPO_ROOT)).replace("\\", "/"),
+            ],
+            "notes": (
+                "Auto-injected by jarvis_autoresearch. S14-tagged "
+                "contradictions are intentional through Phase 5 -- review "
+                "proposals individually before action."
+            ),
+        }
+        backlog_append(task)
+    except Exception as exc:
+        # Never block the main autoresearch run on a backlog injection failure
+        print("  WARNING: backlog injection failed: %s" % exc, file=sys.stderr)
+
+
 # -- Main --------------------------------------------------------------------
 
 def main() -> int:
@@ -712,6 +915,13 @@ def main() -> int:
 
         # 8. Slack notification (if significant)
         post_slack_summary(metrics, run_dir)
+
+        # 9. Backlog intake -- inject one pending_review row per run that
+        #    produced actionable proposals. Dedups per-day via routine_id.
+        #    Respects the S14 steering rule: we inject on proposal_count,
+        #    not on raw contradiction_count, so intentional S14 gaps do not
+        #    flood the queue.
+        _inject_autoresearch_backlog(metrics, run_dir)
 
         print("\nIntrospection complete. Review proposals at:")
         print("  %s" % (run_dir / "proposals.md"))

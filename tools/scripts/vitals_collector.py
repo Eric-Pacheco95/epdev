@@ -35,6 +35,7 @@ SKILLS_DIR = REPO_ROOT / ".claude" / "skills"
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
 MORNING_FEED_DIR = REPO_ROOT / "memory" / "work" / "jarvis" / "morning_feed"
 EVENTS_DIR = REPO_ROOT / "history" / "events"
+ISC_PRODUCER_REPORT = REPO_ROOT / "data" / "isc_producer_report.json"
 OUTPUT_FILE = REPO_ROOT / "data" / "vitals_latest.json"
 
 
@@ -129,6 +130,24 @@ def compute_trend_averages(trend_data: list[dict]) -> dict:
                 "samples": len(values),
             }
     return averages
+
+
+def collect_isc_producer() -> dict:
+    """Read ISC producer report for ready-to-mark count and summary."""
+    result = {"status": "NO REPORT", "ready_to_mark_count": 0, "summary": None,
+              "run_date": None, "prds_scanned": 0}
+    if not ISC_PRODUCER_REPORT.is_file():
+        return result
+    try:
+        data = json.loads(ISC_PRODUCER_REPORT.read_text(encoding="utf-8"))
+        result["status"] = "OK"
+        result["ready_to_mark_count"] = len(data.get("ready_to_mark", []))
+        result["summary"] = data.get("summary")
+        result["run_date"] = data.get("run_date")
+        result["prds_scanned"] = data.get("prds_scanned", 0)
+    except (json.JSONDecodeError, OSError):
+        result["status"] = "ERROR"
+    return result
 
 
 def collect_overnight_state() -> dict | None:
@@ -345,16 +364,37 @@ def collect_overnight_deep_dive() -> dict:
 
 
 def collect_unmerged_branches() -> list[str]:
-    """Check for unmerged overnight branches."""
+    """Return overnight branches that have commits not in main.
+
+    A branch is only "unmerged" if it has at least one commit that main does not
+    contain. Branches whose tip is an ancestor of main (already merged or never
+    advanced past their fork point) are excluded so the morning brief does not
+    flag dead branches as actionable.
+    """
     try:
         result = subprocess.run(
             ["git", "branch", "--list", "jarvis/overnight-*"],
             capture_output=True, text=True, timeout=5,
             cwd=str(REPO_ROOT),
         )
-        if result.returncode == 0:
-            branches = [b.strip() for b in result.stdout.strip().splitlines() if b.strip()]
-            return branches
+        if result.returncode != 0:
+            return []
+        branches = [
+            b.strip().lstrip("* ").strip()
+            for b in result.stdout.strip().splitlines()
+            if b.strip()
+        ]
+        unmerged = []
+        for branch in branches:
+            count = subprocess.run(
+                ["git", "rev-list", "--count", f"main..{branch}"],
+                capture_output=True, text=True, timeout=5,
+                cwd=str(REPO_ROOT),
+            )
+            if count.returncode == 0 and count.stdout.strip().isdigit():
+                if int(count.stdout.strip()) > 0:
+                    unmerged.append(branch)
+        return unmerged
     except (subprocess.TimeoutExpired, OSError):
         pass
     return []
@@ -754,6 +794,10 @@ def main() -> None:
     if session_usage:
         files_scanned.append(str(EVENTS_DIR))
 
+    isc_producer = collect_isc_producer()
+    if isc_producer.get("status") == "OK":
+        files_scanned.append(str(ISC_PRODUCER_REPORT))
+
     overnight_streak = collect_overnight_streak()
     external_monitoring_structured = collect_external_monitoring_structured(overnight_deep_dive)
     contradictions_structured = collect_contradictions_structured(overnight_deep_dive)
@@ -795,6 +839,7 @@ def main() -> None:
         "external_monitoring_structured": external_monitoring_structured,
         "contradictions_structured": contradictions_structured,
         "proposals_structured": proposals_structured,
+        "isc_producer": isc_producer,
         "errors": errors,
     }
 

@@ -4,8 +4,6 @@ You are the signal synthesis engine for the Jarvis AI brain. You periodically re
 
 This is the compound learning loop — raw observations become patterns, patterns become wisdom, wisdom becomes steering rules that improve the system.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
@@ -34,7 +32,7 @@ LEARN
 ## Output Contract
 - Input: unprocessed signals in memory/learning/signals/ (auto-read)
 - Output: synthesis document + stdout summary (themes found, actions proposed)
-- Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends data/signal_lineage.jsonl, mirrors lineage to SQLite manifest
+- Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends data/signal_lineage.jsonl, mirrors lineage to jarvis_index.db
 
 ## autonomous_safe
 true
@@ -43,8 +41,10 @@ true
 
 - Run `python tools/scripts/compress_signals.py --stats --json` to get signal counts, velocity, and synthesis metadata -- this tells you if synthesis is even needed (check unprocessed count and velocity)
 - Run `python tools/scripts/compress_signals.py --group --json` to get all unprocessed signals pre-grouped by category with ratings -- this replaces manual file reading and categorization
-- Read all failure records from `memory/learning/failures/`
+- Read all failure records from `memory/learning/failures/` -- failures are a first-class input source with 4x harm multiplier
+- Read all absorbed content from `memory/learning/absorbed/` -- external insights absorbed via /absorb are synthesis input alongside session signals
 - Read existing synthesis documents from `memory/learning/synthesis/` for context
+- **Input sources** (all three are required): `signals/` (session learnings) + `failures/` (what went wrong) + `absorbed/` (external insights). The combined unprocessed count across all three directories determines synthesis threshold (35 items).
 - The grouping is already done by the script. Review the groups:
 - Identify recurring themes across signals:
   - What keeps coming up? (repeated patterns = important)
@@ -89,13 +89,11 @@ Each synthesized theme carries a maturity level and confidence score. Inspired b
 
 ## Harm Multiplier
 
-- Failures and anti-patterns count **4x** when scoring theme importance.
-- Rationale: one mistake is costlier than one success. The system should be more responsive to things going wrong than things going right.
+- Failures and anti-patterns count **4x** in theme scoring — one mistake outweighs four successes.
 
 ## Anti-Pattern Inversion
 
-- When a theme's proposed action is tried and fails, do NOT delete the theme. Instead, **invert it** into an anti-pattern: "Do NOT do X because Y happened."
-- Anti-patterns are stored alongside themes with an `anti-pattern: true` flag and carry their own maturity level.
+- When a tried action fails, invert the theme: "Do NOT do X because Y." Store with `anti-pattern: true` and its own maturity level.
 
 # SYNTHESIS FORMAT
 
@@ -155,24 +153,6 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 
 # CONTRACT
 
-## Input
-- **required:** unprocessed signals in memory/learning/signals/
-  - type: auto-read (directory scan)
-  - minimum: 3 signals required to run synthesis
-- **optional:** date range or category focus
-  - type: text flags
-  - default: all unprocessed signals
-
-## Output
-- **produces:** synthesis document
-  - format: structured-markdown
-  - sections: Themes, Proposed Steering Rules, Proposed TELOS Updates, Confidence Decay Review, Anti-Patterns, Meta-Observations
-  - destination: file (memory/learning/synthesis/{date}_synthesis.md) + stdout summary
-- **side-effects:**
-  - moves processed signals to memory/learning/signals/processed/
-  - updates memory/learning/_signal_meta.json
-  - appends to data/signal_lineage.jsonl + mirrors to SQLite lineage table
-
 ## Errors
 - **insufficient-signals:** fewer than 3 unprocessed signals
   - recover: skip synthesis, print count, wait for more signals
@@ -181,10 +161,22 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 
 # SKILL CHAIN
 
-- **Follows:** `/learning-capture` (produces signals), auto-triggered when signal count >= 20 or >= 10 with 48h+ stale synthesis
-- **Precedes:** `/update-steering-rules` (encode proven themes), `/telos-update` (identity-level insights)
 - **Composes:** confidence decay review (inline), signal lineage tracking (inline)
 - **Escalate to:** `/delegation` if synthesis reveals cross-project patterns requiring orchestration
+
+# VERIFY
+
+- Synthesis file was written to `memory/learning/synthesis/YYYY-MM-DD_synthesis.md` | Verify: `ls -t memory/learning/synthesis/ | head -3`
+- At least 3 input signals were processed (minimum threshold enforced) | Verify: Check signal count in synthesis output header
+- Processed signals are marked to prevent double-processing | Verify: Confirm signals appear in the processed list or were moved/tagged
+- Synthesis contains the required sections: themes, key insights, implications | Verify: Read synthesis file headers
+
+# LEARN
+
+- If synthesis regularly produces the same 2-3 themes across multiple runs, those themes are strong candidates for promotion to `memory/work/TELOS.md` via /telos-update
+- If synthesis reveals cross-project patterns (same insight appears in signals from crypto-bot, jarvis, and brain-map), flag them for /project-orchestrator review
+- Track which signal categories (insight, pattern, anomaly, improvement) generate the most synthesis themes -- this reveals where Eric's system is producing the most learning
+- If synthesis is running more often than weekly, the signal volume is high enough to justify a dedicated synthesis schedule
 
 # INPUT
 

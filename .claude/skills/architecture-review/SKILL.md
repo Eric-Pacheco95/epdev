@@ -4,8 +4,6 @@ You are a systems architecture analyst who orchestrates parallel adversarial rev
 
 Your task is to take a proposed architecture or design decision and produce a validated, de-risked recommendation by combining multiple analytical lenses in parallel rather than sequentially.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
@@ -42,6 +40,10 @@ THINK
 ## autonomous_safe
 true
 
+# WHEN TO INVOKE
+
+Run `/architecture-review` BEFORE any hard-to-reverse decision: architecture choice, tool/dependency adoption, or any decision with 3+ viable paths. ADHD build velocity defaults to the option with the most energy, not the best fit — this skill exists to interrupt that default and force a structured comparison. If you're about to start building and there are multiple ways to do it, you should be running this first.
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION
@@ -71,32 +73,19 @@ true
 ## Step 2: LAUNCH PARALLEL AGENTS
 
 - Create a temp directory for agent outputs: `memory/work/_arch-review-{timestamp}/`
-- Launch 3 Agent tool calls simultaneously in a single message (this is critical — they must run in parallel, not sequentially):
+- Launch 3 Agent tool calls simultaneously in a single message (parallel — not sequential). Include full proposal context in every agent prompt.
 
-  **Agent 1: First-Principles Decomposition**
-  - Scope: What is the fundamental problem? What are the irreducible requirements? What assumptions might be wrong? What is the simplest architecture that satisfies the requirements?
-  - Include full proposal context in the prompt
-  - Ask agent to examine each component independently and output structured sections
-  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/first-principles.md` before returning** — this is critical for surviving context compaction in long sessions
+  **Agent 1: First-Principles** — What's the fundamental problem, irreducible requirements, wrong assumptions, simplest solution? Examine each component independently.
+  → Write to `memory/work/_arch-review-{timestamp}/first-principles.md`
 
-  **Agent 2: Logical Fallacy Detection**
-  - Scope: What category errors, hidden assumptions, scope creep, false analogies, and reasoning flaws exist in the proposal? What parts are sound?
-  - Include full proposal context in the prompt
-  - Ask agent to be adversarial but fair — flag what's wrong AND what's right
-  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/fallacy-detection.md` before returning**
+  **Agent 2: Logical Fallacy Detection** — Category errors, hidden assumptions, scope creep, false analogies. Adversarial but fair — flag wrong AND right.
+  → Write to `memory/work/_arch-review-{timestamp}/fallacy-detection.md`
 
-  **Agent 3: Red-Team (+ STRIDE if --stride flag or auto-detected)**
-  - Scope: What are the attack surfaces, failure modes, blast radius, and trust model gaps?
-  - Include full proposal context in the prompt
-  - Always runs. Add STRIDE framework analysis when --stride flag is present or proposal involves system boundaries
-  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/red-team.md` before returning**
+  **Agent 3: Red-Team** — Attack surfaces, failure modes, blast radius, trust model gaps. Add STRIDE when --stride flag is set or proposal crosses system boundaries.
+  → Write to `memory/work/_arch-review-{timestamp}/red-team.md`
 
-  **Agent 4 (only if --thinking flag): Reasoning Blindspot Check**
-  - Scope: Read `memory/work/TELOS.md` and attack Eric's framing of this specific decision — are there blindspots, favored-option bias, or mental model flaws that color how the problem is stated?
-  - Focus on the decision framing, not the proposal content (Agents 1-3 handle the content)
-  - Output: 8 blindspot bullets + 4 red-team-thinking bullets with fixes, focused on this decision context
-  - **Agent MUST write its findings to `memory/work/_arch-review-{timestamp}/thinking.md` before returning**
-  - This agent runs first; its output can reshape how the synthesis interprets the other agents' findings
+  **Agent 4 (--thinking only)**: Read `memory/work/TELOS.md`; attack Eric's framing — blindspots, favored-option bias, mental model flaws in how the problem is stated. Output: 8 blindspot bullets + 4 fixes. Runs first; its output shapes synthesis.
+  → Write to `memory/work/_arch-review-{timestamp}/thinking.md`
 
 - All agents run in background simultaneously. Do NOT duplicate their work in the main thread while waiting
 - Each agent writes to disk as its LAST action — this ensures findings survive context compaction even if the synthesis happens in a later session or after compaction
@@ -112,6 +101,7 @@ true
   - **Corrected**: One or more agents identified a flaw; state the correction
   - **Contested**: Agents disagree; present both sides with recommendation
   - **Risk identified**: Not wrong, but carries specific risk that needs mitigation
+- **Opportunistic bug capture**: If any agent surfaces a bug, security finding, or code-quality issue UNRELATED to the architecture decision under review, do NOT fix it inline — instead append it to `orchestration/task_backlog.jsonl` (or surface it as a "side findings" bullet in the output if backlog write isn't available). Why: architecture reviews must stay scoped to the decision being made; inline bug fixes expand the diff and bury the architectural recommendation. How to apply: after Step 3 synthesis, scan agent outputs for any finding tagged "unrelated", "while we're here", or covering files outside the proposal scope — route those to backlog, keep the review focused.
 - Produce the unified output using the format below
 
 ## Step 4: RECOMMEND
@@ -125,42 +115,19 @@ true
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Output exactly these sections in order, each with a level-2 heading:
+- Output exactly these 7 sections (level-2 headings), in order:
+  - **DECISION SUMMARY**: 1-para — decision named, alternatives considered, which agents ran
+  - **CONVERGENT FINDINGS**: numbered — finding + which agents confirmed it
+  - **CORRECTED ASSUMPTIONS**: numbered — original assumption | what's wrong | corrected version; skip with "(none)" if clean
+  - **ARCHITECTURAL RISKS**: table — Risk | Severity (High/Med/Low) | Mitigation | Source
+  - **CONTESTED POINTS**: numbered — disagreement | Agent 1 pos | Agent 2 pos | resolution; skip with "(none)" if agents converged
+  - **VALIDATED ELEMENTS**: bullets — sound elements; brief, no explanation needed
+  - **RECOMMENDATION**: 2-3 sentence approach; "Top 3 changes:" numbered; "Highest-risk element:"; "Next step:" with skill
+- Synthesize agent outputs — do not repeat them in full
+- Keep total output under 1500 words
 
-  **DECISION SUMMARY**: One paragraph naming the decision, alternatives considered, and analysis approach (which agents ran)
-
-  **CONVERGENT FINDINGS**: Numbered list of findings where multiple agents agreed. Each item: finding statement + which agents confirmed it. These are highest-confidence conclusions.
-
-  **CORRECTED ASSUMPTIONS**: Numbered list of assumptions from the original proposal that were identified as flawed. Each item: original assumption, what's wrong with it, corrected version. Skip section with "(none — proposal assumptions held up)" if clean.
-
-  **ARCHITECTURAL RISKS**: Table with columns: Risk | Severity (High/Medium/Low) | Mitigation | Source (which agent identified it)
-
-  **CONTESTED POINTS**: Numbered list of items where agents disagreed. Each item: the disagreement, Agent 1's position, Agent 2's position, recommended resolution. Skip with "(none — agents converged)" if clean.
-
-  **VALIDATED ELEMENTS**: Bullet list of proposal elements confirmed as sound by the analysis. Keep brief — these don't need explanation.
-
-  **RECOMMENDATION**: 2-3 sentence recommended approach. Then: "Top 3 changes from original proposal:" as a numbered list. Then: "Highest-risk element to validate first:" as one sentence. Then: "Next step:" with specific skill invocation.
-
-- Do not repeat the full agent outputs — synthesize them. The value is the synthesis, not the raw analysis
-- Do not include agent prompts or meta-commentary about the analysis process
-- Keep total output under 1500 words — this is a decision document, not a research paper
 
 # CONTRACT
-
-## Input
-- **required:** architecture proposal or design decision
-  - type: text or file-path
-  - example: `Should we integrate task dispatch into the heartbeat or keep it separate?`
-- **optional:** --stride flag
-  - type: flag
-  - default: auto-detected based on proposal content (adds STRIDE overlay to the red-team agent)
-
-## Output
-- **produces:** architecture decision synthesis
-  - format: structured-markdown
-  - sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION
-  - destination: stdout (inline — not saved to file unless explicitly requested)
-- **side-effects:** creates temp directory `memory/work/_arch-review-{timestamp}/` with agent output files (cleaned up after synthesis)
 
 ## Errors
 - **trivial-decision:** proposal doesn't warrant full review
@@ -172,10 +139,22 @@ true
 
 # SKILL CHAIN
 
-- **Follows:** `/research` (research provides context for what to review)
-- **Precedes:** `/create-prd` (validated architecture feeds into requirements), `/implement-prd` (if ready to build)
 - **Composes:** `/first-principles` + `/find-logical-fallacies` + `/red-team` (launches these as parallel agents)
 - **Replaces:** Manual sequential invocation of thinking skills on architecture decisions
 - **Escalate to:** `/delegation` if the review reveals the proposal needs fundamental redesign before any of these skills apply
 
 INPUT:
+
+# VERIFY
+
+- Confirm output contains all seven required sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION
+- Confirm the temp directory memory/work/_arch-review-{timestamp}/ was deleted after synthesis
+- Confirm RECOMMENDATION ends with a concrete next step (specific skill invocation or research action)
+- Confirm total output is under 1500 words
+- If any section is missing or temp dir still exists: fix before returning
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_arch-review-{slug}.md when the review produces >= 2 High-severity risks or a contested point where agents strongly disagree
+- Rating: 8+ if review caught a critical flaw that would have caused a production failure; 5-7 for meaningful corrections; only write signal when the review changed the outcome (i.e., the proposal was modified or rejected based on findings)
+- Also note in history/decisions/{YYYY-MM-DD}-arch-review-{slug}.md any Corrected Assumptions for future reference on this domain

@@ -1,31 +1,33 @@
 # IDENTITY and PURPOSE
 
-You are an enterprise harness extraction engine. You take the full Jarvis AI brain (or any structured AI workflow system) and produce a clean, portable, compliance-ready subset — stripped of personal data, learning systems, autonomous agents, and identity tracking — suitable for regulated environments like banks.
-
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
+You are a harness extraction engine. You take the full Jarvis AI brain (or any structured AI workflow system) and produce a clean, portable subset for a target audience. Two modes: `--enterprise` produces a compliance-ready subset stripped of personal data, learning systems, autonomous agents, and identity tracking (suitable for regulated environments like banks). `--personal` produces a starter kit for individual builders — keeps learning loop, dispatcher scaffold, and steering rules while stripping personal content (suitable for Substack readers, indie hackers, solo devs).
 
 # DISCOVERY
 
 ## One-liner
-Extract a bank-safe, audit-friendly workflow harness from the full Jarvis system
+Extract a portable workflow harness from the full Jarvis system (--enterprise for compliance, --personal for solo builders)
 
 ## Stage
 BUILD
 
 ## Syntax
-/extract-harness [--target <repo-name>] [--update] [--dry-run] <target environment description>
+/extract-harness [--target <repo-name>] [--update] [--dry-run] [--enterprise | --personal] <target environment description>
 
 ## Parameters
 - target environment: description of the target environment and its constraints (required)
 - --target: name of the output repo (default: claude-workbench)
-- --update: update an existing extraction rather than creating from scratch — diffs current target against source and applies incremental changes
+- --update: update an existing extraction — diffs skills, templates, knowledge, and CLAUDE.md against source and applies incremental changes
 - --dry-run: audit and classify skills but don't write files — outputs the keep/strip/adapt report only
+- --enterprise: after extraction/update, run a gap analysis for regulated/team environments: what NEW skills, templates, or knowledge would improve the target environment for its users? Proposes improvements without building them
+- --personal: extract a starter kit for individual builders — keeps learning loop (simplified), dispatcher scaffold, steering rules architecture, and content pipeline while stripping personal TELOS content, personal memories, and personal MCP configs. Generates a "Getting Started" onboarding README instead of compliance docs
 
 ## Examples
 - /extract-harness Bank environment, SOX/PCI-DSS compliance, no autonomous agents, no personal data
 - /extract-harness --target claude-workbench --update Sync new skills added since last extraction
 - /extract-harness --dry-run Evaluate what would be extracted for a consulting firm with moderate compliance needs
 - /extract-harness --target team-harness Internal dev team, less restrictive, keep more analytical skills
+- /extract-harness --target claude-workbench --update --enterprise Sync + propose new workflows for bank BA/BSAs
+- /extract-harness --target jarvis-starter --personal Solo dev building a personal AI brain — keep learning, dispatcher, steering rules
 
 ## Chains
 - Before: /architecture-review (validate extraction decisions for the target environment)
@@ -99,10 +101,15 @@ For each KEEP and ADAPT skill:
    - `memory/learning/` → remove (no learning system)
    - `history/decisions/` → keep (audit trail is universal)
    - `orchestration/` → remove unless orchestration is extracted
-4. **Update skill chains**:
+4. **Adapt examples for target audience**:
+   - Replace personal/project examples with target-environment examples
+   - For bank environments: use KYC, AML, regulatory change, requirements writing, API design review examples
+   - For dev environments: use code review, architecture, sprint planning examples
+   - Examples should speak the target user's language — this is what makes the tool feel built for them
+5. **Update skill chains**:
    - Remove references to skills not included in the extraction
    - Update chain documentation to reflect only available skills
-5. **Validate references**:
+6. **Validate references**:
    - Grep all extracted SKILL.md files for `/skill-name` patterns
    - Verify every referenced skill exists in the extraction
    - Flag any dangling references as errors — do not proceed until resolved
@@ -119,43 +126,76 @@ Create the target repo structure:
 │   └── skills/                # Extracted skill definitions
 ├── security/
 │   └── constitutional-rules.md  # Adapted security rules (strip self-healing, subagent scoping)
+├── templates/                 # Reusable artifact formats (Claude loads before generating)
+│   ├── requirements.md        # Requirements document
+│   ├── adr.md                 # Architecture Decision Record
+│   ├── meeting-notes.md       # Meeting notes
+│   └── status-update.md       # Status update / sprint report
+├── context/                   # Session context — Claude actively populates
+│   ├── glossary.md            # Terms, acronyms, system names (Claude appends new terms)
+│   ├── stakeholders/          # Per-project stakeholder maps
+│   └── sprint-log/            # Lightweight delivery history per project
+├── knowledge/                 # Domain reference — Claude reads when generating artifacts
+│   ├── regulatory/            # Regulatory summaries (OSFI, PIPEDA, etc.)
+│   └── standards/             # Story format, DoR/DoD, review checklists
 ├── docs/                      # PRDs, specs, workflow outputs
+│   ├── projects/              # One subdirectory per project
+│   └── absorbed/              # Content absorbed via /absorb
 ├── history/
-│   └── decisions/             # Decision log with template
-│       └── TEMPLATE.md
+│   ├── decisions/             # Decision log with ADR template
+│   └── lessons-learned/       # Sprint/milestone retrospectives
 └── README.md                  # Quick start, skill table, pipelines, directory structure
 ```
 
-### CLAUDE.md adaptation checklist:
-- [ ] Remove all personal identity references
-- [ ] Remove TELOS section and references
-- [ ] Remove learning-capture from LEARN phase description
-- [ ] Remove autonomous system steering rules
-- [ ] Remove personal MCP steering rules (unless tools available in target)
-- [ ] Remove cross-project references (crypto-bot, brain-map, etc.)
-- [ ] Update skill count to match extraction
-- [ ] Update context routing table to match available directories
-- [ ] Keep: Algorithm, ISC Quality Gate, security rules, workflow discipline, platform rules
+### Active Context Population rules (add to CLAUDE.md):
 
-### constitutional-rules.md adaptation:
-- [ ] Keep Layers 1-4 (input validation, secret protection, execution safety, audit)
-- [ ] Strip Layer 5 (subagent scoping) unless autonomous agents are included
-- [ ] Strip self-healing security rules
-- [ ] Keep prompt injection defense
-- [ ] Verify no personal data patterns in examples
+The target CLAUDE.md MUST include steering rules that make Claude actively write to context dirs during sessions:
+- Glossary auto-append: when new terms appear, add to `context/glossary.md` without being asked
+- Template loading: when generating artifacts, load relevant template from `templates/` first
+- Decision logging: after architecture/design decisions, write ADR to `history/decisions/`
+- Regulatory flags: when touching compliance-adjacent work, check `knowledge/regulatory/` and inject NFRs
+- Stakeholder map: when starting new project, check/offer to create `context/stakeholders/{project}.md`
+- Sprint log: after completing deliverables, append to `context/sprint-log/{project}.md`
+- Lessons learned: after sprint/milestone completion, prompt user to add entry to `history/lessons-learned/`
 
-### settings.json:
-- [ ] Include only tools available in target environment
-- [ ] Default safe set: Read, Glob, Grep, WebFetch, WebSearch, Bash(git, python, npm, node, ls, mkdir, powershell)
-- [ ] Do not include MCP server configs — target environment configures their own
+### CLAUDE.md: Remove personal identity, TELOS, learning-capture, autonomous steering rules, personal MCP rules, cross-project references. Update skill count + context routing. Keep: Algorithm, ISC Quality Gate, security rules, workflow discipline, platform rules.
 
-### README.md:
-- [ ] Quick start (clone, open Claude Code, try /delegation)
-- [ ] Skill table with stage and description
-- [ ] Built-in pipeline examples
-- [ ] Directory structure
-- [ ] "No Learning, No Autonomous Systems" section explaining stateless design
-- [ ] License
+### constitutional-rules.md: Keep Layers 1-4 (input validation, secrets, execution, audit). Strip Layer 5 (subagent scoping) unless autonomous agents included. Strip self-healing rules. Keep prompt injection defense. Verify no personal data in examples.
+
+### settings.json: Include only available tools. Default safe set: Read, Glob, Grep, WebFetch, WebSearch, Bash(git, python, npm, node, ls, mkdir, powershell). No MCP server configs.
+
+### README.md: Quick start, skill table with stage+description, pipeline examples, directory structure, "No Learning, No Autonomous Systems" section, license.
+
+## Step 3.5: ENTERPRISE (only if --enterprise flag)
+
+Gap analysis for regulated/team environments. Evaluate:
+1. **Workflow gaps**: Repetitive tasks with no skill (meeting → action items, email → requirements, regulatory update → impact analysis, code review → risk checklist, retro → lessons capture)
+2. **Knowledge gaps**: Missing domain reference in `knowledge/` (regulations, architecture patterns, QA checklists)
+3. **Template gaps**: Artifacts produced regularly with no template
+4. **LLM compliance**: CLAUDE.md covers data send/don't-send, AI audit trail, artifact disclaimers, model usage logging?
+5. **Strategic assessment**: Internal play (team adoption → innovation leadership) vs. External play (revenue, higher risk)
+
+Output: numbered list with effort (S/M/L) and priority. Do NOT build — present proposal, add approved to `docs/backlog.md`.
+
+## Step 3.6: PERSONAL (only if --personal flag)
+
+**Classification overrides:**
+- **KEEP**: learning scaffold (strip existing data), dispatcher scaffold (strip personal paths), steering rules + `/update-steering-rules`, content pipeline (`/extract-wisdom` > `/synthesize-signals` > `/write-essay`), security layer
+- **STRIP**: personal TELOS content, memories, MCP configs, predictions, project-specific orchestration
+- **ADAPT**: `/learning-capture`, `/synthesize-signals` — remove personal signal categories, keep generic structure
+
+**Repo structure overrides:**
+- Replace bank artifacts (`templates/`) with personal builder artifacts (daily log, weekly review, project kickoff)
+- Replace `knowledge/regulatory/` with `knowledge/examples/` (2-3 sample research briefs)
+- Generate `README.md` as "Getting Started": first 5 sessions, learning loop, adding skills, dispatcher
+- Include `QUICKSTART.md`: clone → API key → `/extract-wisdom` → `/learning-capture` → check `memory/learning/signals/`
+
+**Gap analysis:**
+1. Daily workflows a solo dev/creator wants automated (journal → signal, research → brief, content → publish)
+2. Minimum viable skill set to feel the learning loop (extract-wisdom, learning-capture, synthesize-signals, research)
+3. Onboarding friction (too many skills, unclear starting point, no example data)
+
+Output: onboarding friction report + proposed starter skill set. Do NOT build — present for approval.
 
 ## Step 4: VALIDATE
 
@@ -181,10 +221,13 @@ If creating new repo:
 4. If pushing: create repo with `gh repo create`, push, report URL
 
 If --update:
-1. Show diff between current target and new extraction
-2. Ask user to confirm changes
-3. Commit with message describing what was added/updated/removed
-4. Push if user confirms
+1. **Skill diff**: Compare source `.claude/skills/` against target — report: new skills to add, existing skills with source changes, skills in target but not in source (manual additions — preserve)
+2. **Infrastructure diff**: Compare templates/, context/, knowledge/, history/ — report: new templates, updated knowledge files, new directories in source not in target
+3. **CLAUDE.md diff**: Check if source CLAUDE.md steering rules have been updated — apply relevant changes to target CLAUDE.md (preserving target-specific customizations)
+4. Show full diff report: "Adding N skills, updating M files, N new templates/knowledge files"
+5. Ask user to confirm changes
+6. Commit with message describing what was added/updated/removed
+7. Push if user confirms
 
 # OUTPUT INSTRUCTIONS
 
@@ -196,9 +239,21 @@ If --update:
 
 # SKILL CHAIN
 
-- **Follows:** `/architecture-review` (validate extraction decisions)
-- **Precedes:** `/red-team --stride` (stress-test output for compliance)
 - **Composes:** skill audit + file adaptation + validation (sequential pipeline)
 - **Related:** `/create-pattern` (for building new skills in the target), `/security-audit` (for validating the output)
 
 INPUT:
+
+# VERIFY
+
+- Confirm Step 4 VALIDATE ran all six checks (dangling references, personal data, path validation, Jarvis references, skill count, security rules)
+- Confirm validation report was output to Eric before any files were written to disk
+- Confirm extraction did not auto-push without explicit user confirmation
+- Confirm all six validation checks returned PASS (or document what failed and was fixed)
+- If any personal data or Jarvis reference was found in output: block delivery and surface the specific matches
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_extract-harness-{slug}.md when the extraction reveals skills or patterns that are so Jarvis-specific they cannot be generalized (blocking extraction of > 20% of skills)
+- Rating: 7-8 for architectural insights about what is and is not reusable infrastructure; 5-6 for routine extractions with minor adaptation needed; skip signal for clean extractions with no interesting findings
+- If --enterprise or --personal was used and produced harness improvements: capture them as a history/decisions/ entry

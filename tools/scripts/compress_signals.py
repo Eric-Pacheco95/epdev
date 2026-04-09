@@ -32,6 +32,7 @@ DEFAULT_CONFIG = REPO_ROOT / "heartbeat_config.json"
 DEFAULT_SIGNAL_DIR = REPO_ROOT / "memory" / "learning" / "signals" / "processed"
 UNPROCESSED_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
+ABSORBED_DIR = REPO_ROOT / "memory" / "learning" / "absorbed"
 LINEAGE_FILE = REPO_ROOT / "data" / "signal_lineage.jsonl"
 SIGNAL_META = REPO_ROOT / "memory" / "learning" / "_signal_meta.json"
 
@@ -144,15 +145,22 @@ def group_signals() -> dict:
         cat = s.get("category", "uncategorized")
         groups[cat].append(s)
 
-    # Also count failures
+    # Also count failures (skip _ prefixed meta files)
     failure_count = 0
     if FAILURES_DIR.is_dir():
-        failure_count = len(list(FAILURES_DIR.glob("*.md")))
+        failure_count = len([f for f in FAILURES_DIR.glob("*.md") if not f.name.startswith("_")])
+
+    # Count absorbed content (skip _ prefixed meta files)
+    absorbed_count = 0
+    if ABSORBED_DIR.is_dir():
+        absorbed_count = len([f for f in ABSORBED_DIR.glob("*.md") if not f.name.startswith("_")])
 
     return {
         "groups": {k: {"count": len(v), "signals": v} for k, v in sorted(groups.items())},
         "total_unprocessed": len(signals),
         "total_failures": failure_count,
+        "total_absorbed": absorbed_count,
+        "total_combined": len(signals) + failure_count + absorbed_count,
         "categories": {k: len(v) for k, v in sorted(groups.items())},
     }
 
@@ -164,6 +172,7 @@ def get_signal_stats() -> dict:
     processed = list(DEFAULT_SIGNAL_DIR.glob("*.md")) if DEFAULT_SIGNAL_DIR.is_dir() else []
     compressed = list(DEFAULT_SIGNAL_DIR.glob("*.md.gz")) if DEFAULT_SIGNAL_DIR.is_dir() else []
     failures = list(FAILURES_DIR.glob("*.md")) if FAILURES_DIR.is_dir() else []
+    absorbed = list(ABSORBED_DIR.glob("*.md")) if ABSORBED_DIR.is_dir() else []
 
     # Signal velocity: count signals from last 7 days
     now = datetime.now(timezone.utc)
@@ -189,6 +198,8 @@ def get_signal_stats() -> dict:
         "processed": len(processed),
         "compressed": len(compressed),
         "failures": len(failures),
+        "absorbed": len(absorbed),
+        "total_combined_unprocessed": len(unprocessed) + len(failures) + len(absorbed),
         "total_all_time": len(unprocessed) + len(processed) + len(compressed),
         "velocity_per_day": velocity,
         "recent_7d": recent,
@@ -271,9 +282,10 @@ def main() -> None:
             print(json.dumps(stats, indent=indent))
         else:
             print(_sanitize_ascii(
-                "Signals: %d unprocessed | %d processed | %d compressed | %d failures"
-                % (stats["unprocessed"], stats["processed"], stats["compressed"], stats["failures"])
+                "Signals: %d unprocessed | %d processed | %d compressed | %d failures | %d absorbed"
+                % (stats["unprocessed"], stats["processed"], stats["compressed"], stats["failures"], stats["absorbed"])
             ))
+            print("  Combined unprocessed: %d (threshold: 35)" % stats["total_combined_unprocessed"])
             print("  Total all-time: %d" % stats["total_all_time"])
             print("  Velocity: %.2f/day (last 7d: %d)" % (stats["velocity_per_day"], stats["recent_7d"]))
             print("  Synthesis runs: %d | Last: %s" % (stats["synthesis_count"], stats["last_synthesis"] or "never"))

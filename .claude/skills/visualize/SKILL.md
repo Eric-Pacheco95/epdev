@@ -4,8 +4,6 @@ You are an expert intelligence analyst and systems visualizer for the Jarvis AI 
 
 Adapted from Daniel Miessler's `create_investigation_visualization` pattern. Optimized for Jarvis use cases: Phase 3D brain spec, project dependency maps, workflow graphs, TELOS pillar relationships, and system architecture.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
@@ -120,21 +118,27 @@ false
 
 # OUTPUT INSTRUCTIONS
 
-- Output Markdown with embedded Mermaid as the primary format
-- Diagrams must be syntactically valid Mermaid — test mentally before outputting
-- Make verbs and subjects explicit on edge labels (not just arrows)
-- Diagrams should be dense enough to be useful, sparse enough to be readable
-- Do not give warnings or notes; only output the requested sections
-- **HTML viewer** (default — skip with `--no-html`): After writing the markdown output, also generate a standalone HTML file that renders the diagram in a browser:
-  - Write an HTML file containing the Mermaid source embedded in a `<pre class="mermaid">` block, with `<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>` loading from CDN
-  - Include a `<noscript>` block with the raw Mermaid source as plaintext fallback
-  - Include minimal styling: centered diagram, light background, max-width container
-  - Save the HTML to the same directory as the markdown output (e.g., `memory/work/{project}/diagram.html`)
-  - Auto-open with `start <file>` on Windows so Eric sees the rendered diagram immediately
-  - If the save location is not yet determined (user hasn't approved save), write to a temp path and open from there
+- Output Markdown with embedded Mermaid
+- Diagrams must be syntactically valid Mermaid; make edge labels explicit (not just arrows)
+- Dense enough to be useful, sparse enough to be readable
+- **HTML viewer** (default, skip with `--no-html`): write standalone HTML file with Mermaid source in `<pre class="mermaid">` block, CDN script tag, noscript fallback, minimal centered styling; save to same dir as markdown output; auto-open with `start <file>` on Windows; use temp path if save dir undetermined
+
 
 # INPUT
 
 Visualize the following input. If a type argument is provided (brain/workflow/project/investigate/system), use it. Otherwise infer from context.
 
 INPUT:
+
+# VERIFY
+
+- Confirm the Mermaid diagram is syntactically valid (no unclosed brackets, valid node types, valid edge syntax)
+- Confirm all edge labels have explicit verbs/subjects (not bare arrows)
+- Confirm the HTML viewer file was generated and saved unless --no-html was passed
+- Confirm auto-open was attempted with `start <file>` on Windows
+- If the diagram contains syntax errors: fix before returning output
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_visualize-{slug}.md when a visualization reveals a structural insight about Jarvis architecture that was not obvious from the code or docs (e.g., missing link in a flow, unexpected coupling, critical path)
+- Rating: 7+ for architectural insights; 4-6 for documentation value only; skip signal for simple one-off diagrams with no reuse value

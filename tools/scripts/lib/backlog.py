@@ -12,10 +12,85 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import tempfile
+import time
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+# Cross-platform file locking. msvcrt on Windows; fcntl on POSIX.
+# Both offer advisory exclusive locks on an open file descriptor. The lock
+# wraps the entire read-modify-write window in backlog_append so two
+# producers calling concurrently cannot lose writes.
+_IS_WINDOWS = sys.platform == "win32"
+
+# Monotonic id counter — ensures uniqueness on Windows where time.time()
+# resolution is ~15ms (system tick), causing collisions for batch appends.
+# Strategy: use time_ns() (nanosecond wall clock, finer grained) converted
+# to microseconds, then bump by 1 if the candidate <= last value used.
+# This gives sortable, wall-clock-anchored ids that never repeat in-process.
+_last_id_us: int = 0
+
+
+def _generate_task_id() -> str:
+    """Generate a collision-safe task id using monotonic microsecond counter."""
+    global _last_id_us
+    candidate = time.time_ns() // 1_000  # ns -> us
+    _last_id_us = max(candidate, _last_id_us + 1)
+    return f"task-{_last_id_us}"
+if _IS_WINDOWS:
+    import msvcrt
+else:
+    import fcntl  # type: ignore[import-not-found]
+
+
+@contextmanager
+def _exclusive_file_lock(lock_path: Path, timeout_s: float = 30.0):
+    """Acquire an exclusive lock on a sidecar file, yielding when held.
+
+    Retries every 100ms up to timeout_s. On Windows, msvcrt.locking blocks
+    ~10s per call and raises OSError on failure, so we catch and retry.
+    On POSIX, fcntl.flock with LOCK_NB raises BlockingIOError when the lock
+    is held elsewhere; same retry loop applies.
+    """
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    # "a+b" creates the file if absent, opens read/write, never truncates.
+    fh = open(lock_path, "a+b")
+    try:
+        deadline = time.monotonic() + timeout_s
+        while True:
+            try:
+                if _IS_WINDOWS:
+                    # Lock 1 byte at offset 0. LK_NBLCK = non-blocking exclusive.
+                    fh.seek(0)
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break  # acquired
+            except (OSError, BlockingIOError):
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(
+                        f"could not acquire backlog lock at {lock_path} within {timeout_s}s"
+                    )
+                time.sleep(0.1)
+        try:
+            yield
+        finally:
+            try:
+                if _IS_WINDOWS:
+                    fh.seek(0)
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+            except OSError:
+                pass
+    finally:
+        try:
+            fh.close()
+        except OSError:
+            pass
 
 # Resolve repo root relative to this file (lib/ -> scripts/ -> tools/ -> repo/)
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -28,8 +103,10 @@ VALID_STATUSES = frozenset({
 })
 
 # Statuses that count as "active" for dedup purposes
+# pending_review is included so paradigm_health/overnight injectors don't
+# create duplicate tasks when one already sits in the human review queue.
 ACTIVE_STATUSES = frozenset({
-    "pending", "executing", "verifying", "manual_review", "claimed",
+    "pending", "executing", "verifying", "manual_review", "claimed", "pending_review",
 })
 
 # Optional field defaults applied during auto-fill
@@ -141,6 +218,16 @@ def validate_task(task: dict) -> list[str]:
     elif not isinstance(priority, int):
         errors.append("'priority' must be an integer")
 
+    # -- generation (5E-2 hard cap) --
+    # Follow-on tasks track their generation: parent=0, G1=1, G2=2.
+    # Hard-capped at 2 to prevent runaway _emit_followon() loops, scope drift,
+    # and quality degradation. Direct backlog injection that bypasses the
+    # dispatcher's _emit_followon() must still be blocked here.
+    if "generation" in task:
+        gen = task.get("generation")
+        if not isinstance(gen, int) or gen < 0 or gen > 2:
+            errors.append("'generation' must be int 0-2 (hard cap to prevent runaway loops)")
+
     # -- created --
     created = task.get("created")
     if created is None:
@@ -187,11 +274,7 @@ def backlog_append(
 
     # -- Auto-generate id if absent --
     if "id" not in task or not task.get("id"):
-        import time as _time
-        # Use microsecond-resolution float to avoid collisions when multiple
-        # tasks are appended within the same second (e.g. batch routine injection)
-        ts = int(_time.time() * 1_000_000)
-        task["id"] = f"task-{ts}"
+        task["id"] = _generate_task_id()
 
     # -- Auto-fill created if absent --
     if "created" not in task or not task.get("created"):
@@ -208,50 +291,76 @@ def backlog_append(
     if errors:
         raise ValueError("Task validation failed:\n" + "\n".join(f"  - {e}" for e in errors))
 
-    # -- Load existing backlog for dedup check --
-    existing_tasks: list[dict] = []
-    if backlog_path.exists():
-        with open(backlog_path, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    existing_tasks.append(json.loads(line))
-                except json.JSONDecodeError:
-                    # Skip malformed lines (do not corrupt backlog)
-                    continue
+    # -- Soft warning: autonomous_safe tasks should declare expected_outputs --
+    # Without expected_outputs, the dispatcher's scope_creep gate cannot
+    # verify the worker stayed in bounds and will route the task to
+    # manual_review (see jarvis_dispatcher.detect_scope_creep). Producers
+    # are encouraged to populate expected_outputs at intake to avoid that.
+    # Tier 0 (read-only) and pending_review tasks are exempt.
+    if (
+        task.get("autonomous_safe")
+        and task.get("tier", 0) >= 1
+        and task.get("status") not in ("pending_review", "manual_review", "deferred")
+        and not task.get("expected_outputs")
+    ):
+        import sys as _sys
+        print(
+            f"  WARNING [backlog_append]: task {task['id']} is autonomous_safe "
+            f"tier {task.get('tier')} but has no expected_outputs -- "
+            f"dispatcher will route to manual_review (scope undefined).",
+            file=_sys.stderr,
+        )
 
-    # -- Dedup by routine_id --
-    routine_id = task.get("routine_id")
-    if routine_id:
-        for existing in existing_tasks:
-            if (
-                existing.get("routine_id") == routine_id
-                and existing.get("status") in ACTIVE_STATUSES
-            ):
-                return None
+    # -- Acquire exclusive lock around the read-modify-write window --
+    # Without this, two producers calling backlog_append concurrently can
+    # both read the same existing_tasks snapshot and race on os.replace,
+    # silently losing one write. Sidecar .lock file is never git-tracked.
+    lock_path = backlog_path.with_suffix(backlog_path.suffix + ".lock")
+    with _exclusive_file_lock(lock_path):
+        # -- Load existing backlog for dedup check --
+        existing_tasks: list[dict] = []
+        if backlog_path.exists():
+            with open(backlog_path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        existing_tasks.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        # Skip malformed lines (do not corrupt backlog)
+                        continue
 
-    # -- Atomic append --
-    backlog_path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_path = tempfile.mkstemp(
-        dir=str(backlog_path.parent),
-        suffix=".tmp",
-        prefix="backlog_append_",
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            # Write existing lines
+        # -- Dedup by routine_id --
+        routine_id = task.get("routine_id")
+        if routine_id:
             for existing in existing_tasks:
-                f.write(json.dumps(existing, ensure_ascii=False) + "\n")
-            # Append new task
-            f.write(json.dumps(task, ensure_ascii=False) + "\n")
-        os.replace(tmp_path, str(backlog_path))
-    except Exception:
+                if (
+                    existing.get("routine_id") == routine_id
+                    and existing.get("status") in ACTIVE_STATUSES
+                ):
+                    return None
+
+        # -- Atomic append --
+        backlog_path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(backlog_path.parent),
+            suffix=".tmp",
+            prefix="backlog_append_",
+        )
         try:
-            os.unlink(tmp_path)
-        except OSError:
-            pass
-        raise
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                # Write existing lines
+                for existing in existing_tasks:
+                    f.write(json.dumps(existing, ensure_ascii=False) + "\n")
+                # Append new task
+                f.write(json.dumps(task, ensure_ascii=False) + "\n")
+            os.replace(tmp_path, str(backlog_path))
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
     return task

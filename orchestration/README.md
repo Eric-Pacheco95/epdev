@@ -36,7 +36,7 @@ Unified view of all active tasks across all projects.
 
 ## Phase 4 — Autonomous self-improvement
 
-**PRD:** `memory/work/jarvis/PRD.md` — background automation (heartbeat, curated research, Slack by severity) isolated from interactive chat sessions. **State:** `memory/work/jarvis/STATE.md`. Tasks listed under Phase 4 in `orchestration/tasklist.md`.
+**PRD:** `memory/work/jarvis/PRD_phase5.md` — background automation (heartbeat, curated research, Slack by severity) isolated from interactive chat sessions. **State:** `memory/work/jarvis/STATE.md`. Tasks listed under Phase 5 in `orchestration/tasklist.md`.
 
 ## Phase 3B — Slack (locked in)
 

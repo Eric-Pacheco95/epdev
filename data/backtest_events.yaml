@@ -1,0 +1,418 @@
+# Backtest Events -- Prediction Intelligence Layer
+# Each entry represents a historical event with a known outcome.
+# Used by prediction_backtest_producer.py to run constrained /make-prediction passes.
+#
+# Fields:
+#   event_id:              unique slug
+#   description:           the prediction question to ask (as if asking in real time)
+#   domain:                geopolitics | market | technology | planning
+#   knowledge_cutoff_date: date to constrain Claude's knowledge to (YYYY-MM-DD)
+#   known_outcome:         what actually happened (used for scoring)
+#   difficulty:            low | medium | high (how uncertain the outcome was at cutoff)
+#   at_time_context:       public knowledge available at cutoff_date to inject into prompt
+
+events:
+
+  # ── GEOPOLITICS ───────────────────────────────────────────────────────────
+
+  - event_id: geo-us-election-2020
+    description: "Who will win the 2020 US Presidential Election and by what margin?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2020-10-01"
+    known_outcome: "Joe Biden wins with 306 Electoral College votes vs Trump's 232. Popular vote: Biden 51.3%, Trump 46.9%."
+    difficulty: medium
+    at_time_context: >
+      Biden leads national polls by 7-10 points but state-level polling is tighter.
+      COVID-19 pandemic ongoing; record early voting. Trump won unexpected 2016 victory
+      despite polling disadvantage. Key swing states: Pennsylvania, Michigan, Wisconsin,
+      Florida, Arizona. Senate races competitive. Prediction markets show Biden ~65%
+      favorite. 2016 polling miss fresh in forecasters' minds.
+
+  - event_id: geo-brexit-outcome-2016
+    description: "Will the UK vote to Leave or Remain in the EU in the June 2016 referendum, and what will the margin be?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2016-06-20"
+    known_outcome: "Leave wins 51.9% to 48.1%. Turnout 72.2%. Scotland and Northern Ireland voted Remain; England and Wales voted Leave."
+    difficulty: high
+    at_time_context: >
+      Final pre-vote polls show a slight Remain lead (52-48 average) but within margin
+      of error. Prediction markets strongly favor Remain at ~75%. Jo Cox MP assassinated
+      June 16, briefly paused campaigning. Immigration and sovereignty key Leave arguments.
+      Economic warnings from IMF, Bank of England favor Remain. Last major polling: June 19.
+
+  - event_id: geo-russia-ukraine-invasion-2022
+    description: "Will Russia launch a full-scale military invasion of Ukraine in early 2022?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-01-15"
+    known_outcome: "Russia launches full-scale invasion on February 24 2022 from multiple directions including Kyiv, Kharkiv, Kherson, and the Donbas."
+    difficulty: high
+    at_time_context: >
+      ~100,000 Russian troops massed on Ukrainian border since late 2021. US intelligence
+      warning of imminent invasion publicly stated. Russia denies invasion plans. Western
+      Europe skeptical of US intelligence claims. Germany blocking weapons shipments.
+      Diplomatic talks ongoing (Biden-Putin call January 10). Analysts split: many see
+      limited operation or coercive diplomacy rather than full invasion. Natural gas
+      leverage gives Russia negotiating power.
+
+  - event_id: geo-pelosi-taiwan-conflict-2022
+    description: "If Nancy Pelosi visits Taiwan in August 2022, will China launch direct military strikes against Taiwan or US assets?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-08-01"
+    known_outcome: "Pelosi visited August 2-3 2022. China responded with unprecedented military exercises surrounding Taiwan but did not strike Taiwan or US assets directly. Fired ballistic missiles into Japan's EEZ."
+    difficulty: medium
+    at_time_context: >
+      Reports of Pelosi's potential visit leaking. China issued stern warnings including
+      threat of forceful response. US military assets repositioned to region. Historical
+      precedent: Lee Teng-hui US visit 1995 triggered Taiwan Strait Crisis with live-fire
+      exercises but no conflict. Xi Jinping currently consolidating power ahead of 20th
+      Party Congress. Military analysts debate whether China would risk conflict.
+
+  - event_id: geo-french-election-2022
+    description: "Will Emmanuel Macron win the 2022 French Presidential election runoff against Marine Le Pen?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-04-01"
+    known_outcome: "Macron wins 58.5% to Le Pen's 41.5% in the April 24 runoff."
+    difficulty: low
+    at_time_context: >
+      First round April 10. Macron leads in polls at ~54-56% for runoff. Le Pen running
+      on purchasing power and anti-globalization platform. War in Ukraine ongoing; Le Pen's
+      historical ties to Russia a liability. Melenchon voters (22% in round 1) mostly
+      expected to abstain or back Macron. 2017 Macron won 66% vs Le Pen. Market and
+      institutional consensus strongly favors Macron. Abstention historically high.
+
+  - event_id: geo-iran-nuclear-deal-2022
+    description: "Will the 2015 JCPOA nuclear deal be revived through ongoing negotiations in 2022?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-07-01"
+    known_outcome: "Negotiations ultimately collapsed. No deal reached in 2022. Iran continued uranium enrichment to 60%. No JCPOA revival occurred."
+    difficulty: high
+    at_time_context: >
+      Vienna talks resumed March 2022 after Russia-Ukraine invasion disrupted them.
+      Draft deal text reportedly 95% complete in March. Sticking points: IRGC
+      terrorism designation removal demanded by Iran; US refusing. Indirect talks
+      through EU mediator. Iran's nuclear program advanced significantly since 2018
+      US withdrawal. Regional actors (Israel, Saudi Arabia) opposed to deal.
+      EU mediator Mora optimistic in early 2022; US less so by July.
+
+  - event_id: geo-saudi-iran-normalization-2023
+    description: "Will Saudi Arabia and Iran normalize relations in 2023?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "Saudi Arabia and Iran reached a normalization agreement brokered by China on March 10 2023. Embassies reopened by end of 2023."
+    difficulty: high
+    at_time_context: >
+      Saudi-Iran relations severed since January 2016 (Saudi execution of Shia cleric).
+      Proxy conflicts in Yemen, Lebanon, Iraq ongoing. China quietly mediating behind
+      scenes. No public signals of imminent normalization. Yemen ceasefire holding
+      since April 2022 via UN mediation. MBS consolidating power; pragmatic foreign
+      policy signals. Iran under maximum economic pressure from sanctions.
+
+  - event_id: geo-nato-finland-sweden-2022
+    description: "Will Finland and Sweden apply to join NATO following Russia's invasion of Ukraine?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-05-01"
+    known_outcome: "Both applied for NATO membership in May 2022. Finland joined April 4 2023. Sweden joined March 7 2024."
+    difficulty: low
+    at_time_context: >
+      Both countries formally neutral for decades. Russian invasion triggered major
+      public opinion shift: Finnish support for NATO jumped from 26% to 76% in polls.
+      Swedish Social Democrat government (historically anti-NATO) signaling possible
+      reversal. NATO Secretary General Stoltenberg publicly welcoming. Russia threatening
+      consequences. Turkey signaling possible veto but not yet blocking. Nordic
+      cooperation framework suggests they would move together.
+  - event_id: geo-ukraine-war-six-months-2022
+    description: "Will the Russia-Ukraine war still be actively ongoing at six months (September 2022)?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2022-03-01"
+    known_outcome: "War remained actively ongoing at September 2022. Ukraine launched Kharkiv counteroffensive in September, recapturing significant territory."
+    difficulty: medium
+    at_time_context: >
+      Invasion began February 24. Kyiv not captured as expected by Russia. Ukrainian
+      resistance stronger than anticipated. Russian logistics failures visible. US and
+      NATO supplying weapons. Economic sanctions unprecedented in scope. Russia facing
+      setbacks but still advancing in south/east. Western analysts divided: some expect
+      negotiated settlement in months; others expect protracted conflict. No precedent
+      for large-scale interstate war in Europe in modern era.
+
+  # ── MARKET ────────────────────────────────────────────────────────────────
+
+  - event_id: mkt-btc-ath-2021
+    description: "Will Bitcoin reach a new all-time high above $65,000 in Q4 2021?"
+    domain: market
+    knowledge_cutoff_date: "2021-10-01"
+    known_outcome: "Bitcoin reached $69,044 on November 10 2021, a new all-time high. Subsequently declined sharply."
+    difficulty: medium
+    at_time_context: >
+      Bitcoin at ~$47,000 in early October. Previous ATH $64,895 in April 2021.
+      On-chain metrics: exchange reserves declining (supply squeeze signal). Institutional
+      adoption growing (El Salvador legal tender). Bitcoin ETF applications pending SEC
+      review. October historically strong month (Uptober). Futures market backwardation
+      ended. September correction of ~25% just completed. Retail sentiment recovering.
+
+  - event_id: mkt-crypto-bear-2022
+    description: "Will Bitcoin fall below $20,000 by July 2022?"
+    domain: market
+    knowledge_cutoff_date: "2022-04-01"
+    known_outcome: "Bitcoin fell to $17,567 on June 18 2022 -- first time below $20,000 since December 2020."
+    difficulty: high
+    at_time_context: >
+      Bitcoin at ~$46,000 in April. Fed began hiking rates March 2022 (25bps).
+      Tech stocks correcting. Terra/Luna ecosystem showing stress signals. Celsius
+      and other yield platforms pausing withdrawals (rumors). Previous bear markets:
+      -84% in 2018, -55% in 2020. Crypto highly correlated with risk assets.
+      Crypto winter discourse emerging but many analysts calling for recovery.
+      LUNA/UST depeg risk underappreciated by most.
+
+  - event_id: mkt-ftx-collapse-2022
+    description: "Is FTX solvent and will it survive as an exchange through Q4 2022?"
+    domain: market
+    knowledge_cutoff_date: "2022-11-01"
+    known_outcome: "FTX filed for Chapter 11 bankruptcy on November 11 2022. SBF arrested December 12. ~$8B shortfall between FTX assets and liabilities."
+    difficulty: high
+    at_time_context: >
+      CoinDesk article November 2 revealed Alameda Research balance sheet heavily
+      weighted to FTT token. Binance's CZ tweeted November 6 Binance would liquidate
+      FTT holdings. FTX customer withdrawals spiked. SBF tweeting assurances November 7
+      "FTX is fine." Binance signed LOI to acquire FTX November 8 then withdrew
+      November 9 citing due diligence findings. FTX assets under $1B vs ~$6B withdrawal
+      requests by November 9. Crypto community shocked; FTX was considered top-tier.
+
+  - event_id: mkt-us-recession-2023
+    description: "Will the United States enter a recession in 2023?"
+    domain: market
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "No US recession in 2023. GDP grew 2.5% for full year 2023. Labor market remained resilient throughout."
+    difficulty: high
+    at_time_context: >
+      Fed raised rates 425bps in 2022, fastest pace since 1980s. Yield curve inverted
+      (2/10 spread -70bps). Bloomberg consensus: 65% recession probability in 2023.
+      Leading indicators declining. Housing market cooling sharply. Consumer confidence
+      falling. Historical track record: inverted yield curve preceded every US recession
+      in last 50 years. However: unemployment still near 3.5%, labor market strong.
+      Soft landing historically rare but not impossible.
+
+  - event_id: mkt-nvidia-2023
+    description: "Will Nvidia stock outperform the S&P 500 by more than 50 percentage points in 2023?"
+    domain: market
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "Nvidia returned +239% in 2023 vs S&P 500 +24%. Outperformance of ~215 percentage points."
+    difficulty: medium
+    at_time_context: >
+      Nvidia at ~$14.60 (pre-split adjusted ~$146) in January 2023 after -50% in 2022.
+      GPU shortage for AI training becoming discussed but not widely priced in.
+      ChatGPT released November 2022 -- AI hype building. Nvidia had strong gaming
+      GPU business but data center was growing. Analyst consensus: neutral to moderate
+      bull case. H100 announced but production constraints unclear. Few analysts
+      forecasting >100% return for any major chip company.
+  - event_id: mkt-eth-merge-2022
+    description: "Will the Ethereum Merge (proof-of-stake transition) succeed without a major chain split or security failure?"
+    domain: market
+    knowledge_cutoff_date: "2022-08-01"
+    known_outcome: "Ethereum Merge succeeded on September 15 2022. No major chain split. Network transitioned from PoW to PoS successfully. Minor ETH PoW fork (ETHW) had negligible adoption."
+    difficulty: medium
+    at_time_context: >
+      Merge targeted for September 2022 after years of delays. Testnets (Ropsten,
+      Goerli, Sepolia) merged successfully. Core devs confident. ETHW fork planned
+      by some miners protecting revenue. Technical risk: first-ever consensus
+      mechanism change for a $200B+ network. Historical precedent: none at this scale.
+      DeFi protocols preparing. MEV/validator coordination untested at mainnet scale.
+
+  - event_id: mkt-svb-collapse-2023
+    description: "Will Silicon Valley Bank (SVB) survive the bank run and remain operational through March 2023?"
+    domain: market
+    knowledge_cutoff_date: "2023-03-01"
+    known_outcome: "SVB failed on March 10 2023 -- largest US bank failure since 2008. FDIC took control. Depositors made whole via emergency government action March 12."
+    difficulty: high
+    at_time_context: >
+      SVB disclosed $1.8B loss on bond portfolio sale March 8. Announced $2.25B
+      capital raise. Venture capital community on Twitter March 9 organizing withdrawal
+      of deposits (Peter Thiel's Founders Fund among first). SVB stock down 60%.
+      Classic bank run dynamic. SVB had concentrated exposure to VC/startup sector
+      and long-duration bonds (marked to market losses from Fed hikes). Most analysts
+      still treating as isolated to SVB; contagion risk underappreciated.
+
+  - event_id: mkt-fed-hikes-2022
+    description: "Will the Federal Reserve raise interest rates by more than 200 basis points total in 2022?"
+    domain: market
+    knowledge_cutoff_date: "2022-06-01"
+    known_outcome: "Fed raised rates by 425 basis points total in 2022 (March: 25bps, May: 50bps, June: 75bps, July: 75bps, September: 75bps, November: 75bps, December: 50bps)."
+    difficulty: low
+    at_time_context: >
+      Fed raised 25bps in March (first hike since 2018), 50bps in May. June FOMC
+      meeting upcoming. CPI at 8.6% in May 2022 -- 40-year high. Fed funds rate at
+      0.75-1.00%. Market pricing: ~75bps in June. Dot plot from March showed ~1.75%
+      by year end (implying ~125bps total from Jan). Inflation proving more persistent
+      than Fed's "transitory" framing. Historical precedent: 1994 Fed raised 300bps
+      in one year without recession.
+
+  # ── TECHNOLOGY ────────────────────────────────────────────────────────────
+
+  - event_id: tech-chatgpt-100m-users
+    description: "Will ChatGPT reach 100 million users within 3 months of its November 2022 launch?"
+    domain: technology
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "ChatGPT reached 100 million monthly active users in January 2023 -- approximately 2 months after launch. Fastest consumer app to reach 100M users in history at that time."
+    difficulty: low
+    at_time_context: >
+      ChatGPT launched November 30 2022. Reached 1 million users in 5 days (vs
+      Instagram: 2.5 months, Netflix: 3.5 years). Twitter and tech media saturated
+      with ChatGPT examples. OpenAI servers frequently overloaded. Previous fastest
+      to 100M: TikTok (9 months), Instagram (2.5 years). No consumer AI product
+      had grown this fast. GPT-3 API had been available for 2 years but ChatGPT's
+      UX removed the barrier to access.
+
+  - event_id: tech-gpt4-bar-exam
+    description: "Will GPT-4 pass the US Bar Exam at a score in the top 25% of human test takers?"
+    domain: technology
+    knowledge_cutoff_date: "2023-01-01"
+    known_outcome: "GPT-4 scored in the top 10% of bar exam takers when released March 14 2023. GPT-3.5 had scored in the bottom 10%."
+    difficulty: medium
+    at_time_context: >
+      GPT-3.5 (ChatGPT) scored in bottom 10% of bar exam takers per early studies.
+      GPT-4 rumored to have dramatically improved reasoning. OpenAI reportedly training
+      on legal and professional exam data. AI legal tools (Harvey, Casetext) emerging.
+      Legal experts skeptical AI could pass bar. Constitutional AI and RLHF advancing
+      rapidly. Scaling law researchers optimistic about emergent capabilities.
+      No AI had passed professional licensing exams at top-percentile level.
+
+  - event_id: tech-self-driving-2025
+    description: "Will any company achieve Level 4 autonomous driving at broad commercial scale (>100 cities) by end of 2024?"
+    domain: technology
+    knowledge_cutoff_date: "2022-01-01"
+    known_outcome: "No company achieved Level 4 at broad commercial scale (>100 cities) by end of 2024. Waymo operating in limited geofenced areas in Phoenix, SF, Austin. Cruise suspended after accident. Tesla FSD still Level 2."
+    difficulty: low
+    at_time_context: >
+      Waymo One operating in Phoenix metro area. Cruise operating in SF with permits.
+      Tesla FSD beta rolling out but still supervised. Elon Musk predicted full
+      self-driving by 2020, 2021, 2022. Multiple companies (Aurora, Argo AI, Zoox)
+      targeting commercial launch. Heavy media coverage of AV progress. Regulatory
+      frameworks still being developed. Accidents creating regulatory scrutiny.
+      Industry bullish; most analysts expected meaningful deployment by 2025.
+
+  - event_id: tech-meta-stock-2022
+    description: "Will Meta (formerly Facebook) stock decline more than 50% from its January 2022 price by year-end 2022?"
+    domain: technology
+    knowledge_cutoff_date: "2022-01-01"
+    known_outcome: "Meta stock declined from ~$335 in January to ~$120 by December 2022 -- a decline of approximately 64%."
+    difficulty: medium
+    at_time_context: >
+      Meta at ~$335 in January 2022. Announced $10B+ annual investment in Reality Labs
+      (Metaverse). Q4 2021 earnings showed user decline in core Facebook (first ever).
+      Apple ATT privacy changes estimated $10B annual revenue impact. TikTok taking
+      share from younger demographics. Metaverse strategy dividing analysts. Ad market
+      softening. Rising interest rates compress tech multiples. Still profitable;
+      Zuckerberg controlling shareholder. Previous large-cap tech drawdowns rarely
+      exceeded 40%.
+
+  - event_id: tech-twitter-acquisition-2022
+    description: "Will Elon Musk complete the acquisition of Twitter at the agreed $54.20/share price?"
+    domain: technology
+    knowledge_cutoff_date: "2022-10-01"
+    known_outcome: "Musk completed acquisition October 27 2022 at $54.20/share for $44B total. Had attempted to exit deal in July; litigation forced completion."
+    difficulty: low
+    at_time_context: >
+      Musk signed acquisition agreement April 25 2022. Attempted to exit in July
+      citing bot data dispute. Twitter sued Musk to enforce deal. Delaware Chancery
+      Court appeared likely to rule against Musk based on legal commentary. Trial
+      scheduled for October 17. Musk renewed offer at original price October 4.
+      Legal experts: ~75% chance court forces Musk to complete or pay massive penalty.
+      Whether he'd actually follow through remained uncertain.
+  - event_id: plan-tokyo-olympics-2020
+    description: "Will the Tokyo 2020 Olympics proceed as scheduled in July-August 2020?"
+    domain: planning
+    knowledge_cutoff_date: "2020-01-15"
+    known_outcome: "Postponed to July-August 2021 due to COVID-19 pandemic â€” first Olympic postponement in peacetime history"
+    difficulty: high
+    status: approved
+    at_time_context: >
+      Tokyo 2020 was fully planned for July 24 - August 9, 2020 with venue construction nearly complete and ticket sales underway. Japanese officials had invested over $12 billion in preparations and the IOC showed no signs of contingency planning. WHO had just begun tracking a novel pneumonia cluster in Wuhan, China with fewer than 50 confirmed cases and no evidence of sustained human-to-human transmission outside China. No major international sporting events had been canceled or postponed.
+
+  - event_id: mkt-us-inflation-2021
+    description: “Will US CPI inflation exceed 5% year-over-year at any point in 2021?”
+    domain: market
+    knowledge_cutoff_date: “2021-01-01”
+    known_outcome: “Yes â€” CPI hit 5.4% by June 2021 and rose to 7.0% by December 2021, the highest in 40 years”
+    difficulty: high
+    status: approved
+    at_time_context: >
+      December 2020 CPI stood at 1.4% year-over-year. The Federal Reserve projected 2021 PCE inflation at approximately 1.8% and maintained that any price increases would be transitory supply-chain effects. Most major bank forecasts expected inflation to peak below 3%. The $900B stimulus package had just passed but the additional $1.9T American Rescue Plan had not yet been proposed. Unemployment remained elevated at 6.7% and demand destruction from COVID was widely expected to suppress prices.
+
+  - event_id: geo-afghanistan-collapse-2021
+    description: “Following the announced US military withdrawal, will the Afghan government survive for at least 12 months after the withdrawal deadline of September 11, 2021?”
+    domain: geopolitics
+    knowledge_cutoff_date: “2021-07-01”
+    known_outcome: “No â€” Taliban captured Kabul on August 15, 2021, just 6 weeks after the July 8 withdrawal announcement; the government collapsed in days, not months”
+    difficulty: high
+    status: approved
+    at_time_context: >
+      President Biden announced April 14 that all US troops would leave by September 11, 2021. As of July 1, US intelligence assessments estimated the Afghan government could hold for 6 months to 2 years post-withdrawal, with a 12-month survival scenario considered likely. The Taliban controlled roughly 20% of Afghanistan's districts but had not yet taken any provincial capitals. The Afghan National Army numbered approximately 300,000 on paper and had US air support through the withdrawal deadline. NATO allies and most analysts expected a gradual deterioration, not a rapid collapse.
+
+  - event_id: tech-chip-shortage-2021
+    description: “Will the global semiconductor shortage that emerged in late 2020 resolve to near-normal supply conditions by end of 2021?”
+    domain: technology
+    knowledge_cutoff_date: “2021-01-01”
+    known_outcome: “No â€” the shortage deepened through 2021, auto plants idled globally, lead times stretched to 52+ weeks, and the shortage persisted into 2022”
+    difficulty: medium
+    status: approved
+    at_time_context: >
+      A semiconductor supply crunch had emerged in Q4 2020, initially driven by pandemic-related demand shifts as consumers bought electronics while automakers cut orders. TSMC and Intel publicly projected the shortage as temporary, with most analyst forecasts expecting supply to normalize within 2021 as fabs ramped capacity. Ford and GM had begun warning of limited chip availability but had not yet announced major production cuts. Intel CEO Pat Gelsinger had not yet been appointed and the CHIPS Act was not yet proposed. The shortage was widely framed as a 1-2 quarter disruption.
+
+  - event_id: plan-tesla-cybertruck-2021
+    description: “Will Tesla begin customer deliveries of the Cybertruck in 2021, as Elon Musk indicated at the November 2019 unveiling?”
+    domain: planning
+    knowledge_cutoff_date: “2021-01-01”
+    known_outcome: “No â€” Cybertruck deliveries did not begin until November 2023, more than two years late”
+    difficulty: medium
+    status: approved
+    at_time_context: >
+      Elon Musk unveiled the Cybertruck in November 2019 stating production would begin in late 2021. As of January 2021, the official timeline had not been revised and Tesla had collected over 1 million $100 refundable reservations. Tesla had recently exceeded its own Model Y production ramp timeline, improving credibility for near-term delivery promises. Cybertruck prototypes had been spotted testing on public roads and the Giga Texas facility was under construction. No formal delay announcement had been issued and Musk had not publicly updated the production target.
+
+  - event_id: plan-wework-ipo-collapse-2019
+    description: "Will WeWork successfully complete its IPO in 2019 and maintain a valuation above $20B?"
+    domain: planning
+    knowledge_cutoff_date: "2019-08-14"
+    known_outcome: "WeWork's IPO was suspended in September 2019. Valuation collapsed from $47B to ~$8B. Adam Neumann resigned as CEO. SoftBank took control."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      WeWork filed its S-1 prospectus on August 14, 2019, revealing $1.61B in losses for 2018 on $1.82B revenue. Valuation peaked at $47B after SoftBank's January 2019 investment. Governance concerns emerged: Adam Neumann's dual-class shares, personal loans from the company, self-dealing on real estate leases, and the name trademark sale. IPO roadshow scheduled for September. SoftBank had committed $1.5B contingent on IPO. Competitors IWG/Regus traded at 2x revenue vs WeWork's implied 26x. Analysts at JP Morgan and Goldman Sachs were underwriters despite concerns.
+
+  - event_id: plan-spacex-crew-dragon-2020
+    description: "Will SpaceX successfully launch astronauts to the ISS in 2020?"
+    domain: planning
+    knowledge_cutoff_date: "2020-01-01"
+    known_outcome: "SpaceX Demo-2 launched May 30, 2020, carrying astronauts Bob Behnken and Doug Hurley to the ISS. First crewed orbital launch from US soil since 2011."
+    difficulty: medium
+    status: approved
+    at_time_context: >
+      SpaceX completed Demo-1 (uncrewed) in March 2019. The Crew Dragon capsule exploded during a static fire abort test in April 2019, delaying the crewed mission. In-flight abort test planned for January 2020. NASA Commercial Crew Program target was 'early 2020' for Demo-2 crewed flight with Bob Behnken and Doug Hurley. Parachute system required additional testing. Boeing Starliner (competitor) had its own uncrewed test scheduled for December 2019. Both programs had faced delays. No US crewed orbital launch since Space Shuttle retirement in 2011.
+
+  - event_id: tech-tiktok-ban-us-2020
+    description: "Will TikTok be effectively banned from operating in the United States by end of 2020?"
+    domain: technology
+    knowledge_cutoff_date: "2020-08-03"
+    known_outcome: "TikTok was NOT banned in 2020. US federal courts blocked Trump's executive orders. The Oracle/Walmart deal was never finalized. TikTok continued operating with 100M+ US users."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      On August 1, 2020, Trump threatened to ban TikTok within 45 days unless ByteDance sold its US operations. On August 3, Trump signed an executive order giving ByteDance 90 days to divest. Microsoft confirmed it was in talks to acquire TikTok's US, Canada, Australia, and New Zealand operations. Oracle and Walmart also expressed interest. TikTok had 100M+ US users. National security concerns: potential CCP access to user data, content moderation policies. India had already banned TikTok in June 2020. ByteDance CEO Kevin Mayer (former Disney exec) sent a public letter disputing claims.
+
+  - event_id: mkt-sp500-covid-recovery-2020
+    description: "Will the S&P 500 recover to its pre-COVID all-time high of 3,386 by end of 2020?"
+    domain: market
+    knowledge_cutoff_date: "2020-04-01"
+    known_outcome: "Yes. The S&P 500 recovered to new all-time highs by August 18, 2020 (3,389), driven by Fed stimulus, tech sector strength, and vaccine optimism. It closed 2020 at 3,756."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      S&P 500 hit all-time high of 3,386 on February 19, 2020. COVID-19 caused the fastest bear market in history: down 34% by March 23, 2020 (2,237). As of April 1, 2020, the index was at ~2,527 -- recovering somewhat from the March bottom. Fed announced unlimited QE on March 23. Congress passed $2.2T CARES Act March 27. US had 200,000+ confirmed COVID cases, lockdowns spreading. Unemployment claims hit 6.6M in the week ending March 27 (record). Most economists forecast 2008-style prolonged recovery or worse. 10-year Treasury yield at 0.65%. Oil prices negative futures in April.
+
+  - event_id: mkt-gamestop-squeeze-jan2021
+    description: "Will institutional short sellers successfully maintain their GameStop short positions against retail buying pressure in January 2021?"
+    domain: market
+    knowledge_cutoff_date: "2021-01-20"
+    known_outcome: "Short sellers lost. GME surged from $43 on Jan 20 to $483 on Jan 28. Melvin Capital lost ~$6.8B. Robinhood restricted buying on Jan 28. Short sellers ultimately lost an estimated $5B+ in January alone."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      GameStop (GME) stock rose from $19 on Jan 12 to $43 on Jan 20, 2021. WallStreetBets subreddit (2M+ members) was coordinating a short squeeze. Short interest was ~140% of the float -- one of the highest in history. Melvin Capital and Citron Research had publicly disclosed large short positions. Ryan Cohen (Chewy founder) joined the board in January, sparking renewed optimism. Institutional shorts had been in place since GME was trading at $4-5 in 2019-2020. Most analysts viewed GME as a failing brick-and-mortar retailer losing to digital gaming. Robinhood and other brokers still allowed both buying and selling.

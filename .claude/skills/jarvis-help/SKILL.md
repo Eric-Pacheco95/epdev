@@ -4,8 +4,6 @@ You are the Jarvis discovery hub -- the entry point for understanding what Jarvi
 
 You teach Eric *when* to use skills by grouping them by workflow stage (TheAlgorithm phases), not alphabetically. You also provide contextual suggestions based on the current session state.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
@@ -60,46 +58,7 @@ true
 
 1. Scan `.claude/skills/*/SKILL.md` to get the list of installed skills
 2. For skills that have a `# DISCOVERY` section, read the `## One-liner` and `## Stage` fields
-3. For skills without a DISCOVERY section, fall back to the CLAUDE.md Skill Registry table for descriptions and use this stage mapping:
-
-   | Skill | Stage |
-   |-------|-------|
-   | /research | OBSERVE |
-   | /extract-wisdom | OBSERVE |
-   | /deep-audit | OBSERVE |
-   | /absorb | OBSERVE |
-   | /first-principles | THINK |
-   | /red-team | THINK |
-   | /analyze-claims | THINK |
-   | /find-logical-fallacies | THINK |
-   | /architecture-review | THINK |
-   | /create-prd | PLAN |
-   | /project-init | PLAN |
-   | /improve-prompt | PLAN |
-   | /implement-prd | BUILD |
-   | /create-pattern | BUILD |
-   | /spawn-agent | BUILD |
-   | /workflow-engine | BUILD |
-   | /review-code | VERIFY |
-   | /security-audit | VERIFY |
-   | /quality-gate | VERIFY |
-   | /self-heal | VERIFY |
-   | /learning-capture | LEARN |
-   | /synthesize-signals | LEARN |
-   | /telos-update | LEARN |
-   | /telos-report | LEARN |
-   | /update-steering-rules | LEARN |
-   | /teach | LEARN |
-   | /write-essay | CREATE |
-   | /create-keynote | CREATE |
-   | /create-image | CREATE |
-   | /visualize | CREATE |
-   | /label-and-rate | CREATE |
-   | /delegation | ORCHESTRATE |
-   | /project-orchestrator | ORCHESTRATE |
-   | /notion-sync | ORCHESTRATE |
-   | /commit | ORCHESTRATE |
-   | /jarvis-help | ORCHESTRATE |
+3. For skills without a DISCOVERY section, derive stage from the CLAUDE.md Skill Registry or the formatted output in step 4.
 
 4. Print skills grouped under stage headers using this format:
 
@@ -266,6 +225,21 @@ Print suggestions under a `SUGGESTED FOR THIS SESSION:` header. Only print if at
 - Do not add preamble, explanations, or commentary outside the defined sections
 - For full overview: always end with contextual suggestions if any apply
 - Keep output scannable -- this is a reference, not documentation
+
+# VERIFY
+
+- Output is grouped by workflow stage (OBSERVE, THINK, PLAN, BUILD, VERIFY, LEARN, CREATE, ORCHESTRATE) when no filter used | Verify: Scan output for stage headers
+- Each skill entry shows name + one-liner (no verbose descriptions in quick help) | Verify: Read output format
+- Contextual suggestions section appears when session has open PRDs, pending signals, or uncommitted changes | Verify: Check session state and output
+- Stage filter or search produces only matching skills (no full dump for filtered queries) | Verify: Check output scope matches input filter
+- No file writes occurred (jarvis-help is read-only) | Verify: git status unchanged
+
+# LEARN
+
+- If Eric frequently searches for a skill by intent (not name), note the intent-to-skill mappings that work well and reinforce them in DISCOVERY one-liners
+- If a stage consistently has more queries than others, note it -- may indicate a workflow bottleneck or missing skills in that stage
+- If contextual suggestions are frequently rejected or ignored, recalibrate the trigger thresholds
+- If a new skill is added and Eric is unaware of it after 3+ sessions, evaluate adding it to the contextual suggestions rotation
 
 # INPUT
 

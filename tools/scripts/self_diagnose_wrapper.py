@@ -52,6 +52,42 @@ ERROR_PATTERNS = [
     re.compile(r"SECURITY_AUDIT:\s*FAIL"),
 ]
 
+# Patterns that indicate the host is out of memory / pagefile.
+# When matched, skip claude -p diagnosis (it will OOM the same way)
+# and write a hardcoded structured failure record instead.
+OOM_PATTERNS = [
+    re.compile(r"WinError 1455"),
+    re.compile(r"paging file is too small", re.IGNORECASE),
+    re.compile(r"MemoryError"),
+    re.compile(r"Cannot allocate memory"),
+    re.compile(r"\[Errno 12\]"),
+]
+
+
+def detect_oom(output: str) -> bool:
+    """Return True if output indicates host memory/pagefile exhaustion."""
+    for pat in OOM_PATTERNS:
+        if pat.search(output):
+            return True
+    return False
+
+
+def build_oom_diagnosis(runner_name: str) -> str:
+    """Hardcoded diagnosis for OOM failures -- skips claude -p (would also OOM)."""
+    return (
+        "ROOT_CAUSE: Host out of virtual memory -- Windows pagefile exhausted "
+        "(WinError 1455). Diagnosis skipped because claude -p would hit the same OOM.\n"
+        "SEVERITY: 7\n"
+        "CATEGORY: resource_exhaustion\n"
+        "PROPOSED_FIX: Increase Windows pagefile (System Properties -> Advanced -> "
+        "Performance -> Virtual Memory): set initial 16GB, max 32GB. Reboot required.\n"
+        "REVERSIBLE: yes\n"
+        "REQUIRES_HUMAN: yes\n"
+        "DETAILS: %s aborted before any work was done. The runner did not produce "
+        "a branch or any artifacts. This is a host-level issue, not a code bug -- "
+        "no fix can be applied from inside Jarvis."
+    ) % runner_name
+
 # Patterns to strip from output before sending to claude -p (secret safety)
 SECRET_PATTERNS = [
     re.compile(r".*Bearer\s+\S+.*", re.IGNORECASE),
@@ -166,6 +202,7 @@ def call_claude_diagnose(prompt: str) -> str:
             capture_output=True,
             text=True,
             encoding="utf-8",
+            errors="replace",
             timeout=DIAGNOSE_TIMEOUT_S,
             cwd=str(REPO_ROOT),
         )
@@ -283,8 +320,34 @@ def notify_failure(runner_name: str, diagnosis: str,
 
 # -- Backlog injection -------------------------------------------------------
 
+_TEST_REF_RE = re.compile(
+    r"\btests[/\\][\w/\\\-.]+\.py(?:::[\w_]+)?",
+)
+
+
+def _extract_failing_test_refs(output: str) -> list[str]:
+    """Extract pytest test path references from a failure output blob.
+
+    Matches `tests/.../foo.py` and `tests/.../foo.py::test_name` patterns.
+    Returns deduped list with forward-slash normalized paths. Used by the
+    self-heal ISC builder to construct exact `pytest <ref>` re-run criteria
+    instead of relying on the generic runner --test sanity gate.
+    """
+    if not output:
+        return []
+    refs = []
+    seen = set()
+    for m in _TEST_REF_RE.finditer(output):
+        ref = m.group(0).replace("\\", "/")
+        if ref not in seen:
+            seen.add(ref)
+            refs.append(ref)
+    return refs
+
+
 def append_self_heal_task(runner_name: str, diagnosis: str,
-                          log_path: Path) -> str | None:
+                          log_path: Path,
+                          failure_output: str = "") -> str | None:
     """Append a Tier 1 self-heal task to the dispatcher backlog.
 
     Only appended when REQUIRES_HUMAN is 'no' in the diagnosis.
@@ -307,13 +370,31 @@ def append_self_heal_task(runner_name: str, diagnosis: str,
     runner_script = "tools/scripts/%s.py" % runner_name
     runner_path = REPO_ROOT / runner_script
 
-    # Build ISC: verify the runner exits cleanly after the fix
+    # Build ISC. The previous generic `<runner> --test` sanity gate is too
+    # loose -- it only verifies the runner self-test, not the failing artifact.
+    # When the failure output names specific test files / cases, add a
+    # `pytest <ref>` ISC for each so the heal worker has to actually fix the
+    # named artifact (not just leave the runner's self-test passing).
+    isc = []
+    test_refs = _extract_failing_test_refs(failure_output) + \
+        _extract_failing_test_refs(diagnosis)
+    seen_ref = set()
+    for ref in test_refs:
+        if ref in seen_ref:
+            continue
+        seen_ref.add(ref)
+        isc.append(
+            "Failing test passes after fix: %s | Verify: python -m pytest %s -q --tb=no"
+            % (ref, ref)
+        )
+    # Always include the generic runner sanity gate (when the script exists)
+    # as a regression check in addition to the specific test ISC above.
     if runner_path.is_file():
         verify_cmd = "python %s --test" % runner_script
-        isc = [
-            "%s exits cleanly after fix | Verify: %s" % (runner_name, verify_cmd),
-        ]
-    else:
+        isc.append(
+            "%s exits cleanly after fix | Verify: %s" % (runner_name, verify_cmd)
+        )
+    if not isc:
         isc = [
             "%s failure resolved | Verify: manual smoke test" % runner_name,
         ]
@@ -406,17 +487,23 @@ def main() -> int:
             capture_output=True,
             text=True,
             encoding="utf-8",
+            errors="replace",  # tolerate non-utf-8 bytes from runner output
             timeout=timeout,
             cwd=str(REPO_ROOT),
         )
         exit_code = result.returncode
         combined_output = (result.stdout or "") + "\n" + (result.stderr or "")
 
-        # Tee output to stdout/stderr so .bat log capture still works
+        # Tee output to stdout/stderr so .bat log capture still works.
+        # ASCII-strip first: Task Scheduler stdout is cp1252 on Windows and
+        # any non-encodable char (including U+FFFD from upstream decode) raises
+        # UnicodeEncodeError, killing the wrapper before the runner exits.
+        def _ascii_safe(s: str) -> str:
+            return s.encode("ascii", errors="replace").decode("ascii")
         if result.stdout:
-            sys.stdout.write(result.stdout)
+            sys.stdout.write(_ascii_safe(result.stdout))
         if result.stderr:
-            sys.stderr.write(result.stderr)
+            sys.stderr.write(_ascii_safe(result.stderr))
 
     except subprocess.TimeoutExpired as exc:
         exit_code = 124  # standard timeout exit code
@@ -462,28 +549,47 @@ def main() -> int:
     playbook_category = classify_playbook(combined_output)
     print("self-diagnose: playbook match: %s" % playbook_category)
 
-    # 4. Sanitize output and build diagnosis prompt
-    sanitized = sanitize_output(combined_output)
-    prompt = build_diagnosis_prompt(runner_name, exit_code,
-                                    sanitized, playbook_category)
+    # 3b. OOM short-circuit: if host is out of memory, skip claude -p entirely.
+    # Calling claude -p under OOM produces a useless "diagnosis unavailable"
+    # log because the diagnoser hits the same WinError 1455. Use a hardcoded
+    # diagnosis instead so the failure record is actionable.
+    if detect_oom(combined_output):
+        print("self-diagnose: OOM detected -- skipping claude -p (would also OOM)")
+        playbook_category = "resource_exhaustion"
+        diagnosis = build_oom_diagnosis(runner_name)
+    else:
+        # 4. Sanitize output and build diagnosis prompt
+        sanitized = sanitize_output(combined_output)
+        prompt = build_diagnosis_prompt(runner_name, exit_code,
+                                        sanitized, playbook_category)
 
-    # 5. Call claude -p for diagnosis
-    print("self-diagnose: calling claude -p for diagnosis ...")
-    diagnosis = call_claude_diagnose(prompt)
+        # 5. Call claude -p for diagnosis
+        print("self-diagnose: calling claude -p for diagnosis ...")
+        diagnosis = call_claude_diagnose(prompt)
 
-    if diagnosis.startswith("("):
-        # Diagnosis itself failed -- log what we have
-        print("self-diagnose: diagnosis unavailable: %s" % diagnosis,
-              file=sys.stderr)
-        diagnosis = "ROOT_CAUSE: Diagnosis unavailable -- %s\nSEVERITY: 5\nCATEGORY: unknown\nPROPOSED_FIX: Manual investigation needed" % diagnosis
+        if diagnosis.startswith("("):
+            # Diagnosis itself failed -- check if claude -p also OOM'd
+            if detect_oom(diagnosis):
+                print("self-diagnose: claude -p hit OOM -- using hardcoded OOM diagnosis",
+                      file=sys.stderr)
+                playbook_category = "resource_exhaustion"
+                diagnosis = build_oom_diagnosis(runner_name)
+            else:
+                # Diagnosis itself failed for non-OOM reason -- log what we have
+                print("self-diagnose: diagnosis unavailable: %s" % diagnosis,
+                      file=sys.stderr)
+                diagnosis = "ROOT_CAUSE: Diagnosis unavailable -- %s\nSEVERITY: 5\nCATEGORY: unknown\nPROPOSED_FIX: Manual investigation needed" % diagnosis
 
     # 6. Log the failure
     log_path = log_failure(runner_name, exit_code, combined_output,
                            diagnosis, playbook_category)
     print("self-diagnose: failure logged to %s" % log_path.relative_to(REPO_ROOT))
 
-    # 6b. Inject self-heal task into dispatcher backlog (if REQUIRES_HUMAN: no)
-    task_id = append_self_heal_task(runner_name, diagnosis, log_path)
+    # 6b. Inject self-heal task into dispatcher backlog (if REQUIRES_HUMAN: no).
+    # Pass combined_output so the ISC builder can extract specific failing test
+    # references and build `pytest <ref>` criteria, not just a generic --test gate.
+    task_id = append_self_heal_task(runner_name, diagnosis, log_path,
+                                    failure_output=combined_output)
     if task_id:
         print("self-diagnose: backlog task queued -> %s" % task_id)
     else:

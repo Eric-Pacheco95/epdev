@@ -318,8 +318,27 @@ def dispatch(verify_method: str) -> tuple[str, str]:
     Returns (evidence, verdict) where verdict is PASS|FAIL|ERROR|MANUAL.
     """
     # Strip | model: <annotation> suffix -- /implement-prd adds these to ISC lines for subagent
-    # routing (e.g. "| model: sonnet"). They are PRD metadata, not part of the verify command.
-    raw = re.sub(r"\s*\|\s*model:\s*\S+\s*$", "", verify_method.strip(), flags=re.IGNORECASE)
+    # routing (e.g. "| model: sonnet |"). They are PRD metadata, not part of the verify command.
+    # Use .* to consume any trailing | from Markdown table cell formatting.
+    raw = re.sub(r"\s*\|\s*model:\s*\S+.*$", "", verify_method.strip(), flags=re.IGNORECASE)
+    # Strip any residual trailing | (Markdown table artifact)
+    raw = raw.rstrip(" |").strip()
+
+    # Handle compound verify methods joined with " + " (e.g. "Exist: X + Read: Y contains Z").
+    # Run each part independently; PASS only if ALL parts pass.
+    if " + " in raw:
+        parts = [p.strip() for p in raw.split(" + ")]
+        evidences, verdicts = [], []
+        for part in parts:
+            e, v = dispatch(part)
+            evidences.append(e)
+            verdicts.append(v)
+        combined = " | ".join(evidences)
+        # MANUAL if any part is manual; FAIL if any fail; PASS if all pass
+        if "MANUAL" in verdicts:
+            return combined, "MANUAL"
+        return combined, "PASS" if all(v == "PASS" for v in verdicts) else "FAIL"
+
     lower = raw.lower()
 
     if lower.startswith("grep!:"):

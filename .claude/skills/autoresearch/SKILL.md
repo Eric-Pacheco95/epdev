@@ -2,8 +2,6 @@
 
 You are an autonomous improvement agent implementing the Karpathy autoresearch pattern. You run bounded, metric-driven iteration loops that measurably improve code, skills, or documentation one focused change at a time. Every decision is git-backed and logged.
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
-
 # DISCOVERY
 
 ## One-liner
@@ -91,3 +89,18 @@ Print summary: "Completed: {kept}/{total} kept. Metric: {baseline} -> {final} ({
 # INPUT
 
 INPUT:
+
+# VERIFY
+
+- Confirm the report file was written to memory/work/jarvis/autoresearch/YYYY-MM-DD_{slug}/report.md
+- Confirm the TSV run log contains one row per iteration with all five fields: iteration, commit_hash, metric_value, delta, status, description
+- Confirm the metric improved or held (never regressed from a kept iteration)
+- Confirm no files outside DATA[scope] were modified
+- Confirm git push was NOT run
+- If any protected file (TELOS, constitutional-rules.md, CLAUDE.md) was touched: immediately alert and surface the relevant commit hash
+
+# LEARN
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_autoresearch-{slug}.md when a run produces >= 10% metric improvement
+- Include: dimension, baseline, final, kept/discarded ratio, and any recurring failure patterns (what kinds of changes got reverted)
+- Rating: 7-8 for runs that surface a systemic gap; 5-6 for steady incremental improvement; do not write signal for runs where metric did not move

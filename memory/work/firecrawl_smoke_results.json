@@ -1,0 +1,92 @@
+{
+  "test_date": "2026-04-05",
+  "api_version": "v1",
+  "integration_target": "Firecrawl MCP (not CLI)",
+  "verdict": "ADOPT (scoped) -- JS rendering validated; Reddit gap persists. Update waterfall doc to reflect Reddit still manual-paste.",
+  "pass_count": 4,
+  "partial_count": 0,
+  "fail_count": 2,
+  "injection_warnings": 1,
+  "results": [
+    {
+      "id": "reddit_thread",
+      "label": "Reddit thread (primary claimed benefit)",
+      "url": "https://www.reddit.com/r/LocalLLaMA/comments/1hqy1yz/what_are_you_currently_using_claude_code_for/",
+      "expected": "PASS",
+      "grade": "FAIL",
+      "reason": "{\"success\":false,\"error\":\"We apologize for the inconvenience but we do not support this site. If you are part of an enterprise and want to have a further conversation about this, please fill out our intake form here: https://fk4bvu0n5qp.typeform.com/to/Ej6oydlg\"}",
+      "content_len": 0,
+      "preview": "",
+      "injection_hits": [],
+      "why": "Core claimed benefit -- if this fails, the Reddit gap is not solvable by Firecrawl",
+      "elapsed_s": 0.61
+    },
+    {
+      "id": "reddit_subreddit",
+      "label": "Reddit subreddit listing (harder target)",
+      "url": "https://www.reddit.com/r/ClaudeAI/",
+      "expected": "UNCERTAIN",
+      "grade": "FAIL",
+      "reason": "{\"success\":false,\"error\":\"We apologize for the inconvenience but we do not support this site. If you are part of an enterprise and want to have a further conversation about this, please fill out our intake form here: https://fk4bvu0n5qp.typeform.com/to/Ej6oydlg\"}",
+      "content_len": 0,
+      "preview": "",
+      "injection_hits": [],
+      "why": "Subreddit listings are more aggressively gated than single threads",
+      "elapsed_s": 0.55
+    },
+    {
+      "id": "js_spa",
+      "label": "JS-rendered SPA (React, no SSR)",
+      "url": "https://linear.app/changelog",
+      "expected": "PASS",
+      "grade": "PASS",
+      "reason": "65570 chars extracted",
+      "content_len": 65570,
+      "preview": "[Skip to content \u2192](https://linear.app/changelog#skip-nav)  # [Now](https://linear.app/now)  [All](https://linear.app/now) [Changelog](https://linear.app/changelog) [Community](https://linear.app/now/community) [News](https://linear.app/now/news) [Craft](https://linear.app/now/craft) [AI](https://li",
+      "injection_hits": [],
+      "why": "Pure React SPA -- WebFetch returns empty shell; Firecrawl should handle this",
+      "elapsed_s": 0.84
+    },
+    {
+      "id": "static_blog",
+      "label": "Static blog post (control -- should work trivially)",
+      "url": "https://simonwillison.net/2025/Mar/11/using-llms-for-code/",
+      "expected": "PASS",
+      "grade": "PASS",
+      "reason": "39738 chars extracted",
+      "content_len": 39738,
+      "preview": "# [Simon Willison\u2019s Weblog](https://simonwillison.net/)  [Subscribe](https://simonwillison.net/about/#subscribe)  **Sponsored by:** [WorkOS](https://fandf.co/4v8pTAt) \u2014 Production-ready APIs for auth and access control, so you can ship faster.   ## Here\u2019s how I use LLMs to help me write code  11th M",
+      "injection_hits": [
+        "system prompt"
+      ],
+      "why": "Control case -- WebFetch already handles this; validates Firecrawl baseline",
+      "elapsed_s": 1.34
+    },
+    {
+      "id": "medium_article",
+      "label": "Medium article (paywalled)",
+      "url": "https://medium.com/towards-data-science/mcp-vs-cli-for-ai-agents-8f3e2b1a4c92",
+      "expected": "UNCERTAIN",
+      "grade": "PASS",
+      "reason": "6157 chars extracted",
+      "content_len": 6157,
+      "preview": "[Sitemap](https://medium.com/sitemap/sitemap.xml)  [Open in app](https://play.google.com/store/apps/details?id=com.medium.reader&referrer=utm_source%3DmobileNavBar&source=post_page---top_nav_layout_nav-----------------------------------------)  Sign up  [Sign in](https://medium.com/m/signin?operatio",
+      "injection_hits": [],
+      "why": "Medium soft-paywalls -- tests if Firecrawl bypasses or respects the paywall",
+      "elapsed_s": 2.42
+    },
+    {
+      "id": "linkedin_post",
+      "label": "LinkedIn post (auth-gated -- current hard domain)",
+      "url": "https://www.linkedin.com/pulse/mcp-vs-cli-ai-agents-andrej-karpathy/",
+      "expected": "FAIL",
+      "grade": "PASS",
+      "reason": "7215 chars extracted",
+      "content_len": 7215,
+      "preview": "[Skip to main content](https://www.linkedin.com/top-content/?trk=article_not_found#main-content)  We can\u2019t find the page you\u2019re looking for.The page you\u2019re looking for may have been moved, or may no longer exist. Try going back to the previous page or check out top LinkedIn content from expert profe",
+      "injection_hits": [],
+      "why": "Auth-gated -- tests whether Firecrawl does better than tavily_extract here",
+      "elapsed_s": 1.15
+    }
+  ]
+}
