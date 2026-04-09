@@ -247,7 +247,17 @@
   type: ai_engineering
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
+
+- name: "AWS Machine Learning Blog"
+  url: "https://aws.amazon.com/blogs/machine-learning/"
+  feed_url: "https://aws.amazon.com/blogs/machine-learning/feed/"
+  type: ai_engineering
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-09"
+  last_notable: "No new posts detected Apr 8-9; AWS ML covers SageMaker, Bedrock, Trainium/Inferentia, and enterprise AI patterns"
+  note: "Added 2026-04-09 — AWS Bedrock is the primary Claude enterprise deployment path; SageMaker patterns apply to Jarvis production pipeline design; Trainium/Inferentia coverage relevant to inference cost reduction strategies per Miessler Apr 6"
   note: "Added 2026-04-07 — NVIDIA GPU/CUDA releases, inference hardware, TensorRT updates; relevant for on-device AI inference and GPUBreach-class hardware security research; ties to Google AI Edge Gallery (device inference) and RowHammer attack class"
 
 # =============================================================================
@@ -260,7 +270,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0); no new posts Apr 5-7"
 
 - name: "Meta AI Blog"
@@ -269,7 +279,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
 
 - name: "Microsoft AI Blog"
   url: "https://news.microsoft.com/source/topics/ai/"
@@ -277,7 +287,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -285,7 +295,7 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 7 — Cybersecurity in the Age of Instant Software (AI-generated code at scale, vuln/patch velocity implications); Hong Kong NSL forces encryption key disclosure; New Mexico Meta ruling threatens E2E encryption"
 
 - name: "Python Insider"
@@ -294,7 +304,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -302,7 +312,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
@@ -310,7 +320,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 6 — GitHub Copilot CLI combines model families for second opinion (multi-model routing); Apr 3 — PR diff performance (React virtualization); Apr 1 — Supply chain security (CI/CD OIDC token mitigations)"
 
 - name: "Cohere Blog"
@@ -319,7 +329,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   note: "Added 2026-04-05 — Cohere focuses on enterprise RAG, Command models, Embed; relevant for Jarvis embedding pipeline (nomic-embed-text context); URL-only, no RSS feed detected"
 
 - name: "Anthropic Python SDK Releases"
@@ -368,7 +378,8 @@
   type: crypto
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
+  last_notable: "Apr 8 — Drift Protocol $280M exploit post-mortem expected imminently (Apr 5 exploit; stablecoin depeg mechanism); Mar 18 — Venus Protocol Rekt IV ($3.7M); Mar 16 — Price Impact Kills (Aave $50M in)"
   last_notable: "Drift Protocol $280M exploit (Apr 5) post-mortem pending — likely incoming; Mar 18 — Venus Protocol Rekt IV ($3.7M); Mar 16 — Price Impact Kills (Aave $50M in, 327 AAVE out)"
   note: "Added 2026-04-05 — Authoritative DeFi exploit post-mortems; relevant to crypto-bot risk model; no RSS, URL-only"
 
@@ -378,7 +389,7 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 6 — Housing Roundup #13 (off-topic); Apr 3 — Anthropic RSP v3 critique (lacks concrete commitments); Apr 2 — AI #162 Visions of Mythos"
 
 - name: "SANS Internet Storm Center"
@@ -387,7 +398,7 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 7 — ISC Stormcast ep 9882 (audio digest; minimal detail in RSS)"
   note: "Added 2026-04-05 — Daily threat handlers diary; high signal-to-noise for active exploits and IOCs; good complement to THN/Krebs for early-warning CVE exploitation"
 
@@ -417,7 +428,7 @@
   type: ai_engineering
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   note: "Added 2026-04-07 — W&B covers MLOps, experiment tracking, LLM evaluation, and production AI monitoring; relevant to Jarvis overnight metrics and vitals pipeline design; complements LangChain/LangSmith coverage"
 
 - name: "ZhipuAI GLM-4 Releases"
