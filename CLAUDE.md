@@ -55,6 +55,7 @@ Load documentation on-demand, not upfront:
 | Phase 5 autonomous Jarvis | `memory/work/jarvis/PRD_phase5.md` |
 | Autonomous systems | `orchestration/autonomous-rules.md` |
 | Decision rationale | `history/decisions/` |
+| Math reference (university-level) | WebFetch `algebrica.org/<slug>` — CC BY-NC, cite "Antonio Lupetti / algebrica.org" on any reuse; no local mirror, no Substack quoting |
 
 ## Core Principles
 
