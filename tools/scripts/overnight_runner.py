@@ -184,6 +184,42 @@ def worktree_is_clean(cwd: str) -> bool:
     return result.returncode == 0 and not result.stdout.strip()
 
 
+def auto_commit_dimension(cwd: str, dim_name: str) -> bool:
+    """Auto-commit any uncommitted changes left by a dimension run.
+
+    Some dimensions (notably prompt_quality) write files but do not commit
+    them inside the dimension worker. The pre-dimension dirty-state guard
+    aborts the next dimension when this happens, silently dropping the tail
+    of the queue (cross_project, scaffolding) night after night.
+
+    This helper is called immediately after each successful run_dimension()
+    so the worktree is always clean before the next dimension's pre-guard.
+    Returns True if a commit was created (or worktree was already clean),
+    False if the commit failed.
+    """
+    if worktree_is_clean(cwd):
+        return True
+    add_proc = subprocess.run(
+        ["git", "add", "-A"],
+        capture_output=True, text=True, encoding="utf-8", cwd=cwd,
+    )
+    if add_proc.returncode != 0:
+        print(f"  WARNING: auto-commit add failed for {dim_name}: "
+              f"{add_proc.stderr.strip()[:200]}")
+        return False
+    commit_proc = subprocess.run(
+        ["git", "commit", "-m",
+         f"overnight({dim_name}): auto-commit dimension output"],
+        capture_output=True, text=True, encoding="utf-8", cwd=cwd,
+    )
+    if commit_proc.returncode != 0:
+        print(f"  WARNING: auto-commit failed for {dim_name}: "
+              f"{commit_proc.stderr.strip()[:200]}")
+        return False
+    print(f"  auto-committed {dim_name} dimension output")
+    return True
+
+
 # -- Command validation ------------------------------------------------------
 
 # Allowlisted command prefixes for metric/guard commands in program.md.
@@ -791,6 +827,12 @@ def main() -> int:
             dim_elapsed = time.monotonic() - start_time - elapsed
             print(f"  {dim_name} completed in {dim_elapsed / 60:.1f} min "
                   f"({result.get('kept', 0)} kept, {result.get('discarded', 0)} discarded)")
+
+            # Auto-commit any uncommitted changes the dimension left behind so
+            # the pre-dimension dirty-state guard does not abort the rest of
+            # the queue. Critical for prompt_quality which writes 15+ files
+            # without committing inside its worker.
+            auto_commit_dimension(wt_cwd, dim_name)
 
         # 6. Post-loop validation (once, covering all dimensions)
         total_elapsed = time.monotonic() - start_time
