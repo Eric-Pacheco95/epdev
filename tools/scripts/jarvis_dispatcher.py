@@ -90,6 +90,7 @@ DAILY_AGGREGATE_CAP_S = 5400       # 90 min total dispatcher time per day
 from tools.scripts.lib.isc_common import (
     ISC_ALLOWED_COMMANDS,
     MANUAL_REQUIRED,
+    PRD_VERB,
     classify_verify_method,
     sanitize_isc_command,
 )
@@ -795,6 +796,11 @@ def select_next_task(backlog: list[dict]) -> Optional[dict]:
                         print(f"  Skipping {t['id']}: ISC verify command failed sanitization: {isc[:80]}")
                         isc_valid = False
                         break
+                    verifiable_count += 1
+                elif classification == PRD_VERB:
+                    # PRD-verb verifies are dispatched in-process via
+                    # isc_executor.dispatch() at verify_isc time. They are
+                    # auto-verifiable; no shell sanitization applies.
                     verifiable_count += 1
                 # MANUAL_REQUIRED: not executable but not dangerous -- skip criterion,
                 # do not count toward verifiable_count, do not fail the task
@@ -1607,10 +1613,63 @@ def run_worker(task: dict, branch: str, wt_path: Path, dry_run: bool = False) ->
 
 # -- ISC verification -------------------------------------------------------
 
+def _verify_prd_verb(isc: str, wt_path: Path) -> dict:
+    """Dispatch a PRD-verb ISC criterion via isc_executor.dispatch().
+
+    Runs in-process. isc_executor's handlers use REPO_ROOT-relative paths
+    resolved against its own module path, not cwd, so worktree paths must be
+    handled by the caller. We chdir into wt_path for the duration of dispatch
+    to mirror the bash-cmd verify path's working-directory semantics.
+    """
+    import os as _os
+    try:
+        # Lazy import: isc_executor adds its scripts dir to sys.path on import.
+        from tools.scripts.isc_executor import dispatch as _isc_dispatch
+    except Exception as exc:
+        return {
+            "criterion": isc, "status": "fail",
+            "reason": f"isc_executor import failed: {exc}",
+        }
+    prev_cwd = _os.getcwd()
+    try:
+        _os.chdir(str(wt_path))
+        evidence, verdict = _isc_dispatch(isc)
+    except Exception as exc:
+        return {
+            "criterion": isc, "status": "fail",
+            "reason": f"isc_executor dispatch error: {exc}",
+        }
+    finally:
+        try:
+            _os.chdir(prev_cwd)
+        except Exception:
+            pass
+    # Map executor verdicts to dispatcher status vocabulary.
+    # PASS -> pass, FAIL -> fail, MANUAL -> skipped (no auto-verdict),
+    # ERROR -> fail.
+    if verdict == "PASS":
+        status = "pass"
+    elif verdict == "MANUAL":
+        status = "skipped"
+    else:
+        status = "fail"
+    return {
+        "criterion": isc.split("|")[0].strip(),
+        "command": "[isc_executor:%s]" % verdict,
+        "status": status,
+        "output": (evidence or "")[:500],
+    }
+
+
 def verify_isc(task: dict, wt_path: Path) -> list[dict]:
     """Run ISC verify commands in the worktree. Returns list of results."""
     results = []
     for isc in task.get("isc", []):
+        # PRD-verb criteria (Exist:, Read:, Grep:, Grep!:, Test:, Schema:, +)
+        # bypass the bash sanitizer and run via isc_executor.dispatch().
+        if classify_verify_method(isc) == PRD_VERB:
+            results.append(_verify_prd_verb(isc, wt_path))
+            continue
         cmd = sanitize_isc_command(isc)
         if cmd is None:
             results.append({"criterion": isc, "status": "skipped", "reason": "no verify command or blocked"})

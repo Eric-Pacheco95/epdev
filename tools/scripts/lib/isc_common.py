@@ -86,6 +86,20 @@ _MANUAL_PREFIXES = (
 #
 MANUAL_REQUIRED: str = "manual_required"
 
+# PRD-verb verifies (Exist:, Read:, Grep:, Grep!:, Test:, Schema:) carry no
+# `| Verify:` shell command — the whole string IS the verify spec, evaluated
+# by isc_executor.dispatch(). The dispatcher counts these as auto-verifiable
+# and routes them through the in-process executor at verify time rather than
+# through the bash sanitizer.
+PRD_VERB: str = "prd_verb"
+
+# PRD-verb prefixes that map to executable handlers in isc_executor.dispatch().
+# `cli:` and `review:` are PRD verbs too but resolve to MANUAL — they classify
+# as manual_required, not prd_verb.
+_PRD_VERB_EXECUTABLE_PREFIXES = (
+    "exist:", "read:", "grep:", "grep!:", "test:", "schema:",
+)
+
 
 # -- Public API ---------------------------------------------------------------
 
@@ -109,6 +123,19 @@ def classify_verify_method(verify_str: str) -> str:
         return MANUAL_REQUIRED
 
     cmd_lower = cmd.lower()
+
+    # PRD-verb format (no `| Verify:` separator; the body is itself a verb-prefixed
+    # spec for isc_executor.dispatch). Compound `+` ISC strings classify as prd_verb
+    # if every part begins with an executable PRD verb.
+    if " + " in cmd:
+        parts = [p.strip().lower() for p in cmd.split(" + ")]
+        if parts and all(
+            any(p.startswith(prefix) for prefix in _PRD_VERB_EXECUTABLE_PREFIXES)
+            for p in parts
+        ):
+            return PRD_VERB
+    if any(cmd_lower.startswith(prefix) for prefix in _PRD_VERB_EXECUTABLE_PREFIXES):
+        return PRD_VERB
 
     # Freeform description: starts with a manual-required keyword
     for prefix in _MANUAL_PREFIXES:
@@ -157,12 +184,21 @@ def sanitize_isc_command(verify_str: str) -> Optional[str]:
     if cmd is None:
         return None
 
-    # 1. Block dangerous shell metacharacters
-    if re.search(r"`|\$\(|;|&&|\|\||>>?\s*/", cmd):
+    # 1. Block dangerous shell metacharacters.
+    # Exception: the "Idle Is Success" fallback `<verify> || echo <string>`
+    # is allowed -- strip it before the metacharacter scan so the `||` does
+    # not trip the blocker. Only a trailing `|| echo <literal-token>` counts.
+    scan_cmd = cmd
+    idle_tail_match = re.search(r"\s*\|\|\s*echo\s+\S+\s*$", scan_cmd)
+    if idle_tail_match:
+        scan_cmd = scan_cmd[:idle_tail_match.start()]
+
+    if re.search(r"`|\$\(|;|&&|\|\||>>?\s*/", scan_cmd):
         return None
 
-    # Split on pipe and validate each segment
-    segments = [s.strip() for s in cmd.split("|") if s.strip()]
+    # Split on pipe and validate each segment. Use scan_cmd so the `echo`
+    # tail is not treated as a segment (echo is manual_required-classified).
+    segments = [s.strip() for s in scan_cmd.split("|") if s.strip()]
     for seg in segments:
         first = _first_word(seg)
 
