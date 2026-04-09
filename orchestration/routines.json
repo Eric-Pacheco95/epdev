@@ -76,7 +76,7 @@
         "goal_context": "Learning compounds -- threshold model is 10 signals / 72h. This routine fires every 3 days so the worst case is one missed cycle. If no signals are queued, /synthesize-signals exits Idle Is Success.",
         "isc": [
           "A new synthesis document exists in memory/learning/synthesis/ dated today, OR worker reports Idle Is Success when no unprocessed signals queued | Verify: python tools/scripts/verify_synthesis_routine.py",
-          "Synthesis file (if produced) contains at least one signal reference | Verify: grep -ril signal memory/learning/synthesis/ || echo no-synth-needed"
+          "Most recent synthesis doc cites >= 2 real source signals across >= 2 themes (anti-criterion: blocks hallucinated-themes fidelity failure) | Verify: python tools/scripts/verify_synthesis_recall.py"
         ],
         "context_files": [
           "memory/learning/signals/",

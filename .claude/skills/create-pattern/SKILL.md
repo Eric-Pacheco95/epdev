@@ -36,6 +36,10 @@ BUILD
 ## autonomous_safe
 false
 
+# DESIGN PRINCIPLES
+
+- **Script-vs-SKILL split**: for each step in the new skill, evaluate whether it requires intelligence (judgment, synthesis, NLG). If not, emit a deterministic Python script under `tools/scripts/` and have the SKILL.md call it. Only keep steps in SKILL.md that genuinely need the model.
+
 # STEPS
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)
