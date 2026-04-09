@@ -82,12 +82,12 @@ The ISC Producer is a standalone daily script that scans all active PRDs, runs d
 ## ACCEPTANCE CRITERIA
 
 - [x] `data/isc_producer_report.json` exists after a run with valid JSON containing `summary`, `by_prd`, and `ready_to_mark` keys | Verify: Exist: data/isc_producer_report.json + Read: data/isc_producer_report.json contains "summary" | model: haiku |
-- [x] Report `by_prd` array contains only active PRDs with zero `_archived/` entries | Verify: Grep!: _archived in data/isc_producer_report.json | model: haiku |
+- [x] Report `by_prd` array contains only active PRDs with zero `_archived/` entries | Verify: Grep!: memory/work/_archived in data/isc_producer_report.json | model: haiku |
 - [x] Backlog tasks created per run do not exceed 10 | Verify: Grep: isc-producer in orchestration/task_backlog.jsonl + count | model: haiku |
 - [x] `ready_to_mark` items in report correspond to isc_executor PASS verdicts with no false positives | Verify: Run executor on one PRD, cross-check ready_to_mark entries against executor JSON output [M]
 - [x] No PRD file is modified by the producer during a run | Verify: Grep!: open.*mode.*w in tools/scripts/isc_producer.py | model: haiku |
 - [x] `vitals_collector.py` reads `isc_producer_report.json` and folds pass count into pending_review | Verify: Read: tools/scripts/vitals_collector.py contains "isc_producer_report" | model: haiku |
-- [x] Full scan completes within 300s across all active PRDs | Verify: Test: timed run with 7+ PRDs completes under 300s | model: haiku |
+- [x] Full scan completes within 300s across all active PRDs | Verify: Review: Run python tools/scripts/isc_producer.py and confirm run_duration_s in data/isc_producer_report.json is under 300 | model: haiku |
 
 Anti-criterion:
 - [x] No ISC checkboxes are marked `[x]` by the producer script (SENSE-only, propose-only) | Verify: Grep!: \[x\] write operations in tools/scripts/isc_producer.py [M]

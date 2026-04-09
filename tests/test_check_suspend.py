@@ -56,24 +56,25 @@ class TestCheckSuspend:
         )
         assert result.returncode == 0
 
-    def test_suspended_producer_exits_3(self, tmp_path):
-        """Create a real sentinel, verify exit code 3 and message."""
-        import importlib.util, importlib
-
-        spec = importlib.util.spec_from_file_location("check_suspend", SCRIPT)
-        mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
-        spec.loader.exec_module(mod)  # type: ignore[union-attr]
-
-        # Patch the sentinel resolution by overriding sys.argv and the path logic
-        # We'll test the logic directly by calling the key path checks
-        sentinel_dir = tmp_path / "data" / "producers"
-        sentinel_dir.mkdir(parents=True)
-        sentinel_path = sentinel_dir / "my_producer.suspend"
-        sentinel_path.write_text("suspended")
-
-        # Verify the file exists (logic check)
-        assert sentinel_path.exists()
-        assert sentinel_path.parent.exists()
+    def test_suspended_producer_exits_3(self):
+        """Create a real sentinel in data/producers/, invoke script, assert exit 3."""
+        repo_root = SCRIPT.parents[2]
+        producers_dir = repo_root / "data" / "producers"
+        producers_dir.mkdir(parents=True, exist_ok=True)
+        sentinel = producers_dir / "pytest_test_producer_exitcode3.suspend"
+        sentinel.write_text("suspended by test")
+        try:
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "pytest_test_producer_exitcode3"],
+                capture_output=True,
+                text=True,
+            )
+            assert result.returncode == 3, (
+                f"Expected exit 3, got {result.returncode}. stdout={result.stdout!r}"
+            )
+            assert "SUSPENDED" in result.stdout
+        finally:
+            sentinel.unlink(missing_ok=True)
 
     def test_output_contains_suspended_text(self, tmp_path, monkeypatch):
         """Exit 3 message contains SUSPENDED keyword."""
