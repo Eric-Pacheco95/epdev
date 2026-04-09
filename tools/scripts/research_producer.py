@@ -646,6 +646,26 @@ def main() -> int:
             print(f"  Signal clusters found: {len(signal_topics)}")
         all_candidates.extend(signal_topics)
 
+    # Top-up guarantee: if no topic is naturally due, force-inject the stalest
+    # static watchlist topic so the producer never runs as a complete no-op.
+    # Eric's directive 2026-04-09: "always be ingesting research to improve our
+    # domain knowledge". Without this, every topic within its interval window
+    # produces zero overnight ingestion.
+    if not all_candidates and not args.force:
+        def _staleness_key(topic):
+            slug = topic["slug"]
+            kb_date = latest_article_date_for_slug(topic["domain"], slug) or "0000-00-00"
+            inj_date = state.get("topics", {}).get(slug, {}).get("last_injected") or "0000-00-00"
+            # Sort ascending; oldest (smallest max-date) sorts first.
+            return max(kb_date, inj_date)
+        stalest = sorted(static_topics, key=_staleness_key)[:1]
+        if stalest:
+            t = dict(stalest[0])
+            t["_source"] = "watchlist"
+            t["_reason"] = "top-up: no topics naturally due, picked stalest"
+            all_candidates.append(t)
+            print(f"  Top-up injection: {t['slug']} (stalest)")
+
     if not all_candidates:
         print(f"  All topics current. Idle Is Success.")
         state["last_run"] = TODAY

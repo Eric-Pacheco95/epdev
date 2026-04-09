@@ -18,7 +18,7 @@
       "type": "technical",
       "domain": "ai-infra",
       "depth": "default",
-      "interval_days": 14,
+      "interval_days": 7,
       "priority": 2,
       "tags": ["ai", "orchestration", "agents", "langraph", "crewai", "autogen"],
       "enabled": true
@@ -29,7 +29,7 @@
       "type": "technical",
       "domain": "ai-infra",
       "depth": "quick",
-      "interval_days": 14,
+      "interval_days": 7,
       "priority": 2,
       "tags": ["claude", "anthropic", "api", "models", "sdk"],
       "enabled": true
@@ -40,7 +40,7 @@
       "type": "market",
       "domain": "fintech",
       "depth": "default",
-      "interval_days": 30,
+      "interval_days": 15,
       "priority": 2,
       "tags": ["fintech", "banking", "ai", "enterprise", "consulting"],
       "enabled": true
@@ -51,7 +51,7 @@
       "type": "technical",
       "domain": "ai-infra",
       "depth": "default",
-      "interval_days": 21,
+      "interval_days": 10,
       "priority": 2,
       "tags": ["prediction", "markets", "calibration", "metaculus", "manifold"],
       "enabled": true
@@ -62,7 +62,7 @@
       "type": "market",
       "domain": "crypto",
       "depth": "default",
-      "interval_days": 21,
+      "interval_days": 10,
       "priority": 2,
       "tags": ["defi", "mev", "dex", "algo-trading", "market-structure"],
       "enabled": true
@@ -73,7 +73,7 @@
       "type": "technical",
       "domain": "ai-infra",
       "depth": "default",
-      "interval_days": 21,
+      "interval_days": 10,
       "priority": 2,
       "tags": ["coding-agents", "devin", "swe-agent", "autonomous", "benchmarks"],
       "enabled": true
@@ -84,7 +84,7 @@
       "type": "technical",
       "domain": "security",
       "depth": "default",
-      "interval_days": 30,
+      "interval_days": 15,
       "priority": 2,
       "tags": ["security", "prompt-injection", "agentic", "attack-surface", "defense"],
       "enabled": true
