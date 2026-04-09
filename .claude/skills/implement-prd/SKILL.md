@@ -109,19 +109,19 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
 
 ### REVIEW GATE: Deterministic prescan + cross-model review
 
-- Once all ISC items are built and verified (or blocked), gather all new and modified files — this is a non-optional gate
+Non-optional gate once all ISC items are built/blocked.
 
 **Step 1 — Deterministic prescan (main thread):**
-- Run `python tools/scripts/code_prescan.py --path <changed-files> --json` — zero LLM tokens
-- Review prescan output: ruff findings feed RELIABILITY, security scan findings feed SECURITY FINDINGS
-- If Critical security findings in the prescan: fix them before proceeding to Step 2
+- Run `python tools/scripts/code_prescan.py --path <changed-files> --json` (zero LLM tokens)
+- Ruff findings → RELIABILITY; security findings → SECURITY FINDINGS
+- Critical security findings: fix before Step 2
 
 **Step 2 — Cross-model review (Sonnet subagent):**
-- Spawn Sonnet subagent (fresh-eyes, no build history); pass: changed files, ISC context, build summary
-- Subagent prompt: "You are reviewing code you did not write. Be adversarial: look for incomplete implementations, edge cases, security gaps, anything that would fail in production."
-- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again" before treating exit 0 as PASS; empty stdout also = incomplete. Surface "REVIEW GATE: review incomplete" and do NOT proceed to VERIFY.
-- **Review Fix Loop** (max 2 cycles): Critical/High findings → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
-- Scope: only fix issues related to implemented ISC items
+- Spawn Sonnet (fresh-eyes); pass changed files, ISC context, build summary
+- Subagent prompt: "Review code you did not write. Be adversarial: incomplete implementations, edge cases, security gaps, production failures."
+- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: review incomplete", do NOT proceed to VERIFY
+- **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
+- Scope: only issues related to implemented ISC items
 
 ### VERIFY PHASE: Full pass
 
