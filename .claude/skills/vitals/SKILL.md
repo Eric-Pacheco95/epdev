@@ -68,18 +68,8 @@ true
 
 ## Phase 3: Slack Deep Dive
 
-7. After displaying terminal output, compose the full Slack report (see SLACK FORMAT)
-8. The Slack report must include ALL of these sections when data is available:
-   - System health summary (ISC, signals, sessions)
-   - Overnight branch breakdown (per-dimension time/kept/metric, commit list, diff stats)
-   - TELOS introspection (full proposals text, full contradictions text, coverage score)
-   - External monitoring findings (if available in overnight_deep_dive)
-   - Cross-project findings (if available in overnight_deep_dive)
-   - Threshold crossings with explanations
-   - Autonomous value rate
-   - Unmerged branches with age
-   - Top 3 actions with evidence
-9. Post to #epdev Slack using:
+7. After displaying terminal output, compose the full Slack report (see SLACK FORMAT) with ALL available sections: system health, overnight branch breakdown, TELOS introspection, external monitoring, cross-project findings, threshold crossings, autonomous value rate, unmerged branches, Top 3 actions.
+8. Post to #epdev Slack using:
    ```python
    import sys; sys.path.insert(0, str(__import__('pathlib').Path('.').resolve()))
    from tools.scripts.slack_notify import notify
