@@ -68,26 +68,19 @@ false
   4. In Step 4 OUTPUT: add after reference class: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`
   5. If no calibration file or domain has no data: proceed normally.
   6. **Prediction memory scan**: If 2+ resolved predictions in `data/predictions/` for this domain, load 2 most recent; extract reasoning errors and effective signposts. Display: "Loaded {n} prior predictions as priors for {domain}." Use as guardrails.
-- **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for entries relevant to the prediction topic. Use this domain mapping:
-  - crypto, trading, DeFi, blockchain, BTC, ETH, market cycles → `crypto`
-  - security, vulnerability, attack, defense, audit → `security`
-  - AI, LLM, infrastructure, orchestration, tooling → `ai-infra`
-  If relevant articles exist (up to 3 most recent), load them as background context for the prediction. These provide domain priors — accumulated research findings that should inform the reference class selection, scenario construction, and signpost identification. Note to Eric: "Loaded N domain knowledge articles as priors."
+- **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for relevant entries. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability → `security`; AI/LLM/orchestration → `ai-infra`. Load up to 3 most recent relevant articles as priors. Note: "Loaded N domain knowledge articles as priors."
 - Once input is validated, proceed to Step 0.5
 
 ## Step 0.5: CONVERSATIONAL PARAMETER CLARIFICATION
 
-Before producing a prediction, ensure you understand exactly what is being predicted. Ask 1-3 brief, targeted questions to lock down:
+Ask 1-3 brief questions to lock down:
+1. **What specifically** — Binary, range, or directional? Restate in falsifiable form.
+2. **Time horizon** — By when? Propose if not stated.
+3. **Domain scope** — Multiple domains? Which is primary?
 
-1. **What specifically** — Is the question about a binary outcome, a range of outcomes, or a directional trend? Restate in falsifiable form.
-2. **Time horizon** — By when? If not stated, propose a reasonable horizon and confirm.
-3. **Domain scope** — Does this span multiple domains (geopolitics + economics)? Which is primary?
-
-Rules for clarification:
-- Be brief. 1-3 questions max, not an interrogation
-- If the question is already clear and specific, skip clarification and proceed directly
-- CRITICAL: Do NOT let clarification influence your thinking about the outcome. If Eric hints at a preferred outcome ("Don't you think BTC will moon?"), acknowledge it and explicitly set it aside: "Noted — I'll analyze all outcomes independently regardless of preference."
-- After clarification, restate the prediction question in final falsifiable form and proceed
+- Skip if question is already clear and specific
+- Do NOT let hints about preferred outcomes bias analysis — if Eric implies a preference, acknowledge and set aside explicitly
+- Restate in final falsifiable form before proceeding
 
 ## Step 1: ORIENT
 
@@ -101,11 +94,7 @@ Apply domain lens (auto-detected or from flag), then anchor the prediction:
 3. **Identify the reference class**: "Of N historical situations like this, what % resulted in outcome X?"
    - If a clear reference class exists, state the base rate
    - If no reference class exists, state: "No clear reference class — estimate is unanchored" and note this increases uncertainty
-3.5. **Check domain priors**: If domain knowledge articles were loaded in Step 0, scan them for:
-   - Prior research findings that refine or challenge the reference class base rate
-   - Known domain-specific factors that should weight scenario probabilities
-   - Open questions from prior research that this prediction might resolve
-   Reference specific prior findings when they inform the analysis (e.g., "Per prior research on DeFi lending (2026-04-03), Aave v3 dominates TVL — this affects scenario likelihood.")
+3.5. **Check domain priors**: If articles loaded in Step 0, scan for prior findings that refine the reference class, domain factors that weight scenario probabilities, and open questions this prediction might resolve. Reference specific findings when they inform the analysis.
 4. **State the starting probability anchor** from the reference class base rate
 
 ### Domain-Specific ORIENT

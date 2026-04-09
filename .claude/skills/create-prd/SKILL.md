@@ -52,7 +52,7 @@ false
   - STOP and wait for user decision
 - If no research context found and topic seems complex:
   - Print: "No research brief found for this topic. The PRD will be based solely on your description. For a stronger foundation, run `/project-init` (full pipeline: research + analysis + PRD) or `/research <topic>` (research only). Proceed with standalone PRD anyway?"
-- **External-source absorb-vs-adopt gate**: If the input references an external source (tweet, repo URL, blog post, paper, "saw this thing called X") OR the idea was clearly inspired by something Eric just read/absorbed, STOP and prompt: "This idea came from an external source. Run `/architecture-review` first to filter absorb-vs-adopt before drafting requirements? Skipping the filter has previously led to scope creep and dependencies on tools that didn't fit." If Eric confirms skip, proceed and note in PRD's CONTEXT section that the absorb-vs-adopt filter was bypassed. Why: Eric's default posture is absorb ideas over adopt dependencies; the filter belongs BEFORE requirements drafting, not after — once a PRD exists, sunk cost biases adoption.
+- **External-source absorb-vs-adopt gate**: If input references an external source (URL, tweet, paper, "saw this thing called X") or clearly came from something Eric just read, STOP and prompt: "This came from an external source. Run `/architecture-review` first to filter absorb-vs-adopt?" If Eric skips, note bypass in PRD's CONTEXT section.
 - Once input is validated, proceed to Step 1
 
 ## Step 0.5: USER STORY CHECK (optional, auto-triggered)
@@ -75,7 +75,6 @@ false
   5. **Scope edge**: "What's the smallest version you'd ship? What's explicitly out?"
 - Present questions as a numbered list and WAIT for answers before proceeding to Step 1. Do not generate placeholder PRD content while waiting.
 - If Eric responds "skip" or "just write it", proceed but flag in OPEN QUESTIONS that the PRD was written without brainstorming and may have unstated assumptions.
-- Pattern source: obra/superpowers `brainstorming` skill (Socratic refinement); validated in feedback memory `feedback_collaborative_design.md` — collaborative design catches overengineering before BUILD.
 
 ## Step 1: EXTRACT
 

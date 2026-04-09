@@ -169,36 +169,33 @@ The target CLAUDE.md MUST include steering rules that make Claude actively write
 ## Step 3.5: ENTERPRISE (only if --enterprise flag)
 
 Gap analysis for regulated/team environments. Evaluate:
+1. **Workflow gaps**: Repetitive tasks with no skill (meeting → action items, email → requirements, regulatory update → impact analysis, code review → risk checklist, retro → lessons capture)
+2. **Knowledge gaps**: Missing domain reference in `knowledge/` (regulations, architecture patterns, QA checklists)
+3. **Template gaps**: Artifacts produced regularly with no template
+4. **LLM compliance**: CLAUDE.md covers data send/don't-send, AI audit trail, artifact disclaimers, model usage logging?
+5. **Strategic assessment**: Internal play (team adoption → innovation leadership) vs. External play (revenue, higher risk)
 
-1. **Workflow gaps**: Repetitive tasks target users (BA/BSA/junior dev) do daily with no current skill — e.g., meeting → action items, email → requirements, regulatory update → impact analysis, code review → risk checklist, retro → lessons capture.
-2. **Knowledge gaps**: Domain reference missing from `knowledge/` — regulations, architecture patterns, QA checklists.
-3. **Template gaps**: Artifact formats produced regularly with no template.
-4. **LLM compliance**: Does CLAUDE.md cover: data send/don't-send rules, AI decision audit trail, artifact disclaimers, model usage logging?
-5. **Strategic assessment** (two paths): Internal play (team adoption → innovation leadership) vs. External play (sell to enterprises → revenue, higher risk).
-
-Output: numbered list with effort estimates (S/M/L) and priority order. Do NOT build — present proposal, then add approved items to `docs/backlog.md`.
+Output: numbered list with effort (S/M/L) and priority. Do NOT build — present proposal, add approved to `docs/backlog.md`.
 
 ## Step 3.6: PERSONAL (only if --personal flag)
 
-Override classification defaults for individual builder audience:
-
 **Classification overrides:**
-- **KEEP**: learning system scaffold (strip existing data), dispatcher scaffold (strip personal paths), steering rules architecture + `/update-steering-rules` (3-5 template rules), content pipeline (`/extract-wisdom` > `/synthesize-signals` > `/write-essay`), security layer
+- **KEEP**: learning scaffold (strip existing data), dispatcher scaffold (strip personal paths), steering rules + `/update-steering-rules`, content pipeline (`/extract-wisdom` > `/synthesize-signals` > `/write-essay`), security layer
 - **STRIP**: personal TELOS content, memories, MCP configs, predictions, project-specific orchestration
 - **ADAPT**: `/learning-capture`, `/synthesize-signals` — remove personal signal categories, keep generic structure
 
 **Repo structure overrides:**
-- Replace `templates/` bank artifacts (KYC, AML) with personal builder artifacts (daily log, weekly review, project kickoff)
-- Replace `knowledge/regulatory/` with `knowledge/examples/` containing 2-3 sample research briefs
-- Generate `README.md` as a "Getting Started" onboarding guide: what to do in your first 5 sessions, how the learning loop works, how to add your first skill, how to run the dispatcher
-- Include a `QUICKSTART.md` with: clone → set API key → first `/extract-wisdom` → first `/learning-capture` → check `memory/learning/signals/`
+- Replace bank artifacts (`templates/`) with personal builder artifacts (daily log, weekly review, project kickoff)
+- Replace `knowledge/regulatory/` with `knowledge/examples/` (2-3 sample research briefs)
+- Generate `README.md` as "Getting Started": first 5 sessions, learning loop, adding skills, dispatcher
+- Include `QUICKSTART.md`: clone → API key → `/extract-wisdom` → `/learning-capture` → check `memory/learning/signals/`
 
-**Gap analysis (like --enterprise but for solo builders):**
-1. What daily workflows would a solo dev/creator want automated? (journal → signal, research → brief, content → publish)
-2. What's the minimum viable skill set to feel the learning loop working? (extract-wisdom, learning-capture, synthesize-signals, research)
-3. What onboarding friction exists? (too many skills, unclear starting point, no example data)
+**Gap analysis:**
+1. Daily workflows a solo dev/creator wants automated (journal → signal, research → brief, content → publish)
+2. Minimum viable skill set to feel the learning loop (extract-wisdom, learning-capture, synthesize-signals, research)
+3. Onboarding friction (too many skills, unclear starting point, no example data)
 
-Output: onboarding friction report + proposed starter skill set. Do NOT build — present proposal for approval.
+Output: onboarding friction report + proposed starter skill set. Do NOT build — present for approval.
 
 ## Step 4: VALIDATE
 

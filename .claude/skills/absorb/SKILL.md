@@ -73,17 +73,10 @@ false
 
 ## Step 3: CONTENT VALIDATION
 
-- Check the fetched content length: must be > 200 characters of meaningful text
-- Check for common error patterns:
-  - Paywall indicators: "subscribe to read", "premium content", "sign in to continue", login forms dominating content
-  - 404/error pages: "page not found", "404", "this page doesn't exist"
-  - Rate limiting: "too many requests", "rate limit exceeded"
-  - Age gates: "verify your age", "you must be 18+"
-  - Empty/minimal content: less than 200 chars of actual text after stripping HTML artifacts
-- If validation fails:
-  - Print: "Content validation failed: {reason}. No analysis performed."
-  - STOP (no file written, no signal generated)
-- If validation passes: proceed to Step 4
+- Require > 200 characters of meaningful text
+- Fail on: paywall ("subscribe to read", login forms), 404 errors, rate limits ("too many requests"), age gates, or < 200 chars of actual text
+- On failure: print "Content validation failed: {reason}. No analysis performed." STOP
+- On pass: proceed to Step 4
 
 ## Step 4: RUN ANALYSIS
 

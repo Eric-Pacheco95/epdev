@@ -109,28 +109,25 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
 
 ### REVIEW GATE: Deterministic prescan + cross-model review
 
-- Once all ISC items are built and verified (or blocked), gather all new and modified files — this is a non-optional gate
+Non-optional gate once all ISC items are built/blocked.
 
 **Step 1 — Deterministic prescan (main thread):**
-- Run `python tools/scripts/code_prescan.py --path <changed-files> --json` — zero LLM tokens
-- Review prescan output: ruff findings feed RELIABILITY, security scan findings feed SECURITY FINDINGS
-- If Critical security findings in the prescan: fix them before proceeding to Step 2
+- Run `python tools/scripts/code_prescan.py --path <changed-files> --json` (zero LLM tokens)
+- Ruff findings → RELIABILITY; security findings → SECURITY FINDINGS
+- Critical security findings: fix before Step 2
 
 **Step 2 — Cross-model review (Sonnet subagent):**
-- Spawn Sonnet subagent (fresh-eyes, no build history); pass: changed files, ISC context, build summary
-- Subagent prompt: "You are reviewing code you did not write. Be adversarial: look for incomplete implementations, edge cases, security gaps, anything that would fail in production."
-- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again" before treating exit 0 as PASS; empty stdout also = incomplete. Surface "REVIEW GATE: review incomplete" and do NOT proceed to VERIFY.
-- **Review Fix Loop** (max 2 cycles): Critical/High findings → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
-- Scope: only fix issues related to implemented ISC items
+- Spawn Sonnet (fresh-eyes); pass changed files, ISC context, build summary
+- Subagent prompt: "Review code you did not write. Be adversarial: incomplete implementations, edge cases, security gaps, production failures."
+- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: review incomplete", do NOT proceed to VERIFY
+- **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
+- Scope: only issues related to implemented ISC items
 
 ### VERIFY PHASE: Full pass
 
-- **Re-read the PRD file from disk before executing any verify methods.** Do not rely on the ISC list extracted at Step 1 if BUILD took multiple turns or auto-compaction may have fired between then and now — verify command text must come from the on-disk PRD, which is the source of truth. If the on-disk verify command differs from your in-memory copy, trust the file.
-- Run the full VERIFY phase: execute every ISC verify method in sequence and record pass/fail for each
-- **Structured Evidence**: For each ISC item, record three fields in the VERIFY RESULTS table:
-  - Evidence type: CLI output | test result | file exists | grep match | manual review
-  - Source: the exact command or file path that produced the evidence
-  - Content: the actual output snippet proving pass/fail (truncate to key lines if verbose)
+- **Re-read PRD from disk before executing verify methods** — auto-compaction may have fired; on-disk PRD is the source of truth; trust file over in-memory copy.
+- Run every ISC verify method in sequence, record pass/fail.
+- **Structured Evidence** per ISC item: (1) Evidence type (CLI output | test result | file exists | grep match | manual review), (2) Source (exact command/path), (3) Content (output snippet proving pass/fail, truncated)
 - Mark completed ISC checkboxes in the PRD (`- [ ]` → `- [x]`) only after the verify method passes AND structured evidence is recorded
 - Find the corresponding task in `orchestration/tasklist.md` and mark it complete (`[ ]` → `[x]`) with a one-line completion note
 - Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
