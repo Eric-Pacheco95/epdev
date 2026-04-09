@@ -68,11 +68,7 @@ false
   4. In Step 4 OUTPUT: add after reference class: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`
   5. If no calibration file or domain has no data: proceed normally.
   6. **Prediction memory scan**: If 2+ resolved predictions in `data/predictions/` for this domain, load 2 most recent; extract reasoning errors and effective signposts. Display: "Loaded {n} prior predictions as priors for {domain}." Use as guardrails.
-- **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for entries relevant to the prediction topic. Use this domain mapping:
-  - crypto, trading, DeFi, blockchain, BTC, ETH, market cycles → `crypto`
-  - security, vulnerability, attack, defense, audit → `security`
-  - AI, LLM, infrastructure, orchestration, tooling → `ai-infra`
-  If relevant articles exist (up to 3 most recent), load them as background context for the prediction. These provide domain priors — accumulated research findings that should inform the reference class selection, scenario construction, and signpost identification. Note to Eric: "Loaded N domain knowledge articles as priors."
+- **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for relevant entries. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability → `security`; AI/LLM/orchestration → `ai-infra`. Load up to 3 most recent relevant articles as priors. Note: "Loaded N domain knowledge articles as priors."
 - Once input is validated, proceed to Step 0.5
 
 ## Step 0.5: CONVERSATIONAL PARAMETER CLARIFICATION
