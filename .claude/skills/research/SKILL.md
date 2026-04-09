@@ -70,13 +70,13 @@ false
 
 ## Phase 0.5: PRIOR KNOWLEDGE SCAN
 
-1. **Semantic search**: Run `python tools/scripts/embedding_service.py search "<topic>" --top-k 5`. Surface hits >= 0.70 grouped by tier (memory/work/, memory/learning/, history/decisions/). Tell Eric: "Semantic search found N related files: [name @ score]". Load top 1-2 hits >= 0.75 as context. If Ollama unavailable: skip silently.
+1. **Semantic search**: `python tools/scripts/embedding_service.py search "<topic>" --top-k 5`. Surface hits >= 0.70 by tier. Load top 1-2 hits >= 0.75. Tell Eric: "Semantic search found N related files: [name @ score]". Skip silently if Ollama unavailable.
 
-2. **Knowledge index**: Read `memory/knowledge/index.md`; scan for domain/topic matches. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability/defense → `security`; AI/LLM/orchestration/tooling → `ai-infra`.
+2. **Knowledge index**: Read `memory/knowledge/index.md`. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability → `security`; AI/LLM/orchestration → `ai-infra`.
 
-3. If prior articles found: surface 2-3 recent one-liners, load single most relevant as context. Tell Eric: "N prior articles on {domain}. Most recent: {title} ({date})." Sub-questions should fill gaps — don't re-cover known ground.
+3. Prior articles found: surface 2-3 one-liners, load most relevant. Tell Eric: "N prior articles on {domain}. Most recent: {title} ({date})." Sub-questions fill gaps — don't re-cover known ground.
 
-4. If none: note "No prior domain knowledge — starting fresh".
+4. None found: note "No prior domain knowledge — starting fresh".
 
 ## Phase 1: PLAN — Generate sub-questions
 
