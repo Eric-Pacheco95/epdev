@@ -77,17 +77,14 @@ false
 
 ## Step 0.5: CONVERSATIONAL PARAMETER CLARIFICATION
 
-Before producing a prediction, ensure you understand exactly what is being predicted. Ask 1-3 brief, targeted questions to lock down:
+Ask 1-3 brief questions to lock down:
+1. **What specifically** — Binary, range, or directional? Restate in falsifiable form.
+2. **Time horizon** — By when? Propose if not stated.
+3. **Domain scope** — Multiple domains? Which is primary?
 
-1. **What specifically** — Is the question about a binary outcome, a range of outcomes, or a directional trend? Restate in falsifiable form.
-2. **Time horizon** — By when? If not stated, propose a reasonable horizon and confirm.
-3. **Domain scope** — Does this span multiple domains (geopolitics + economics)? Which is primary?
-
-Rules for clarification:
-- Be brief. 1-3 questions max, not an interrogation
-- If the question is already clear and specific, skip clarification and proceed directly
-- CRITICAL: Do NOT let clarification influence your thinking about the outcome. If Eric hints at a preferred outcome ("Don't you think BTC will moon?"), acknowledge it and explicitly set it aside: "Noted — I'll analyze all outcomes independently regardless of preference."
-- After clarification, restate the prediction question in final falsifiable form and proceed
+- Skip if question is already clear and specific
+- Do NOT let hints about preferred outcomes bias analysis — if Eric implies a preference, acknowledge and set aside explicitly
+- Restate in final falsifiable form before proceeding
 
 ## Step 1: ORIENT
 
