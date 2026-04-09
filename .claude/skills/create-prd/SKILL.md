@@ -75,7 +75,6 @@ false
   5. **Scope edge**: "What's the smallest version you'd ship? What's explicitly out?"
 - Present questions as a numbered list and WAIT for answers before proceeding to Step 1. Do not generate placeholder PRD content while waiting.
 - If Eric responds "skip" or "just write it", proceed but flag in OPEN QUESTIONS that the PRD was written without brainstorming and may have unstated assumptions.
-- Pattern source: obra/superpowers `brainstorming` skill (Socratic refinement); validated in feedback memory `feedback_collaborative_design.md` — collaborative design catches overengineering before BUILD.
 
 ## Step 1: EXTRACT
 
