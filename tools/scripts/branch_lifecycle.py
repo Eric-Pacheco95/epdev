@@ -26,6 +26,44 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 BRANCH_PREFIXES = ("jarvis/auto-", "jarvis/overnight-")
 DEFAULT_TTL_DAYS = 7
+BACKLOG_FILE = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
+
+
+# ---------------------------------------------------------------------------
+# Backlog index
+# ---------------------------------------------------------------------------
+
+def _load_backlog_index() -> dict[str, dict]:
+    """Build a branch-name → task dict index from task_backlog.jsonl.
+
+    Only indexes tasks that have an 'id' field; derives expected branch name
+    as 'jarvis/auto-{task_id}' (matching dispatcher's naming convention).
+    Returns empty dict on any read/parse failure (non-fatal for callers).
+    """
+    index: dict[str, dict] = {}
+    if not BACKLOG_FILE.exists():
+        return index
+    try:
+        with open(BACKLOG_FILE, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    task = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                task_id = task.get("id")
+                if not task_id:
+                    continue
+                # Map via auto-branch convention
+                index[f"jarvis/auto-{task_id}"] = task
+                # Also map by stored branch field if present (handles overnight branches)
+                if task.get("branch"):
+                    index[task["branch"]] = task
+    except OSError:
+        pass
+    return index
 
 
 # ---------------------------------------------------------------------------
@@ -97,14 +135,16 @@ def scan_branches(ttl_days: int = DEFAULT_TTL_DAYS) -> list[dict]:
 
     Returns list of dicts with:
         name, last_commit, age_days, is_merged, is_stale,
-        commit_count, diff_summary
+        commit_count, diff_summary, task_id, task_status, task_created
     """
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=ttl_days)
     branches = list_jarvis_branches()
+    backlog_index = _load_backlog_index()
     results = []
 
     for branch in branches:
+        task = backlog_index.get(branch, {})
         try:
             last_commit = branch_last_commit_date(branch)
             # Make timezone-aware if naive
@@ -123,12 +163,18 @@ def scan_branches(ttl_days: int = DEFAULT_TTL_DAYS) -> list[dict]:
                 "is_stale": last_commit < cutoff and not merged,
                 "commit_count": commits,
                 "diff_summary": diff,
+                "task_id": task.get("id"),
+                "task_status": task.get("status"),
+                "task_created": task.get("created"),
             })
         except RuntimeError as exc:
             results.append({
                 "name": branch,
                 "error": str(exc),
                 "is_stale": False,
+                "task_id": task.get("id"),
+                "task_status": task.get("status"),
+                "task_created": task.get("created"),
             })
 
     return results
@@ -150,7 +196,10 @@ def format_report(branches: list[dict]) -> str:
     if stale:
         lines.append("STALE (>7 days, not merged -- action required):")
         for b in sorted(stale, key=lambda x: x.get("age_days", 0), reverse=True):
-            lines.append(f"  {b['name']} -- {b['age_days']}d old, {b['commit_count']} commits, {b['diff_summary']}")
+            task_info = ""
+            if b.get("task_id"):
+                task_info = f" | task={b['task_id']} status={b['task_status']}"
+            lines.append(f"  {b['name']} -- {b['age_days']}d old, {b['commit_count']} commits, {b['diff_summary']}{task_info}")
         lines.append("")
 
     if merged:

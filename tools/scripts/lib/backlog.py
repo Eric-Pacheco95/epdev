@@ -25,6 +25,21 @@ from typing import Optional
 # wraps the entire read-modify-write window in backlog_append so two
 # producers calling concurrently cannot lose writes.
 _IS_WINDOWS = sys.platform == "win32"
+
+# Monotonic id counter — ensures uniqueness on Windows where time.time()
+# resolution is ~15ms (system tick), causing collisions for batch appends.
+# Strategy: use time_ns() (nanosecond wall clock, finer grained) converted
+# to microseconds, then bump by 1 if the candidate <= last value used.
+# This gives sortable, wall-clock-anchored ids that never repeat in-process.
+_last_id_us: int = 0
+
+
+def _generate_task_id() -> str:
+    """Generate a collision-safe task id using monotonic microsecond counter."""
+    global _last_id_us
+    candidate = time.time_ns() // 1_000  # ns -> us
+    _last_id_us = max(candidate, _last_id_us + 1)
+    return f"task-{_last_id_us}"
 if _IS_WINDOWS:
     import msvcrt
 else:
@@ -259,11 +274,7 @@ def backlog_append(
 
     # -- Auto-generate id if absent --
     if "id" not in task or not task.get("id"):
-        import time as _time
-        # Use microsecond-resolution float to avoid collisions when multiple
-        # tasks are appended within the same second (e.g. batch routine injection)
-        ts = int(_time.time() * 1_000_000)
-        task["id"] = f"task-{ts}"
+        task["id"] = _generate_task_id()
 
     # -- Auto-fill created if absent --
     if "created" not in task or not task.get("created"):

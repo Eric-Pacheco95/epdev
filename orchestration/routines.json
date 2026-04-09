@@ -55,6 +55,12 @@
         "type": "interval",
         "interval_days": 3
       },
+      "condition": {
+        "type": "file_count_min",
+        "glob": "memory/learning/signals/*.md",
+        "min": 1,
+        "description": "skip synthesis if no signals queued"
+      },
       "task_template": {
         "description": "Run /synthesize-signals to distill accumulated learning signals into a synthesis doc",
         "project": "epdev",

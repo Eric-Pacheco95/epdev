@@ -130,22 +130,27 @@ def _blocked_rm_rf(cmd: str) -> bool:
     if not re.search(r"\brm\b", cmd):
         return False
     compact = re.sub(r"\s+", " ", cmd)
-    if not re.search(r"-[a-z]*rf[a-z]*|-[a-z]*fr[a-z]*|-r\s+-f\b", compact, re.IGNORECASE):
+    # Match -rf, -fr, or split -r -f flags
+    _RF = r"(?:-[a-z]*rf[a-z]*|-[a-z]*fr[a-z]*|-r\s+-f)"
+    if not re.search(_RF, compact, re.IGNORECASE):
         return False
+    # rm (-rf|-fr) /  -- absolute root
     if (
-        re.search(r"\brm\b[^;]*-rf[^;]*\s/\s", compact)
-        or re.search(r"\brm\b[^;]*-rf[^;]*\s/\s*[\"']", compact)
-        or re.search(r"\brm\b[^;]*-rf[^;]*\s/\s*$", compact)
+        re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s/\s", compact)
+        or re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s/\s*[\"']", compact)
+        or re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s/\s*$", compact)
     ):
         return True
+    # rm (-rf|-fr) ~  -- home directory
     if (
-        re.search(r"\brm\b[^;]*-rf[^;]*\s~\s*$", compact)
-        or re.search(r"\brm\b[^;]*-rf[^;]*\s~\s*[;&|]", compact)
-        or re.search(r"\brm\b[^;]*-rf[^;]*[\"']~[\"']", compact)
+        re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s~\s*$", compact)
+        or re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s~\s*[;&|]", compact)
+        or re.search(r"\brm\b[^;]*" + _RF + r"""[^;]*[\"']~[\"']""", compact)
     ):
         return True
-    if re.search(r"\brm\b[^;]*-rf[^;]*\s\*\s*;?", compact) or re.search(
-        r"\brm\b[^;]*-rf[^;]*\s\*[\"']", compact
+    # rm (-rf|-fr) *  -- wildcard
+    if re.search(r"\brm\b[^;]*" + _RF + r"[^;]*\s\*\s*;?", compact) or re.search(
+        r"\brm\b[^;]*" + _RF + r"""[^;]*\s\*[\"']""", compact
     ):
         return True
     return False

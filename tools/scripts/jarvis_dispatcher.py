@@ -66,6 +66,7 @@ RUNS_DIR = REPO_ROOT / "data" / "dispatcher_runs"
 WORKTREE_DIR = REPO_ROOT.parent / "epdev-dispatch"
 ROUTINES_FILE = REPO_ROOT / "orchestration" / "routines.json"
 ROUTINE_STATE_FILE = REPO_ROOT / "data" / "routine_state.json"
+EVENTS_DIR = REPO_ROOT / "history" / "events"
 
 # Absolute path to claude CLI
 _claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
@@ -1862,6 +1863,31 @@ def save_run_report(report: dict, path: Path | None = None) -> Path:
     return path
 
 
+# -- Event emission ---------------------------------------------------------
+
+def _emit_dispatcher_event(task: dict, event_type: str) -> None:
+    """Append a dispatcher lifecycle event to history/events/YYYY-MM-DD.jsonl.
+
+    event_type: 'dispatcher.task_started' | 'dispatcher.task_completed' | 'dispatcher.task_failed'
+    """
+    try:
+        EVENTS_DIR.mkdir(parents=True, exist_ok=True)
+        today = datetime.now().strftime("%Y-%m-%d")
+        event = {
+            "ts": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "hook": event_type,
+            "task_id": task.get("id"),
+            "task_tier": task.get("tier"),
+            "task_source": task.get("source"),
+            "task_status": task.get("status"),
+            "failure_reason": task.get("failure_reason") if "failed" in event_type else None,
+        }
+        with open(EVENTS_DIR / f"{today}.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(event, ensure_ascii=False) + "\n")
+    except Exception as exc:
+        print(f"  WARNING: _emit_dispatcher_event failed: {exc}", file=sys.stderr)
+
+
 # -- Notification -----------------------------------------------------------
 
 def notify_completion(task: dict, report: dict, isc_results: list[dict]) -> None:
@@ -1901,6 +1927,39 @@ def notify_completion(task: dict, report: dict, isc_results: list[dict]) -> None
 
 
 # -- Routines engine ---------------------------------------------------------
+
+def _eval_routine_condition(condition: dict) -> bool:
+    """Evaluate a routine condition block. Returns True if the routine should fire.
+
+    Supported condition types:
+      file_count_min -- count files matching a glob pattern; fire if count >= min
+        {"type": "file_count_min", "glob": "memory/learning/signals/*.md", "min": 1}
+
+      always -- unconditional (default if no condition block)
+        {"type": "always"}
+
+    Unknown types default to True (fail open -- do not silently skip routines).
+    """
+    ctype = condition.get("type", "always")
+
+    if ctype == "always":
+        return True
+
+    if ctype == "file_count_min":
+        pattern = condition.get("glob", "")
+        minimum = int(condition.get("min", 1))
+        if not pattern:
+            return True
+        matches = list(REPO_ROOT.glob(pattern))
+        count = len(matches)
+        desc = condition.get("description", pattern)
+        print(f"  Condition [{desc}]: {count} files matched (min={minimum})")
+        return count >= minimum
+
+    # Unknown type -- fail open, log warning
+    print(f"  WARNING: unknown routine condition type '{ctype}' -- allowing injection", file=sys.stderr)
+    return True
+
 
 def inject_routines() -> int:
     """Check routines.json for due routines and inject them into the backlog.
@@ -1953,6 +2012,13 @@ def inject_routines() -> int:
                     continue  # Not due yet
             except ValueError:
                 pass  # Malformed date -- treat as never injected
+
+        # Evaluate condition block (if present) -- skip injection if condition not met
+        condition = routine.get("condition")
+        if condition:
+            if not _eval_routine_condition(condition):
+                print(f"  Routine skipped (condition not met): {routine_id}")
+                continue
 
         # Build task dict from template + routine_id
         task = dict(routine.get("task_template", {}))
@@ -2049,6 +2115,8 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
                 task["failure_reason"] = reason
             write_backlog(backlog)
             try:
+                ev = "dispatcher.task_completed" if task.get("status") == "done" else "dispatcher.task_failed"
+                _emit_dispatcher_event(task, ev)
                 notify_completion(task, report, isc_results)
             except Exception as exc:
                 print(f"  WARNING: notify_completion failed: {exc}", file=sys.stderr)
@@ -2104,6 +2172,7 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         # Execute
         task["status"] = "executing"
         write_backlog(backlog)
+        _emit_dispatcher_event(task, "dispatcher.task_started")
 
         report = run_worker(task, branch, wt_path or REPO_ROOT, dry_run=dry_run)
 
@@ -2213,6 +2282,8 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         write_backlog(backlog)
 
         # Notify
+        ev = "dispatcher.task_completed" if task.get("status") == "done" else "dispatcher.task_failed"
+        _emit_dispatcher_event(task, ev)
         notify_completion(task, report, isc_results)
         return "continue"
 
