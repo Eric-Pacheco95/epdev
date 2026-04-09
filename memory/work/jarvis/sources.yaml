@@ -99,7 +99,7 @@
   tier: 2
   frequency: weekly
   last_checked: "2026-04-09"
-  note: "Replaces OpenAI Blog (403 blocked, no RSS). OpenAI coverage via HN + Zvi is sufficient. The Batch covers all major lab releases weekly including OpenAI. Feed returned 404 on 2026-04-05 — monitor for recovery."
+  note: "Replaces OpenAI Blog (403 blocked, no RSS). The Batch covers all major lab releases weekly. Feed 404 since 2026-04-05 (5 days); if not resolved by 2026-04-14, consider downgrade to URL-only or replacement. OpenAI coverage via HN + Zvi + OpenAI Changelog (added this cycle) as fallback."
 
 - name: "Krebs on Security"
   url: "https://krebsonsecurity.com"
@@ -399,8 +399,18 @@
   tier: 3
   frequency: monthly
   last_checked: "2026-04-09"
-  last_notable: "Apr 7 — ISC Stormcast ep 9882 (audio digest; minimal detail in RSS)"
+  last_notable: "Apr 9 — ISC Stormcast ep 9883 (audio digest); Apr 7 — ep 9882; no high-priority handlers diary entries Apr 8-9"
   note: "Added 2026-04-05 — Daily threat handlers diary; high signal-to-noise for active exploits and IOCs; good complement to THN/Krebs for early-warning CVE exploitation"
+
+- name: "ArXiv CS.AI (Daily Papers)"
+  url: "https://arxiv.org/list/cs.AI/recent"
+  feed_url: "https://rss.arxiv.org/rss/cs.AI"
+  type: ai_releases
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-09"
+  last_notable: "Apr 8-9 — No single breakout paper; ArXiv CS.AI RSS provides daily preprint titles; filter for agent safety, prompt injection defenses, and inference optimization papers relevant to Jarvis"
+  note: "Added 2026-04-09 — ArXiv CS.AI preprints are the earliest signal for new attack classes, model capabilities, and safety research before blog/media coverage; filter by keyword (agent, prompt injection, inference, calibration) rather than reading in full; RSS feed available at rss.arxiv.org/rss/cs.AI"
 
 - name: "CISA Known Exploited Vulnerabilities (KEV)"
   url: "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
