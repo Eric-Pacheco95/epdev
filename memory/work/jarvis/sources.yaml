@@ -14,7 +14,7 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 6 — Anthropic expands partnership with Google and Broadcom for multiple gigawatts of next-gen compute; Apr 5 — Anthropic launches employee PAC amid AI policy tensions"
 
 - name: "Claude Code Changelog"
@@ -23,8 +23,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-07"
-  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster, remote settings forceRemoteSettingsRefresh, /release-notes interactive; no new release Apr 5-7"
+  last_checked: "2026-04-09"
+  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster, remote settings forceRemoteSettingsRefresh, /release-notes interactive; no confirmed new release Apr 5-9"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
@@ -32,7 +32,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 6 — Google AI Edge Gallery (Gemma 4 on-device iOS app with tool calling); scan-for-secrets 0.3 (redact flag + redact_file() API); datasette-ports 0.2 (no Datasette dep); Cleanup Claude Code Paste tool"
 
 - name: "Daniel Miessler"
@@ -41,7 +41,7 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 6 — Inference Costs Are Not Sustainable (Claude Code burning sub budget in hours; multi-model + local/cloud hybrid as fix); Mar 28 — Most Important AI Ideas April 2026"
 
 - name: "Hacker News"
@@ -50,8 +50,8 @@
   type: community
   tier: 1
   frequency: daily
-  last_checked: "2026-04-07"
-  last_notable: "Apr 7 — Cloudflare 2029 post-quantum roadmap; Google open-sources Scion (multi-agent orchestration testbed); GLM-5.1 long-horizon tasks; 'Good Taste the Only Real Moat Left'"
+  last_checked: "2026-04-09"
+  last_notable: "Apr 9 — CISA Fortinet CVE deadline day; Scion early community exploration; Bitcoin $66-68K consolidation; Apr 8 — Docker CVE-2026-34040 patch discussion; crypto tariff macro headwind"
 
 - name: "MLOps YouTube"
   url: "https://www.youtube.com/@MLOps"
@@ -59,7 +59,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
 
 - name: "Andrej Karpathy YouTube"
   url: "https://www.youtube.com/@AndrejKarpathy"
@@ -67,7 +67,7 @@
   type: ai_education
   tier: 1
   frequency: daily
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
 
 - name: "The Pragmatic Engineer"
   url: "https://newsletter.pragmaticengineer.com"
@@ -75,7 +75,7 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   note: "Added 2026-04-07 — Gergely Orosz weekly newsletter; covers GitHub Copilot, AI coding tools, enterprise AI adoption patterns, and developer market trends; high signal-to-noise for practical AI engineering implications"
 
 # =============================================================================
@@ -298,9 +298,19 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-07"
-  last_notable: "v0.89.0 (Apr 3) — Vertex AI multi-region, deprecated client-side compaction helpers; no new release Apr 5-7; watch: compaction helper deprecation may affect overnight runner"
+  last_checked: "2026-04-09"
+  last_notable: "v0.89.0 (Apr 3) — Vertex AI multi-region, deprecated client-side compaction helpers; no new release Apr 5-9; watch: compaction helper deprecation may affect overnight runner"
   note: "Added 2026-04-05 — Jarvis dispatcher and all claude -p invocations depend on this SDK; deprecation of client-side compaction helpers in v0.89.0 may impact overnight runner"
+
+- name: "OpenAI Platform Changelog"
+  url: "https://platform.openai.com/docs/changelog"
+  feed_url: ""
+  type: ai_releases
+  tier: 1
+  frequency: daily
+  last_checked: "2026-04-09"
+  last_notable: "No new changelog entry Apr 8-9; latest known: GPT-4.1 function calling improvements and Assistants API v2 stable; watch for o3/o4 API access expansion"
+  note: "Added 2026-04-09 — OpenAI is the primary competitor ecosystem; platform API changes affect agent patterns, tool calling specs, and model availability; URL-only (no RSS detected)"
 
 - name: "MCP Specification (modelcontextprotocol)"
   url: "https://github.com/modelcontextprotocol/specification"
