@@ -173,13 +173,23 @@
   last_checked: "2026-04-09"
   last_notable: "Apr 3 — AINews Good Friday (Gemma 4, Hermes Agent as breakout open-source agent framework); Marc Andreessen on death of browser + why this time is different"
 
+- name: "Meta AI Llama Releases"
+  url: "https://github.com/meta-llama/llama-models/releases"
+  feed_url: "https://github.com/meta-llama/llama-models/releases.atom"
+  type: ai_releases
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-09"
+  last_notable: "No new releases Apr 8-9; latest known is Llama 3.3 (Dec 2024); watch for Llama 4 Scout/Maverick production releases"
+  note: "Added 2026-04-09 — Meta Llama open-weight series is the largest open-weight ecosystem; Llama 4 Scout/Maverick/Behemoth announced; Llama models drive open-weight competition with GLM-5, Gemma 4, Mistral; key for Jarvis local model fallback options"
+
 - name: "Blockworks"
   url: "https://blockworks.com"
   feed_url: "https://blockworks.com/feed/"
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   note: "Replaces CoinDesk (RSS 403 blocked). URL updated: blockworks.co 308-redirects to blockworks.com. Feed stale (Jan 2026 entries) — persistent recovery issue."
 
 - name: "CoinTelegraph"
@@ -188,8 +198,8 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
-  last_notable: "Apr 7 — Bitcoin $68K ahead of Iran deadline; ETF inflows $471M (highest since Feb); CME adds Avalanche+Sui futures; US Senate confirms April crypto market structure timeline; Chaos Labs exits Aave"
+  last_checked: "2026-04-09"
+  last_notable: "Apr 9 — Bitcoin $66-68K consolidation; tariff uncertainty dampens recovery; Apr 8 — BTC dips to $65.5K as Iran deadline partially resolves, $2.1B liquidations, recovery to $66.5K; Apr 7 — $68K, ETF inflows $471M"
 
 - name: "Google Cloud Threat Intelligence"
   url: "https://cloud.google.com/blog/topics/threat-intelligence"
@@ -197,7 +207,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 3 — Attributed axios npm supply chain attack to North Korea UNC1069 (WAVESHAPER.V2 backdoor)"
   note: "Added 2026-04-04 — Google Mandiant/GTIG primary attribution source; cited in axios compromise, APT reports; feed returned JS framework only on Apr 7 check"
 
@@ -207,7 +217,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Mar 31 — Spaces CLI built for humans and agents; Mar 23 — Voxtral TTS; no new posts Apr 5-7"
   note: "Added 2026-04-05 — Mistral is a key open-model lab (Mixtral, Mistral Large, Codestral, Voxtral); no RSS feed detected, URL-only monitoring"
 
@@ -217,7 +227,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 1 — Mitigation guide for axios npm supply chain compromise (WAVESHAPER.V2); no new posts Apr 5-7"
   note: "Added 2026-04-04 — Microsoft MSRC + Defender research; key for supply chain mitigations and Patch Tuesday coverage"
 
@@ -227,7 +237,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 2 — Multi-layer indirect prompt injection defense in Workspace; Mar 31 — VRP 2025 Year in Review ($17M to 700+ researchers); no new posts Apr 5-7"
   note: "Added 2026-04-05 — Google application security research blog; complements GTIC with defensive architecture and vulnerability research"
 
@@ -348,7 +358,7 @@
   type: ai_safety
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 1 — RSP v3.0 published (Responsible Scaling Policy update; lacks concrete commitments per Zvi); Mar 31 — Australia/Anthropic MOU; no new posts Apr 5-7"
   note: "Added 2026-04-05 — Separate from Anthropic Blog (products/news); tracks constitutional AI, interpretability, RSP safety milestone commitments; URL-only (no separate RSS)"
 
@@ -397,7 +407,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "Apr 4 — GHSA-9jpj-g8vv-j5mf: openclaw High (Gemini OAuth PKCE verifier exposed); GHSA-737v-mqg7-c878: defu High (prototype pollution); no new high advisories Apr 5-7"
   note: "Added 2026-04-05 — Reviewed npm advisories; no RSS feed (GraphQL API available). High-value for supply chain and dev-dependency threat tracking."
 
@@ -416,7 +426,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-07"
+  last_checked: "2026-04-09"
   last_notable: "GLM-5.1 (Apr 7 HN) — long-horizon multi-step task model; GLM-5 previously matched closed frontier on agent tasks (LangChain Apr 2)"
   note: "Added 2026-04-07 — ZhipuAI (THUDM) open-weight models; GLM-4/5 series competitive with frontier on agent benchmarks per LangChain Apr 2 report; GLM-5.1 focused on long-horizon planning; key open-weight competitor to track"
 
