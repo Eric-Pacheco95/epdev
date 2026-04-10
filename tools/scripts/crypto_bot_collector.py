@@ -37,7 +37,7 @@ PATCHES_FILE = CRYPTO_BOT_ROOT / "data" / "patches.jsonl"
 
 API_BASE = "http://localhost:8080"
 API_TIMEOUT_S = 10
-POLL_INTERVAL_S = 900  # 15 minutes
+POLL_INTERVAL_S = 3600  # 60 minutes (synced with Jarvis heartbeat)
 LOG_TAIL_LINES = 200
 
 # Dead-man's switch config

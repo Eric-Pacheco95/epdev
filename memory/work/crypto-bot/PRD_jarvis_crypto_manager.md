@@ -45,7 +45,7 @@ Jarvis becomes the strategic project manager for crypto-bot, layering on top of 
 ## FUNCTIONAL REQUIREMENTS
 
 **FR-001: SENSE Collector**
-- Polls crypto-bot REST API every 15 min: `GET /api/status`, `GET /api/portfolio`, `GET /api/pipeline-health`, `GET /api/paper-report`, `GET /api/signal-attribution`, `GET /api/costs`
+- Polls crypto-bot REST API every 60 min: `GET /api/status`, `GET /api/portfolio`, `GET /api/pipeline-health`, `GET /api/paper-report`, `GET /api/signal-attribution`, `GET /api/costs`
 - Reads log files directly: `C:\Users\ericp\Github\crypto-bot\data\logs\{uvicorn,celery_worker,celery_beat,health_monitor}.log` (tail last 200 lines per poll)
 - Reads alert audit trail: `C:\Users\ericp\Github\crypto-bot\data\alerts\alerts.jsonl` (new entries since last poll)
 - Reads patch audit trail: `C:\Users\ericp\Github\crypto-bot\data\patches.jsonl` (new entries since last poll — surfaces health_monitor GPT-4o auto-applied patches in morning briefing)
@@ -108,7 +108,7 @@ Jarvis becomes the strategic project manager for crypto-bot, layering on top of 
 
 ## ACCEPTANCE CRITERIA
 
-- [x] SENSE collector polls 6 API endpoints and writes `crypto_bot_state.json` every 15 min | Verify: `cat data/crypto_bot_state.json` shows timestamp within last 15 min | model: sonnet |
+- [x] SENSE collector polls 6 API endpoints and writes `crypto_bot_state.json` every 60 min | Verify: `cat data/crypto_bot_state.json` shows timestamp within last 15 min | model: sonnet |
 - [x] Dead-man's switch sends Slack alert within 45 min of total crypto-bot API failure | Verify: stop crypto-bot, wait, check #crypto-bot for alert | model: sonnet |
 - [x] Dead-man's switch sends max 3 alerts per incident and resets on recovery | Verify: count alerts in #crypto-bot during extended outage | model: sonnet |
 - [x] Morning briefing includes crypto-bot status block with trade count, P&L, win rate, process health | Verify: start new Jarvis session, check hook output for crypto-bot section

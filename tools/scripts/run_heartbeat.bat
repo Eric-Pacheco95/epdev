@@ -21,6 +21,11 @@ echo [%date% %time%] Knowledge index update starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\jarvis_index.py update >> "%LOGFILE%" 2>&1
 echo [%date% %time%] Knowledge index update complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
 
+REM Crypto-bot SENSE collector (Phase A -- read-only API poll + dead-man's switch)
+echo [%date% %time%] Crypto-bot collector starting >> "%LOGFILE%" 2>&1
+"C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\crypto_bot_collector.py >> "%LOGFILE%" 2>&1
+echo [%date% %time%] Crypto-bot collector complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
+
 REM Log rotation (gzip old events, enforce retention policy)
 echo [%date% %time%] Log rotation starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\rotate_events.py --execute >> "%LOGFILE%" 2>&1
