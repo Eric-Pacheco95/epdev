@@ -131,7 +131,7 @@ Project initialization (new project from scratch):
 
 | Task Type | Route To | Next in Chain |
 |-----------|----------|---------------|
-| Analyze content | `/extract-wisdom` or `/analyze-claims` | `/telos-update` or `/create-summary` |
+| Analyze content | `/extract-wisdom` or `/analyze-claims` | `/telos-update` or `/extract-wisdom --summary` |
 | Break down a problem | `/first-principles` | `/red-team` |
 | Stress-test a plan | `/red-team` | `/create-prd` |
 | Research a topic | `/research` | `/first-principles` or `/create-prd` |

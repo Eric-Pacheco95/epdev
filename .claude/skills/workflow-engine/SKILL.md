@@ -77,12 +77,12 @@ These are pre-defined pipelines for common tasks. Invoke by name.
 
 **`deep-analysis`** — Rigorous multi-angle analysis of an idea or plan
 ```
-[idea] → /first-principles → /red-team → /analyze-claims → /create-summary
+[idea] → /first-principles → /red-team → /analyze-claims → /extract-wisdom --summary
 ```
 
 **`new-project`** — Spin up a new project from an idea
 ```
-[idea] → /first-principles → /create-prd → /threat-model → /review-code (if code exists)
+[idea] → /first-principles → /create-prd → /red-team --stride → /review-code (if code exists)
 ```
 
 **`improve-system`** — Review and improve Jarvis itself
@@ -92,7 +92,7 @@ These are pre-defined pipelines for common tasks. Invoke by name.
 
 **`content-to-wisdom`** — Extract and store wisdom from any source (article, video transcript, voice note)
 ```
-[content] → /extract-wisdom → /create-summary → /telos-update
+[content] → /extract-wisdom → /telos-update → /learning-capture
 ```
 
 # OUTPUT INSTRUCTIONS
@@ -112,7 +112,7 @@ Describe the goal or name a built-in workflow. Provide the content or context to
 
 # SKILL CHAIN
 
-- **Composes:** any combination of the 33 registered skills
+- **Composes:** any combination of the 46 registered skills
 - **Escalate to:** `/delegation` to identify which built-in workflow matches a task
 
 # BUILT-IN WORKFLOW: `build-feature`
