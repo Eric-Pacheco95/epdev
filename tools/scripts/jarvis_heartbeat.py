@@ -549,6 +549,29 @@ def build_message(snap: dict, prev: dict | None, changes: list[dict]) -> str:
     return "\n".join(lines)
 
 
+# ── Producer alert dedup ───────────────────────────────────────────
+
+def _dedup_producer_alerts(changes: list[dict], snap: dict) -> None:
+    """Suppress producer_health WARN when producer_recency is OK.
+
+    Both collectors watch the same producers. producer_health queries the
+    manifest_db (stale on Idle Is Success days), producer_recency checks
+    file mtimes (accurate). When recency says healthy, health's WARN is
+    noise — downgrade it to OK so it doesn't trigger alerts or remediation.
+    """
+    recency = snap.get("metrics", {}).get("producer_recency", {})
+    health = snap.get("metrics", {}).get("producer_health", {})
+
+    recency_ok = recency.get("value") is not None and recency.get("value") == 0
+    health_warn = health.get("value") is not None and health.get("value") > 0
+
+    if recency_ok and health_warn:
+        for change in changes:
+            if change["metric"] == "producer_health" and change["severity"] in ("WARN", "CRIT"):
+                change["severity"] = "OK"
+                change["_dedup_note"] = "suppressed: producer_recency is OK"
+
+
 # ── Main ────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -598,6 +621,11 @@ def main() -> None:
             "severity": null_severity,
             "detail": f"Null collectors: {', '.join(null_collectors)}",
         })
+
+    # Dedup: suppress producer_health WARN when producer_recency is OK for same snapshot.
+    # Both collectors monitor the same producers; producer_health (manifest_db) stays WARN
+    # on Idle Is Success days even when producer_recency (file_mtime) shows healthy.
+    _dedup_producer_alerts(changes, snap)
 
     # Save snapshot
     save_snapshot(snap, latest_path, history_path)

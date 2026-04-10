@@ -26,6 +26,7 @@ Outputs:
 from __future__ import annotations
 
 import argparse
+import ctypes
 import json
 import os
 import re
@@ -45,6 +46,9 @@ CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
+# NOTE: processed/ subdir was never created in production. Signals land
+# directly in SIGNALS_DIR. Keep PROCESSED_DIR as a fallback but primary
+# signal reading now uses SIGNALS_DIR with the 14-day window.
 PROCESSED_DIR = SIGNALS_DIR / "processed"
 SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
@@ -66,6 +70,40 @@ EXTERNAL_PROJECT_REPOS = [
     },
 ]
 EXTERNAL_EVIDENCE_DAYS = 30
+
+
+# -- Windows sleep prevention -------------------------------------------------
+
+# ES_CONTINUOUS | ES_SYSTEM_REQUIRED — prevent system sleep during run
+_ES_CONTINUOUS = 0x80000000
+_ES_SYSTEM_REQUIRED = 0x00000001
+
+
+def prevent_sleep() -> bool:
+    """Prevent Windows from sleeping during the run. Returns True on success."""
+    if sys.platform != "win32":
+        return False
+    try:
+        result = ctypes.windll.kernel32.SetThreadExecutionState(
+            _ES_CONTINUOUS | _ES_SYSTEM_REQUIRED
+        )
+        if result == 0:
+            print("  WARNING: SetThreadExecutionState returned 0 "
+                  "(sleep prevention may not be active)", file=sys.stderr)
+            return False
+        return True
+    except (AttributeError, OSError):
+        return False
+
+
+def allow_sleep() -> None:
+    """Re-allow system sleep (clear the continuous flag)."""
+    if sys.platform != "win32":
+        return
+    try:
+        ctypes.windll.kernel32.SetThreadExecutionState(_ES_CONTINUOUS)
+    except (AttributeError, OSError):
+        pass
 
 
 # -- File gathering (read-only, time-bounded) --------------------------------
@@ -238,13 +276,28 @@ def gather_inputs() -> dict:
     """Gather all read-scope inputs. Returns structured dict."""
     telos = read_telos_files()
     synthesis = read_synthesis_recent(5)
-    signals = read_recent_files(PROCESSED_DIR, days=14, max_files=20)
+    # Primary: read from SIGNALS_DIR (where signals actually land).
+    # Fallback: also check PROCESSED_DIR if it exists, to avoid losing
+    # signals if the processed/ subdir is ever created.
+    signals = read_recent_files(SIGNALS_DIR, days=14, max_files=20)
+    if PROCESSED_DIR.is_dir():
+        processed = read_recent_files(PROCESSED_DIR, days=14, max_files=10)
+        # Merge, dedup by name, cap at 20
+        seen = {s["name"] for s in signals}
+        for p in processed:
+            if p["name"] not in seen:
+                signals.append(p)
+                seen.add(p["name"])
+        signals = signals[:20]
     raw_signals = read_recent_files(SIGNALS_DIR, days=7, max_files=10)
     failures = read_recent_files(FAILURES_DIR, days=14, max_files=10)
     sessions = read_recent_files(SESSION_DIR, days=7, max_files=5)
     prior_proposals = read_prior_proposals(days=14, max_runs=5)
     external_evidence = read_external_project_evidence()
 
+    # raw_signals uses the 7-day window from SIGNALS_DIR — same dir as
+    # signals but narrower window. Keep both: "signals" = 14-day context,
+    # "raw_signals" = 7-day recency emphasis in the prompt.
     return {
         "telos": telos,
         "synthesis": synthesis,
@@ -482,6 +535,24 @@ Use ASCII only (no Unicode dashes, arrows, or box characters)."""
 
 # -- Response parsing --------------------------------------------------------
 
+def _dump_raw_response(response: str, tag: str) -> None:
+    """Dump raw Claude response to a timestamped file for diagnosis.
+
+    Called when metrics parsing fails silently — makes the failure loud
+    so it can be investigated from logs.
+    """
+    today = datetime.now().strftime("%Y-%m-%d")
+    dump_dir = OUTPUT_BASE / ("run-%s" % today)
+    dump_dir.mkdir(parents=True, exist_ok=True)
+    dump_path = dump_dir / ("raw_response_%s.txt" % tag)
+    try:
+        dump_path.write_text(response[:50000], encoding="utf-8")
+        print("  Raw response dumped to: %s" % dump_path, file=sys.stderr)
+    except OSError as exc:
+        print("  WARNING: could not dump raw response: %s" % exc,
+              file=sys.stderr)
+
+
 def parse_metrics(response: str) -> dict:
     """Parse metrics from the structured response."""
     metrics = {
@@ -500,9 +571,11 @@ def parse_metrics(response: str) -> dict:
     if not metrics_match:
         print("  WARNING: METRICS section not found in API response. "
               "Using defaults (all zeros).", file=sys.stderr)
+        _dump_raw_response(response, "metrics-section-missing")
         return metrics
 
     block = metrics_match.group(1)
+    parsed_count = 0
     for key in metrics:
         m = re.search(r"%s:\s*(\d+\.?\d*)" % key, block)
         if m:
@@ -511,6 +584,14 @@ def parse_metrics(response: str) -> dict:
                 metrics[key] = float(val)
             else:
                 metrics[key] = int(val)
+            parsed_count += 1
+
+    # Loud failure: if METRICS section existed but no values parsed,
+    # something is wrong with the format — dump for diagnosis
+    if parsed_count == 0:
+        print("  WARNING: METRICS section found but 0 values parsed. "
+              "Dumping raw response for diagnosis.", file=sys.stderr)
+        _dump_raw_response(response, "metrics-parse-zero")
 
     return metrics
 
@@ -869,10 +950,16 @@ def main() -> int:
         print("  Output dir: %s" % run_dir)
         return 0
 
-    # 3. Acquire global claude -p mutex
+    # 3. Prevent system sleep during run
+    sleep_prevented = prevent_sleep()
+    if sleep_prevented:
+        print("  Sleep prevention: active")
+
+    # 4. Acquire global claude -p mutex
     if not acquire_claude_lock("autoresearch"):
         print("ERROR: Another claude -p process is running. Aborting.",
               file=sys.stderr)
+        allow_sleep()
         return 1
 
     # Build prompts and call API
@@ -928,6 +1015,7 @@ def main() -> int:
         return 0
     finally:
         release_claude_lock()
+        allow_sleep()
 
 
 # -- Self-test ---------------------------------------------------------------

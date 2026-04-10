@@ -363,8 +363,8 @@
         "priority": 5,
         "goal_context": "Pipeline health depends on backlog flow -- stuck tasks and stale reviews block forward progress",
         "isc": [
-          "No pending_review tasks older than 7 days exist in backlog | Verify: python -c \"import json,datetime; tasks=[json.loads(l) for l in open('orchestration/task_backlog.jsonl')]; print([t['id'] for t in tasks if t.get('status')=='pending_review'])\"",
-          "Backlog composition stats posted to Slack (pending/done/failed counts) | Verify: check #epdev for backlog_health message"
+          "No pending_review tasks older than 7 days exist in backlog | Verify: python tools/scripts/verify_backlog_health.py",
+          "Backlog composition stats posted to Slack (pending/done/failed counts) | Verify: python tools/scripts/verify_backlog_health.py"
         ],
         "context_files": [
           "orchestration/task_backlog.jsonl"
