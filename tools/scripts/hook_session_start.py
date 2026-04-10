@@ -47,6 +47,7 @@ SECURITY_DIR = REPO_ROOT / "history" / "security"
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SYNTHESIS_DIR = REPO_ROOT / "memory" / "learning" / "synthesis"
 ABSORBED_DIR = REPO_ROOT / "memory" / "learning" / "absorbed"
+LINEAGE_FILE = REPO_ROOT / "data" / "signal_lineage.jsonl"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
 G2_STREAK_FILE = REPO_ROOT / "data" / "g2_streak.json"
 CRYPTO_BOT_ROOT = Path("C:/Users/ericp/Github/crypto-bot")
@@ -116,6 +117,43 @@ def _count_files(directory: Path, ext: str = ".md") -> int:
     if not directory.is_dir():
         return 0
     return sum(1 for p in directory.iterdir() if p.is_file() and p.suffix == ext)
+
+
+def _synthesized_signal_names() -> set:
+    """Read lineage JSONL to get set of signal filenames already consumed by synthesis."""
+    if not LINEAGE_FILE.is_file():
+        return set()
+    names = set()
+    try:
+        for line in LINEAGE_FILE.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+                # Lineage rows use "signals" array of filenames
+                for name in row.get("signals", []):
+                    if name:
+                        names.add(name)
+            except (json.JSONDecodeError, TypeError):
+                continue
+    except OSError:
+        pass
+    return names
+
+
+def _count_unprocessed_signals() -> tuple:
+    """Count total and unprocessed signals using lineage for dedup.
+
+    Returns (total, unprocessed) counts.
+    """
+    if not SIGNALS_DIR.is_dir():
+        return 0, 0
+    all_signals = [p for p in SIGNALS_DIR.iterdir() if p.is_file() and p.suffix == ".md"]
+    total = len(all_signals)
+    synthesized = _synthesized_signal_names()
+    unprocessed = sum(1 for p in all_signals if p.name not in synthesized)
+    return total, unprocessed
 
 
 def _recent_security_events(days: int = 7) -> list[str]:
@@ -590,11 +628,11 @@ def main() -> None:
         print(f"  (missing: {TASKLIST})")
     print()
 
-    # Signal and failure counts
-    n_signals = _count_files(SIGNALS_DIR)
+    # Signal and failure counts (use lineage-aware unprocessed count for synthesis check)
+    n_total_signals, n_unprocessed = _count_unprocessed_signals()
     n_failures = _count_files(FAILURES_DIR)
-    print(f"Learning signals: {n_signals} | Failures logged: {n_failures}")
-    due, reason = _synthesis_due(n_signals)
+    print(f"Learning signals: {n_total_signals} (unprocessed: {n_unprocessed}) | Failures logged: {n_failures}")
+    due, reason = _synthesis_due(n_unprocessed)
     if due:
         print(f"  >>> Synthesis due: {reason}")
         print("      Run /synthesize-signals when ready.")
