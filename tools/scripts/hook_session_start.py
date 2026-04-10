@@ -134,6 +134,66 @@ def _recent_security_events(days: int = 7) -> list[str]:
     return [f"  - {name}" for _, name in events[:10]]
 
 
+def _crypto_bot_status() -> list[str]:
+    """Load crypto-bot status from data/crypto_bot_state.json for morning briefing (FR-003)."""
+    state_file = REPO_ROOT / "data" / "crypto_bot_state.json"
+    if not state_file.is_file():
+        return []
+    try:
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return ["  (state file unreadable)"]
+
+    ts = state.get("timestamp", "unknown")
+    # Staleness check: >30 min = stale
+    lines: list[str] = []
+    try:
+        poll_dt = datetime.fromisoformat(ts)
+        age_min = (datetime.now(timezone.utc) - poll_dt).total_seconds() / 60
+        if age_min > 30:
+            lines.append(f"  STALE -- last poll {ts} ({age_min:.0f} min ago)")
+    except (ValueError, TypeError):
+        lines.append(f"  Last poll: {ts}")
+
+    api_ok = state.get("api_reachable", False)
+    status_ok = state.get("status_reachable", False)
+    lines.append(f"  API: {'OK' if api_ok else 'PARTIAL' if status_ok else 'DOWN'}")
+
+    # Process health
+    procs = state.get("processes", {})
+    if isinstance(procs, dict) and procs:
+        alive = [k for k, v in procs.items() if v]
+        dead = [k for k, v in procs.items() if not v]
+        if dead:
+            lines.append(f"  Processes DOWN: {', '.join(dead)}")
+        else:
+            lines.append(f"  Processes: {len(alive)} alive")
+    else:
+        lines.append("  Processes: unknown")
+
+    # Trade summary
+    t_open = state.get("trade_count_open", 0)
+    t_closed = state.get("trade_count_closed", 0)
+    pnl = state.get("realized_pnl", 0.0)
+    wr = state.get("win_rate", 0.0)
+    dd = state.get("drawdown_pct", 0.0)
+    lines.append(f"  Trades: {t_open} open, {t_closed} closed | P&L: ${pnl:.2f} | WR: {wr:.1f}% | DD: {dd:.1f}%")
+
+    # Overnight alerts/patches
+    n_alerts = state.get("new_alerts_count", 0)
+    n_patches = state.get("new_patches_count", 0)
+    if n_alerts or n_patches:
+        lines.append(f"  Since last poll: {n_alerts} alerts, {n_patches} patches")
+
+    # Log errors
+    errs = state.get("log_errors", {})
+    if errs:
+        err_parts = [f"{k}: {v}" for k, v in errs.items()]
+        lines.append(f"  Log errors: {', '.join(err_parts)}")
+
+    return lines
+
+
 def _load_telos_status() -> str:
     """Load key TELOS context for session awareness."""
     lines: list[str] = []
@@ -497,6 +557,15 @@ def main() -> None:
         print("-" * 40)
         for w in g2_warnings:
             print(_ascii_safe(w))
+        print()
+
+    # Crypto-bot status (FR-003: morning briefing integration)
+    crypto_status = _crypto_bot_status()
+    if crypto_status:
+        print("Crypto-bot Status")
+        print("-" * 40)
+        for line in crypto_status:
+            print(_ascii_safe(line))
         print()
 
     # TELOS context (focus only — mood/energy omitted to save context)
