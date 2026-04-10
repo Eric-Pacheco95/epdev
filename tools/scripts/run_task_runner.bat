@@ -10,7 +10,7 @@ REM Create log directory if missing
 if not exist "data\logs" mkdir "data\logs"
 
 REM Log file: one per day, append
-for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set LOGDATE=%%I
+for /f %%I in ('C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe C:\Users\ericp\Github\epdev\tools\scripts\today.py') do set LOGDATE=%%I
 set LOGFILE=data\logs\task_runner_%LOGDATE%.log
 
 echo [%date% %time%] Task runner starting >> "%LOGFILE%" 2>&1

@@ -7,7 +7,7 @@ cd /d "C:\Users\ericp\Github\epdev"
 
 if not exist "data\logs" mkdir "data\logs"
 
-for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set LOGDATE=%%I
+for /f %%I in ('C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe C:\Users\ericp\Github\epdev\tools\scripts\today.py') do set LOGDATE=%%I
 set LOGFILE=data\logs\steering_audit_%LOGDATE%.log
 
 echo [%date% %time%] Steering audit starting >> "%LOGFILE%" 2>&1
