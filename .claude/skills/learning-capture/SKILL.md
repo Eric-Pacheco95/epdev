@@ -24,7 +24,7 @@ LEARN
 
 ## Chains
 - Before: any build, research, or design session (this is always the final step)
-- After: /synthesize-signals (auto-invoked if combined count >= 35, or >= 20 with 48h+ stale, or >= 15 with 72h+ stale)
+- After: /synthesize-signals (auto-invoked if combined unprocessed count >= 35 OR last synthesis >72h ago with any unprocessed signals; unprocessed = signals not referenced in `data/signal_lineage.jsonl`; overnight runner also triggers synthesis on 72h cadence independently)
 - Full: [any session work] > /learning-capture > /synthesize-signals > /telos-update
 
 ## Output Contract
@@ -86,9 +86,9 @@ false
 - Write each signal to `C:/Users/ericp/Github/epdev/memory/learning/signals/` using the format below
 - Write any failures to `C:/Users/ericp/Github/epdev/memory/learning/failures/` using the failure format below
 - **Write-then-read-back**: After writing each signal, immediately read it back to confirm. If read-back fails, retry once with absolute path. If second write fails, output signal as plain text and log a failure record — do not silently drop.
-- **Reconcile `_signal_meta.json`**: Count actual `.md` files in `memory/learning/signals/` (exclude `_signal_meta.json` and `processed/`) and write count to `_signal_meta.json`. Do NOT increment — always reconcile against filesystem state.
+- **Reconcile `_signal_meta.json`**: Count actual `.md` files in `memory/learning/signals/` (exclude `_signal_meta.json`) and write count to `_signal_meta.json`. Do NOT increment — always reconcile against filesystem state.
 - Run `python tools/scripts/jarvis_index.py update` after writing signals (required — velocity metric and synthesis threshold checks read `jarvis_index.db`, not filesystem).
-- After writing signals, count unprocessed signals (signals/ + failures/ + absorbed/, excluding `processed/`). Auto-invoke `/synthesize-signals` immediately if: combined >= 35 OR >= 20 with 48h+ stale OR >= 15 with 72h+ stale. Present proposed steering rules to Eric for approval but do not auto-invoke `/update-steering-rules`
+- After writing signals, count unprocessed signals (signals/ + failures/ + absorbed/, where unprocessed = not referenced in `data/signal_lineage.jsonl`). Auto-invoke `/synthesize-signals` immediately if: combined unprocessed count >= 35 OR last synthesis >72h ago with any unprocessed signals. Present proposed steering rules to Eric for approval but do not auto-invoke `/update-steering-rules`
 - **Skill friction check**: If any skill was used this session, review each invocation for friction: missing steps, confusing parameters, unnecessary confirmations, or unclear output. For each friction point, write a signal tagged `skill-improvement` with the skill name, what went wrong, and a proposed fix. This feeds the skill self-improvement loop.
 - **Skill gap check**: Scan session for ad-hoc tasks that could be reusable skills. Score each on: Recurrence (weekly+?), Repeatability (scriptable structure?), Value (saves time/errors?). Surface only candidates scoring High on 2+ of 3 as `## Skill Gap Candidates` (name, description, recurrence signal). Do NOT auto-invoke `/create-pattern`.
 - **Source engagement check**: Read `data/source_candidates.jsonl` (if exists). If any candidate URL/domain was referenced this session, increment its `engagement_count`. If count reaches 3: prompt "Source '{name}' came up 3 times. Add to sources.yaml? (tier: {suggestion})". If approved: append to `memory/work/jarvis/sources.yaml` and clear from JSONL. If declined: set count to -1 (skip forever). Also check if any session URL matches an *existing* source in sources.yaml — note as "Source hit: {name}" if found.
@@ -168,6 +168,6 @@ Analyze the current session and extract learnings. If invoked with specific cont
 # SKILL CHAIN
 
 - **Composes:** skill gap check (inline) → present candidates to Eric → Eric decides whether to invoke `/create-pattern`
-- **Escalate to:** `/synthesize-signals` immediately if combined count >= 35 (or >= 20 with 48h stale, >= 15 with 72h stale), then `/telos-update` if identity-level insights emerged
+- **Escalate to:** `/synthesize-signals` immediately if combined unprocessed count >= 35 OR last synthesis >72h ago with any unprocessed signals (unprocessed = not in `data/signal_lineage.jsonl`), then `/telos-update` if identity-level insights emerged
 
 INPUT:

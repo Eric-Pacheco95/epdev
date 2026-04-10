@@ -60,6 +60,108 @@ TIME_BUDGET_S = 6000
 # 2 GiB chosen as floor for "worktree create + 1 claude -p invocation can fit".
 PREFLIGHT_MIN_AVAIL_BYTES = 2 * 1024 * 1024 * 1024
 
+# Hours between automatic /synthesize-signals triggers in knowledge_synthesis.
+SYNTHESIS_CADENCE_HOURS = 72
+
+
+def check_synthesis_trigger() -> bool:
+    """Return True if /synthesize-signals should run before knowledge_synthesis.
+
+    Triggers when BOTH conditions hold:
+      1. Last synthesis was >SYNTHESIS_CADENCE_HOURS ago (or no lineage exists)
+      2. At least 1 unprocessed signal file exists in memory/learning/signals/
+
+    Uses only stdlib (json, datetime, pathlib). All I/O errors are handled
+    gracefully -- missing or malformed files default to "trigger".
+    """
+    import datetime as _dt
+
+    lineage_path = REPO_ROOT / "data" / "signal_lineage.jsonl"
+    signals_dir = REPO_ROOT / "memory" / "learning" / "signals"
+
+    # --- Step 1: find most recent timestamp in lineage ---
+    last_synthesis_ts = None
+    if lineage_path.is_file():
+        try:
+            for raw_line in lineage_path.read_text(encoding="utf-8").splitlines():
+                raw_line = raw_line.strip()
+                if not raw_line:
+                    continue
+                try:
+                    record = json.loads(raw_line)
+                except (json.JSONDecodeError, ValueError):
+                    continue  # skip malformed lines
+                ts_val = record.get("timestamp")
+                if not ts_val:
+                    continue
+                try:
+                    ts = _dt.datetime.fromisoformat(str(ts_val))
+                except (ValueError, TypeError):
+                    continue
+                if last_synthesis_ts is None or ts > last_synthesis_ts:
+                    last_synthesis_ts = ts
+        except OSError:
+            pass  # treat as no lineage
+
+    # Condition 1: >72h since last synthesis (or never synthesized)
+    if last_synthesis_ts is None:
+        hours_since = float("inf")
+        stale = True
+    else:
+        now = _dt.datetime.now(tz=last_synthesis_ts.tzinfo)
+        hours_since = (now - last_synthesis_ts).total_seconds() / 3600
+        stale = hours_since > SYNTHESIS_CADENCE_HOURS
+
+    if not stale:
+        return False
+
+    # --- Step 2: count unprocessed signals ---
+    # Unprocessed = .md files in signals/ (non-_ prefix) not listed in lineage
+    if not signals_dir.is_dir():
+        return False  # no signals dir means nothing to process
+
+    signal_files = {
+        p.name for p in signals_dir.glob("*.md")
+        if not p.name.startswith("_")
+    }
+    if not signal_files:
+        return False  # nothing to process regardless of age
+
+    # Collect filenames already in lineage (matches compress_signals.py schema)
+    processed_names: set = set()
+    if lineage_path.is_file():
+        try:
+            for raw_line in lineage_path.read_text(encoding="utf-8").splitlines():
+                raw_line = raw_line.strip()
+                if not raw_line:
+                    continue
+                try:
+                    record = json.loads(raw_line)
+                except (json.JSONDecodeError, ValueError):
+                    continue
+                # New schema: {"signals": ["file1.md", ...]}
+                if "signals" in record:
+                    for s in record["signals"]:
+                        processed_names.add(Path(s).name)
+                # Old schema: {"signal_filename": "path/to/file.md"}
+                elif "signal_filename" in record:
+                    processed_names.add(Path(record["signal_filename"]).name)
+        except OSError:
+            pass
+
+    unprocessed = signal_files - processed_names
+
+    if len(unprocessed) == 0:
+        return False
+
+    # Both conditions met -- print trigger message (ASCII only)
+    hours_label = ">72" if hours_since == float("inf") else "%dh" % int(hours_since)
+    print(
+        "Time-based synthesis trigger: last synthesis was %s ago with %d unprocessed "
+        "signal(s). Triggering /synthesize-signals." % (hours_label, len(unprocessed))
+    )
+    return True
+
 
 def check_memory_preflight() -> tuple[bool, str]:
     """Return (ok, message). Uses GlobalMemoryStatusEx via ctypes -- no PowerShell.
@@ -812,6 +914,29 @@ def main() -> int:
             iters = dim_config.get("iterations", 20)
             print(f"\n--- [{i}/{len(dim_queue)}] {dim_name} "
                   f"({iters} iters, {remaining / 60:.0f} min remaining) ---")
+
+            # Pre-check: trigger /synthesize-signals before knowledge_synthesis
+            # if signals are stale (>72h) and unprocessed signals exist.
+            if dim_name == "knowledge_synthesis":
+                if check_synthesis_trigger():
+                    print("  Running /synthesize-signals pre-check ...")
+                    try:
+                        synth_proc = subprocess.run(
+                            [CLAUDE_BIN, "-p", "-"],
+                            input="/synthesize-signals",
+                            capture_output=True, text=True, encoding="utf-8",
+                            cwd=wt_cwd,
+                            timeout=600,  # 10 min
+                        )
+                        synth_out = (synth_proc.stdout or "").strip()
+                        if synth_out:
+                            print("  synthesize-signals: %s" % synth_out[:200])
+                        else:
+                            print("  synthesize-signals: completed (no output)")
+                    except subprocess.TimeoutExpired:
+                        print("  synthesize-signals: timed out after 10 min -- continuing")
+                    except Exception as exc:
+                        print("  synthesize-signals: error (%s) -- continuing" % exc)
 
             result = run_dimension(dim_name, dim_config, branch, cwd=wt_cwd)
             results.append(result)

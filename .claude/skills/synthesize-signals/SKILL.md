@@ -32,7 +32,7 @@ LEARN
 ## Output Contract
 - Input: unprocessed signals in memory/learning/signals/ (auto-read)
 - Output: synthesis document + stdout summary (themes found, actions proposed)
-- Side effects: writes synthesis doc, moves processed signals, updates _signal_meta.json, appends data/signal_lineage.jsonl, mirrors lineage to jarvis_index.db
+- Side effects: writes synthesis doc, appends data/signal_lineage.jsonl, mirrors lineage to jarvis_index.db
 
 ## autonomous_safe
 true
@@ -65,9 +65,7 @@ true
 - Review existing synthesis themes from prior runs for **confidence decay**: any theme not revalidated by new signals within 90 days should be downgraded one maturity level. Themes that decay below candidate become archived.
 - Write the synthesis document to `memory/learning/synthesis/`
 - Record lineage: run `python tools/scripts/compress_signals.py --lineage "YYYY-MM-DD_synthesis"` to append lineage records linking all unprocessed signals to this synthesis run
-- Archive processed signals: run `python tools/scripts/compress_signals.py --move` to move all unprocessed signals to `memory/learning/signals/processed/`
-- Mirror lineage records to SQLite by running: `python tools/scripts/sync_lineage.py` after the lineage and move operations. This syncs all JSONL rows to the DB (idempotent, safe to re-run). If this fails, the JSONL file is still the source of truth.
-- Update `memory/learning/_signal_meta.json` with new counts
+- Mirror lineage records to SQLite by running: `python tools/scripts/sync_lineage.py` after recording lineage. This syncs all JSONL rows to the DB (idempotent, safe to re-run). If this fails, the JSONL file is still the source of truth.
 
 # CONFIDENCE MODEL
 
@@ -98,6 +96,8 @@ Each synthesized theme carries a maturity level and confidence score. Inspired b
 # SYNTHESIS FORMAT
 
 Write to `memory/learning/synthesis/{date}_synthesis.md`:
+Synthesis docs accumulate permanently — each run writes a new dated file. Never delete, overwrite, or replace existing synthesis docs.
+
 
 ```markdown
 # Signal Synthesis — {date}
@@ -147,7 +147,7 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 - Read ALL signals before synthesizing — don't process partial batches
 - Be honest about signal quality — if most signals are low-rated or vague, say so
 - Propose specific, actionable steering rules (not vague guidelines)
-- After writing synthesis, move processed signals to the processed/ subdirectory
+- After writing synthesis, record lineage via `compress_signals.py --lineage` to mark which signals were consumed. Signals remain in `signals/` — they are never moved or deleted.
 - Output a summary: signals processed, themes found, actions proposed
 - If fewer than 3 signals exist, skip synthesis and say "insufficient signals for synthesis"
 
@@ -168,7 +168,7 @@ Write to `memory/learning/synthesis/{date}_synthesis.md`:
 
 - Synthesis file was written to `memory/learning/synthesis/YYYY-MM-DD_synthesis.md` | Verify: `ls -t memory/learning/synthesis/ | head -3`
 - At least 3 input signals were processed (minimum threshold enforced) | Verify: Check signal count in synthesis output header
-- Processed signals are marked to prevent double-processing | Verify: Confirm signals appear in the processed list or were moved/tagged
+- Consumed signals are recorded in `data/signal_lineage.jsonl` to prevent double-processing | Verify: Check lineage file for synthesis run entry
 - Synthesis contains the required sections: themes, key insights, implications | Verify: Read synthesis file headers
 
 # LEARN
