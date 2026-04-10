@@ -478,6 +478,8 @@ def main() -> None:
     print(f"  {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     print("=" * 60)
     print()
+    print("  Output: DENSE (Core Principle #7)")
+    print()
 
     # Git safety check (parallel sessions + uncommitted changes)
     git_warnings = _git_safety_check()
