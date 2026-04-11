@@ -307,15 +307,21 @@ del os.environ["JARVIS_SESSION_TYPE"]
 
 
 # ---------------------------------------------------------------------------
-# Summary
+# Summary (standalone mode) + pytest-compatible test function
 # ---------------------------------------------------------------------------
-print(f"\n{'='*60}")
-total = 60  # approximate — counted from checks above
-if failures:
-    print(f"FAILED {len(failures)} check(s):")
-    for f in failures:
-        print(f)
-    sys.exit(1)
-else:
-    print(f"All trust topology checks PASSED.")
-    sys.exit(0)
+def test_trust_topology():
+    """Pytest entry point -- fails if any check above recorded a failure."""
+    assert not failures, f"{len(failures)} check(s) failed:\n" + "\n".join(failures)
+
+
+if __name__ == "__main__":
+    print(f"\n{'='*60}")
+    total = 60  # approximate -- counted from checks above
+    if failures:
+        print(f"FAILED {len(failures)} check(s):")
+        for f in failures:
+            print(f)
+        sys.exit(1)
+    else:
+        print(f"All trust topology checks PASSED.")
+        sys.exit(0)
