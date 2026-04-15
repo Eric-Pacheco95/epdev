@@ -18,6 +18,8 @@
 | 2026-04-06 | Prompt Injection and Agentic Attack Patterns | No complete technical solution exists for prompt injection in current transformers; MCP tool poisoning and memory poisoning are highest-leverage new vectors; defense must be layered and assume-breach | `security/2026-04-06_telos-gap-security-2026-04-06_prompt-injection-agentic-attacks.md` |
 
 ## ai-infra
+Sub-domains: `ai-infra/agent-orchestration.md`
+
 
 | Date | Topic | Key Finding | Path |
 |------|-------|-------------|------|
@@ -63,3 +65,15 @@
 | Date | Topic | Key Finding | Path |
 |------|-------|-------------|------|
 | 2026-03-27 | Evolution and the Big Bang — Cosmic and Biological Origins | Four independent Big Bang evidence lines; all elements heavier than iron forged in supernovae/neutron star mergers; RNA World + hydrothermal vents is current abiogenesis consensus | `general/2026-03-27_evolution-big-bang.md` |
+
+## geopolitics
+
+| Date | Topic | Key Finding | Path |
+|------|-------|-------------|------|
+| (synthesized) | Geopolitical strategy and multi-stakeholder dynamics | Iran trap + AI datacenter supply constraints; multi-stakeholder incentive misalignment as strategic trap | `geopolitics/_context.md` |
+
+## predictions
+
+| Date | Topic | Key Finding | Path |
+|------|-------|-------------|------|
+| (synthesized) | Prediction framework, calibration, and backtest results | Bayesian + BDM game theory chassis; Brier Score calibration; base rate more predictive than domain expertise | `predictions/_context.md` |
