@@ -875,6 +875,18 @@ def select_next_task(backlog: list[dict]) -> Optional[dict]:
             t["failure_reason"] = branch_failure
             t["failure_type"] = "branch_lifecycle"
             continue
+        # Gate 2C: Precondition files must exist before claiming the task.
+        # Avoids burning Claude budget on tasks whose required inputs aren't ready.
+        # Tasks stay pending and are retried next cycle.
+        preconditions = t.get("precondition_files", [])
+        if preconditions:
+            missing = [p for p in preconditions if not (REPO_ROOT / p).exists()]
+            if missing:
+                print(
+                    f"  Deferring {t['id']}: precondition files missing: "
+                    f"{missing[:3]}{'...' if len(missing) > 3 else ''}"
+                )
+                continue
         # Validate all ISC commands upfront using classify_verify_method so that
         # manual_required criteria (Review, echo, freeform) don't block the task --
         # only 'blocked' dangerous commands cause the task to be skipped.
@@ -1768,6 +1780,19 @@ def _verify_prd_verb(isc: str, wt_path: Path) -> dict:
     }
 
 
+def _isc_counts(isc_results: list[dict]) -> tuple[int, int, int]:
+    """Return (pass_count, total_count, executable_count) from ISC results.
+
+    executable_count excludes skipped (MANUAL/Review/CLI) criteria.
+    Use executable_count (not total_count) for done/fail determination so that
+    human-review criteria don't cause autonomous tasks to permanently fail.
+    """
+    pass_count = sum(1 for r in isc_results if r.get("status") == "pass")
+    total_count = len(isc_results)
+    executable_count = sum(1 for r in isc_results if r.get("status") != "skipped")
+    return pass_count, total_count, executable_count
+
+
 def verify_isc(task: dict, wt_path: Path) -> list[dict]:
     """Run ISC verify commands in the worktree. Returns list of results."""
     results = []
@@ -1799,11 +1824,22 @@ def verify_isc(task: dict, wt_path: Path) -> list[dict]:
                 timeout=30,
             )
             passed = result.returncode == 0
+            raw_output = (result.stdout + result.stderr)[:500]
+            # Belt-and-suspenders: flag vacuous pass for find/ls (exit 0, empty output).
+            # These commands enumerate targets -- empty output means nothing was found,
+            # not that the check succeeded. Use test -n "$(find ...)" to be explicit.
+            if passed and not (result.stdout + result.stderr).strip():
+                cmd_lower = cmd.lower()
+                if any(x in cmd_lower for x in ["find ", "ls "]):
+                    raw_output = (
+                        "[WARN: empty output -- possible vacuous pass; "
+                        "use test -n \"$(find ...)\" or Exist: instead of bare find/ls]"
+                    )
             results.append({
                 "criterion": isc.split("|")[0].strip(),
                 "command": cmd,
                 "status": "pass" if passed else "fail",
-                "output": (result.stdout + result.stderr)[:500],
+                "output": raw_output,
             })
         except subprocess.TimeoutExpired:
             results.append({"criterion": isc, "command": cmd, "status": "fail", "reason": "timeout"})
@@ -2069,8 +2105,7 @@ def _inline_cleanup(original_branch: str | None) -> None:
 
 def notify_completion(task: dict, report: dict, isc_results: list[dict]) -> None:
     """Post completion/failure summary to Slack."""
-    isc_pass = sum(1 for r in isc_results if r.get("status") == "pass")
-    isc_total = len(isc_results)
+    isc_pass, isc_total, isc_executable = _isc_counts(isc_results)
     task_status = task.get("status", "unknown")
 
     if task_status == "done":
@@ -2084,7 +2119,7 @@ def notify_completion(task: dict, report: dict, isc_results: list[dict]) -> None
         f"Dispatcher: {task['id']} [{status_label}]\n"
         f"Branch: {report.get('branch', 'N/A')}\n"
         f"Model: {report.get('model', 'N/A')}\n"
-        f"ISC: {isc_pass}/{isc_total} passed\n"
+        f"ISC: {isc_pass}/{isc_executable} executable passed ({isc_total} total)\n"
         f"Diff: {report.get('diff_stat', 'N/A')}"
     )
 
@@ -2328,15 +2363,15 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
             task["status"] = "verifying"
             write_backlog(backlog)
             isc_results = verify_isc(task, REPO_ROOT)
-            isc_pass = sum(1 for r in isc_results if r.get("status") == "pass")
-            isc_total = len(isc_results)
-            print(f"  ISC: {isc_pass}/{isc_total} passed")
+            isc_pass, isc_total, isc_executable = _isc_counts(isc_results)
+            print(f"  ISC: {isc_pass}/{isc_executable} executable passed ({isc_total} total incl. skipped)")
             report["isc_results"] = isc_results
             report["isc_passed"] = isc_pass
             report["isc_total"] = isc_total
+            report["isc_executable"] = isc_executable
             save_run_report(report)
 
-            if report.get("status") == "ok" and isc_pass == isc_total:
+            if report.get("status") == "ok" and isc_pass == isc_executable:
                 task["status"] = "done"
                 task["completed"] = datetime.now().strftime("%Y-%m-%d")
                 task["branch"] = "pipeline"
@@ -2344,7 +2379,7 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
             else:
                 reason = (
                     report.get("failure_reason")
-                    or f"ISC {isc_pass}/{isc_total} passed (pipeline)"
+                    or f"ISC {isc_pass}/{isc_executable} executable passed (pipeline)"
                 )
                 task["status"] = "failed"
                 task["failure_reason"] = reason
@@ -2373,18 +2408,18 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
                 task["status"] = "verifying"
                 write_backlog(backlog)
                 isc_results = verify_isc(task, REPO_ROOT)
-                isc_pass = sum(1 for r in isc_results if r.get("status") == "pass")
-                isc_total = len(isc_results)
-                print(f"  ISC: {isc_pass}/{isc_total} passed")
+                isc_pass, isc_total, isc_executable = _isc_counts(isc_results)
+                print(f"  ISC: {isc_pass}/{isc_executable} executable passed ({isc_total} total incl. skipped)")
                 report["isc_results"] = isc_results
                 report["isc_passed"] = isc_pass
                 report["isc_total"] = isc_total
+                report["isc_executable"] = isc_executable
                 save_run_report(report)
-                if isc_pass == isc_total:
+                if isc_pass == isc_executable:
                     task["status"] = "done"
                 else:
                     task["status"] = "failed"
-                    task["failure_reason"] = f"ISC {isc_pass}/{isc_total} passed (local)"
+                    task["failure_reason"] = f"ISC {isc_pass}/{isc_executable} executable passed (local)"
                 write_backlog(backlog)
                 release_lock()
                 return "continue"
@@ -2445,13 +2480,15 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         write_backlog(backlog)
 
         isc_results = verify_isc(task, wt_path)
-        isc_pass = sum(1 for r in isc_results if r.get("status") == "pass")
-        isc_total = len(isc_results)
+        isc_pass, isc_total, isc_executable = _isc_counts(isc_results)
 
-        print(f"  ISC: {isc_pass}/{isc_total} passed")
+        print(f"  ISC: {isc_pass}/{isc_executable} executable passed ({isc_total} total incl. skipped)")
 
         # Save run report
         report["isc_results"] = isc_results
+        report["isc_passed"] = isc_pass
+        report["isc_total"] = isc_total
+        report["isc_executable"] = isc_executable
         report_path = save_run_report(report)
         task["run_report"] = str(report_path.relative_to(REPO_ROOT))
 
@@ -2468,7 +2505,7 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         if scope_creep_msg:
             print(f"  SCOPE CREEP: {scope_creep_msg}")
             handle_task_failure(task, scope_creep_msg, backlog, failure_type="scope_creep")
-        elif report.get("status") == "done" and isc_pass == isc_total:
+        elif report.get("status") == "done" and isc_pass == isc_executable:
             task["status"] = "done"
             task["completed"] = datetime.now().strftime("%Y-%m-%d")
             task["branch"] = branch
