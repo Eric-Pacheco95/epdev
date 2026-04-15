@@ -61,6 +61,12 @@ Load documentation on-demand, not upfront:
 | Trade development | `orchestration/steering/trade-development.md` |
 | Decision rationale | `history/decisions/` |
 | Math reference (university-level) | WebFetch `algebrica.org/<slug>` — CC BY-NC, cite "Antonio Lupetti / algebrica.org" on any reuse; no local mirror, no Substack quoting |
+| Topic includes: agent, orchestration, harness, embedding, LLM, autonomous coding, Claude API, agentic | `memory/knowledge/ai-infra/_context.md` → sub-domains: `agent-orchestration.md`, `harness-engineering.md`, `autonomous-coding.md`, `harness-tooling.md`, `frontend-ui.md` |
+| Topic includes: banking, finance, OSFI, fintech, AI adoption, consulting, bank AI | `memory/knowledge/fintech/_context.md` → sub-domains: (see domain dir) |
+| Topic includes: crypto, DeFi, MEV, Freqtrade, bitcoin, ethereum, trading bot | `memory/knowledge/crypto/_context.md` → sub-domains: (see domain dir) |
+| Topic includes: security, injection, prompt injection, MCP threat, agentic attack, vulnerability | `memory/knowledge/security/_context.md` → sub-domains: (see domain dir) |
+| Topic includes: geopolitics, Iran, Russia, Ukraine, NATO, geopolitical, foreign policy, election | `memory/knowledge/geopolitics/_context.md` → sub-domains: (see domain dir) |
+| Topic includes: prediction, forecast, backtest, calibration, Superforecaster, geopolitical prediction | `memory/knowledge/predictions/_context.md` → sub-domains: `backtested-geopolitics.md`, `geopolitics-military-conflict.md`, `market-crypto.md` |
 
 ## Core Principles
 

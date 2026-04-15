@@ -118,6 +118,16 @@ DOMAIN_CONTEXT_ROUTING: dict = {
     "external":     "orchestration/steering/research-patterns.md",
     "cross-project": "orchestration/steering/cross-project.md",
     "cross_project": "orchestration/steering/cross-project.md",
+    # Domain knowledge context files (FR-017) -- loaded when task category/description
+    # matches domain keyword. Files may not exist until first consolidation run.
+    "ai-infra":     "memory/knowledge/ai-infra/_context.md",
+    "agentic":      "memory/knowledge/ai-infra/_context.md",
+    "orchestration": "memory/knowledge/ai-infra/_context.md",
+    "defi":         "memory/knowledge/crypto/_context.md",
+    "freqtrade":    "memory/knowledge/crypto/_context.md",
+    "geopolitics":  "memory/knowledge/geopolitics/_context.md",
+    "osfi":         "memory/knowledge/fintech/_context.md",
+    "banking":      "memory/knowledge/fintech/_context.md",
 }
 
 # -- Git Bash resolution (avoid WSL interception) ---------------------------
