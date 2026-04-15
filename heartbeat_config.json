@@ -291,7 +291,7 @@
       "isc": [
         "Autonomous signal rate is below warn threshold (10/day) | Verify: python -c \"import json; d=json.load(open('data/heartbeat_latest.json')); print(d.get('autonomous_signal_rate',{}).get('value',0) < 10)\""
       ],
-      "context_files": ["orchestration/autonomous-rules.md"],
+      "context_files": ["orchestration/steering/autonomous-rules.md"],
       "model": "haiku",
       "min_severity": "WARN"
     },

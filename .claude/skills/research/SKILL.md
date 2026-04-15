@@ -53,6 +53,10 @@ false
 - No results found: suggest broadening topic, different keywords, or different type
 - Non-research intent (e.g. pasted code): redirect to /review-code or /implement-prd
 
+## Step 0.5: LOAD RESEARCH STEERING RULES
+
+- Read `orchestration/steering/research-patterns.md` — load research and dependency-adoption constraints before executing any research workflow
+
 ## Phase 0: CLASSIFY
 
 1. **Explicit flag** — if `--market`, `--technical`, or `--live` present, use it. Skip to step 3.

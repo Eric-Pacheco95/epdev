@@ -55,6 +55,10 @@ false
 - Extract the URL and depth flag from input
 - Proceed to Step 1
 
+## Step 0.5: LOAD RESEARCH STEERING RULES
+
+- Read `orchestration/steering/research-patterns.md` — load research and external-pattern constraints (absorb-vs-adopt posture, counterfactual filter) before evaluating the content
+
 ## Step 1: IDEMPOTENCY CHECK
 
 - Check if `memory/learning/absorbed/` contains a file with the same URL in its frontmatter

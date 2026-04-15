@@ -53,6 +53,10 @@ false
   - Create directory and continue
 - Once validated, proceed to Step 1
 
+## Step 0.5: LOAD AUTONOMOUS STEERING RULES
+
+- Read `orchestration/steering/autonomous-rules.md` — load producer behavior constraints and synthesis thresholds before evaluating session signals
+
 ## Step 1: REVIEW
 
 - Review what happened in this session: what was discussed, built, decided, or discovered

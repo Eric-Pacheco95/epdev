@@ -44,6 +44,7 @@ true
 
 # STEPS
 
+- Read `orchestration/steering/autonomous-rules.md` — load anti-criterion verification constraints (detector-for-class requirement, anti-criteria exit-code rules) before evaluating ISC compliance
 - Run `python tools/scripts/quality_gate_check.py --check-files` to get the deterministic report: tasklist stats, open items, decision log coverage, and file reference validation. If a `--phase` argument was provided, pass it through: `python tools/scripts/quality_gate_check.py --check-files --phase <PHASE>`
 - If a PRD is being gated, also run `python tools/scripts/quality_gate_check.py --prd <path>` to validate ISC items (verify methods present, minimum count, completion percentage)
 - Parse the report output — the script handles all file counting, cross-referencing, and existence checks deterministically. You only need to interpret the findings

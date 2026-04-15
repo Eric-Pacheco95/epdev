@@ -50,6 +50,10 @@ false
 - If target environment is too vague: ask for specifics — "What compliance frameworks? What's restricted? What tools are available on target machines?"
 - If --update flag but target repo doesn't exist: error — "Target repo not found. Run without --update to create initial extraction."
 
+## Step 0.5: LOAD PLATFORM STEERING RULES
+
+- Read `orchestration/steering/platform-specific.md` — load Windows/Scheduling/MCP/Hooks constraints before evaluating what to extract for the target environment
+
 ## Step 1: AUDIT SOURCE SKILLS
 
 Scan all skills in the source system (`.claude/skills/*/SKILL.md`):

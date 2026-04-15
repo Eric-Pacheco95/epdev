@@ -76,6 +76,10 @@ false
 - Present questions as a numbered list and WAIT for answers before proceeding to Step 1. Do not generate placeholder PRD content while waiting.
 - If Eric responds "skip" or "just write it", proceed but flag in OPEN QUESTIONS that the PRD was written without brainstorming and may have unstated assumptions.
 
+## Step 0.9: LOAD AUTONOMOUS STEERING RULES
+
+- Read `orchestration/steering/autonomous-rules.md` — load ISC anti-criterion verification constraints (detector-for-class requirement, vacuous-truth guards) before drafting acceptance criteria
+
 ## Step 1: EXTRACT
 
 - Extract the product or feature name, intended audience, and the problem being solved from the input

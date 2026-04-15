@@ -38,6 +38,7 @@ Before BUILD begins, every ISC set must pass these 6 checks. If any check fails,
 4. **Binary-testable** — Each criterion has a clear pass/fail evaluation with no subjective judgment
 5. **Anti-criteria** — At least one criterion states what must NOT happen (prevents regressions, security violations)
 6. **Verify method** — Every criterion has a `| Verify:` suffix specifying how to test it (CLI, Test, Grep, Read, Review, Custom)
+7. **Vacuous-truth audit** — For every verify method, ask: does it exit 0 on empty output? Pass when its data source is absent? Count non-executable items toward the gate? Grep an artifact that stores its own verify string? Any "yes" requires a guard — "exit 0" is not confirmation of the target state.
 
 ## Context Routing
 
@@ -53,7 +54,11 @@ Load documentation on-demand, not upfront:
 | Defensive testing | `tests/defensive/README.md` |
 | Project status | `orchestration/tasklist.md` |
 | Phase 5 autonomous Jarvis | `memory/work/jarvis/PRD_phase5.md` |
-| Autonomous systems | `orchestration/autonomous-rules.md` |
+| Autonomous systems | `orchestration/steering/autonomous-rules.md` |
+| Platform (Windows/Scheduling/MCP/Hooks) | `orchestration/steering/platform-specific.md` |
+| Research & dependency adoption | `orchestration/steering/research-patterns.md` |
+| Cross-project & integrations | `orchestration/steering/cross-project.md` |
+| Trade development | `orchestration/steering/trade-development.md` |
 | Decision rationale | `history/decisions/` |
 | Math reference (university-level) | WebFetch `algebrica.org/<slug>` — CC BY-NC, cite "Antonio Lupetti / algebrica.org" on any reuse; no local mirror, no Substack quoting |
 
@@ -97,10 +102,8 @@ Load documentation on-demand, not upfront:
 - Mark tasklist items `[x]` only after validated in target context — if built but unvalidated, leave unchecked with "BUILT — awaiting validation: [test]". The tasklist is Eric's primary trust tool; post-sprint doc-sync is owned by `/quality-gate`.
 - VERIFY phase must include `/review-code` for external-input scripts; phase gate criteria must include a verification command or file-existence check, not self-reported status
 - **ISC criteria must live in a version-controlled file (PRD, CLAUDE.md, tasklist) — never only in conversation state.** Auto-compaction strips working context but on-disk files are re-read fresh post-compact. Before declaring ISC-tracked tasks complete, re-read the source-of-truth file and verify each criterion with evidence (not from memory). Commit cadence during long builds is owned by `/implement-prd`.
-- When designing human review for autonomous pipelines, place the approval gate at the batch summary output — not at each intermediate step; auto-approve intermediate artifacts and present a single review surface with smart defaults Eric can override (reduces decision fatigue; per-item gates create backlog that blocks the pipeline)
-- **Silent failures require a detector for the failure CLASS before relaunch, and every anti-criterion ISC must exit nonzero on the forbidden state.** Never use `grep -v` / `awk` filter-and-print as the sole verifier — they exit 0 whenever the file is readable, making the anti-criterion a no-op. Prefer a `tools/scripts/verify_*.py` that owns threshold logic and exits 1. How to apply: during `/create-prd` ISC drafting and `/quality-gate` review, every "anti-" criterion must answer "what command exits nonzero on the forbidden state?" — if the answer is "none, just filters output," reject.
-- **Pipelines writing to gitignored directories must include a retention ISC: "output file count is monotonically non-decreasing after pipeline runs."** Gitignored dirs have no `git status` visibility; silent empty returns from missing subdirectories mask data loss for weeks. Test the full cycle (write -> consume -> verify survival), not just individual step execution. Why: 2026-04-10 — two independent data-loss bugs discovered in 24h: (1) learning pipeline destroyed 200+ sessions of output via move-to-processed + cleanup, (2) TELOS runner read from nonexistent `processed/` subdir, receiving 0 of 20+ available signals. Both were invisible until manual investigation.
-- **Dispatcher ISC criteria must never reference gitignored runtime state (e.g. `data/jarvis_index.db`, running services, live network).** Worktrees are ephemeral clones — gitignored files are absent, so any verify script that reads them silently passes with empty data. How to apply: during ISC authoring for autonomous tasks, run `git check-ignore <verify-script-dependencies>` and reject any criterion whose verify path is gitignored. Also ban bare `find`/`ls` as ISC verifiers — they exit 0 with empty output when no files match; use `test -n "$(find ...)"` or `Exist:` instead.
+- **For any fix on a system with 2+ prior failed fixes, /architecture-review is mandatory before coding.** Run all three agents (first-principles, fallacy detection, red-team) in parallel — not sequential review. Why: "correct-but-narrow" fixes survive single-angle review; adversarial agents surface the class of failure the author is blind to. Proven across 3 sessions (dispatcher, ISC producer, junction fix).
+- **Never call `git worktree remove --force` directly — use `_safe_worktree_remove()` from `tools/scripts/lib/worktree.py`.** The `memory/learning/synthesis/` directory must be excluded from all pipeline cleanup, rotation, and move-to-processed logic. Why: git's internal rm-rf follows Windows junctions and destroyed 367 signals across 4 days; same class of cleanup bug destroyed the synthesis doc independently.
 - **When relocating a file other code reads, delete/stub/symlink the old path in the same commit.** Gitignored orphans are invisible to `git status` — grep hits both copies and the stale one misleads future investigations. Why: 2026-04-09 — `memory/learning/signal_lineage.jsonl` was left behind when the canonical moved to `data/signal_lineage.jsonl`; 11 days later a lineage investigation grepped the orphan and reached the wrong conclusion. How to apply: same-commit `rm`, error-stub, or symlink. Never leave a gitignored parallel copy.
 
 ### Skill Flag Discoverability
@@ -111,39 +114,6 @@ Load documentation on-demand, not upfront:
 
 - Give minimum viable instruction first — Eric is a build-first learner; provide enough to start immediately, then refine as he acts
 - When Eric faces a decision with multiple viable paths, present a full options comparison (pros/cons table or numbered list with tradeoffs) before offering a recommendation — never lead with "I recommend X"
-### Platform: Windows & Scheduling
-
-- Python CLI scripts that print to terminal must use ASCII-only output — Windows cp1252 encoding breaks Unicode box-drawing chars with a hard UnicodeEncodeError; when assigning external content (scraped, API, user input) to variables that will be printed/logged, strip non-ASCII at assignment: `raw.encode('ascii', errors='replace').decode('ascii')`
-- Always smoke-test scheduled jobs, hook wrappers, and `claude -p` scripts via their actual execution context (Task Scheduler or standalone CMD), never from within an active Claude Code session — subprocess contention causes hangs, and Git Bash is not a valid proxy for Task Scheduler behavior
-- **Never derive identity, ordering, or dedup keys from `time.time()` — Windows tick is ~15ms.** Use `time.time_ns()` plus a process-local monotonic counter (`last_id = max(time.time_ns(), last_id + 1)`), or carry a Windows self-test asserting uniqueness across rapid successive calls.
-- `[MODEL-DEP]` Any `claude -p` consumer must check stdout for rate limit messages ("hit your limit") before treating exit code 0 as success — rate-limited runs return exit 0 with zero work done
-
-### Platform: MCP & Hooks
-
-- `[MODEL-DEP]` MCP servers: stdio transport (npx/uvx), `.mcp.json` in project root; **`.mcp.json` config edits still require session restart**, but MCP servers can push runtime tool/prompt/resource updates via `list_changed` notifications without disconnect; debug by reading `C:/Users/ericp/.claude.json` directly (`mcp list` shows health only)
-- Never use `mcp__<server>__*` wildcards in allow lists for servers with mutation tools — enumerate read tools explicitly; wildcards only safe for read-only servers
-- Hook commands must use absolute paths (relative breaks silently); hooks fire on every message — never print content already in CLAUDE.md, only surface dynamic state
-
-### Autonomous Signal Producers
-
-- Prediction signals (backtest, resolution, calibration) use their own synthesis cycle, not /synthesize-signals. Bulk batches (20+) must carry a domain category tag. `suspect_leakage: true` signals require Eric's review before contributing to calibration at full weight.
-- An autonomous producer is not "live" until it has produced outcome artifacts, not just run successfully — track what the producer creates (knowledge articles, scored predictions, merged branches), not whether the script exited 0; before updating TELOS or tasklist status, verify at least 1 outcome artifact exists in the last 7 days
-- Alerting collectors that report shared-host metrics (TCP connections, memory, file handles) must attribute to specific processes by name+cmd, never blanket-blame a class like "Claude". How to apply: any new collector emitting alert text must call a top-N-holder helper (`tools/scripts/lib/net_util.py` for TCP); reject generic "close X sessions" templates in favor of named-process attribution
-
-### Research & External Patterns
-
-- For current-events research (financial, geopolitical, live topics), always use direct WebSearch — sub-agents may have a stale knowledge cutoff
-- Default posture is absorb ideas over adopt dependencies — before proposing any new tool/MCP/dependency: (1) apply the **counterfactual filter**: "what would we build if this tool didn't exist?" — if the answer is simpler, you're anchored on the tool's patterns, not real problems, (2) identify root cause, (3) test existing tools first, (4) if none work, run `/architecture-review`; only adopt when implementation is genuinely hard (>1 day) AND the dependency is mature. Why: two consecutive sessions (algebrica ingest, gnhf autoresearch) produced inflated adoption lists that /architecture-review collapsed to minimal fixes.
-- Before committing to a new product idea competing with platform incumbents, run `/research` targeting "don't build" signals — check: bundled free by incumbents? structural moats? WTP survives bundling?
-- External AI orchestration patterns: filter through "is this a team coordination problem?" — if yes, skip; Jarvis is skill-first, not agent-first
-
-### Cross-Project & Integrations
-
-- crypto-bot: always read `crypto_alpha_trading_bot.plan.md` first; never suggest switching RUN_MODE to production without Eric's explicit approval
-- **Before editing any file outside epdev, run `git status --short` in the target repo; if tree is non-empty OR HEAD is not on default branch, do NOT Edit — propose a backlog row, worktree-off-main patch, or handoff note.** The session-start "N Claude sessions detected" warning is a pre-edit gate for cross-repo work, not ambient noise. Why: 2026-04-08 edit to `crypto-bot/dashboard/app.py` would have been bundled into a concurrent session's PR on `fix/paper-exit-price-resolver`.
-- **When entering a non-epdev repo after any gap, verify before assuming:** (1) `git remote show origin | grep 'HEAD branch'` (crypto-bot is `master` not `main`), (2) check README for canonical launcher (crypto-bot: `launch_paper_validation.py` not `start_bot.bat`), (3) `git check-ignore <path>` before staging. Why: 2026-04-08 four same-day frictions each cost 2-5 tool calls.
-- Remote Triggers (cloud scheduled tasks) run in fresh-clone isolation: no local file access, no hook firing, no `/skill` invocation, no CLAUDE.md auto-load — only cloud-side connectors. Use local Task Scheduler with `claude -p` for any Jarvis-context work. Slack channels (`#jarvis-inbox`, `#jarvis-voice`) are stateless.
-
 ### CLAUDE.md Self-Maintenance
 
 - CLAUDE.md token budget: hard cap **20 KB total file size**; soft caps of **8 rules per category** and **55 rules total**. Bytes are the real cost (loaded every cold session); rule count is just a leading indicator. When ANY threshold is hit, run `/update-steering-rules --audit` before adding new rules — merge related rules, move category-specific rules into the relevant `SKILL.md` or `orchestration/steering/` doc, and flag rules unused 90+ days for re-validation.

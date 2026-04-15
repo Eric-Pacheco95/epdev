@@ -39,6 +39,10 @@ true
 
 # STEPS
 
+## Step 0.5: LOAD AUTONOMOUS STEERING RULES
+
+- Read `orchestration/steering/autonomous-rules.md` — load producer behavior constraints and synthesis thresholds before processing signals
+
 - Run `python tools/scripts/compress_signals.py --stats --json` to get signal counts, velocity, and synthesis metadata -- this tells you if synthesis is even needed (check unprocessed count and velocity)
 - Run `python tools/scripts/compress_signals.py --group --json` to get all unprocessed signals pre-grouped by category with ratings -- this replaces manual file reading and categorization
 - Read all failure records from `memory/learning/failures/` -- failures are a first-class input source with 4x harm multiplier
