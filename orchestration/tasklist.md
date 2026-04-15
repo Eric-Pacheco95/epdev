@@ -34,6 +34,17 @@
 - [ ] **Wire Claude Code "defer" into dispatcher (code)** — validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface. Requires `claude -p --resume` e2e spike first. (split from doc task 2026-04-08)
 - [ ] **5C-5C: ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs). Current: ISC generated inline per-branch, functional but not templated.
 
+### Phase 4→5 Capability Bridge (backcasted from Phase 7 DA ideal state)
+
+> Gate condition: 5E-1 falsification passes (2026-04-21) + 15+ dispatcher task outcomes before building.
+> Architecture-review 2026-04-15: corrected 3 items; see `history/decisions/2026-04-15-arch-review-phase47-roadmap.md`
+
+- [ ] **Health schema + log command (4A)** — Define `data/health.jsonl` schema (date, gym_sessions, sleep_avg_hours, subjective_energy, notes) + one-command log entry skill. Zero dependencies. Ships now — not Phase 6. | Gate: none.
+- [ ] **Financial feed snapshot (Phase 5 routine)** — Tier 0 read-only: aggregate crypto-bot P&L + Substack revenue into `data/financial/snapshot.jsonl` (gitignored, blocked from autonomous agent reads). Feeds morning briefing + TELOS G1 tracking. | Gate: crypto-bot paper trading stable.
+- [ ] **Goal-drift detection** — Slack alert when G1/G2 go N days without active capture. Scope: G1/G2 ONLY until G3/G4 have signal pipelines (Item 4A is G4's prerequisite). Per-goal threshold; alert names goal + last signal date. | Gate: 5E-1 passes.
+- [ ] **Morning briefing: proactive daily priority** — Cron-triggered Tier 0 task: reads TELOS goals + signal queue + backlog pending count → Slack DM before Eric's first session. Input must include `task_backlog.jsonl` pending count and any `manual_review` items. Can ship before 5E-1 falsification — zero risk. | Gate: none (accelerated).
+- [ ] **Autonomous task proposals (NOT direct backlog writes)** — Jarvis writes signal-derived proposals to `orchestration/task_proposals.jsonl`; Eric batch-approves in morning review. Live backlog remains human-approved-only per PRD_phase5.md safety invariant. Replaces "autonomous backlog generation" which was blocked. | Gate: Phase 5 completion (90% over 14 days) + loop-health metric live.
+
 ### Phase 5D — Hardening + Quality (data-gated)
 
 > Prerequisite: 15+ tasks with diverse outcomes before optimizing.
@@ -93,12 +104,30 @@
 
 ---
 
-## Phase 6: Daemon-inspired behavioral change (future)
+## Phase 6: Senses — Persistent ambient awareness (future)
 
 > Status: deferred — requires Phase 5 completion gate.
-> Concept: Miessler's "Daemon" — behavioral change targeting guitar practice, health, financial momentum, self-discovery. Runs ON Phase 5 infrastructure.
+> Concept: Miessler's Phase 6 (Senses) + Daemon behavioral change — persistent input streams + goal advocacy. Runs ON Phase 5 infrastructure.
+> Gate: Phase 5 completion gate (≥90% success rate over 14 days)
 
-- [ ] TBD — defined after Phase 5 completion gate passes
+- [ ] **Health sensor integration (4B)** — Automated gym/sleep capture from wearable API (Garmin Connect, Apple Health export). Optional — manual log (4A) is defensible indefinitely for solo operator. Only pursue if 4A proves insufficient. | Gate: Phase 5 completion + 4A live 60+ days.
+- [ ] **Substack human-gated draft pipeline** — `/extract-wisdom` → draft → Slack DM with draft link → Eric reviews → Eric triggers publish. Autonomous publish is BLOCKED permanently under Tier 3 classification until Eric explicitly upgrades Substack to an approved external write surface (policy decision, not tech work). | Gate: explicit policy decision by Eric.
+- [ ] **Thin claude_runner.py wrapper** — Centralize `subprocess.run(["claude", "-p", ...])` call in `tools/scripts/lib/claude_runner.py`. All 47 skill call sites stay unchanged; only the internal implementation consolidates. This is cleanup, not full provider abstraction. Full abstraction only when a second provider is named. | Gate: none (low priority, any Phase 5 sprint).
+- [ ] **Loop-health metric** — Track human-to-autonomous task ratio over 30-day rolling window. Alert when autonomous > 70%. Required before autonomous task proposals (Phase 4→5) or autonomous PRD generation (Phase 7) go live. Prevents silent self-reinforcing feedback loops. | Gate: before task proposals ship.
+- [ ] TBD — Daemon targets (guitar practice, financial momentum, self-discovery) defined after Phase 5 gate
+---
+
+## Phase 7: Advocates — Jarvis represents Eric's interests autonomously (future)
+
+> Status: north star only — defined by backcasting from ideal DA end-state (2026-04-15 prediction: `data/predictions/2026-04-15-jarvis-phase7-da-backcast.md`)
+> Gate: Phase 6 Senses operational + substrate abstraction layer complete
+
+- [ ] **Autonomous PRD generation (staged)** — Jarvis generates PRD proposals from signal patterns into a staging directory; human `git mv` required to promote to `memory/work/`. Generated PRDs must pass ISC Quality Gate (6 checks) before entering review queue. Anti-criterion: no generated PRD may modify TELOS goals or security rules. Loop-health metric must be live before this ships. | Gate: Phase 6 complete + loop-health metric + 3+ manual signal→gap→task cycles proven.
+- [ ] **Calendar + email integration (read-only)** — Jarvis reads calendar/email; injects "N items today, next free block at X" into morning briefing. Hard requirements: OAuth scopes read-only at API level (not prompt level); email content treated as untrusted (length cap + injection strip before synthesis); provenance marker `[email-sourced]` on all derived content; feature-flagged OFF by default (`JARVIS_EMAIL_READER_ENABLED=false`). | Gate: Phase 6 complete + explicit security review.
+- [ ] **Multi-domain parallel orchestration** — 3+ simultaneous overnight jobs with per-project file locking, TOCTOU fix on `task_backlog.jsonl`, per-job Claude budget allocation, and circuit breaker (2/3 failures → halt all + alert). This is a safety architecture redesign, not a scaling operation. | Gate: Phase 5 gate (90% over 14 days) + single-task reliability proven + per-project lock design reviewed.
+
+---
+
 - [ ] **Local embedding + vector search for memory** — Deferred from Phase 5. Triggers: file count > 400 OR 5+ documented grep retrieval failures. Research: `memory/work/local-embeddings/research_brief.md`. Decision: premature at current scale.
 - [ ] **Harness hill-climbing eval loop (Trace Grader)** — Phase 1: wire report.md TSV delta into Slack review message. Phase 2 (gated on ~30 merged runs): `grade_overnight.py`. Architecture review: `history/decisions/2026-04-08-arch-review-trace-grader.md`. Trigger: Phase 5 gate + merge volume evidence.
 - [ ] **Evaluate ACP/acpx for overnight runner + dispatcher** — Deferred. Source: openclaw/acpx. Trigger: (a) `claude -p` rate-limit handling fragile after 15+ outcomes, OR (b) need stateful multi-turn workers, OR (c) need non-Claude agents. Acceptance: must not add auth surface, must work with `JARVIS_SESSION_TYPE=autonomous`. Per "absorb over adopt" rule — do not adopt until existing `claude -p` proves insufficient.
