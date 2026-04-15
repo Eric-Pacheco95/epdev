@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import sys
+from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
 
@@ -34,6 +35,8 @@ PENDING_REVIEW_EXPIRED_DIR = REPO_ROOT / "data" / "pending_review_expired"
 
 ALERT_DAYS = 7
 EXPIRE_DAYS = 14
+
+FALSIFICATION_WINDOW_DATE = date(2026, 4, 14)
 
 PASS = "PASS"
 FAIL = "FAIL"
@@ -335,25 +338,72 @@ def check_i7_anti_pending_review_never_skips_review(backlog: list[dict], archive
 def check_i8_followon_daily_throttle(reports: list[dict]) -> tuple[str, str]:
     """I8: Daily follow-on emission count never exceeded 1 on any single day.
 
-    Reads followon_state.json for current day count. For historical days,
-    uses run reports to count tasks with parent_task_id per calendar day.
+    Merges two data sources:
+    1. Run reports cross-referenced against backlog+archive: a follow-on task
+       carries `parent_task_id`. We count completed run reports per calendar day
+       whose corresponding task has a parent_task_id and flag any day > 1.
+    2. followon_state.json -- authoritative current-day counter for the live cycle.
+
+    Report shape (verified in dispatcher.run_worker / _dispatch_*):
+      task_id, branch, model, source, started (ISO), completed (ISO),
+      status, isc_passed, isc_total, exit_code, stdout_tail, stderr_tail.
     """
-    # Check current state file
+    violations_from_reports: list[tuple[str, int]] = []
+
+    # Build task_index from backlog + archive for parent_task_id lookups.
+    task_index: dict[str, dict] = {}
+    for t in _load_backlog() + _load_archive():
+        tid = t.get("id")
+        if isinstance(tid, str):
+            task_index[tid] = t
+
+    # Source 1: count follow-on completions per calendar day.
+    day_counts: defaultdict[str, int] = defaultdict(int)
+    for report in reports:
+        tid = report.get("task_id")
+        if not tid:
+            continue
+        task = task_index.get(tid)
+        if not task or not task.get("parent_task_id"):
+            continue
+        ts = report.get("completed") or report.get("started")
+        if not ts:
+            continue
+        try:
+            day = datetime.fromisoformat(ts.replace('Z', '+00:00')).date().isoformat()
+        except (ValueError, AttributeError):
+            continue
+        day_counts[day] += 1
+
+    for day, cnt in sorted(day_counts.items()):
+        if cnt > 1:
+            violations_from_reports.append((day, cnt))
+
+    # Source 2: followon_state.json -- authoritative current-day counter
+    state_ok = False
+    state_detail = ""
     if FOLLOWON_STATE_FILE.exists():
         try:
             state = json.loads(FOLLOWON_STATE_FILE.read_text(encoding="utf-8"))
             count = state.get("count", 0)
             state_date = state.get("date", "?")
             if count > 1:
-                return FAIL, (
-                    f"VIOLATION -- followon_state.json shows count={count} on {state_date} "
-                    f"(max is 1/day)"
-                )
-            return PASS, f"followon_state.json: date={state_date} count={count} (within 1/day limit)"
+                violations_from_reports.append((state_date, count))
+            state_ok = True
+            state_detail = f"followon_state.json: date={state_date} count={count}"
         except (json.JSONDecodeError, OSError) as e:
-            return SKIP, f"Could not read followon_state.json: {e}"
-    else:
-        return SKIP, "followon_state.json not found -- no follow-ons emitted yet"
+            state_detail = f"followon_state.json unreadable: {e}"
+
+    if violations_from_reports:
+        lines = ["VIOLATION -- daily follow-on throttle exceeded:"]
+        for day, cnt in violations_from_reports:
+            lines.append(f"  {day}: {cnt} follow-ons (max 1/day)")
+        return FAIL, "\n".join(lines)
+
+    if state_ok:
+        return PASS, state_detail + " (within 1/day limit)"
+
+    return SKIP, "followon_state.json not found -- no follow-ons emitted yet"
 
 
 def main() -> int:
@@ -409,6 +459,15 @@ def main() -> int:
 
         if status == FAIL:
             overall_fail = True
+
+    # Fail closed: if falsification window has opened and nothing actually passed,
+    # all-SKIPs must not silently exit 0 -- there is no evidence the system is working.
+    post_window = date.today() >= FALSIFICATION_WINDOW_DATE
+    pass_count = sum(1 for _, _, s, _ in results if s == PASS)
+    skip_count = sum(1 for _, _, s, _ in results if s in (SKIP, "N/A"))
+    if post_window and pass_count == 0:
+        print(f"[FAIL] Falsification window opened ({FALSIFICATION_WINDOW_DATE}) but no real verifications passed ({skip_count} skipped)")
+        overall_fail = True
 
     print("=" * 60)
     if overall_fail:

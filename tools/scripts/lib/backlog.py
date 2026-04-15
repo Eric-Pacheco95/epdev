@@ -144,6 +144,12 @@ def validate_task(task: dict) -> list[str]:
         pass
     elif not isinstance(task_id, str) or not task_id.strip():
         errors.append("'id' must be a non-empty string when provided")
+    else:
+        import re as _re
+        if not _re.match(r'^[A-Za-z0-9_\-.]{1,200}$', task_id):
+            errors.append(
+                "'id' must match [A-Za-z0-9_\\-.]+ (no path separators or traversal)"
+            )
 
     # -- description --
     desc = task.get("description")
@@ -340,6 +346,13 @@ def backlog_append(
                     and existing.get("status") in ACTIVE_STATUSES
                 ):
                     return None
+
+        # -- Dedup by explicit id --
+        if task.get('id'):
+            existing_ids = {t.get('id') for t in existing_tasks if t.get('id')}
+            if task['id'] in existing_ids:
+                print(f"WARNING: backlog_append: refusing duplicate id {task['id']}", file=sys.stderr)
+                return None
 
         # -- Atomic append --
         backlog_path.parent.mkdir(parents=True, exist_ok=True)

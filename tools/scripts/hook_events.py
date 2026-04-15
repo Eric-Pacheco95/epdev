@@ -38,6 +38,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 EVENTS_DIR = REPO_ROOT / "history" / "events"
 
+# lib imports — insert script dir so lib.* resolves without repo-root prefix
+sys.path.insert(0, str(Path(__file__).parent))
+from lib.file_lock import locked_append
+
 
 def main() -> None:
     EVENTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -88,7 +92,20 @@ def main() -> None:
             stop_reason = data.get("stop_reason", "end_turn") or "end_turn"
 
     except (json.JSONDecodeError, EOFError):
-        pass
+        now_utc = datetime.now(timezone.utc)
+        error_record: dict = {
+            "ts": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "hook": "parse_error",
+            "session_id": "",
+            "tool": "",
+            "success": False,
+            "error": "malformed stdin",
+            "input_len": 0,
+        }
+        EVENTS_DIR.mkdir(parents=True, exist_ok=True)
+        log_path = EVENTS_DIR / f"{now_utc.strftime('%Y-%m-%d')}.jsonl"
+        locked_append(log_path, json.dumps(error_record))
+        sys.exit(1)
 
     now_utc = datetime.now(timezone.utc)
     record: dict = {
@@ -104,8 +121,7 @@ def main() -> None:
         record["stop_reason"] = stop_reason
 
     log_path = EVENTS_DIR / f"{now_utc.strftime('%Y-%m-%d')}.jsonl"
-    with log_path.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(record) + "\n")
+    locked_append(log_path, json.dumps(record))
 
     # Track skill invocations in manifest DB
     if tool_name == "Skill" and hook_type == "PreToolUse" and session_id:

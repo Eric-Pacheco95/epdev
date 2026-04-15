@@ -126,6 +126,67 @@ def _inline_script_destructive(cmd: str) -> bool:
     return False
 
 
+# Match read-like function calls with a string-literal path argument.
+# Quotes are matched as paired (double-double OR single-single) to avoid the
+# mixed-class bug where [\"'] opens with " and closes at the first '.
+_INLINE_READ_CALL_RE = re.compile(
+    r"""
+    (?:
+        \bopen\s*\(
+        | \b(?:fs\.)?readFileSync\s*\(
+        | \b(?:fs\.)?readFile\s*\(
+        | \bPath\s*\(
+        | \bread_text\s*\(
+    )
+    \s*
+    (?: "([^"]+)" | '([^']+)' )
+    """,
+    re.VERBOSE,
+)
+
+# Body extractors: capture content inside a balanced pair of quotes.
+# Group 1 = double-quoted body, group 2 = single-quoted body.
+_PY_INLINE_RE = re.compile(r'\bpython[3]?\s+-c\s+(?:"([^"]*)"|\'([^\']*)\')')
+_NODE_INLINE_RE = re.compile(r'\bnode\s+-e\s+(?:"([^"]*)"|\'([^\']*)\')')
+_SH_INLINE_RE = re.compile(r'\b(?:ba)?sh\s+-c\s+(?:"([^"]*)"|\'([^\']*)\')')
+
+# cat/less/head/tail/etc. on a direct path token.
+_SHELL_READ_TOOL_RE = re.compile(
+    r"\b(?:cat|less|more|head|tail|xxd|od|strings|base64)\b\s+([^\s;|&><]+)"
+)
+
+
+def _scan_body_for_secret_read(body: str) -> str | None:
+    for rm in _INLINE_READ_CALL_RE.finditer(body):
+        path = rm.group(1) or rm.group(2)
+        if path and _is_secret_path(path):
+            return path
+    return None
+
+
+def _inline_script_reads_secret(cmd: str) -> str | None:
+    """Detect inline scripts (python -c, node -e, bash -c) that read secret files.
+
+    Returns the matched secret path string if found, else None.
+    """
+    for pattern in (_PY_INLINE_RE, _NODE_INLINE_RE):
+        for m in pattern.finditer(cmd):
+            body = m.group(1) or m.group(2) or ""
+            hit = _scan_body_for_secret_read(body)
+            if hit:
+                return hit
+    for m in _SH_INLINE_RE.finditer(cmd):
+        body = m.group(1) or m.group(2) or ""
+        for rm in _SHELL_READ_TOOL_RE.finditer(body):
+            path = rm.group(1).strip("\"'")
+            if _is_secret_path(path):
+                return path
+        hit = _scan_body_for_secret_read(body)
+        if hit:
+            return hit
+    return None
+
+
 def _blocked_rm_rf(cmd: str) -> bool:
     if not re.search(r"\brm\b", cmd):
         return False
@@ -246,6 +307,13 @@ def validate_bash_command(command: str) -> dict[str, Any]:
     if _inline_script_destructive(cmd):
         return _result("block", "Destructive command in inline script blocked (dcg pattern)")
 
+    secret_read = _inline_script_reads_secret(cmd)
+    if secret_read:
+        return _result(
+            "block",
+            f"Inline script reads secret file blocked: {secret_read}"
+        )
+
     if _blocked_git_force_main(cmd):
         return _result("block", "git push --force to main/master is blocked")
 
@@ -317,14 +385,54 @@ CLAUDE_MD_PATH_PATTERN = re.compile(
     r"CLAUDE\.md$", re.IGNORECASE
 )
 
+def _is_secret_path(path_str: str) -> bool:
+    """Return True if the path references a secret/credential file.
+
+    Canonical implementation -- used by both validate_tool_use.py and
+    jarvis_dispatcher.py (duplicated there with a comment pointing here).
+
+    Handles:
+      - .env, .env.local, .env.production, .env.dev, etc.
+      - credentials*, *secret*, *.key, *.pem (and .key.bak, .pem.old, etc.)
+      - .ssh/, .aws/ directory prefixes
+    """
+    if not path_str:
+        return False
+    s = str(path_str).rstrip("/").rstrip("\\")
+    basename = s.split("/")[-1].split("\\")[-1].lower()
+    if not basename:
+        return False
+    # .env, .env.local, .env.production, .env.dev, etc.
+    if basename == ".env" or basename.startswith(".env."):
+        return True
+    # Common secret/credential filename patterns
+    if "credential" in basename or "secret" in basename:
+        return True
+    # Key/cert files (any backup/old variant too: .key.bak, .pem.old, etc.)
+    for suffix in (".key", ".pem", ".p12", ".pfx"):
+        if basename.endswith(suffix):
+            return True
+        if suffix + "." in basename:  # .key.bak, .pem.old, etc.
+            return True
+    # .ssh/ or .aws/ directory anywhere in the path
+    normalized = s.replace("\\", "/").lower()
+    if "/.ssh/" in normalized or normalized.startswith(".ssh/"):
+        return True
+    if "/.aws/" in normalized or normalized.startswith(".aws/"):
+        return True
+    return False
+
+
 # Secrets patterns for Read tool blocking (autonomous sessions)
+# NOTE: _is_secret_path() is the canonical check; this regex is kept as a
+# belt-and-suspenders fallback for paths that need regex-level matching.
 _SECRET_FILE_PATTERNS = re.compile(
-    r"(?:^|[/\\])\.env(?:[/\\]|$)"
-    r"|(?:^|[/\\])credentials\.json$"
-    r"|\.pem$"
-    r"|\.key$"
-    r"|(?:^|[/\\])\.ssh[/\\]"
-    r"|(?:^|[/\\])\.aws[/\\]",
+    r"(?:^|[/\\])\.env(?:(?:[/\\]|$)|\.)"
+    r"|(?:^|[/\\])credentials[^/\\]*$"
+    r"|\.pem(?:\.|$)"
+    r"|\.key(?:\.|$)"
+    r"|(?:^|[/\\])\.ssh(?:[/\\]|$)"
+    r"|(?:^|[/\\])\.aws(?:[/\\]|$)",
     re.IGNORECASE,
 )
 
@@ -425,7 +533,7 @@ def _check_autonomous_read_secrets(tool: str, inp: dict) -> dict[str, Any] | Non
         return None
 
     file_path = str(inp.get("file_path", "") or "")
-    if _SECRET_FILE_PATTERNS.search(file_path):
+    if _SECRET_FILE_PATTERNS.search(file_path) or _is_secret_path(file_path):
         return _result(
             "block",
             f"Autonomous sessions MUST NOT read secret files. "
@@ -448,7 +556,14 @@ def _check_autonomous_file_containment(tool: str, inp: dict) -> dict[str, Any] |
 
     worktree_root = os.environ.get("JARVIS_WORKTREE_ROOT")
     if not worktree_root:
-        return None  # No containment when worktree root not specified
+        # Fail closed for Write/Edit; fail open for Read (reads are harder to
+        # universally block and less dangerous without a worktree anchor).
+        if tool in ("Write", "Edit"):
+            return _result(
+                "block",
+                "Autonomous Write/Edit requires JARVIS_WORKTREE_ROOT to be set"
+            )
+        return None
 
     if tool not in ("Read", "Write", "Edit"):
         return None
@@ -457,14 +572,16 @@ def _check_autonomous_file_containment(tool: str, inp: dict) -> dict[str, Any] |
     if not file_path:
         return None
 
-    # Normalize paths for comparison
+    # Normalize paths for comparison; use is_relative_to (Python 3.9+) to
+    # avoid the epdev/epdev_evil prefix-collision false-pass.
     try:
-        resolved = str(Path(file_path).resolve()).replace("\\", "/").lower()
-        wt_resolved = str(Path(worktree_root).resolve()).replace("\\", "/").lower()
+        resolved = Path(file_path).resolve()
+        wt_resolved = Path(worktree_root).resolve()
+        contained = resolved.is_relative_to(wt_resolved)
     except (OSError, ValueError):
         return _result("block", f"Cannot resolve path for containment check: {file_path}")
 
-    if not resolved.startswith(wt_resolved):
+    if not contained:
         return _result(
             "block",
             f"Autonomous worker file access blocked: path escapes worktree. "
@@ -524,8 +641,10 @@ def main() -> None:
         print(json.dumps(_result("block", f"Invalid JSON on stdin: {e}")))
         sys.exit(1)
 
-    tool = data.get("tool", "")
-    inp = data.get("input") or {}
+    # Accept both canonical Claude Code hook schema (tool_name/tool_input)
+    # and legacy (tool/input) for any older callers or tests.
+    tool = data.get("tool_name") or data.get("tool", "")
+    inp = data.get("tool_input") or data.get("input") or {}
     if isinstance(inp, str):
         inp = {}
 
@@ -555,6 +674,26 @@ def main() -> None:
     containment_block = _check_autonomous_file_containment(tool, inp)
     if containment_block:
         print(json.dumps(containment_block))
+        return
+
+    # Glob/Grep secret-path + containment checks
+    if tool in ("Glob", "Grep"):
+        target = str(inp.get("path") or inp.get("pattern") or "")
+        if target and _is_secret_path(target):
+            print(json.dumps(_result("block", f"Glob/Grep on secret path forbidden: {target}")))
+            return
+        if target and os.environ.get("JARVIS_SESSION_TYPE") == "autonomous":
+            wt = os.environ.get("JARVIS_WORKTREE_ROOT")
+            if wt:
+                try:
+                    target_path = Path(target).resolve()
+                    wt_path = Path(wt).resolve()
+                    if not target_path.is_relative_to(wt_path):
+                        print(json.dumps(_result("block", f"Glob/Grep outside worktree: {target}")))
+                        return
+                except (ValueError, OSError):
+                    pass
+        print(json.dumps(_result("allow")))
         return
 
     # Bash command validation

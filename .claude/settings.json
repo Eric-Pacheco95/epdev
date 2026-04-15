@@ -1,5 +1,6 @@
 {
   "enableAllProjectMcpServers": true,
+  "disabledMcpjsonServers": ["claude_ai_Notion"],
   "permissions": {
     "allow": [
       "Read(*)",
@@ -50,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_session_start.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_session_start.py"
           }
         ]
       }
@@ -60,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/security/validators/validate_tool_use.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat security/validators/validate_tool_use.py"
           }
         ]
       },
@@ -68,7 +69,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_events.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_events.py"
           }
         ]
       }
@@ -78,7 +79,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_notification.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_notification.py"
           }
         ]
       }
@@ -88,7 +89,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_events.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_events.py"
           }
         ]
       }
@@ -98,7 +99,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_post_compact.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_post_compact.py"
           }
         ]
       }
@@ -108,7 +109,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_stop.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_stop.py"
           }
         ]
       },
@@ -116,7 +117,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_events.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_events.py"
           }
         ]
       },
@@ -124,7 +125,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:/Users/ericp/github/epdev/tools/scripts/hook_session_cost.py"
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_session_cost.py"
           }
         ]
       }

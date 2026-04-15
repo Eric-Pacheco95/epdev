@@ -126,14 +126,54 @@ def _find_git_bash() -> str:
     return _GIT_BASH_CANDIDATES[0]
 
 
+def _safe_filename_component(value: str, fallback: str = "unknown") -> str:
+    """Return value sanitized for use as a filename component (basename only, no traversal)."""
+    if not isinstance(value, str) or not value:
+        return fallback
+    # Strip path separators + drive letters, then allowlist
+    cleaned = re.sub(r'[^A-Za-z0-9_\-.]', '_', value.split('/')[-1].split('\\')[-1])
+    return cleaned[:200] or fallback
+
+
+
+def _is_secret_path(path_str: str) -> bool:
+    """Secret-path check -- duplicate of security/validators/validate_tool_use._is_secret_path.
+
+    Kept inline to avoid sys.path complexity in dispatcher context.
+    Canonical copy lives in security/validators/validate_tool_use.py.
+    """
+    if not path_str:
+        return False
+    s = str(path_str).rstrip("/").rstrip("\\")
+    basename = s.split("/")[-1].split("\\")[-1].lower()
+    if not basename:
+        return False
+    if basename == ".env" or basename.startswith(".env."):
+        return True
+    if "credential" in basename or "secret" in basename:
+        return True
+    for suffix in (".key", ".pem", ".p12", ".pfx"):
+        if basename.endswith(suffix):
+            return True
+        if suffix + "." in basename:
+            return True
+    normalized = s.replace("\\", "/").lower()
+    if "/.ssh/" in normalized or normalized.startswith(".ssh/"):
+        return True
+    if "/.aws/" in normalized or normalized.startswith(".aws/"):
+        return True
+    return False
+
+
 # Protected paths that context_files must never reference
+# NOTE: _is_secret_path() is the primary check; this regex is belt-and-suspenders.
 CONTEXT_FILES_BLOCKED = re.compile(
-    r"(?:^|[/\\])\.env(?:[/\\]|$)"
-    r"|(?:^|[/\\])credentials\.json$"
-    r"|\.pem$"
-    r"|\.key$"
-    r"|(?:^|[/\\])\.ssh[/\\]"
-    r"|(?:^|[/\\])\.aws[/\\]",
+    r"(?:^|[/\\])\.env(?:(?:[/\\]|$)|\.[a-zA-Z0-9_-])"
+    r"|(?:^|[/\\])credentials[^/\\]*$"
+    r"|\.pem(?:\.|$)"
+    r"|\.key(?:\.|$)"
+    r"|(?:^|[/\\])\.ssh(?:[/\\]|$)"
+    r"|(?:^|[/\\])\.aws(?:[/\\]|$)",
     re.IGNORECASE,
 )
 
@@ -190,10 +230,22 @@ def read_backlog() -> list[dict[str, Any]]:
     if not BACKLOG_FILE.exists():
         return []
     tasks = []
-    for line in BACKLOG_FILE.read_text(encoding="utf-8").splitlines():
+    quarantine_lines = []
+    for lineno, line in enumerate(BACKLOG_FILE.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
-        if line:
+        if not line:
+            continue
+        try:
             tasks.append(json.loads(line))
+        except json.JSONDecodeError as e:
+            print(f"WARNING: read_backlog: malformed JSON at line {lineno}: {e}", file=sys.stderr)
+            quarantine_lines.append(line)
+    if quarantine_lines:
+        qpath = REPO_ROOT / "data" / "backlog_quarantine.jsonl"
+        qpath.parent.mkdir(parents=True, exist_ok=True)
+        with qpath.open("a", encoding="utf-8") as fh:
+            for ln in quarantine_lines:
+                fh.write(ln + "\n")
     return tasks
 
 
@@ -289,6 +341,8 @@ def all_deps_met(task: dict, backlog: list[dict]) -> bool:
 
 def deliverable_exists(task: dict) -> bool:
     """Pre-claim gate: check if the deliverable already exists."""
+    if not task.get('id'):
+        return False
     # Check if a branch with the expected name already exists
     branch_name = f"jarvis/auto-{task['id']}"
     result = subprocess.run(
@@ -312,16 +366,20 @@ def deliverable_exists(task: dict) -> bool:
 
 def validate_context_files(task: dict) -> bool:
     """Validate context_files don't reference secrets or escape repo."""
-    repo_str = str(REPO_ROOT).replace("\\", "/")
     for cf in task.get("context_files", []):
         cf_normalized = cf.replace("\\", "/")
-        # Block paths that reference secrets
-        if CONTEXT_FILES_BLOCKED.search(cf_normalized):
+        # Block paths that reference secrets (helper + regex belt-and-suspenders)
+        if _is_secret_path(cf_normalized) or CONTEXT_FILES_BLOCKED.search(cf_normalized):
             print(f"  BLOCKED: context_file references protected path: {cf}")
             return False
-        # Block path traversal outside repo
+        # Block path traversal outside repo -- use is_relative_to to avoid
+        # prefix-collision false-pass (epdev_evil passing when root is epdev).
         resolved = (REPO_ROOT / cf).resolve()
-        if not str(resolved).replace("\\", "/").startswith(repo_str):
+        try:
+            contained = resolved.is_relative_to(REPO_ROOT.resolve())
+        except ValueError:
+            contained = False
+        if not contained:
             print(f"  BLOCKED: context_file escapes repo root: {cf}")
             return False
     return True
@@ -475,7 +533,11 @@ def archive_expired_pending_review(task: dict) -> Path:
         "parent_task_id": task.get("parent_task_id"),
         "parent_branch": task.get("parent_branch"),
     }
-    path = PENDING_REVIEW_EXPIRED_DIR / f"{task.get('id', 'unknown')}.json"
+    safe_id = _safe_filename_component(task.get('id', ''), 'unknown')
+    path = PENDING_REVIEW_EXPIRED_DIR / f"{safe_id}.json"
+    resolved = path.resolve()
+    if not str(resolved).startswith(str(PENDING_REVIEW_EXPIRED_DIR.resolve())):
+        raise ValueError(f"path escape detected: {path}")
     path.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
     return path
 
@@ -532,9 +594,19 @@ def _load_followon_state() -> dict:
     if not FOLLOWON_STATE_FILE.exists():
         return {"date": "", "count": 0}
     try:
-        return json.loads(FOLLOWON_STATE_FILE.read_text(encoding="utf-8"))
+        state = json.loads(FOLLOWON_STATE_FILE.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return {"date": "", "count": 0}
+    # 7b: type validation
+    if not isinstance(state, dict):
+        return {}
+    date_val = state.get('date')
+    if not isinstance(date_val, str):
+        state['date'] = ''
+    count_val = state.get('count', 0)
+    if not isinstance(count_val, int) or count_val < 0:
+        state['count'] = 0
+    return state
 
 
 def _save_followon_state(state: dict) -> None:
@@ -560,19 +632,35 @@ def _followon_throttle_ok() -> bool:
     today_str = _date.today().isoformat()
     if state.get("date") != today_str:
         return True  # New day, quota reset
-    return state.get("count", 0) < FOLLOWON_MAX_PER_DAY
+    # 7c: clamp negative/invalid counts to prevent throttle bypass
+    count = state.get("count", 0)
+    if not isinstance(count, int) or count < 0:
+        count = 0
+    return count < FOLLOWON_MAX_PER_DAY
 
 
 def _record_followon_emission(followon_id: str) -> None:
-    """Increment today's follow-on count, persist."""
+    """Increment today's follow-on count, persist (concurrent-safe via file lock)."""
     from datetime import date as _date
-    today_str = _date.today().isoformat()
-    state = _load_followon_state()
-    if state.get("date") != today_str:
-        state = {"date": today_str, "count": 0, "last_emitted": None}
-    state["count"] = state.get("count", 0) + 1
-    state["last_emitted"] = followon_id
-    _save_followon_state(state)
+    from tools.scripts.lib.file_lock import locked_read_modify_write
+    today = _date.today().isoformat()
+
+    def mutator(state: dict) -> dict:
+        if state.get('date') != today:
+            return {'date': today, 'count': 1, 'last_emitted': followon_id}
+        # 7c fix: clamp negative counts
+        current = state.get('count', 0)
+        if not isinstance(current, int) or current < 0:
+            current = 0
+        state['count'] = current + 1
+        state['last_emitted'] = followon_id
+        return state
+
+    locked_read_modify_write(
+        FOLLOWON_STATE_FILE,
+        mutator,
+        default={'date': today, 'count': 0, 'last_emitted': None},
+    )
 
 
 def _extract_failing_executable_isc(
@@ -749,7 +837,14 @@ def _emit_followon(
 def select_next_task(backlog: list[dict]) -> Optional[dict]:
     """Select the highest-priority eligible task."""
     candidates = []
+    mutated = False
     for t in backlog:
+        if not t.get("id"):
+            print(f"  WARNING: select_next_task: skipping task with missing id", file=sys.stderr)
+            t["status"] = "manual_review"
+            t["failure_type"] = "missing_id"
+            mutated = True
+            continue
         if t.get("status") != "pending":
             continue
         if not t.get("autonomous_safe", False):
@@ -806,11 +901,22 @@ def select_next_task(backlog: list[dict]) -> Optional[dict]:
                 # MANUAL_REQUIRED: not executable but not dangerous -- skip criterion,
                 # do not count toward verifiable_count, do not fail the task
         if not isc_valid:
+            t["status"] = "manual_review"
+            t["failure_type"] = "isc_blocked_command"
+            t["notes"] = (t.get("notes") or "") + "\nISC verify command blocked by classifier"
+            mutated = True
             continue
         if verifiable_count == 0:
             print(f"  Skipping {t['id']}: no verifiable ISC (need >= 1 executable '| Verify:')")
+            t["status"] = "manual_review"
+            t["failure_type"] = "no_verifiable_isc"
+            t["notes"] = (t.get("notes") or "") + "\nNo executable ISC criteria; requires manual review"
+            mutated = True
             continue
         candidates.append(t)
+
+    if mutated:
+        write_backlog(backlog)
 
     if not candidates:
         return None
@@ -1856,8 +1962,13 @@ def save_run_report(report: dict, path: Path | None = None) -> Path:
     Otherwise create a new timestamped file.
     """
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
-    if path is None:
-        filename = f"{report['task_id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    if path is not None:
+        resolved = Path(path).resolve()
+        if not str(resolved).startswith(str(RUNS_DIR.resolve())):
+            raise ValueError(f"save_run_report path must be under RUNS_DIR, got: {path}")
+    else:
+        safe_id = _safe_filename_component(report.get('task_id', ''), 'unknown')
+        filename = f"{safe_id}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
         path = RUNS_DIR / filename
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     return path
@@ -2022,9 +2133,54 @@ def _eval_routine_condition(condition: dict) -> bool:
         print(f"  Condition [{desc}]: {count} files matched (min={minimum})")
         return count >= minimum
 
-    # Unknown type -- fail open, log warning
-    print(f"  WARNING: unknown routine condition type '{ctype}' -- allowing injection", file=sys.stderr)
-    return True
+    # Unknown type -- fail CLOSED (do not silently inject on unrecognized config;
+    # fail-open allowed unknown types to fire even when the condition was mis-typed)
+    print(f"  WARNING: unknown routine condition type '{ctype}' -- skipping injection (fail closed)", file=sys.stderr)
+    return False
+
+
+def _validate_routine_schema(routine: dict) -> tuple[bool, str]:
+    """Validate a routine config dict before processing.
+
+    Returns (True, "") on success, (False, reason) on failure.
+    """
+    rid = routine.get('id', routine.get('routine_id', '<unknown>'))
+
+    if not isinstance(routine.get('routine_id'), str) or not routine.get('routine_id'):
+        return False, f"{rid}: missing or non-string routine_id"
+
+    # interval_days -- may live under schedule.interval_days or top-level
+    schedule = routine.get('schedule', {})
+    interval = schedule.get('interval_days') if isinstance(schedule, dict) else None
+    if interval is None:
+        interval = routine.get('interval_days')
+    if interval is None:
+        return False, f"{rid}: missing interval_days"
+    if not isinstance(interval, int) or interval < 1:
+        return False, f"{rid}: interval_days must be int >= 1, got {interval!r}"
+
+    # schedule type (if present)
+    sched_type = schedule.get('type', 'interval') if isinstance(schedule, dict) else 'interval'
+    valid_sched_types = ('interval', 'daily', 'weekly', 'monthly', 'always')
+    if sched_type not in valid_sched_types:
+        return False, f"{rid}: unknown schedule type {sched_type!r}"
+
+    # condition block (optional)
+    cond = routine.get('condition')
+    if cond is not None:
+        if not isinstance(cond, dict):
+            return False, f"{rid}: condition must be a dict"
+        ctype = cond.get('type')
+        valid_cond_types = ('always', 'file_count_min')
+        if ctype not in valid_cond_types:
+            return False, f"{rid}: unknown condition type {ctype!r}"
+        if ctype == 'file_count_min':
+            try:
+                int(cond.get('min', 1))
+            except (ValueError, TypeError):
+                return False, f"{rid}: condition min must be integer"
+
+    return True, ""
 
 
 def inject_routines() -> int:
@@ -2064,46 +2220,57 @@ def inject_routines() -> int:
         if not routine.get("enabled", True):
             continue
 
-        routine_id = routine.get("routine_id")
-        if not routine_id:
+        # 8b: schema validation before any processing
+        ok, err = _validate_routine_schema(routine)
+        if not ok:
+            print(f"  WARNING: skipping invalid routine: {err}", file=sys.stderr)
             continue
-
-        interval_days = routine.get("schedule", {}).get("interval_days", 7)
-        last_injected_str = state.get(routine_id)
-
-        if last_injected_str:
-            try:
-                last_injected = date.fromisoformat(last_injected_str)
-                if (today - last_injected).days < interval_days:
-                    continue  # Not due yet
-            except ValueError:
-                pass  # Malformed date -- treat as never injected
-
-        # Evaluate condition block (if present) -- skip injection if condition not met
-        condition = routine.get("condition")
-        if condition:
-            if not _eval_routine_condition(condition):
-                print(f"  Routine skipped (condition not met): {routine_id}")
-                continue
-
-        # Build task dict from template + routine_id
-        task = dict(routine.get("task_template", {}))
-        task["routine_id"] = routine_id
-        task["source"] = "routine"
 
         try:
-            result = backlog_append(task, backlog_path=BACKLOG_FILE)
-            if result is not None:
-                print(f"  Routine injected: {routine_id}")
-                injected_count += 1
-            else:
-                print(f"  Routine skipped (already active): {routine_id}")
-        except ValueError as exc:
-            print(f"  WARNING: inject_routines -- validation failed for {routine_id}: {exc}", file=sys.stderr)
-            continue
+            routine_id = routine.get("routine_id")
 
-        # Update last_injected regardless of dedup (prevents re-checking every cycle)
-        state[routine_id] = today.isoformat()
+            interval_days = routine.get("schedule", {}).get("interval_days", 7)
+            last_injected_str = state.get(routine_id)
+
+            if last_injected_str:
+                try:
+                    # 7d: guard against non-string values before fromisoformat
+                    if not isinstance(last_injected_str, str):
+                        raise TypeError(f"expected str, got {type(last_injected_str).__name__}")
+                    last_injected = date.fromisoformat(last_injected_str)
+                    if (today - last_injected).days < interval_days:
+                        continue  # Not due yet
+                except (ValueError, TypeError):
+                    pass  # Malformed date -- treat as never injected
+
+            # Evaluate condition block (if present) -- skip injection if condition not met
+            condition = routine.get("condition")
+            if condition:
+                if not _eval_routine_condition(condition):
+                    print(f"  Routine skipped (condition not met): {routine_id}")
+                    continue
+
+            # Build task dict from template + routine_id
+            task = dict(routine.get("task_template", {}))
+            task["routine_id"] = routine_id
+            task["source"] = "routine"
+
+            try:
+                result = backlog_append(task, backlog_path=BACKLOG_FILE)
+                if result is not None:
+                    print(f"  Routine injected: {routine_id}")
+                    injected_count += 1
+                    # 7e: only advance last_injected on successful injection (not on dedup-skip)
+                    state[routine_id] = today.isoformat()
+                else:
+                    print(f"  Routine skipped (already active): {routine_id}")
+            except ValueError as exc:
+                print(f"  WARNING: inject_routines -- validation failed for {routine_id}: {exc}", file=sys.stderr)
+                continue
+
+        except Exception as e:
+            print(f"  WARNING: routine {routine.get('routine_id', routine.get('id', '?'))} crashed: {e}", file=sys.stderr)
+            continue
 
     # Persist updated state
     try:
@@ -2228,7 +2395,8 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
                 ok, inline_original_branch, msg = _inline_setup(branch)
                 if not ok:
                     print(f"  INLINE SETUP REFUSED: {msg}")
-                    task["status"] = "pending"
+                    task["status"] = "manual_review"
+                    task["failure_type"] = "dirty_tree_blocked"
                     task["notes"] = (task.get("notes") or "") + (
                         f"\nInline refused {datetime.now().strftime('%Y-%m-%d %H:%M')}: {msg}"
                     )
@@ -2405,7 +2573,16 @@ def dispatch(dry_run: bool = False) -> None:
     print(f"\n=== Jarvis Dispatcher === {datetime.now().isoformat()}")
     print(f"  Max tier: {MAX_TIER}")
 
-    # Read backlog
+    # 8a: Inject due routines BEFORE the empty-backlog check so routines can
+    # populate the backlog on first run (empty backlog should not skip injection).
+    try:
+        injected = inject_routines()
+        if injected > 0:
+            print(f"  Injected {injected} routine(s) into backlog")
+    except Exception as exc:
+        print(f"  WARNING: inject_routines failed: {exc}", file=sys.stderr)
+
+    # Read backlog (after routine injection)
     backlog = read_backlog()
     if not backlog:
         print("  No tasks in backlog. Idle Is Success.")
@@ -2429,14 +2606,6 @@ def dispatch(dry_run: bool = False) -> None:
             write_backlog(backlog)
     except Exception as exc:
         print(f"  WARNING: pending_review sweep failed: {exc}", file=sys.stderr)
-
-    # Inject due routines before task selection
-    try:
-        injected = inject_routines()
-        if injected > 0:
-            backlog = read_backlog()
-    except Exception as exc:
-        print(f"  WARNING: inject_routines failed: {exc}", file=sys.stderr)
 
     print(f"  Backlog: {len(backlog)} tasks")
 

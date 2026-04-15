@@ -294,12 +294,12 @@ check_result(
     ),
     True,
 )
-# No worktree root set — skip containment
+# No worktree root set — fail closed for Write/Edit (safer default)
 del os.environ["JARVIS_WORKTREE_ROOT"]
 check_result(
-    "Write with no JARVIS_WORKTREE_ROOT (allow — no containment)",
+    "Write with no JARVIS_WORKTREE_ROOT (block — fail closed)",
     _check_autonomous_file_containment("Write", {"file_path": str(ROOT / "data" / "out.json")}),
-    False,
+    True,
 )
 
 # Clean up env

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-voice_inbox_sync.py — Watches iCloud Shortcuts folder (primary) or OneDrive/jarvis-voice/
+voice_inbox_sync.py - Watches iCloud Shortcuts folder (primary) or OneDrive/jarvis-voice/
 (fallback) for new voice transcripts and copies them into memory/work/inbox/voice/
 for processing by /voice-capture.
 
-Transport: iOS Shortcut → iCloud Drive/Shortcuts/pai-voice-recording → iCloud for Windows sync
-Fallback:  iOS Shortcut → OneDrive/jarvis-voice/ (if iCloud not available)
+Transport: iOS Shortcut -> iCloud Drive/Shortcuts/pai-voice-recording -> iCloud for Windows sync
+Fallback:  iOS Shortcut -> OneDrive/jarvis-voice/ (if iCloud not available)
 
 Run manually or schedule via Windows Task Scheduler every 5 minutes.
 Usage: python tools/scripts/voice_inbox_sync.py
@@ -44,7 +44,7 @@ def sync() -> int:
     watch, transport = _resolve_watch_dir()
     if watch is None:
         print("No watch source found. Set up one of:")
-        print(f"  iCloud:   install iCloud for Windows → sign in → {ICLOUD_SHORTCUTS}")
+        print(f"  iCloud:   install iCloud for Windows -> sign in -> {ICLOUD_SHORTCUTS}")
         print("  OneDrive: create 'jarvis-voice' folder at OneDrive root")
         return 0
 
@@ -55,7 +55,7 @@ def sync() -> int:
 
     copied = 0
     candidates = list(watch.glob("*.md")) + list(watch.glob("*.txt"))
-    # iCloud Shortcuts stores the file without extension — check for it too
+    # iCloud Shortcuts stores the file without extension - check for it too
     if ICLOUD_FILE.exists() and not ICLOUD_FILE.suffix:
         candidates.append(ICLOUD_FILE)
 
@@ -67,7 +67,7 @@ def sync() -> int:
             continue
 
         shutil.copy2(src, dest)
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] Copied: {src.name} → {dest_name}")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Copied: {src.name} -> {dest_name}")
         copied += 1
 
     if copied == 0:

@@ -21,6 +21,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EVENTS_DIR = REPO_ROOT / "history" / "events"
 
+sys.path.insert(0, str(Path(__file__).parent))
+from lib.file_lock import locked_append
+
 
 def _extract_token_data(data: dict) -> dict:
     """Extract token/cost data from the Stop payload or environment.
@@ -99,21 +102,10 @@ def build_cost_record(data: dict) -> dict:
 
 def write_cost_record(record: dict) -> Path:
     """Write a cost record to the daily JSONL file with file locking. Returns the file path."""
-    EVENTS_DIR.mkdir(parents=True, exist_ok=True)
     ts = record.get("ts", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     date_str = ts[:10]  # YYYY-MM-DD from ISO timestamp
     log_path = EVENTS_DIR / f"{date_str}.jsonl"
-    line = json.dumps(record) + "\n"
-    try:
-        import msvcrt
-        with log_path.open("a", encoding="utf-8") as fh:
-            msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
-            fh.write(line)
-            msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
-    except (ImportError, OSError):
-        # Fallback for non-Windows or locking failure
-        with log_path.open("a", encoding="utf-8") as fh:
-            fh.write(line)
+    locked_append(log_path, json.dumps(record))
     return log_path
 
 
@@ -122,7 +114,22 @@ def main() -> None:
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
-        pass
+        now_utc = datetime.now(timezone.utc)
+        error_record = {
+            "ts": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "hook": "Stop",
+            "type": "session_cost",
+            "session_id": "",
+            "stop_reason": "parse_error",
+            "cost_usd": None,
+            "input_tokens": None,
+            "output_tokens": None,
+            "cache_read_tokens": None,
+            "parse_error": True,
+            "success": False,
+        }
+        write_cost_record(error_record)
+        sys.exit(1)
 
     record = build_cost_record(data)
     write_cost_record(record)

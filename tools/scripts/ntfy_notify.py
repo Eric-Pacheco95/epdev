@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lightweight ntfy push notifier — stdlib only, no external deps.
+"""Lightweight ntfy push notifier - stdlib only, no external deps.
 
 Usage (from other scripts):
     from tools.scripts.ntfy_notify import push
@@ -7,7 +7,7 @@ Usage (from other scripts):
     push("Session ended", priority="low")
 
 Environment:
-    NTFY_TOPIC   your private ntfy topic name (required — keep secret)
+    NTFY_TOPIC   your private ntfy topic name (required - keep secret)
     NTFY_SERVER  ntfy server base URL (default: https://ntfy.sh)
 
 If NTFY_TOPIC is not set, logs a warning to stderr and returns False silently
@@ -38,7 +38,7 @@ def push(
     topic = os.environ.get("NTFY_TOPIC", "").strip()
     if not topic:
         print(
-            "ntfy_notify: NTFY_TOPIC not set — skipping ntfy push",
+            "ntfy_notify: NTFY_TOPIC not set - skipping ntfy push",
             file=sys.stderr,
         )
         return False
@@ -64,7 +64,7 @@ def push(
             resp.read()
         return True
     except (urllib.error.URLError, OSError) as exc:
-        print(f"ntfy_notify: request failed — {exc}", file=sys.stderr)
+        print(f"ntfy_notify: request failed - {exc}", file=sys.stderr)
         return False
 
 

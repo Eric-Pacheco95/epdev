@@ -51,6 +51,8 @@ OVERNIGHT_SOURCES = frozenset({"overnight"})
 FOLLOWON_MAX_PER_DAY = 1
 FOLLOWON_EMISSION_THRESHOLD = 0.5
 
+FALSIFICATION_WINDOW_DATE = date(2026, 4, 21)
+
 PASS = "PASS"
 FAIL = "FAIL"
 SKIP = "SKIP"
@@ -313,6 +315,14 @@ def check_i5_source_attribution(followons: list[dict]) -> tuple[str, str]:
     return PASS, f"{len(followons)} follow-on(s): none have source='dispatcher'"
 
 
+def _to_calendar_day(created: str) -> str:
+    """Normalize ISO timestamp or date string to YYYY-MM-DD."""
+    try:
+        return datetime.fromisoformat(created.replace('Z', '+00:00')).date().isoformat()
+    except (ValueError, AttributeError):
+        return created  # fall through if unparseable; will land in its own bucket
+
+
 def check_i6_daily_throttle_not_exceeded(followons: list[dict]) -> tuple[str, str]:
     """I6: Daily follow-on emission count never exceeded 1 on any calendar day.
 
@@ -331,11 +341,12 @@ def check_i6_daily_throttle_not_exceeded(followons: list[dict]) -> tuple[str, st
         except Exception:
             return SKIP, "followon_state.json unreadable"
 
-    # Group by created date
+    # Group by calendar day (normalize ISO timestamps to YYYY-MM-DD)
     by_date: dict[str, list[str]] = {}
     for task in followons:
         created = task.get("created", "unknown")
-        by_date.setdefault(created, []).append(task.get("id", "?"))
+        day_key = _to_calendar_day(created)
+        by_date.setdefault(day_key, []).append(task.get("id", "?"))
 
     violations = []
     for day, ids in by_date.items():
@@ -500,6 +511,15 @@ def main() -> int:
 
         if status == FAIL:
             overall_fail = True
+
+    # Fail closed: if falsification window has opened and nothing actually passed,
+    # all-SKIPs must not silently exit 0 -- there is no evidence the system is working.
+    post_window = date.today() >= FALSIFICATION_WINDOW_DATE
+    pass_count = sum(1 for _, _, s, _ in results if s == PASS)
+    skip_count = sum(1 for _, _, s, _ in results if s in (SKIP, "N/A"))
+    if post_window and pass_count == 0:
+        print(f"[FAIL] Falsification window opened ({FALSIFICATION_WINDOW_DATE}) but no real verifications passed ({skip_count} skipped)")
+        overall_fail = True
 
     print("=" * 60)
     if overall_fail:

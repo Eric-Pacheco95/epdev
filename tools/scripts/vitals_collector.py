@@ -491,11 +491,14 @@ def collect_session_usage() -> dict | None:
                 if not date_key:
                     continue
                 if rec_type == "session_cost":
+                    sid = rec.get("session_id", "")
+                    if not sid:
+                        # parse_error / empty-session rows — skip totals entirely
+                        continue
+                    ts = rec.get("ts", "")
                     daily_counts[date_key] = daily_counts.get(date_key, 0) + 1
                     total_sessions += 1
-                    sid = rec.get("session_id", "")
-                    ts = rec.get("ts", "")
-                    if sid and ts:
+                    if ts:
                         session_spans.setdefault(sid, []).append(ts)
                 elif rec_type == "gemini_usage":
                     gemini_calls += 1
