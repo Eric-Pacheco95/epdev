@@ -42,7 +42,7 @@
 - [ ] **Worker prompt optimization (data-gated)** — Analyze run reports: what context did workers actually use vs ignore? Only build after 15+ runs provide calibration data.
   - Hypothesis parked 2026-04-07: test prompt valence (neutral / supportive / urgent) as a worker prompt variable, n≥15 outcomes per arm. Source: dair_ai recap of NeurIPS workshop paper.
 - [ ] **Multi-repo support** — Dispatcher handles epdev + crypto-bot + jarvis-app. Per-project config: repo path, context files, ISC sources. Requires pipeline stability first.
-- Memory dedup v2 triggers: see `memory/work/jarvis/dedup_v2_triggers.md` — 8 trigger-gated items, do not pre-build.
+- Memory dedup v2 triggers: see `orchestration/dedup_v2_triggers.md` — 8 trigger-gated items, do not pre-build.
 
 ### Phase 5E — Self-Correcting Pipeline
 
