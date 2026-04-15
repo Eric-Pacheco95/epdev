@@ -13,7 +13,7 @@ from typing import Iterable
 
 # Named patterns for tests and reporting
 SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    ("sk-", re.compile(r"sk-[a-zA-Z0-9]{10,}", re.IGNORECASE)),
+    ("sk-", re.compile(r"\bsk-[a-zA-Z0-9]{10,}", re.IGNORECASE)),
     ("AKIA", re.compile(r"AKIA[0-9A-Z]{16}")),
     ("ghp_", re.compile(r"ghp_[a-zA-Z0-9]{20,}")),
     ("xoxb-", re.compile(r"xoxb-[0-9]+-[0-9]+-[a-zA-Z0-9]+")),
