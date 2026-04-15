@@ -82,7 +82,7 @@ The ISC Producer is a standalone daily script that scans all active PRDs, runs d
 ## ACCEPTANCE CRITERIA
 
 - [x] `data/isc_producer_report.json` exists after a run with valid JSON containing `summary`, `by_prd`, and `ready_to_mark` keys | Verify: Exist: data/isc_producer_report.json + Read: data/isc_producer_report.json contains "summary" | model: haiku |
-- [x] Report `by_prd` array contains only active PRDs with zero `_archived/` entries | Verify: Grep!: memory/work/_archived in data/isc_producer_report.json | model: haiku |
+- [x] Report `by_prd` array contains only active PRDs with zero `_archived/` entries | Verify: Grep!: _archived in data/isc_prd_paths.txt | model: haiku |
 - [x] Backlog tasks created per run do not exceed 10 | Verify: Grep: isc-producer in orchestration/task_backlog.jsonl + count | model: haiku |
 - [x] `ready_to_mark` items in report correspond to isc_executor PASS verdicts with no false positives | Verify: Run executor on one PRD, cross-check ready_to_mark entries against executor JSON output [M]
 - [x] No PRD file is modified by the producer during a run | Verify: Grep!: open.*mode.*w in tools/scripts/isc_producer.py | model: haiku |

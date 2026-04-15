@@ -30,6 +30,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PRD_GLOB = "memory/work/*/PRD.md"
 ARCHIVED_DIR = REPO_ROOT / "memory" / "work" / "_archived"
 REPORT_PATH = REPO_ROOT / "data" / "isc_producer_report.json"
+ISC_PD_PATHS_PATH = REPO_ROOT / "data" / "isc_prd_paths.txt"
 BACKLOG_PATH = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
 EXECUTOR_SCRIPT = REPO_ROOT / "tools" / "scripts" / "isc_executor.py"
 GLOBAL_TIMEOUT_S = 300
@@ -378,6 +379,12 @@ def main() -> int:
         json.dumps(report, indent=2, ensure_ascii=True),
         encoding="utf-8",
     )
+
+    # Write sidecar prd-paths file -- contains only prd_path values with no
+    # verify_method or evidence strings, so Grep! anti-criteria targeting this
+    # file avoid self-referential false positives from the main report JSON.
+    prd_paths_txt = "\n".join(e["path"] for e in report["by_prd"])
+    ISC_PD_PATHS_PATH.write_text(prd_paths_txt + "\n", encoding="utf-8")
 
     # ASCII summary for Task Scheduler log
     s = report["summary"]
