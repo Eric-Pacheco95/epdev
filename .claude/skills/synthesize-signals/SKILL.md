@@ -62,10 +62,11 @@ true
   - Proposes a concrete action (steering rule, TELOS update, workflow change)
 - Apply the **harm multiplier**: failures and anti-patterns weigh 4x compared to positive signals. One failure outweighs four successes when determining theme priority.
 - Check if any synthesis findings warrant:
-  - A new AI Steering Rule in CLAUDE.md (task #18)
+  - A new AI Steering Rule — apply the `/update-steering-rules` routing decision tree to select the target file (CLAUDE.md for universal rules; platform-specific.md for Windows/PS/hooks; autonomous-rules.md for producer-only; etc.)
   - A TELOS update (route to /telos-update)
   - A new skill or skill modification
   - A failure prevention rule
+- For every proposed steering rule, record: target file, rule text, evidence signals, why it matters — not just the rule text
 - Review existing synthesis themes from prior runs for **confidence decay**: any theme not revalidated by new signals within 90 days should be downgraded one maturity level. Themes that decay below candidate become archived.
 - Write the synthesis document to `memory/learning/synthesis/`
 - Record lineage: run `python tools/scripts/compress_signals.py --lineage "YYYY-MM-DD_synthesis"` to append lineage records linking all unprocessed signals to this synthesis run
@@ -123,7 +124,21 @@ Synthesis docs accumulate permanently — each run writes a new dated file. Neve
 
 ## Proposed Steering Rules
 
-(Any new rules for CLAUDE.md, or "none proposed")
+For each proposed rule, include:
+- **Target file**: one of `CLAUDE.md`, `orchestration/steering/platform-specific.md`, `orchestration/steering/autonomous-rules.md`, `orchestration/steering/research-patterns.md`, `orchestration/steering/cross-project.md`, `orchestration/steering/trade-development.md`, or `security/constitutional-rules.md` — use the routing decision tree from `/update-steering-rules` to select
+- **Rule text**: specific, actionable, testable — one sentence
+- **Evidence**: signal filenames or failure records that support it
+- **Why**: what breaks without this rule
+
+Format:
+```
+1. **Target:** `orchestration/steering/platform-specific.md`
+   **Rule:** [rule text]
+   **Evidence:** [signal file(s)]
+   **Why:** [consequence of absence]
+```
+
+If no rules are warranted: "(none proposed)"
 
 ## Proposed TELOS Updates
 
