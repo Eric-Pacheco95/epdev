@@ -129,6 +129,7 @@ memory/work/inbox/voice/*.md
 memory/work/inbox/voice/processed/*.md
 # Learning content (accumulated per user, not part of template)
 memory/learning/signals/*.md
+memory/learning/signals/*.json
 memory/learning/signals/processed/
 memory/learning/failures/*.md
 memory/learning/synthesis/*.md
