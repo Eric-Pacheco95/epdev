@@ -152,6 +152,7 @@ INPUT:
 - Confirm RECOMMENDATION ends with a concrete next step (specific skill invocation or research action)
 - Confirm total output is under 1500 words
 - If any section is missing or temp dir still exists: fix before returning
+- If execution plan requires any files dependecies or required infrastructure, verify/ensure already exists
 
 # LEARN
 
