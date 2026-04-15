@@ -96,6 +96,30 @@ from tools.scripts.lib.isc_common import (
     sanitize_isc_command,
 )
 
+# -- Steering Context Routing -----------------------------------------------
+# STEERING_ALWAYS_INJECT: injected into every dispatched task's context,
+# regardless of tier, category, or task-declared context_files.
+#
+# DOMAIN_CONTEXT_ROUTING: maps task category / description keywords to
+# domain-specific sub-steering file paths. Additive with always-inject and
+# task-declared context_files (never replaced). Keys are lowercase keywords
+# matched against task.category and task.description.
+
+STEERING_ALWAYS_INJECT = [
+    "orchestration/steering/autonomous-rules.md",
+]
+
+DOMAIN_CONTEXT_ROUTING: dict = {
+    "platform":     "orchestration/steering/platform-specific.md",
+    "windows":      "orchestration/steering/platform-specific.md",
+    "scheduling":   "orchestration/steering/platform-specific.md",
+    "research":     "orchestration/steering/research-patterns.md",
+    "absorb":       "orchestration/steering/research-patterns.md",
+    "external":     "orchestration/steering/research-patterns.md",
+    "cross-project": "orchestration/steering/cross-project.md",
+    "cross_project": "orchestration/steering/cross-project.md",
+}
+
 # -- Git Bash resolution (avoid WSL interception) ---------------------------
 
 _GIT_BASH_CANDIDATES = [
@@ -1470,6 +1494,47 @@ def assemble_context(task: dict) -> str:
     goal = task.get("goal_context")
     if goal:
         sections.append(f"WHY THIS TASK MATTERS:\n{goal}")
+
+    # Auto-inject steering files: always-inject + domain routing (FR-A01 to FR-A04).
+    # Runs before task-declared context_files so steering rules form the base layer.
+    steering_paths: list[str] = list(STEERING_ALWAYS_INJECT)
+    category = (task.get("category") or "").lower()
+    description = (task.get("description") or "").lower()
+    search_text = category + " " + description
+    # file_path values come exclusively from DOMAIN_CONTEXT_ROUTING (a module-level
+    # constant) -- never from task fields. Task content only influences which constant
+    # entry is selected, not the path itself.
+    for keyword, file_path in DOMAIN_CONTEXT_ROUTING.items():
+        if keyword in search_text and file_path not in steering_paths:
+            steering_paths.append(file_path)
+
+    steering_contents: list[str] = []
+    for steering_path in steering_paths:
+        # Assert path comes from constants (guards against future DOMAIN_CONTEXT_ROUTING
+        # misconfiguration with traversal sequences).
+        assert not steering_path.startswith("..") and "\\" not in steering_path, (
+            f"steering_path must be a forward-slash repo-relative path: {steering_path!r}"
+        )
+        sp = REPO_ROOT / steering_path
+        if sp.is_file():
+            try:
+                content = sp.read_text(encoding="utf-8")
+                if len(content) > 3000:
+                    content = content[:3000] + "\n... (truncated)"
+                steering_contents.append(f"--- {steering_path} ---\n{content}")
+            except Exception as exc:
+                print(
+                    f"  WARNING: auto-inject steering read error {steering_path}: {exc}",
+                    file=sys.stderr,
+                )
+        else:
+            print(
+                f"  WARNING: auto-inject steering file not found: {steering_path}"
+                f" -- context may be incomplete for this task",
+                file=sys.stderr,
+            )
+    if steering_contents:
+        sections.append("STEERING CONTEXT:\n" + "\n\n".join(steering_contents))
 
     # Load context files (task-specific + profile-suggested)
     context_files = task.get("context_files", [])
@@ -3582,6 +3647,47 @@ def self_test() -> bool:
             _tmp_state.parent.rmdir()
         except OSError:
             pass
+
+    # Test 27: domain routing -- category keyword triggers correct steering file
+    print("Test 27: domain routing (DOMAIN_CONTEXT_ROUTING)...")
+    try:
+        import io
+        from contextlib import redirect_stderr
+
+        # Task with platform category should route to platform-specific.md
+        t_platform = {
+            "id": "test-domain-platform", "description": "fix windows scheduler",
+            "project": "epdev", "tier": 1, "isc": [], "context_files": [],
+            "skills": [], "category": "platform",
+        }
+        err_buf = io.StringIO()
+        with redirect_stderr(err_buf):
+            ctx_platform = assemble_context(t_platform)
+        stderr_out = err_buf.getvalue()
+        # platform-specific.md doesn't exist yet (Phase B) -- warning expected
+        assert "platform-specific.md" in stderr_out or "platform-specific.md" in ctx_platform, (
+            "platform category should attempt platform-specific.md"
+        )
+
+        # Task with no category should ONLY attempt autonomous-rules.md (always-inject)
+        t_base = {
+            "id": "test-domain-base", "description": "generic task",
+            "project": "epdev", "tier": 1, "isc": [], "context_files": [],
+            "skills": [], "category": "",
+        }
+        err_buf2 = io.StringIO()
+        with redirect_stderr(err_buf2):
+            ctx_base = assemble_context(t_base)
+        stderr_out2 = err_buf2.getvalue()
+        # platform-specific.md must NOT be attempted for a generic task
+        assert "platform-specific.md" not in stderr_out2 and "platform-specific.md" not in ctx_base, (
+            "generic task should not inject platform-specific.md"
+        )
+
+        print("  PASS: domain routing correct")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
 
     print(f"\n{'ALL TESTS PASSED' if ok else 'SOME TESTS FAILED'}")
     return ok

@@ -49,14 +49,52 @@ false
   - User corrections that apply broadly → behavioral rule
   - Validated approaches that should be default → preference rule
   - Security incidents → security rule (route to constitutional-rules.md if severe)
+- For each proposed rule, apply the **routing decision tree** to select the target file:
+
+### Routing Decision Tree (7 destinations — apply top-down, first match wins)
+
+1. **`security/constitutional-rules.md`** — if the rule restricts irreversible/high-blast-radius actions (credential handling, prompt injection defense, git push protection, trust boundary enforcement)
+2. **`orchestration/steering/autonomous-rules.md`** — if the rule governs autonomous `claude -p` worker behavior exclusively (producer/dispatcher/worktree patterns, overnight runner conventions, model routing, ISC pipeline behavior); rule must NOT apply to interactive sessions
+3. **`orchestration/steering/platform-specific.md`** — if the rule is Windows/Task Scheduler/PowerShell/MCP/hooks specific; applies equally in interactive and autonomous contexts but NOT in non-Windows environments
+4. **`orchestration/steering/research-patterns.md`** — if the rule governs how Jarvis consumes external information (web research, absorb, counterfactual filter, adopt-vs-absorb decisions)
+5. **`orchestration/steering/cross-project.md`** — if the rule constrains cross-repo operations (crypto-bot, brain-map, non-epdev edits); rule applies whenever touching a repo other than epdev
+6. **`orchestration/steering/trade-development.md`** — if the rule governs financial research, trade signal evaluation, or alpha development workflows
+7. **`CLAUDE.md`** — if the rule is universal (applies in interactive AND autonomous sessions, across platforms, across projects) AND does not fit any of the above domains
+
+**Accumulation rule:** If a proposed rule belongs to a domain with no existing sub-steering file AND a second rule for the same domain emerges in the same or adjacent session, propose a new sub-steering file (see "Proposing new sub-steering files" below) rather than adding both to CLAUDE.md.
+
 - For each proposed rule:
   - State the rule clearly in one sentence
   - Cite the evidence (failure filename, synthesis theme, user feedback)
   - Explain why it matters (what goes wrong without it)
-  - Check it doesn't conflict with existing rules
+  - Apply the routing decision tree — name the target file and the destination number that matched
+  - Check it doesn't conflict with existing rules in the target file
 - Present all proposed rules for review before writing
-- After approval, add rules to the appropriate section of CLAUDE.md
+- After approval, add rules to the appropriate file (not always CLAUDE.md — follow the routing)
 - Log the update to `history/decisions/` with rationale
+
+### Proposing new sub-steering files
+
+Trigger: a domain has accumulated 2+ rules with no existing sub-steering file.
+
+Template (follow `orchestration/steering/trade-development.md` as the pattern):
+```markdown
+# [Domain Name] — Steering Rules
+
+> Behavioral constraints for [domain context]. Loaded by [which skills/configs inject it].
+> Extracted from CLAUDE.md to reduce base context pressure.
+
+## [Section Name]
+
+- [rule 1]
+- [rule 2]
+
+## Loaded by
+
+- [list skills or configs that inject this file]
+```
+
+Present the proposed file to Eric for approval before creating it. After approval, add a `DOMAIN_CONTEXT_ROUTING` entry in `tools/scripts/jarvis_dispatcher.py` for the domain keywords.
 
 ## Mode: --audit — Health check + prune + consolidate
 
@@ -70,7 +108,11 @@ Run these checks and report results before proposing any changes:
    - Rules that contradict each other (e.g., "always X" vs. "never X" in different sections)
    - Rules scoped as universal that only apply to autonomous/specific contexts
    - Compound rules that violate the ISC "no compound criteria" principle
-5. **Cross-file consistency**: Read `orchestration/autonomous-rules.md` and `security/constitutional-rules.md` — check for rules duplicated between CLAUDE.md and these files
+5. **Cross-file consistency (multi-file loop)**: Read ALL files listed in the CLAUDE.md Context Routing table, not just CLAUDE.md. For each file that exists:
+   - Read the file and collect its rules
+   - Check for rules duplicated between CLAUDE.md and sub-steering files (exact or near-duplicate)
+   - Check for rules misrouted: a universal rule sitting in a domain-specific file, or a domain rule still in CLAUDE.md after the split
+   - Files to check (read Context Routing table first, then iterate): `security/constitutional-rules.md`, `orchestration/steering/autonomous-rules.md`, `orchestration/steering/platform-specific.md`, `orchestration/steering/research-patterns.md`, `orchestration/steering/cross-project.md`, `orchestration/steering/trade-development.md` (plus any new files added to the table)
 6. **Staleness scan**: Flag rules that reference:
    - Completed phases or shipped features (should be archived)
    - One-time debugging notes or specific incident workarounds without ongoing relevance
