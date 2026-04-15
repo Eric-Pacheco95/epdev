@@ -1042,6 +1042,37 @@ def _collect_stale_branches(cfg: dict, root_dir: Path, _prev: dict = None) -> di
                        "stale_branches import error: %s" % exc)
 
 
+# ── learning_retention ─────────────────────────────────────────────
+
+def collect_learning_retention(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Invoke verify_learning_retention.py; value = violation count.
+
+    0 = OK (no missing lineage refs, no count drop below high-water).
+    >=1 = violations detected. Parses stdout for summary line.
+    """
+    name = cfg["name"]
+    script = root_dir / "tools" / "scripts" / "verify_learning_retention.py"
+    if not script.is_file():
+        return _result(name, None, "count", "verify_learning_retention.py missing")
+    try:
+        result = subprocess.run(
+            [sys.executable, str(script)],
+            capture_output=True, text=True, timeout=30,
+            cwd=str(root_dir),
+        )
+        if result.returncode == 0:
+            return _result(name, 0, "count", result.stdout.strip().splitlines()[-1] if result.stdout else "OK")
+        if result.returncode == 1:
+            detail = "; ".join(
+                ln.strip(" -") for ln in result.stdout.splitlines()
+                if ln.strip().startswith("-")
+            ) or "retention violation"
+            return _result(name, 1, "count", detail[:200])
+        return _result(name, None, "count", f"verify_learning_retention crashed (rc={result.returncode})")
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        return _result(name, None, "count", f"retention check failed: {exc}")
+
+
 # ── Dispatcher ──────────────────────────────────────────────────────
 
 COLLECTOR_TYPES = {
@@ -1068,6 +1099,7 @@ COLLECTOR_TYPES = {
     "backlog_health_metric": collect_backlog_health_metric,
     "system_resources": collect_system_resources,
     "stale_branches": _collect_stale_branches,
+    "learning_retention": collect_learning_retention,
 }
 
 

@@ -16,6 +16,12 @@
       "thresholds": {}
     },
     {
+      "name": "learning_retention",
+      "type": "learning_retention",
+      "thresholds": { "crit_above": 0 },
+      "isc_ref": "arch-review-2026-04-14: retention tripwire -- exits 1 when lineage-referenced signals vanish or count drops below high-water"
+    },
+    {
       "name": "signal_velocity",
       "type": "manifest_signal_velocity",
       "window_days": 3,

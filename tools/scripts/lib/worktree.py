@@ -107,16 +107,13 @@ def worktree_setup(
     # Clean up stale worktree if it exists (crash recovery)
     if wt.exists():
         print(f"  Cleaning up stale worktree at {wt}")
-        subprocess.run(
-            ["git", "worktree", "remove", str(wt), "--force"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=str(REPO_ROOT),
-        )
-        subprocess.run(
-            ["git", "worktree", "prune"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=str(REPO_ROOT),
-        )
+        if not _safe_worktree_remove(wt):
+            print(
+                f"ERROR: stale worktree removal aborted — "
+                f"not creating new worktree to avoid compounding risk.",
+                file=sys.stderr,
+            )
+            return None
 
     # Delete stale branch if it exists (from previous run)
     subprocess.run(
@@ -185,6 +182,91 @@ def _is_junction(path: Path) -> bool:
         return False
 
 
+def _find_reparse_points(root: Path) -> list[Path]:
+    """Return all directory reparse points (junctions/symlinks) under root.
+
+    Walks without following reparse points — junctions are collected, not
+    descended into. Root itself is not returned.
+    """
+    found: list[Path] = []
+    if not root.exists():
+        return found
+    stack = [root]
+    while stack:
+        d = stack.pop()
+        try:
+            entries = list(os.scandir(d))
+        except OSError:
+            continue
+        for e in entries:
+            p = Path(e.path)
+            try:
+                if not e.is_dir(follow_symlinks=False):
+                    continue
+            except OSError:
+                continue
+            if _is_junction(p) or p.is_symlink():
+                found.append(p)
+            else:
+                stack.append(p)
+    return found
+
+
+def _safe_worktree_remove(wt: Path) -> bool:
+    """Remove a worktree safely on Windows.
+
+    Pre-unlinks any reparse points under wt/memory/ via os.rmdir (which
+    removes the junction without following it), then re-verifies none
+    survive before invoking ``git worktree remove --force``. Aborts the
+    git call if any reparse point persists — preventing git's bundled
+    rm-rf from traversing a junction and deleting the main repo's
+    learning data (2026-04-10 incident).
+
+    Returns True when removal was attempted (or worktree already absent),
+    False when aborted due to surviving reparse points.
+    """
+    if not wt.exists():
+        subprocess.run(
+            ["git", "worktree", "prune"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=str(REPO_ROOT),
+        )
+        return True
+
+    memory_root = wt / "memory"
+    for p in _find_reparse_points(memory_root):
+        try:
+            os.rmdir(str(p))
+        except OSError as exc:
+            print(
+                f"  WARN: could not unlink reparse point {p}: {exc}",
+                file=sys.stderr,
+            )
+
+    survivors = _find_reparse_points(memory_root)
+    if survivors:
+        print(
+            f"  ABORT worktree removal: {len(survivors)} reparse point(s) "
+            f"survived unlink; refusing 'git worktree remove' to prevent "
+            f"destruction of junction targets. Survivors: "
+            f"{[str(p) for p in survivors]}",
+            file=sys.stderr,
+        )
+        return False
+
+    subprocess.run(
+        ["git", "worktree", "remove", str(wt), "--force"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        cwd=str(REPO_ROOT),
+    )
+    subprocess.run(
+        ["git", "worktree", "prune"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        cwd=str(REPO_ROOT),
+    )
+    return True
+
+
 def _symlink_local_memory(wt: Path) -> None:
     """Replace gitkeep-only dirs in worktree with symlinks to real local dirs.
 
@@ -244,15 +326,7 @@ def _symlink_local_memory(wt: Path) -> None:
 def worktree_cleanup(worktree_dir: Optional[Path] = None) -> None:
     """Remove the worktree. Safe to call even if it doesn't exist."""
     wt = worktree_dir or (REPO_ROOT.parent / "epdev-worktree")
-    if wt.exists():
-        subprocess.run(
-            ["git", "worktree", "remove", str(wt), "--force"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(REPO_ROOT),
-        )
-    subprocess.run(
-        ["git", "worktree", "prune"],
-        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(REPO_ROOT),
-    )
+    _safe_worktree_remove(wt)
 
 
 def cleanup_old_branches(prefix: str, days: int = 7) -> None:
