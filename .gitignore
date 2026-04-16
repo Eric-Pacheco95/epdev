@@ -166,3 +166,9 @@ tools/fabric-upstream/
 
 # ISC validation audit reports (may contain command output; secret-scanned but gitignored)
 history/validations/
+
+# Scratch space and personal work context
+_codex_scratch/
+memory/work/create-demo-video/
+memory/work/dashboard-ui-research/
+memory/work/td-innovation-keynote/
