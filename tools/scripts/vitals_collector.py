@@ -78,16 +78,47 @@ def _read_jsonl_tail(path: Path, n: int = 5) -> list[dict]:
 
 
 def collect_heartbeat() -> tuple[dict | None, str | None]:
-    """Run heartbeat and return snapshot + any error."""
+    """Return heartbeat snapshot + any error.
+
+    Strategy: prefer the on-disk snapshot written by the hourly Task Scheduler
+    run if it is fresh (< 2 h old).  Only invoke the subprocess when the file
+    is absent or stale -- the script takes 15-30 s to run and the
+    _run_script timeout (10 s) reliably kills it before it completes.
+    """
+    from datetime import datetime, timezone
+
+    # -- Try on-disk snapshot first ------------------------------------------
+    cached = _read_json(HEARTBEAT_LATEST)
+    if cached is not None:
+        ts_str = cached.get("ts", "")
+        try:
+            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            age_s = (datetime.now(timezone.utc) - ts).total_seconds()
+            if age_s < 7200:  # fresh enough (< 2 h)
+                return cached, None
+            stale_note = f"heartbeat snapshot is {int(age_s // 60)}m old -- running live"
+        except (ValueError, TypeError):
+            stale_note = "heartbeat snapshot has unparseable timestamp -- running live"
+    else:
+        stale_note = None
+
+    # -- Snapshot missing or stale: run live with a generous timeout ----------
     script = str(REPO_ROOT / "tools" / "scripts" / "jarvis_heartbeat.py")
-    data = _run_script(script, ["--quiet", "--json"])
-    if data is None:
-        # Fallback: read latest snapshot from disk
-        data = _read_json(HEARTBEAT_LATEST)
-        if data is None:
-            return None, "heartbeat script failed and no cached snapshot found"
-        return data, "heartbeat script failed -- using cached snapshot"
-    return data, None
+    try:
+        result = subprocess.run(
+            [sys.executable, script, "--quiet", "--json"],
+            capture_output=True, text=True, timeout=60,
+            cwd=str(REPO_ROOT),
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return json.loads(result.stdout), stale_note
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+        pass
+
+    # -- Last resort: return stale cached data with a warning ----------------
+    if cached is not None:
+        return cached, "heartbeat script failed -- using cached snapshot"
+    return None, "heartbeat script failed and no cached snapshot found"
 
 
 def collect_skill_usage() -> tuple[dict | None, str | None]:

@@ -2,8 +2,13 @@
 """Morning summary -- collects overnight autonomous work for Eric's review.
 
 Runs at ~10am via Task Scheduler (after overnight 4am, autoresearch 7am,
-morning feed 9am). Posts a single structured summary to #jarvis-decisions
-with all unmerged branches, dispatcher results, and pending decisions.
+morning feed 9am).
+
+Behavior:
+- If /vitals was already run today (data/vitals_latest.json collected_at = today):
+  post a one-line ack to #epdev and exit -- no duplicate noise.
+- Otherwise: post full summary to #jarvis-decisions so overnight work surfaces
+  even if Eric never opened Claude Code.
 
 Usage:
     python tools/scripts/morning_summary.py           # normal run
@@ -21,6 +26,21 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
+
+VITALS_FILE = REPO_ROOT / "data" / "vitals_latest.json"
+
+
+def vitals_ran_today() -> bool:
+    """Return True if vitals_collector wrote vitals_latest.json today (UTC)."""
+    if not VITALS_FILE.exists():
+        return False
+    try:
+        data = json.loads(VITALS_FILE.read_text(encoding="utf-8"))
+        collected_at = data.get("collected_at", "")
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        return collected_at.startswith(today)
+    except (json.JSONDecodeError, OSError):
+        return False
 
 BACKLOG_FILE = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
 DISPATCHER_RUNS = REPO_ROOT / "data" / "dispatcher_runs"
@@ -160,7 +180,23 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
+    # If /vitals already ran today, just ack and exit -- no duplicate noise
+    if vitals_ran_today():
+        msg = "Morning summary: /vitals already run today. Overnight work covered."
+        if args.dry_run:
+            print(msg)
+            return 0
+        try:
+            from tools.scripts.slack_notify import notify
+            notify(msg, severity="routine")
+            print(msg)
+        except Exception as exc:
+            print(f"Slack post failed: {exc}", file=sys.stderr)
+        return 0
+
+    # /vitals not run yet -- post full summary as fallback
     summary = build_summary()
+    summary += "\n\n> /vitals not run yet. Open Claude Code and run /vitals for the full brief."
 
     if args.dry_run:
         print(summary)
@@ -173,7 +209,6 @@ def main() -> int:
         print("Morning summary posted to #jarvis-decisions")
     except Exception as exc:
         print(f"Slack post failed: {exc}", file=sys.stderr)
-        # Print to stdout as fallback
         print(summary)
 
     return 0
