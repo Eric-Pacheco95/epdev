@@ -54,6 +54,7 @@ def main() -> None:
     input_len = 0
     stop_reason = None
     _skill_name = ""
+    _advisor_word_count = 0
 
     try:
         data = json.load(sys.stdin)
@@ -84,6 +85,14 @@ def main() -> None:
                     error_msg = str(content)[:120] if content else "error"
             tool_input = data.get("tool_input", {})
             input_len = len(json.dumps(tool_input))
+            if tool_name == "advisor":
+                adv_content = response.get("content", "") if isinstance(response, dict) else ""
+                if isinstance(adv_content, list):
+                    adv_content = " ".join(
+                        c.get("text", "") if isinstance(c, dict) else str(c)
+                        for c in adv_content
+                    )
+                _advisor_word_count = len(str(adv_content).split())
 
         elif hook_type == "Stop":
             # Session boundary — marks end of a session for aggregation
@@ -122,6 +131,20 @@ def main() -> None:
 
     log_path = EVENTS_DIR / f"{now_utc.strftime('%Y-%m-%d')}.jsonl"
     locked_append(log_path, json.dumps(record))
+
+    # Advisor call stub — hook fires before model responds; model appends catch assessment separately
+    if tool_name == "advisor" and hook_type == "PostToolUse":
+        advisor_log = REPO_ROOT / "data" / "advisor_log.jsonl"
+        advisor_log.parent.mkdir(parents=True, exist_ok=True)
+        stub = {
+            "date": now_utc.strftime("%Y-%m-%d"),
+            "session_id": session_id,
+            "event": "advisor_called",
+            "output_word_count": _advisor_word_count,
+            "advisor_changed_plan": None,
+            "catch_summary": "PENDING",
+        }
+        locked_append(advisor_log, json.dumps(stub))
 
     # Track skill invocations in manifest DB
     if tool_name == "Skill" and hook_type == "PreToolUse" and session_id:
