@@ -84,7 +84,7 @@ def run_ruff(scan_path: Path) -> dict:
 
     try:
         result = subprocess.run(
-            ["ruff", "check", "--output-format=json", str(scan_path)],
+            ["ruff", "check", "--output-format=json", "--extend-select", "TD,FIX", str(scan_path)],
             capture_output=True, text=True, timeout=TOOL_TIMEOUT,
             cwd=str(REPO_ROOT),
         )

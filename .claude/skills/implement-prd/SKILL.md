@@ -118,7 +118,7 @@ Non-optional gate once all ISC items are built/blocked.
 
 **Step 2 — Cross-model review (Sonnet subagent):**
 - Spawn Sonnet (fresh-eyes); pass changed files, ISC context, build summary
-- Subagent prompt: "Review code you did not write. Be adversarial: incomplete implementations, edge cases, security gaps, production failures."
+- Subagent prompt: "Review code you did not write. Be adversarial: incomplete implementations, edge cases, security gaps, production failures. Before reviewing correctness, scan the diff for any behavior not traceable to an ISC item and flag it as SCOPE CREEP."
 - **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: review incomplete", do NOT proceed to VERIFY
 - **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
 - Scope: only issues related to implemented ISC items
@@ -126,6 +126,7 @@ Non-optional gate once all ISC items are built/blocked.
 ### VERIFY PHASE: Full pass
 
 - **Re-read PRD from disk before executing verify methods** — auto-compaction may have fired; on-disk PRD is the source of truth; trust file over in-memory copy.
+- **Full test suite**: if the project has a test runner (`pytest`, `npm test`, `make test`), execute it now and record aggregate pass/fail count as structural evidence before running per-ISC verify methods.
 - Run every ISC verify method in sequence, record pass/fail.
 - **Structured Evidence** per ISC item: (1) Evidence type (CLI output | test result | file exists | grep match | manual review), (2) Source (exact command/path), (3) Content (output snippet proving pass/fail, truncated)
 - Mark completed ISC checkboxes in the PRD (`- [ ]` → `- [x]`) only after the verify method passes AND structured evidence is recorded
