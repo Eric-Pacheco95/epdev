@@ -9,6 +9,7 @@ Runs non-interactively -- no user input required.
 
 from __future__ import annotations
 
+import io
 import re
 import sys
 from pathlib import Path
@@ -58,6 +59,11 @@ def _incomplete_iscs() -> dict[str, list[str]]:
 
 
 def main() -> None:
+    # Reconfigure stdout to UTF-8 so non-ASCII chars from file content never crash the hook.
+    # Windows default encoding (cp1252) cannot encode characters like ✓, →, em-dashes, etc.
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+
     parts: list[str] = []
 
     # Active tasks from tasklist
