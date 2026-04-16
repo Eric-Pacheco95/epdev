@@ -104,6 +104,38 @@
 
 ---
 
+## Strategic Horizon — Where AI Is Going and What Jarvis Will Face
+
+> Source: Miessler DA thesis analysis + architecture-review 2026-04-15. Read before planning Phase 6+.
+> Full analysis: `history/decisions/2026-04-15-arch-review-phase47-roadmap.md`
+> Prediction: `data/predictions/2026-04-15-jarvis-phase7-da-backcast.md`
+
+### The Convergence Thesis (working hypothesis, not law)
+PAI, Claude Code, OpenCode, MoltBot all independently arrived at the same 5 primitives: Skills, Hooks, Memory, Agent orchestration, Context priming. Independent convergence is the strongest architectural signal available — but the sample is small (4 projects, proximate ecosystem) and remains a hypothesis to validate, not a law to cite. Before treating this as architectural law, validate against AutoGen/CrewAI/Semantic Kernel (non-Anthropic-adjacent projects).
+
+### The DA Absorption Rule
+Any standalone AI product feature in the eventual DA scope is a dead-end. The DA will absorb it the way smartphones absorbed cameras, maps, and alarm clocks. Apply this test before adopting any new tool: *"Will a Phase 7 DA do this automatically?"* If yes, don't build a standalone version — build toward the DA integration instead.
+
+### Phase-by-Phase Headwinds Jarvis Will Hit
+
+| Phase | Problem to anticipate |
+|---|---|
+| 4 (Presence) | Without mobile access, Jarvis stays terminal-only and engagement drops outside work hours — Phase 5 has no delivery surface |
+| 5 (Proactive) | Autonomous task generation without loop-health monitoring creates silent self-reinforcing bad patterns |
+| 5→6 | Anthropic pricing/capability shift hits hardest here — 47 skills fully locked in, substrate abstraction not yet built |
+| 6 (Senses) | Every new input stream (calendar, email, health API) adds to the MCP attack surface; 43% of MCP servers vulnerable per 2026-04-06 security research |
+| 6→7 | Hallucination under autonomy gets irreversible — proactive actions at Phase 5+ cannot be rolled back the way interactive actions can |
+| 7 (Advocates) | DA layer consolidates at 2-3 companies (Anthropic, Google, OpenAI); Jarvis risks becoming a config layer on a vendor-controlled substrate with no leverage |
+
+### Known Structural Risks (don't re-discover these)
+- **Vendor lock-in (HIGH):** Claude Code controls both model and harness substrate simultaneously. Substrate abstraction (`claude_runner.py`) must ship before Phase 6 deepens lock-in further.
+- **Read-only is policy, not sandbox:** Calendar, email, financial integrations enforced by system prompt text + settings.json allow-lists — not a hard technical boundary. Until Claude Code supports per-subagent hard permission profiles, all "read-only" constraints are advisory.
+- **Spear-phishing escalation:** As Jarvis gains access to calendar, email, and financial data, it becomes a higher-value injection target. Every new sense is a new attack surface. Treat ambient data feeds as untrusted external input even when they come from "trusted" sources (Eric's own calendar can be poisoned via invite).
+- **The "Her" OS is over-specified:** Voice-first, always-on is ONE possible interface end-state. The correct north star is orchestration capability + advocacy for Eric's goals — not the interface modality. Build the orchestration; let the interface emerge.
+- **MCP is vendor-controlled:** Model Context Protocol is Anthropic's protocol. Watch for OpenAPI-native alternatives. MCP is the right bet today; it may not be in 2027.
+
+---
+
 ## Phase 6: Senses — Persistent ambient awareness (future)
 
 > Status: deferred — requires Phase 5 completion gate.

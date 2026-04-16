@@ -305,3 +305,154 @@ ISC Quality Gate: PASS (6/6) -- count 8 (at ceiling), single sentence each, stat
 ---
 
 Next step: `/implement-prd memory/work/jarvis-app/PRD.md` to execute Sprint 3 through the full BUILD -> VERIFY -> LEARN loop.
+
+---
+
+# Sprint 4: /dashboard — Unified Life View
+
+- Status: draft
+- Created: 2026-04-15
+- Depends on: Sprints 1+2+3 COMPLETE
+- Architecture review: PASSED with corrections (2026-04-15) — `history/decisions/2026-04-15-arch-review-jarvis-app-sprint4.md`
+- Phase 4 gate: "Brain-map: all active projects + TELOS goal progress in one view" — satisfied by Projects + TELOS tabs
+- Visual reference: Kai/Pulse app (Daniel Miessler) — dark theme, horizontal tab bar, stat cards, icon + label
+- Setup prerequisite: Add `## Mission` one-liner to `memory/work/telos/GOALS.md` before implementation (TELOS tab renders this at top)
+
+## OVERVIEW
+
+Sprint 4 adds a new `/dashboard` route to jarvis-app as a peer to `/` (graph canvas) and `/vitals` (ops health) — neither existing route is touched. The route has three client-side tabs: Projects (default), TELOS, and Business. Projects and TELOS satisfy the Phase 4 gate condition by surfacing active project status and TELOS goal progress in a single browser context. The Business tab is a POC showing crypto-bot state and revenue log data; its future role is a cross-project monitoring hub. All new API routes implement the full `/api/source` defense stack. The TELOS route enforces an explicit three-file allowlist, preventing the other 16+ personal files in the TELOS directory from being accessible via the API.
+
+## PROBLEM AND GOALS
+
+- **Phase 4 gate unmet**: No single browser view shows all active projects + TELOS goal progress; Eric must open source files or use CLI for this context
+- **Jarvis is tool-mode, not presence-mode**: Sprint 4 begins the shift — dashboard is always-open context, not a thing Eric invokes
+- **TELOS goals are invisible during sessions**: Goal weights, status, and active project traces live in markdown; Sprint 4 surfaces them in the browser without an LLM session
+
+## NON-GOALS
+
+- Stubs/placeholders for Health, Finances, Life tabs — deferred until data contracts exist
+- Absorption or restructuring of `/vitals` — remains untouched as the ops health view
+- Top-level routes per tab (`/work`, `/telos`, `/business`) — client-side tabs only (localStorage pattern from Sprint 3)
+- Markdown renderer with HTML output — content renders as plaintext or structured data extraction; `dangerouslySetInnerHTML` is prohibited
+- Write-back to any source files — read-only throughout
+- Mobile responsive below 1280px
+- Authentication or cloud deployment
+
+## USERS AND PERSONAS
+
+- **Eric P (sole user)**: Keeps `/dashboard` as a persistent browser tab alongside Claude Code. Needs active projects and TELOS goals visible at a glance without consuming LLM turns.
+
+## USER JOURNEYS OR SCENARIOS
+
+1. **Project status check**: Eric opens `/dashboard`. Projects tab (default) shows the Active Projects table (project, status, health, next action) from tasklist.md plus open tasks by priority group. crypto-bot health is yellow at a glance.
+2. **Goal check-in**: Eric clicks TELOS tab. Mission statement at top (Kai-style), then goals table (G1–G6, weights, status). G4 is "challenged" — visible without opening any file.
+3. **Business POC**: Eric clicks Business tab. "API Down" badge is visible (api_reachable: false), P&L $0.00, baseline revenue log entry. Sparse but structural.
+4. **Morning routine**: Dashboard is already open. Eric scans Projects tab before starting a Claude Code session — no CLI required, no LLM turn consumed.
+
+## FUNCTIONAL REQUIREMENTS
+
+### Navigation
+
+- FR-200: NavBar adds a third link "Dashboard" — total nav: Graph | Vitals | Dashboard
+- FR-201: Dashboard tab state stored at localStorage key `jarvis-dashboard-active-tab` — distinct from `jarvis-vitals-active-tab` (Sprint 3)
+
+### Projects Tab (default)
+
+- FR-210: Projects tab is the default landing tab when `/dashboard` loads
+- FR-211: Active Projects table renders rows from tasklist.md `## Active Projects` pipe table (columns: Project, Status, Health, Next Action)
+- FR-212: Open Tasks section renders checkbox-list items from tasklist.md `## Open Tasks` section, grouped by their priority subheadings
+- FR-213: `/api/tasklist` response includes `task_count` (integer) and `parse_warning` (boolean) — `parse_warning: true` when input file is non-empty but parser produced 0 tasks
+- FR-214: If `parse_warning` is true, Projects tab shows "Unable to parse tasks — check tasklist.md format" banner instead of an empty list
+
+### TELOS Tab
+
+- FR-220: TELOS tab renders mission statement from GOALS.md `## Mission` section at the top of the tab before the goals table (Eric adds this line to GOALS.md as Sprint 4 setup)
+- FR-221: Goals table renders all rows from GOALS.md goals table (columns: #, Goal, Weight, Status, Metric)
+- FR-222: Predictions table renders rows from PREDICTIONS.md pipe table (columns: Date, Prediction, Confidence, Timeframe, Outcome)
+- FR-223: `/api/telos` accepts a `file` query parameter and serves only files in the explicit allowlist: `[GOALS.md, PROJECTS.md, PREDICTIONS.md]` — all other filenames return HTTP 403
+- FR-224: `/api/telos` logs rejected filename at WARN level in server logs when a non-allowlisted file is requested
+
+### Business Tab (POC)
+
+- FR-230: Business tab reads `data/crypto_bot_state.json` via `/api/business` and renders: API status badge (reachable/down), realized P&L, win rate, drawdown, open/closed trade counts
+- FR-231: When `api_reachable: false`, Business tab shows a prominent "API Down" badge alongside (not instead of) numeric fields
+- FR-232: Business tab reads `data/revenue_log.jsonl` via `/api/business` and renders the most recent entry (date, substack_revenue, crypto_pnl, notes)
+- FR-233: Business tab shows "No revenue data" state when `revenue_log.jsonl` is absent or empty
+
+### Security (all new routes)
+
+- FR-240: All new API routes (`/api/tasklist`, `/api/telos`, `/api/business`) implement path traversal guard — `path.resolve(rootDir, ...segments)` result checked with `startsWith(rootDir + path.sep)` before any file read
+- FR-241: All new API routes implement symlink escape guard — `fs.realpathSync()` result re-checked against root before serving
+- FR-242: All new API routes cap response at 1MB — files exceeding this return HTTP 413
+
+## NON-FUNCTIONAL REQUIREMENTS
+
+- Dashboard page load under 500ms (local file reads, no network calls)
+- Tab switching is perceptually instant — client-side state only, no re-fetch on tab switch
+- All text is ASCII-safe (Windows cp1252 compatibility)
+- Works at 1280px+ width
+- No new npm dependencies
+- `dangerouslySetInnerHTML` is not used in any Sprint 4 component
+
+## ACCEPTANCE CRITERIA
+
+### Sprint 4: /dashboard Unified Life View
+
+- [x] [E] `/dashboard` route is reachable via NavBar "Dashboard" link and renders a page with a tab bar | Verify: `curl -s http://localhost:3002/dashboard | grep -c "Projects"` returns ≥ 1 [M] | model: haiku | Evidence: returns 1
+- [x] [E] Projects tab (default) renders Active Projects table rows matching tasklist.md `## Active Projects` pipe table | Verify: API returns 3 projects matching tasklist.md Active Projects table [M] | model: sonnet | Evidence: /api/tasklist projects: 3, parse_warning: false
+- [x] [E] TELOS tab goals table renders all rows from GOALS.md goals table with goal name, weight, and status | Verify: rendered goal row count matches `grep -c "^| [0-9]" memory/work/telos/GOALS.md` [M] | model: sonnet | Evidence: API goals: 7, file goals: 7
+- [x] [E] TELOS tab renders mission statement from GOALS.md `## Mission` section above the goals table | Verify: load TELOS tab, confirm mission text block appears in DOM before goal rows [M] | model: sonnet | Evidence: mission extracted: "Build an AI-augmented life..."
+- [x] [E] Business tab renders API status badge and P&L from `data/crypto_bot_state.json`; shows "API Down" badge when `api_reachable` is false | Verify: load Business tab with current data, confirm "API Down" badge visible and P&L renders as $0.00 [M] | model: sonnet | Evidence: apiReachable: false, pnl: 0, status: ok
+- [x] [R] `/api/telos` returns HTTP 403 for any filename not in {GOALS.md, PROJECTS.md, PREDICTIONS.md} | Verify: `curl .../api/telos?file=BELIEFS.md` → 403 [M] | Evidence: HTTP 403 PASS
+- [x] [R] `/api/tasklist`, `/api/telos`, `/api/business` each return HTTP 403 for path traversal attempts | Verify: URL-encoded traversal and non-allowlist filenames → 403 [M] | Evidence: WISDOM.md → 403, URL-encoded `..%2F..%2F` → 403, both PASS
+- [x] [R] Routes `/` and `/vitals` are not modified by Sprint 4 | Verify: `git diff --exit-code src/app/page.tsx src/app/vitals/` exits 0 [A] | Evidence: git diff exit 0, PASS
+
+ISC Quality Gate: PASS (6/6) — count 8 (at ceiling), single sentence each, state-not-action, binary-testable, anti-criteria present (criteria 6, 7, 8 — each with explicit test commands that exit nonzero on violation), verify methods specified.
+
+## SUCCESS METRICS
+
+- Phase 4 gate satisfied: active projects + TELOS goals visible in browser without CLI session
+- Eric opens `/dashboard` before starting daily sessions (qualitative)
+- Business tab POC is in place for future data enrichment (structural — not measured)
+
+## OUT OF SCOPE
+
+- Health, Finances, Life tabs — deferred until data contracts defined
+- Chart library (recharts/chart.js) — evaluate after Sprint 4 ships
+- TELOS radar chart — needs scoring rubric first
+- Write-back / edit capabilities
+- Tab URL routing (hash-based) — localStorage persistence is sufficient for single-user use
+
+## DEPENDENCIES AND INTEGRATIONS
+
+- **`orchestration/tasklist.md`**: Source for Projects tab (Active Projects table + Open Tasks). No schema version — parser must degrade gracefully on format change and emit `parse_warning`.
+- **`memory/work/telos/GOALS.md`** (requires `## Mission` line added before Sprint 4 build): Source for TELOS mission + goals table
+- **`memory/work/telos/PROJECTS.md`**: Source for TELOS active projects trace
+- **`memory/work/telos/PREDICTIONS.md`**: Source for TELOS predictions table
+- **`data/crypto_bot_state.json`**: Source for Business tab — crypto-bot P&L and status
+- **`data/revenue_log.jsonl`**: Source for Business tab — Substack revenue baseline
+- **`jarvis-app.config.json`**: Config-driven path resolution (same pattern as Sprint 1/vitals)
+- **Existing jarvis-app components**: StatCard, SectionHead — reused from Sprint 3
+
+## RISKS AND ASSUMPTIONS
+
+### Risks
+
+- **tasklist.md format drift**: File is manually maintained with no schema version. Parser producing zero tasks from non-empty input is indistinguishable from empty backlog — mitigated by `parse_warning` field in API response and banner in UI.
+- **TELOS allowlist enforcement**: If `/api/telos` route is implemented without the allowlist check, all 19+ personal files in `memory/work/telos/` become API-accessible. Mitigated by explicit ISC criterion 6 with a test command that exits nonzero on failure.
+- **Business tab permanent sparseness**: `crypto_bot_state.json` is currently all zeros (API down). If crypto-bot remains down, this tab shows only "API Down" indefinitely. This is a POC — acceptable for Sprint 4.
+
+### Assumptions
+
+- Eric adds a `## Mission` line to `memory/work/telos/GOALS.md` before implementation begins
+- `jarvis-app.config.json` already has `epdevRoot` pointing to the epdev repo (same config used by vitals)
+- No chart library needed — stat cards and pipe tables rendered as structured components are sufficient for POC
+
+## OPEN QUESTIONS
+
+- **PROJECTS.md in TELOS tab**: Should the active projects from PROJECTS.md render on the TELOS tab (showing goal traces), or is the projects table in the Projects tab sufficient? Suggest deferring to Sprint 5 to keep TELOS tab focused on goals + predictions.
+- **Business tab future scope**: When `data/financial/snapshot.jsonl` ships (separate backlog item), does it fold into Business tab or get its own Finances tab? Decision deferred — no action in Sprint 4.
+
+---
+
+Next step: `/implement-prd memory/work/jarvis-app/PRD.md` — target Sprint 4 section.
