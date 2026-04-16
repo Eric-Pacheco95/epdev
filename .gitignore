@@ -152,6 +152,8 @@ history/events/
 data/
 tools/scripts/.notify_state/
 _worker_prompt.txt
+# Demo builder output (rendered MP4 segments, not source)
+tools/scripts/demo_builder/output/
 
 # ------------------------------------------------------------------------------
 # Fabric upstream patterns (large dependency, cloned locally — not part of repo)
