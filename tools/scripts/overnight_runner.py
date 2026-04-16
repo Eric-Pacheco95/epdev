@@ -894,6 +894,18 @@ def main() -> int:
     try:
         wt_cwd = str(wt_path)
 
+        # Pre-loop clean: symlink setup (memory/learning/*) may leave the worktree
+        # dirty before any dimension runs, causing the pre-dimension guard to abort
+        # the entire queue.  Auto-commit any residual changes now so the first
+        # dimension starts from a clean state.
+        if not worktree_is_clean(wt_cwd):
+            print("  Pre-loop: worktree dirty after setup -- auto-committing residual changes.")
+            auto_commit_dimension(wt_cwd, "setup")
+            if not worktree_is_clean(wt_cwd):
+                print("  ERROR: Worktree still dirty after pre-loop clean. Aborting.")
+                worktree_cleanup()
+                return 1
+
         # 5. Run dimensions in sequence until time budget exhausted
         for i, dim_name in enumerate(dim_queue, 1):
             elapsed = time.monotonic() - start_time
