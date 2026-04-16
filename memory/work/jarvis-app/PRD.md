@@ -456,3 +456,71 @@ ISC Quality Gate: PASS (6/6) — count 8 (at ceiling), single sentence each, sta
 ---
 
 Next step: `/implement-prd memory/work/jarvis-app/PRD.md` — target Sprint 4 section.
+
+---
+
+# Sprint 5: Design System — Pulse-Quality GUI
+
+- Status: planning
+- Created: 2026-04-16
+- Depends on: Sprint 4 COMPLETE (all 3 tabs ship, APIs working)
+- Trigger: Sprint 4 shipped functionally correct but visually off from Pulse reference. Root cause diagnosed: no design system, pure-Tailwind-from-scratch iteration loop doesn't converge without visual feedback.
+
+## PROBLEM
+
+The /dashboard UI is functionally complete but does not match the visual quality of the Pulse/Kai reference app. Iterating on raw Tailwind CSS from screenshot interpretation is the wrong workflow — each cycle is blind guessing. Sprint 5 establishes the design foundation that all future jarvis-app UI work builds on.
+
+## ROOT CAUSE (from Sprint 4 retrospective)
+
+- No component library — every card, stat row, tab, and label is hand-rolled Tailwind
+- No design-to-code tool in the loop — v0.dev generates production-quality components from reference screenshots in minutes; not using it costs 3-5x iteration time
+- Iterating without visual feedback — "way off" feedback without specific dimensions (color / spacing / typography / weight) can't be acted on precisely
+- Screenshots as design spec are too low-resolution for exact color/spacing extraction
+
+## WHAT SHIPS IN SPRINT 5
+
+### Design system foundation
+- Install **shadcn/ui** as the component base (`npx shadcn@latest init` — dark mode, CSS variables)
+- Add `cn()` utility and shadcn `Card`, `Badge`, `Separator` primitives
+- Define design tokens in `globals.css`: exact color values for bg, card, border, muted, accent per tab
+
+### v0.dev workflow (new)
+- For any new UI component or redesign: screenshot reference → v0.dev image-to-code → paste output → integrate
+- Prompt template: "Recreate this dark dashboard component in Next.js + Tailwind + shadcn/ui. Background #0a0a0f, card #111118. [specific component description]"
+- Removes blind-guessing — production-quality baseline in one shot
+
+### /dashboard redesign using shadcn + v0.dev output
+- Regenerate all 3 tab UIs (Projects, TELOS, Business) using v0.dev with Pulse screenshots as reference
+- Replace hand-rolled stat rows and cards with shadcn Card + proper typography scale
+- Validated against Pulse screenshots with Eric's in-browser visual sign-off
+
+### Specific design decisions deferred from Sprint 4
+- Exact Pulse color values (need v0.dev or Figma extract — not screenshot inference)
+- Mission rendering as Win: bullets vs. prose (needs data format decision)
+- Tab bar alignment: pill vs. underline vs. Pulse-style centered nav
+
+## WHAT DOES NOT SHIP
+
+- New data sources or API routes (Sprint 4 APIs are sufficient)
+- New tabs (Health, Finances, Life — still deferred)
+- Animation or transitions (visual correctness first)
+- Mobile responsive design
+
+## ACCEPTANCE CRITERIA (ISC)
+
+- [ ] shadcn/ui is initialized in jarvis-app with dark mode CSS variables | Verify: `grep "dark" jarvis-app/src/app/globals.css` shows shadcn dark theme variables
+- [ ] v0.dev workflow is documented: prompt template + integration steps in `jarvis-app/DESIGN.md` | Verify: `ls jarvis-app/DESIGN.md`
+- [ ] /dashboard TELOS tab passes Eric's visual sign-off against Pulse Untitled1.png reference | Verify: Side-by-side comparison + Eric approval
+- [ ] /dashboard Projects tab passes Eric's visual sign-off | Verify: Eric approval
+- [ ] No dangerouslySetInnerHTML introduced | Verify: `grep -r dangerouslySetInnerHTML jarvis-app/src/`
+- [ ] TypeScript clean after shadcn install | Verify: `tsc --noEmit` exits 0
+
+## OPEN QUESTIONS
+
+- Does Eric want to do the v0.dev generation himself (browser) or should we use the Claude API's vision capability to generate components from screenshots in-session?
+- Should shadcn/ui replace ALL current Tailwind components (full refactor) or augment only new components going forward?
+- Is the target Pulse-identical or Pulse-inspired? (Identical requires exact font/color extraction from Daniel Miessler's actual CSS)
+
+## NEXT STEP
+
+Run `! npx shadcn@latest init` in `C:\Users\ericp\Github\jarvis-app` to initialize the design system foundation. Then run `/implement-prd memory/work/jarvis-app/PRD.md --phase 5`.

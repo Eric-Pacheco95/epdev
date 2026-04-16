@@ -23,7 +23,7 @@
 |---------|--------|--------|-------------|
 | epdev-jarvis | active | green | Phase 5D data-gated items; 5E-1 falsification 2026-04-21 |
 | crypto-bot | active | yellow | Paper trading → production gate — `memory/work/crypto_trading_bot/project_state.md` |
-| jarvis-app | active | green | Sprint 1+2+3 COMPLETE — `memory/work/jarvis-app/PRD.md` |
+| jarvis-app | active | green | Sprints 1-4 COMPLETE (/dashboard 3-tab, Phase 4 gate closed). Sprint 5: design system — `memory/work/jarvis-app/PRD.md` |
 
 ---
 
@@ -31,6 +31,7 @@
 
 ### Priority: Active
 
+- [ ] **jarvis-app Sprint 5: Design system** — Install shadcn/ui (dark mode), establish v0.dev workflow, regenerate /dashboard tabs using v0.dev + Pulse screenshots. Root cause: Sprint 4 GUI is functionally correct but visually off — pure-Tailwind iteration without design tooling doesn't converge. PRD: `memory/work/jarvis-app/PRD.md` Sprint 5 section. | Gate: Sprint 4 COMPLETE ✓
 - [ ] **Wire Claude Code "defer" into dispatcher (code)** — validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface. Requires `claude -p --resume` e2e spike first. (split from doc task 2026-04-08)
 - [ ] **5C-5C: ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs). Current: ISC generated inline per-branch, functional but not templated.
 
