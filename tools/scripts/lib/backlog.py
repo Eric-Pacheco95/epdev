@@ -292,6 +292,12 @@ def backlog_append(
             # Deep-copy mutable defaults
             task[field] = list(default) if isinstance(default, list) else default
 
+    # -- Enforce: autonomous_safe=False tasks must land in pending_review --
+    # pending + autonomous_safe=False is an unreachable state: the dispatcher
+    # won't pick it up (requires autonomous_safe=True) and nothing promotes it.
+    if task.get("autonomous_safe") is False and task.get("status") == "pending":
+        task["status"] = "pending_review"
+
     # -- Validate --
     errors = validate_task(task)
     if errors:

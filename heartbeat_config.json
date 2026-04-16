@@ -187,7 +187,7 @@
       "name": "backlog_pending_count",
       "type": "backlog_health_metric",
       "metric": "backlog_pending_count",
-      "thresholds": { "warn_above": 10, "crit_above": 20 }
+      "thresholds": { "warn_above": 3, "crit_above": 10 }
     },
     {
       "name": "backlog_failed_count",
@@ -324,17 +324,6 @@
       "context_files": ["tools/scripts/lib/net_util.py"],
       "model": "sonnet",
       "min_severity": "CRIT"
-    },
-    "producer_health": {
-      "description": "One or more producers are reporting unhealthy -- review producer_health detail and fix/pause the offender",
-      "skills": [],
-      "isc": [
-        "All producers listed in orchestration/producers.json report healthy | Verify: python tools/scripts/verify_producer_health.py",
-        "No producer has been stale longer than 26h without an approved backlog row documenting the gap | Verify: Review"
-      ],
-      "context_files": ["orchestration/producers.json"],
-      "model": "sonnet",
-      "min_severity": "WARN"
     },
     "producer_recency": {
       "description": "producer_recency watchdog reported stale producer(s) -- a corresponding pending_review row has already been injected by the watchdog; this entry is belt-and-suspenders coverage in case the watchdog inject fails",

@@ -160,7 +160,7 @@ def query_producer_health(max_age_hours: int = 26) -> list[dict]:
     if conn is None:
         return []
     try:
-        now = datetime.now()
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         rows = conn.execute(
             """SELECT producer, MAX(started_at) as last_run, status
                FROM producer_runs
@@ -171,7 +171,7 @@ def query_producer_health(max_age_hours: int = 26) -> list[dict]:
             if not last_run:
                 continue
             try:
-                # Strip timezone info for consistent naive comparison
+                # Strip timezone info to produce naive-UTC for consistent comparison
                 clean = last_run.replace("Z", "").replace("+00:00", "")
                 last_dt = datetime.fromisoformat(clean)
             except ValueError:
