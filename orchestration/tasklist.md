@@ -182,5 +182,5 @@ Any standalone AI product feature in the eventual DA scope is a dead-end. The DA
 
 ## Build Location Guide
 
-**Claude Code (Claude Max)** = All implementation. Cursor retired 2026-03-27.  
+**Claude Code (Claude Max)** = All implementation. Cursor+codex being used bi-weekly/monthly to do extensive /second-opinion reviews  
 **jarvis-app repo** = `C:\Users\ericp\Github\jarvis-app` — React Flow + Next.js + TypeScript. Tracked in `memory/work/jarvis-app/PRD.md`.
