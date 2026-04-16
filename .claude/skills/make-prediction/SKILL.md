@@ -11,7 +11,7 @@ Structured multi-outcome predictions with committed probabilities
 THINK
 
 ## Syntax
-/make-prediction [--deep] [--geopolitics | --market] [--planning] [--research] [--no-track] <question>
+/make-prediction [--deep] [--geopolitics | --market] [--planning] [--backcast] [--research] [--no-track] <question>
 
 ## Parameters
 - question: what you want to predict (required for execution, omit for usage help)
@@ -19,6 +19,7 @@ THINK
 - --geopolitics: force geopolitics lens (Predictive History framework, actor modeling, civilizational cycles)
 - --market: force market lens (Dalio cycles, sentiment, macro regime)
 - --planning: suppress probabilities, rank by impact severity, add pre-mortem framing
+- --backcast: phase-mapped backcasting from ideal state — upgrades pre-mortem to phase × problem table; gate list output precedes roadmap items; use for multi-phase PRDs, roadmap planning, or any question spanning 2+ years. Always follow with /architecture-review on flagged items before tasklist commit
 - --research: auto-invoke /research for current data before predicting
 - --no-track: skip writing prediction record (tracking is ON by default)
 
@@ -28,13 +29,16 @@ THINK
 - /make-prediction --market Where is BTC heading in the next cycle?
 - /make-prediction --planning What happens if I start an AI consulting business?
 - /make-prediction --research --geopolitics How does the US-Iran conflict reshape the Middle East?
+- /make-prediction --backcast What does a fully realized Phase 7 Jarvis Digital Assistant look like for Eric?
 
 ## Chains
 - Before: /research (for current data — auto-invoked with --research flag)
 - After: /extract-alpha (optional — surfaces novel insights, but biases toward surprising low-probability scenarios)
 - After: /analyze-claims (verify surprising claims in the analysis)
 - After: /red-team (stress-test the prediction before acting on it)
+- After (--backcast only): /architecture-review on all ITEMS REQUIRING REVIEW before committing ROADMAP ITEMS to tasklist
 - Full: /research > /make-prediction --deep > /red-team
+- Full (backcast): /research > /make-prediction --backcast > /architecture-review > /create-prd > tasklist commit
 
 ## Output Contract
 - Input: question about the future + optional flags
@@ -214,6 +218,65 @@ Same structure as quick mode but:
 - [Failure mode 2 — what went wrong]
 - [Failure mode 3 — what went wrong]
 ```
+
+### Backcast Mode Output (--backcast flag)
+
+Before generating any output, ask Eric three clarifying questions to validate the ideal state input:
+1. What does failure look like at full ideal state? (sharpens the goal)
+2. What is the single most important constraint? (anchors phase gate conditions)
+3. Name one thing that must NOT be true at ideal state. (surfaces anti-criteria early)
+
+If Eric cannot answer these, stop and suggest `/research` or a more specific ideal state description first.
+
+Then generate these 6 sections in order. Write each section to disk at `memory/work/_backcast-{slug}/section-{N}.md` as it's produced — do not wait until the end. Synthesis reads from disk, not context (compaction guard).
+
+```
+## BACKCAST: [one-sentence falsifiable ideal state]
+
+Phase model: [Generic 5-phase: Concept→Tools→Presence→Proactive→Autonomous | or named model if specified]
+Current phase: [assessed from input context]
+
+### IDEAL STATE
+[Vivid, concrete description — what success looks like at full realization. 3-5 sentences. Falsifiable: a skeptic could verify this is or isn't achieved.]
+
+### CURRENT STATE
+[Phase mapping of current capabilities against the model. What phase is the subject in now, and what evidence supports that assessment.]
+
+### PHASE GATES (future → present)
+[Backcasted from ideal state backward through each phase boundary. Each gate: what must be true for this phase transition to succeed.]
+
+**Phase [N] → [N-1]:** Must be true: [conditions]
+**Phase [N-1] → [N-2]:** Must be true: [conditions]
+...
+**Phase [current+1] → [current]:** Must be true: [conditions — these are next-quarter buildable items]
+
+### ITEMS REQUIRING /architecture-review
+⚠️ These items must not be added to tasklist until /architecture-review completes. The FUTURE-STATE PROBLEMS table below is narrative risk identification only — it does not run adversarial agents.
+
+- [Item] — Reason: [why it needs review: system boundary / autonomous capability / irreversible side effect / self-referential loop risk]
+- ...
+
+### FUTURE-STATE PROBLEMS
+Phase × problem table — what will go wrong at each phase boundary, not just "assume it failed" flat list.
+
+| Phase | Problem | Category | Severity | Mitigation hint |
+|---|---|---|---|---|
+| Phase [N] | [specific failure at this boundary] | technical / platform / behavioral | High/Med/Low | [one-liner] |
+| ... | | | | |
+
+### ROADMAP ITEMS
+[Only items cleared by ITEMS REQUIRING /architecture-review (above) OR items that are unambiguously Phase 4 or earlier with no system boundary implications.]
+
+Phase [current+1]:
+- [Item with headwind embedded: "X — but watch for Y at this phase"]
+...
+
+Phase [current+2]:
+- [Item]
+...
+```
+
+After producing output: write backcast record to `data/predictions/YYYY-MM-DD-backcast-{slug}.md` (same frontmatter format as standard prediction, with `mode: backcast`). Clean up `memory/work/_backcast-{slug}/` after write.
 
 ## Step 5: TRACK (default on, suppress with --no-track)
 

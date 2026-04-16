@@ -150,6 +150,22 @@ Default to **consumer** if unspecified and topic is general, **technical** if to
 ---
 ```
 
+# PPTX VISUAL STYLE (enforced by keynote_to_pptx.py)
+
+When images are generated, the final PPTX uses a two-column layout:
+- **Left column** (~45% width, Inches(5.5)): slide title (LEFT, 36pt bold white) + bullets (CENTER, 20pt #CCCCCC)
+- **Right column**: AI-generated image fills the right ~55%
+- **Divider line**: 2-inch blue accent bar (#4EA8DE) below title at Inches(1.3)
+- **Bullet spacing**: blank line between each bullet (not inline padding)
+- **Text hierarchy**: title #FFFFFF, bullets #CCCCCC, subtitle/accent #88BBDD, notes #999999
+- **Title slide**: 44pt bold centered title + 18pt #88BBDD subtitle (the DESIRED TAKEAWAY)
+- **Background**: `#0F172A` dark navy on all slides
+
+**Messaging guidance for enterprise/compliance audiences:**
+- Use the org's own compliance terminology, not generic standards (e.g., "EA/AP, Data Privacy, AML" not "OSFI B-13, PIPEDA" when presenting internally at TD)
+- "Your [role]" → "the [role]" — less presumptuous for mixed audiences
+- Title slide subtitle: state the gap/opportunity concisely — avoid "they already have X" framing
+
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown

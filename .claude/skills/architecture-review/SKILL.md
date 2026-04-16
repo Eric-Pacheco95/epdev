@@ -64,6 +64,11 @@ Run `/architecture-review` BEFORE any hard-to-reverse decision: architecture cho
 - Extract the key constraints, requirements, and context from the proposal
 - List the viable alternatives (minimum 2) — if only one path is described, identify what was implicitly rejected
 - Determine if STRIDE overlay is warranted (explicit --stride flag, or proposal involves: external input, file system writes, network access, credential handling, autonomous execution)
+- **Backcast eligibility check**: Before launching agents, assess if the proposal spans multiple phases, involves a multi-year roadmap, or asks "how should we evolve X over time." If any of these are true, prompt Eric:
+  > "This proposal spans multiple phases / involves a long-horizon roadmap. `/make-prediction --backcast` would surface phase-specific failure modes BEFORE the architecture review — so the agents have richer problems to evaluate. Recommend running that first. Proceed with /architecture-review only, or run `/make-prediction --backcast <ideal state>` first?"
+  - If Eric confirms architecture-review only: proceed to Step 2
+  - If Eric wants --backcast first: STOP; direct to `/make-prediction --backcast` with a suggested ideal state restatement
+  - Skip this check if: the proposal is scoped to a single phase, a specific implementation decision, or a binary choice with no multi-phase dependency
 - Present the framing to Eric for confirmation before launching agents:
   > **Architecture Decision:** {one sentence}
   > **Alternatives:** {2-3 options}

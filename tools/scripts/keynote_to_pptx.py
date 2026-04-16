@@ -165,25 +165,6 @@ def build_pptx(data: dict, output_path: Path, images_dir: Path | None = None) ->
         shape.fill.fore_color.rgb = ACCENT_COLOR
         shape.line.fill.background()
 
-        # Bullets
-        if s["bullets"]:
-            txBox = slide.shapes.add_textbox(
-                margin, Inches(1.8), content_width, Inches(4.0)
-            )
-            tf = txBox.text_frame
-            tf.word_wrap = True
-
-            for i, bullet in enumerate(s["bullets"]):
-                if i == 0:
-                    p = tf.paragraphs[0]
-                else:
-                    p = tf.add_paragraph()
-                p.text = bullet
-                p.font.size = Pt(20)
-                p.font.color.rgb = BULLET_COLOR
-                p.space_after = Pt(12)
-                p.level = 0
-
         # Image: embed file if available, otherwise show text description
         slide_num = data["slides"].index(s) + 1
         image_path = None
@@ -196,14 +177,37 @@ def build_pptx(data: dict, output_path: Path, images_dir: Path | None = None) ->
 
         if image_path:
             # Place image on the right side of the slide
-            img_left = slide_width - margin - Inches(5.0)
-            img_top = Inches(1.8)
+            img_left = slide_width - margin - Inches(5.5)
+            img_top = Inches(2.1)
             img_height = Inches(4.0)
             slide.shapes.add_picture(
                 str(image_path), img_left, img_top, height=img_height
             )
-            # Narrow bullet text to left half when image is present
-        elif s["image"]:
+
+        # Bullets — constrain to left column when image is present
+        if s["bullets"]:
+            bullet_width = Inches(5.5) if image_path else content_width
+            txBox = slide.shapes.add_textbox(
+                margin, Inches(2.1), bullet_width, Inches(4.5)
+            )
+            tf = txBox.text_frame
+            tf.word_wrap = True
+
+            for i, bullet in enumerate(s["bullets"]):
+                if i == 0:
+                    p = tf.paragraphs[0]
+                else:
+                    # blank line between bullets
+                    blank = tf.add_paragraph()
+                    blank.text = ""
+                    p = tf.add_paragraph()
+                p.text = bullet
+                p.font.size = Pt(20)
+                p.font.color.rgb = BULLET_COLOR
+                p.alignment = PP_ALIGN.CENTER
+                p.level = 0
+
+        if not image_path and s.get("image"):
             _add_text_box(slide, margin, Inches(6.2), content_width, Inches(0.8),
                           "Visual: " + s["image"][:120], 10, NOTE_COLOR)
 

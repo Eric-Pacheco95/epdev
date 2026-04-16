@@ -3,6 +3,10 @@
 > Behavioral constraints for research tasks, external source evaluation, and dependency adoption.
 > Load when running /research, /absorb, /architecture-review, or evaluating new tools/dependencies.
 
+## Dependency Verification
+
+- Before claiming a dependency is "installed" or "available," verify the actual package manifest (package.json, requirements.txt, pyproject.toml, go.mod). PRDs and documentation describe intent, not current state — trust the lockfile. Why: /research subagent inferred Tremor + shadcn/ui were installed because the jarvis-app PRD named them as the intended stack; package.json had neither. All downstream recommendations in that session were wrong.
+
 ## External Research
 
 - For current-events research (financial, geopolitical, live topics), always use direct WebSearch — sub-agents may have a stale knowledge cutoff
