@@ -38,8 +38,21 @@ def _ascii_safe(text: str) -> str:
         .replace("\u2192", "->")   # right arrow
         .replace("\u2190", "<-")   # left arrow
     )
-    # Catch-all: replace any remaining non-ASCII chars with ?
-    return result.encode("ascii", errors="replace").decode("ascii")
+    return result
+
+
+_W = 58  # inner box width
+
+
+def _box_line(text: str = "") -> str:
+    return f"║  {text:<{_W - 2}}║"
+
+
+def _section(label: str) -> str:
+    bar = "─" * max(2, _W - len(label) - 3)
+    return f"\n◈ {label} {bar}"
+
+
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
@@ -570,55 +583,45 @@ def main() -> None:
         _check_morning_brief_reference(user_prompt)
 
     now = datetime.now().astimezone()
-    print()
-    print("=" * 60)
-    print("  EPDEV Jarvis - session start")
-    print(f"  {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
-    print("=" * 60)
-    print()
-    print("  Output: DENSE (Core Principle #7)")
-    print()
 
-    # Git safety check (parallel sessions + uncommitted changes)
+    # ── Banner ──────────────────────────────────────────────────────────
+    print()
+    print(f"╔{'═' * _W}╗")
+    print(_box_line("JARVIS :: NEURAL LINK ESTABLISHED"))
+    print(_box_line(f"SESSION // {now.strftime('%Y-%m-%d %H:%M:%S %Z')}  [DENSE]"))
+    print(f"╚{'═' * _W}╝")
+
+    # ── Git Safety ──────────────────────────────────────────────────────
     git_warnings = _git_safety_check()
     if git_warnings:
-        print("Git Safety")
-        print("-" * 40)
+        print(_section("GIT SAFETY"))
         for w in git_warnings:
             print(_ascii_safe(w))
-        print()
 
-    # G2 streak warning (fires at >= 5 consecutive G2-only days)
+    # ── Goal Balance ────────────────────────────────────────────────────
     g2_warnings = _g2_streak_check()
     if g2_warnings:
-        print("Goal Balance Warning")
-        print("-" * 40)
+        print(_section("GOAL BALANCE"))
         for w in g2_warnings:
             print(_ascii_safe(w))
-        print()
 
-    # Crypto-bot status (FR-003: morning briefing integration)
+    # ── Crypto-bot ──────────────────────────────────────────────────────
     crypto_status = _crypto_bot_status()
     if crypto_status:
-        print("Crypto-bot Status")
-        print("-" * 40)
+        print(_section("CRYPTO-BOT"))
         for line in crypto_status:
             print(_ascii_safe(line))
-        print()
 
-    # TELOS context (focus only — mood/energy omitted to save context)
-    print("TELOS Status")
-    print("-" * 40)
+    # ── TELOS ───────────────────────────────────────────────────────────
+    print(_section("TELOS"))
     print(_ascii_safe(_load_telos_status()))
-    print()
 
-    # Active tasks
-    print("Active tasks (unchecked)")
-    print("-" * 40)
+    # ── Active Tasks ────────────────────────────────────────────────────
+    print(_section("ACTIVE TASKS"))
     if TASKLIST.is_file():
         tasks = _unchecked_tasks(TASKLIST.read_text(encoding="utf-8", errors="replace"))
         if tasks:
-            for t in tasks[:5]:  # Cap at 5 — top priorities only
+            for t in tasks[:5]:
                 print(f"  [ ] {_ascii_safe(t)}")
             if len(tasks) > 5:
                 print(f"  ... and {len(tasks) - 5} more")
@@ -626,63 +629,53 @@ def main() -> None:
             print("  (none)")
     else:
         print(f"  (missing: {TASKLIST})")
-    print()
 
-    # Signal and failure counts (use lineage-aware unprocessed count for synthesis check)
+    # ── Learning ────────────────────────────────────────────────────────
     n_total_signals, n_unprocessed = _count_unprocessed_signals()
     n_failures = _count_files(FAILURES_DIR)
-    print(f"Learning signals: {n_total_signals} (unprocessed: {n_unprocessed}) | Failures logged: {n_failures}")
+    print(_section("LEARNING"))
+    print(f"  {n_total_signals} signals ({n_unprocessed} unprocessed) | {n_failures} failures")
     due, reason = _synthesis_due(n_unprocessed)
     if due:
-        print(f"  >>> Synthesis due: {reason}")
-        print("      Run /synthesize-signals when ready.")
-    print()
+        print(f"  ⚡ Synthesis due: {reason}")
+        print("     Run /synthesize-signals when ready.")
 
-    # Open validations reminder
+    # ── Open Validations ────────────────────────────────────────────────
     validations = _check_open_validations()
     if validations:
-        print("Open validations (BUILT -- awaiting confirmation)")
-        print("-" * 40)
+        print(_section("OPEN VALIDATIONS"))
         for v in validations:
-            print(f"  >>> {_ascii_safe(v)}")
-        print()
+            print(f"  ⚡ {_ascii_safe(v)}")
 
-    # Pending /absorb TELOS proposals
+    # ── Pending Absorb ──────────────────────────────────────────────────
     pending = _count_pending_absorb_proposals()
     if pending:
-        print(f"Pending /absorb TELOS proposals: {pending}")
-        print("-" * 40)
-        print(f"  >>> {pending} TELOS proposal(s) pending from /absorb -- run `/absorb --review`")
-        print()
+        print(_section("PENDING /ABSORB"))
+        print(f"  ⚡ {pending} TELOS proposal(s) pending -- run `/absorb --review`")
 
-    # Pending /dream report
+    # ── Dream report ────────────────────────────────────────────────────
     dream_report = REPO_ROOT / "data" / "dream_last_report.md"
     dream_last_run = REPO_ROOT / "data" / "dream_last_run.txt"
     if dream_report.exists():
         try:
             report_text = dream_report.read_text(encoding="utf-8", errors="replace")
-            # Surface only if there were actual changes (not just "memory is clean")
             if any(k in report_text for k in ["[MERGE", "[STALE", "[DATES"]):
                 last_run = dream_last_run.read_text().strip() if dream_last_run.exists() else "unknown"
-                print("Dream consolidation report")
-                print("-" * 40)
-                print(f"  >>> /dream ran at {last_run} and made changes -- run `/dream --dry-run` to review")
-                print()
+                print(_section("DREAM CONSOLIDATION"))
+                print(f"  ⚡ /dream ran at {last_run} -- run `/dream --dry-run` to review")
         except Exception:
             pass
 
-    # Recent security events
-    print("Recent security events (last 7 days)")
-    print("-" * 40)
+    # ── Security ────────────────────────────────────────────────────────
+    print(_section("SECURITY (7d)"))
     sec = _recent_security_events()
     if sec:
         print("\n".join(sec))
     else:
         print("  (none logged)")
-    print()
 
-    print("=" * 60)
-    print()
+    # ── Footer ──────────────────────────────────────────────────────────
+    print(f"\n╚{'═' * _W}╝\n")
 
 
 if __name__ == "__main__":

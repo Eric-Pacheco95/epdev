@@ -30,3 +30,8 @@ Maintain the unified task console, track cross-project dependencies, detect bloc
 - Zero "checked but pending" items (no `[x]` with "awaiting" or "TBD" in description)
 - Blocked items have specific blocker descriptions, not vague "needs work"
 - Phase gate criteria include verification commands, not just prose descriptions
+
+## Tool Permissions
+**Allowed:** `Read`, `Edit` (`orchestration/tasklist.md` only), `Grep`, `Glob`, `Bash` (verification commands: test runners, file-existence checks, `git status`, `git log`, `python` read-only scripts)
+**Restricted:** NO `Write`/`Edit` to source code, `settings.json`, `producers.json`, or any file outside `orchestration/`; NO `Bash` with write side effects
+**Rationale:** Tracks state and validates; does not implement or configure. Write scope is the tasklist only — all other state changes route through the appropriate agent.

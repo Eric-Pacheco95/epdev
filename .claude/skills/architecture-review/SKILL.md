@@ -95,6 +95,23 @@ Run `/architecture-review` BEFORE any hard-to-reverse decision: architecture cho
 - All agents run in background simultaneously. Do NOT duplicate their work in the main thread while waiting
 - Each agent writes to disk as its LAST action — this ensures findings survive context compaction even if the synthesis happens in a later session or after compaction
 
+## Step 2.5: CANARY CROSS-READ [always runs, passive data collection only]
+
+After all 3 agent outputs exist on disk, run one lightweight agent to do a cross-read pass. This agent does NOT feed into synthesis — it feeds a failure-mode ledger that gates future Agent Teams adoption.
+
+**Cross-read agent prompt:**
+> Read all three agent outputs from `memory/work/_arch-review-{timestamp}/`. For each agent (first-principles, fallacy-detection, red-team), answer: given the OTHER two agents' findings, would this agent's conclusion change? If yes: describe the delta in 1-2 sentences. If no: say "no delta."
+> Then append one JSONL entry per agent to `data/arch_review_canary.jsonl`:
+> `{"date": "YYYY-MM-DD", "review_slug": "{slug}", "topic": "{1-sentence topic}", "canary_agent": "{agent-name}", "original_stance": "{1 sentence}", "cross_read_delta": "{delta or 'none'}", "would_change_conclusion": true/false}`
+> Only set `would_change_conclusion: true` if the delta would have materially changed the recommendation — not just added nuance.
+
+**What this data is for:** Building a failure-mode ledger to evaluate whether cross-agent communication improves /architecture-review output quality. Three `would_change_conclusion: true` entries = demand signal to revisit Agent Teams adoption. Zero or one after 10 reviews = current independence architecture is validated.
+
+**Canary rules:**
+- Synthesis in Step 3 uses ORIGINAL independent outputs ONLY — canary output never feeds back into the recommendation
+- If `data/arch_review_canary.jsonl` doesn't exist yet, just write the first entry — JSONL has no header or wrapper array, one JSON object per line
+- Run canary in background — do not wait for it before proceeding to Step 3
+
 ## Step 3: SYNTHESIZE FINDINGS
 
 - Read all agent outputs from `memory/work/_arch-review-{timestamp}/` — do NOT rely on agent return values alone, as these may be lost to context compaction in long sessions
@@ -104,7 +121,7 @@ Run `/architecture-review` BEFORE any hard-to-reverse decision: architecture cho
 - For each element of the proposal, classify as:
   - **Validated**: Multiple agents confirm this is sound
   - **Corrected**: One or more agents identified a flaw; state the correction
-  - **Contested**: Agents disagree; present both sides with recommendation
+  - **Contested**: Agents disagree — **a verdict is required**: declare one position correct, name the evidence, and state specifically why the other position is wrong. "Both positions have merit" is NOT an acceptable resolution — it is a synthesis failure.
   - **Risk identified**: Not wrong, but carries specific risk that needs mitigation
 - **Opportunistic bug capture**: If any agent surfaces a bug, security finding, or code-quality issue UNRELATED to the architecture decision under review, do NOT fix it inline — instead append it to `orchestration/task_backlog.jsonl` (or surface it as a "side findings" bullet in the output if backlog write isn't available). Why: architecture reviews must stay scoped to the decision being made; inline bug fixes expand the diff and bury the architectural recommendation. How to apply: after Step 3 synthesis, scan agent outputs for any finding tagged "unrelated", "while we're here", or covering files outside the proposal scope — route those to backlog, keep the review focused.
 - Produce the unified output using the format below
@@ -125,7 +142,7 @@ Run `/architecture-review` BEFORE any hard-to-reverse decision: architecture cho
   - **CONVERGENT FINDINGS**: numbered — finding + which agents confirmed it
   - **CORRECTED ASSUMPTIONS**: numbered — original assumption | what's wrong | corrected version; skip with "(none)" if clean
   - **ARCHITECTURAL RISKS**: table — Risk | Severity (High/Med/Low) | Mitigation | Source
-  - **CONTESTED POINTS**: numbered — disagreement | Agent 1 pos | Agent 2 pos | resolution; skip with "(none)" if agents converged
+  - **CONTESTED POINTS**: numbered — disagreement | Agent 1 pos | Agent 2 pos | **verdict** (one position declared correct + why the other is wrong); "both have merit" is a synthesis failure; skip with "(none)" if agents converged
   - **VALIDATED ELEMENTS**: bullets — sound elements; brief, no explanation needed
   - **RECOMMENDATION**: 2-3 sentence approach; "Top 3 changes:" numbered; "Highest-risk element:"; "Next step:" with skill
 - Synthesize agent outputs — do not repeat them in full

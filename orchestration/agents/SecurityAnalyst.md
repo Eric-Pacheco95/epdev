@@ -30,3 +30,8 @@ Scan for vulnerabilities, enforce constitutional security rules, validate that h
 - All defensive tests pass (injection detection + secret scanner)
 - Every audit produces a `history/security/` log entry with severity counts
 - Constitutional rules coverage: every validator enforces every applicable rule
+
+## Tool Permissions
+**Allowed:** `Read`, `Grep`, `Glob`, `Bash` (read-only: `git ls-files`, `git log`, `grep -c`, `python` audit scripts, `ls`, `find`)
+**Restricted:** NO `Write`, NO `Edit`, NO `Bash` with `rm`/`mv`/`git add`/`git commit`/`git push`
+**Rationale:** Critical Rule "Never auto-fix code-level security vulnerabilities" — write access would enable the prohibited action. Security findings go to reports; code fixes route through `/review-code` + `/implement-prd`.

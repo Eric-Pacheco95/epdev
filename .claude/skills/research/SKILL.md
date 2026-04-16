@@ -114,7 +114,9 @@ Rate sources 1-10 for relevance/credibility. Discard below 5.
 
 ### URL Content Extraction Waterfall
 
-1. **Difficult domains** (x.com, twitter, linkedin, medium): `tavily_extract` with `extract_depth: "advanced"`
+> **This routing applies in ALL contexts — inside or outside /research.** `WebFetch` on x.com/twitter/linkedin returns 402. Always use `tavily_extract` for these domains, even in ad-hoc mid-session URL lookups.
+
+1. **Difficult domains** (x.com, twitter.com, linkedin.com, medium.com): `tavily_extract` with `extract_depth: "advanced"` — tavily_extract (advanced) successfully retrieves x.com tweet content where WebFetch returns 402
 2. **Static/public sites** (github, blogs, docs): WebFetch (faster)
 2.5. **JS-heavy / SPA sites** (React apps, Linear/Vercel/Notion changelogs, anything WebFetch returns as an empty shell): use Firecrawl wrapper:
    ```python

@@ -85,6 +85,7 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
 - If `gate_passed: false`: review the hard fails and fix the criteria in the PRD file. Note fixes in IMPLEMENTATION LOG
 - If the PRD has 3+ hard fails across multiple criteria: STOP and print "ISC Quality Gate: FAIL -- this PRD needs /create-prd revision before implementation" with specifics
 - Fallback: if isc_validator.py is unavailable, manually validate against the 6-check gate (see CLAUDE.md > ISC Quality Gate): count (3-8 per phase), conciseness (no compound "and"), state-not-action, binary-testable, anti-criteria (at least one), verify method present
+- **Escalation check**: if PRD contains unannotated main-thread items with `[I]`/`[R]` confidence tags OR irreversible verify methods (production deploys, external API writes, credential changes), recommend `/architecture-review` (structural pre-BUILD analysis) or `advisor()` (plan sanity check) before BUILD. See `orchestration/steering/model-effort-routing.md` for the full boundary. If session has compacted since any prior advisor() call, treat that authorization as expired and re-read PRD from disk before proceeding.
 
 ### PHASE SCOPE FILTER (only if --phase N was provided)
 
@@ -122,6 +123,11 @@ Non-optional gate once all ISC items are built/blocked.
 - **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: review incomplete", do NOT proceed to VERIFY
 - **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
 - Scope: only issues related to implemented ISC items
+- **Catch-rate log**: after review completes (regardless of outcome), append one entry to `data/review_gate_log.jsonl`:
+  `{"date": "YYYY-MM-DD", "task_slug": "<prd-slug>", "evaluator": "sonnet-subagent", "generator": "sonnet-main", "findings_count": N, "severity_max": "Critical|High|Med|Low|none", "applied_fix": true/false, "rate_limited": false, "skill": "implement-prd"}`
+  Set `applied_fix: true` only if a Critical/High finding required a code change. Set `rate_limited: true` and `findings_count: null` if rate-limit guard fired (don't count toward catch rate). This feeds the capability-gap kill switch in `orchestration/steering/autonomous-rules.md` — 20 non-rate-limited entries with `applied_fix: true` rate <10% disables the eval loop.
+
+**Trust-boundary guard**: Any future gate addition that introduces mutable state (fixes, rewrites) must be positioned *before* this step, not after. Downstream placement means new code bypasses fresh-eyes review — a silent coverage regression on every build where the gate fires.
 
 ### VERIFY PHASE: Full pass
 

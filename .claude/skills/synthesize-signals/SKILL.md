@@ -69,6 +69,7 @@ true
 - For every proposed steering rule, record: target file, rule text, evidence signals, why it matters — not just the rule text
 - Review existing synthesis themes from prior runs for **confidence decay**: any theme not revalidated by new signals within 90 days should be downgraded one maturity level. Themes that decay below candidate become archived.
 - Write the synthesis document to `memory/learning/synthesis/`
+- Invoke a fresh evaluator subagent (no shared context with this session) with only the synthesis doc content. The evaluator must output exactly one of: `VERDICT: ACCEPT` (synthesis is coherent, covers dominant themes, no major gaps) or `VERDICT: REVISE + [one-sentence specific delta]`. If REVISE: apply the specific delta as a targeted edit to the synthesis doc (do not rewrite from scratch); then accept the result. Max 1 evaluator pass — never loop. If the delta substantially changes the document, write to a new dated file rather than overwriting. Evaluator reads only the synthesis doc, not signal files (evaluator independence).
 - Record lineage: run `python tools/scripts/compress_signals.py --lineage "YYYY-MM-DD_synthesis"` to append lineage records linking all unprocessed signals to this synthesis run
 - Mirror lineage records to SQLite by running: `python tools/scripts/sync_lineage.py` after recording lineage. This syncs all JSONL rows to the DB (idempotent, safe to re-run). If this fails, the JSONL file is still the source of truth.
 

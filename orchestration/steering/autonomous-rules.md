@@ -25,7 +25,8 @@
 
 - Model routing is about correctness, not cost — Opus for judgment/security/architecture, Sonnet for code generation/bulk work, Haiku for extraction/formatting; dispatcher resolves from task `model` field → tier defaults → Opus fallback
 - External models (Codex, Gemini) are review-only — never execute, write code, or modify state; route security reviews through Codex adversarial mode; track catch rate per model — if zero catches over 20+ tasks, re-evaluate routing
-- Never use the same model to both generate and evaluate its own output — route evaluation to a fresh Sonnet subagent (interactive) or Codex adversarial mode (overnight); track catch rate in history/decisions/
+- Never use the same model to both generate and evaluate its own output — route evaluation to a fresh Sonnet subagent (interactive) or Codex adversarial mode (overnight); track catch rate in `data/review_gate_log.jsonl` (one JSONL entry per eval run: `date`, `task_slug`, `findings_count`, `applied_fix`, `rate_limited`; summarize to `history/decisions/` at quarterly audit)
+- `[MODEL-DEP]` Capability-gap pairing (re-validate quarterly; last validated 2026-04-16): Opus judges Sonnet output, Sonnet judges Haiku output — evaluator must be strictly stronger than generator; if the gap closes (evaluator catch rate <10% over 20+ samples), disable the eval loop and alert rather than continuing to spend with zero quality delta. Current status: gap confirmed (Opus 4.7 > Sonnet 4.6 > Haiku 4.5); 1 positive catch-rate data point logged (2026-04-04, 3 High findings); systematic 20-sample tracking not yet established — log each eval outcome to `history/decisions/` with `catch_result:` field
 
 ## Security Gates
 

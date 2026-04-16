@@ -28,7 +28,7 @@ VERIFY
 
 ## Output Contract
 - Input: tasklist scope (auto or specified)
-- Output: gap report (summary line, findings table, critical gaps, checked-but-pending, gate verification commands, recommendations)
+- Output: gap report (summary line, findings table, critical gaps, checked-but-pending, gate verification commands, recommendations) + `VERDICT: ACCEPT | REJECT | PARTIAL`
 - Side effects: none (OBSERVE only -- never modifies files)
 
 ## autonomous_safe
@@ -76,6 +76,7 @@ true
 - ## Recommendations: "what to audit next" or "what to verify before proceeding" only — never code changes or fixes (OBSERVE only)
 - Never modify files, tasklists, or configurations
 - Never propose steering rules
+- End with a `VERDICT` line: `VERDICT: ACCEPT` (zero critical or high gaps), `VERDICT: REJECT` (any critical gap present), `VERDICT: PARTIAL` (high gaps only, no critical)
 
 
 # SKILL CHAIN
@@ -90,6 +91,7 @@ true
 - No files were modified during the audit (OBSERVE-only skill) | Verify: `git diff --stat` shows no changes
 - Gate verification commands are present for each phase-gate criterion | Verify: Check ## Gate Verification Commands section exists and is non-empty
 - Critical gaps are flagged in the summary with explicit counts (C critical, H high) | Verify: Check output lead line
+- VERDICT field is present and correctly maps to gap severity (ACCEPT: zero critical/high; REJECT: any critical; PARTIAL: high-only, no critical) | Verify: Read VERDICT line in output
 
 # LEARN
 

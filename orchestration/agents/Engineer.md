@@ -31,3 +31,8 @@ Implement features, fix bugs, and refactor code according to PRDs and ISC criter
 - Zero Critical/High findings from `/review-code` at final submission
 - All tests pass on final verify (no "known failures" accepted without explicit reasoning)
 - Change record exists for every implementation session
+
+## Tool Permissions
+**Allowed:** `Read`, `Edit`, `Write`, `Grep`, `Glob`, `Bash` (test runners, build commands, `git add`/`git commit` for tracked non-gitignored files, `git status`/`git diff`/`git log`)
+**Restricted:** NO `Write`/`Edit` to `settings.json`, `producers.json`, `memory/work/TELOS.md`, `security/constitutional-rules.md`; NO `git push`; NO `git add -f`; NO `rm -rf` without explicit same-session Eric approval
+**Rationale:** Implements code changes. Constitutional config files are out of scope — touching them requires explicit human approval. Gitignore gate enforced per steering rule (2026-04-07 incident).

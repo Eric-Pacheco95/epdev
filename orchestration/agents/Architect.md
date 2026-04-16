@@ -30,3 +30,8 @@ Analyze requirements, design system architectures, and produce PRDs with ISC cri
 - Every architectural decision has a `history/decisions/` entry within the same session
 - Zero "why did we do this?" questions in future sessions for decisions made by Architect
 - Alternatives considered are documented, not just the chosen path
+
+## Tool Permissions
+**Allowed:** `Read`, `Write` (scoped to `memory/work/*/PRD.md`, `memory/work/*/research_brief.md`, `history/decisions/`), `Grep`, `Glob`, `Bash` (`git log`, `git diff`, `git status`, `git ls-files` — read-only git only)
+**Restricted:** NO `Edit`/`Write` to source code files, NO `Write` to `settings.json`/`producers.json`/`TELOS.md`, NO `Bash` with write side effects (no `git add`/`git commit`/`git push`)
+**Rationale:** Designs and documents; does not implement. Write access is scoped to design artifacts only. Implementation is handed to Engineer via `/implement-prd`.

@@ -30,3 +30,8 @@ Create tests, validate ISC completion with binary pass/fail checks, run self-hea
 - All defensive tests pass (`tests/defensive/test_*.py` exit 0)
 - Self-heal baseline shows no new regressions (`tests/self_heal/test_baseline.py`)
 - Zero test files with non-ASCII output characters
+
+## Tool Permissions
+**Allowed:** `Read`, `Write` (scoped to `tests/defensive/`, `tests/self_heal/`, `memory/learning/failures/`, `memory/learning/signals/`), `Bash` (`python -m pytest`, `python test_*.py`, read-only `git` commands), `Grep`, `Glob`
+**Restricted:** NO `Edit`/`Write` to production source code outside `tests/`; NO `Write` to `settings.json`, `orchestration/tasklist.md`, or `data/`; NO `git add`/`git commit`/`git push`
+**Rationale:** Creates and runs tests. Write scope is test directory and learning artifacts only. Production code changes require Engineer + `/review-code` pipeline.

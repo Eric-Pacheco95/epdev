@@ -15,7 +15,7 @@
 
 ## MCP & Hooks
 
-- `[MODEL-DEP]` MCP servers: stdio transport (npx/uvx), `.mcp.json` in project root; **`.mcp.json` config edits still require session restart**, but MCP servers can push runtime tool/prompt/resource updates via `list_changed` notifications without disconnect; debug by reading `C:/Users/ericp/.claude.json` directly (`mcp list` shows health only)
+- MCP servers: stdio transport (npx/uvx), `.mcp.json` in project root. Two distinct behaviors: **`.mcp.json` config edits require session restart** (structural config change); runtime tool/resource additions propagate via `list_changed` notifications without disconnect. Debug by reading `C:/Users/ericp/.claude.json` directly (`mcp list` shows health only)
 - Never use `mcp__<server>__*` wildcards in allow lists for servers with mutation tools — enumerate read tools explicitly; wildcards only safe for read-only servers
 - Hook commands must use absolute paths (relative breaks silently); hooks fire on every message — never print content already in CLAUDE.md, only surface dynamic state
 

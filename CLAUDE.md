@@ -59,6 +59,7 @@ Load documentation on-demand, not upfront:
 | Research & dependency adoption | `orchestration/steering/research-patterns.md` |
 | Cross-project & integrations | `orchestration/steering/cross-project.md` |
 | Trade development | `orchestration/steering/trade-development.md` |
+| Model and effort routing | `orchestration/steering/model-effort-routing.md` |
 | Decision rationale | `history/decisions/` |
 | Math reference (university-level) | WebFetch `algebrica.org/<slug>` — CC BY-NC, cite "Antonio Lupetti / algebrica.org" on any reuse; no local mirror, no Substack quoting |
 | Topic includes: agent, orchestration, harness, embedding, LLM, autonomous coding, Claude API, agentic | `memory/knowledge/ai-infra/_context.md` → sub-domains: `agent-orchestration.md`, `harness-engineering.md`, `autonomous-coding.md`, `harness-tooling.md`, `frontend-ui.md` |
