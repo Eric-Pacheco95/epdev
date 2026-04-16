@@ -74,6 +74,7 @@ EXCLUDED_FILENAMES = {
     "TELOS_BELIEFS.md",
     "TELOS_STRATEGIES.md",
     "TELOS_CHALLENGES.md",
+    "TELOS_IDEAS.md",
     "GOALS.md",
     "STATUS.md",
     "LEARNED.md",

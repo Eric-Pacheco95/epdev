@@ -45,6 +45,10 @@
 - An autonomous producer is not "live" until it has produced outcome artifacts, not just run successfully — track what the producer creates (knowledge articles, scored predictions, merged branches), not whether the script exited 0; before updating TELOS or tasklist status, verify at least 1 outcome artifact exists in the last 7 days
 - Alerting collectors that report shared-host metrics (TCP connections, memory, file handles) must attribute to specific processes by name+cmd, never blanket-blame a class like "Claude". How to apply: any new collector emitting alert text must call a top-N-holder helper (`tools/scripts/lib/net_util.py` for TCP); reject generic "close X sessions" templates in favor of named-process attribution
 
+## Cleanup & Retention
+
+- **Never call `git worktree remove --force` directly — use `_safe_worktree_remove()` from `tools/scripts/lib/worktree.py`.** The `memory/learning/synthesis/` directory must be excluded from ALL pipeline cleanup, rotation, and move-to-processed logic. Why: git's internal rm-rf follows Windows junctions and destroyed 367 signals across 4 days; the same class of cleanup bug independently destroyed a synthesis doc. How to apply: any overnight or dispatcher cleanup step that prunes worktrees or rotates output directories must call `_safe_worktree_remove()` and explicitly exclude `memory/learning/synthesis/` from its scope.
+
 ## Loaded by
 
 - `tools/scripts/jarvis_dispatcher.py` — STEERING_ALWAYS_INJECT (every dispatched task)

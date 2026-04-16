@@ -127,10 +127,24 @@ def get_overnight_summary() -> str:
     return "Overnight: no run today"
 
 
+def get_ollama_status() -> str:
+    """Return a one-line Ollama health string for the summary."""
+    try:
+        sys.path.insert(0, str(REPO_ROOT))
+        from tools.scripts.local_model import check_ollama_health
+        ok = check_ollama_health()
+        return "Ollama: OK (embedding ready)" if ok else "Ollama: DOWN -- /dream will fail tonight"
+    except Exception as exc:
+        return f"Ollama: unknown ({exc})"
+
+
 def build_summary() -> str:
     """Build the morning summary message."""
     lines = ["Morning Summary"]
     lines.append("=" * 40)
+
+    # Ollama health (embedding pipeline dependency)
+    lines.append(f"\n{get_ollama_status()}")
 
     # Unmerged branches
     branches = get_unmerged_branches()

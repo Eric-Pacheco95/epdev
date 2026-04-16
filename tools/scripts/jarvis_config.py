@@ -17,6 +17,10 @@ PROTECTED_FILES: set[str] = {
 # Relative path prefixes (from repo root) whose contents are also protected.
 PROTECTED_DIR_PREFIXES: set[str] = {
     "memory/work/telos/",
+    "memory/work/",           # all work-tier files: PRDs, project state (updated by skills only)
+    "memory/knowledge/",      # knowledge index + domain consolidation reports
+    "history/decisions/",     # immutable decision log
+    "orchestration/steering/", # steering sub-files (update-steering-rules only)
 }
 
 

@@ -1057,7 +1057,7 @@ def main() -> int:
         try:
             dream_result = subprocess.run(
                 [sys.executable, str(Path(__file__).parent / "dream.py"), "--autonomous"],
-                capture_output=True, text=True, timeout=180,
+                capture_output=True, text=True, timeout=600,
                 cwd=str(REPO_ROOT),
             )
             if dream_result.returncode == 0:
