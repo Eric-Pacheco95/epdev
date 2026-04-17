@@ -267,6 +267,30 @@ def _safe_worktree_remove(wt: Path) -> bool:
     return True
 
 
+def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
+    """Remove rel_path from git index and add to local exclude so git add -A ignores it.
+
+    Called after a symlink/junction is created in the worktree so the replacement
+    never gets committed and merged back into main as a self-referential symlink.
+    """
+    # Remove .keep (and any other tracked file) from the worktree's git index
+    subprocess.run(
+        ["git", "rm", "--cached", "-r", "-q", "--ignore-unmatch", rel_path],
+        capture_output=True, cwd=str(wt),
+    )
+    # Add to worktree-local exclude so the symlink/junction is invisible to git add -A
+    exclude_path = wt / ".git" / "info" / "exclude"
+    try:
+        existing = exclude_path.read_text(encoding="utf-8") if exclude_path.exists() else ""
+        entry = f"/{rel_path}"
+        if entry not in existing:
+            with open(exclude_path, "a", encoding="utf-8") as f:
+                f.write(f"\n{entry}\n")
+    except OSError as exc:
+        print(f"  WARNING: Could not update .git/info/exclude for {rel_path}: {exc}",
+              file=sys.stderr)
+
+
 def _symlink_local_memory(wt: Path) -> None:
     """Replace gitkeep-only dirs in worktree with symlinks to real local dirs.
 
@@ -288,12 +312,15 @@ def _symlink_local_memory(wt: Path) -> None:
             shutil.rmtree(dst)
 
         if dst.exists() or dst.is_symlink() or _is_junction(dst):
+            # Already linked — still ensure git index is clean (idempotent)
+            _hide_symlink_from_git(wt, rel_path)
             continue
 
         try:
             dst.symlink_to(src, target_is_directory=True)
             mode = "read-only" if readonly else "read-write"
             print(f"  Symlinked {rel_path} -> {src} ({mode})")
+            _hide_symlink_from_git(wt, rel_path)
         except OSError:
             # Symlinks require admin/Developer Mode on Windows.
             # Fall back to junction points (mklink /J) which work unprivileged.
@@ -306,6 +333,7 @@ def _symlink_local_memory(wt: Path) -> None:
                     if result.returncode == 0:
                         mode = "read-only" if readonly else "read-write"
                         print(f"  Junction {rel_path} -> {src} ({mode})")
+                        _hide_symlink_from_git(wt, rel_path)
                     else:
                         print(
                             f"  WARNING: Junction failed for {rel_path}: {result.stderr.strip()}",
