@@ -57,6 +57,13 @@ false
   - Offer to route via /delegation
 - Once input is validated, proceed to Step 1
 
+## Step 0.5: OUTCOME-SHAPE CHECK (v2+ and stalled projects)
+
+- If the PRD filename or directory signals a revision (v2, v3, v4, etc.) OR the project directory has git history older than 7 days: apply the outcome-shape test before reading ISC items.
+- Scan ISC items: does at least one criterion directly measure a forward, observable outcome (revenue, error rate, trade count, user behavior) rather than code completion (file exists, function returns, test passes)?
+- If all ISC items describe implementation actions with no output-state outcome criterion, print: "OUTCOME-SHAPE WARNING: All ISC items appear to be implementation tasks. Could all of these complete without the primary outcome occurring? If yes, this PRD is activity-shaped — recommend /create-prd --reshape to add an outcome gate before implementing." Wait for confirmation before proceeding.
+- Do NOT block if even one ISC item measures a primary behavioral/financial outcome.
+
 ## Step 1: READ PRD
 
 - Read the PRD file supplied in the input
