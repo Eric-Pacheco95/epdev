@@ -57,34 +57,24 @@ false
 - If input is fewer than 5 words: enter Step 0.5 (conversational clarification) to understand what Eric wants to predict
 - If --research flag is set: invoke /research on the topic first, then proceed with the research output as additional context
 - If the question clearly requires post-training-cutoff data and --research is not set: suggest "This prediction would benefit from current data. Run with --research flag, or run /research first?"
-- **Calibration injection**: Check if `data/calibration.json` exists. If it does:
-  1. Identify domain (geopolitics, market, technology, planning, other) and maturity:
-     - `immature` (n_forward < 10): INFORMATIONAL ONLY — display but don't apply
-     - `provisional` (10-19 forward): apply with warning label
-     - `calibrated` (20+): apply with full confidence
-  2. If non-zero adjustment exists, display before proceeding:
-     ```
-     Calibration for {domain}: [{maturity}]
-       Accuracy: {accuracy}% | n={n} ({n_forward} fwd, {n_backtest} bt) | Bias: {over|under} by {delta}%
-       Adjustment: {adjustment:+.0%} {applied|informational only}
-     ```
-  3. If maturity `provisional`/`calibrated`: apply adjustment during Step 2 (reduce outcome probs by delta, renormalize to 100%). If `immature`: display only.
-  4. In Step 4 OUTPUT: add after reference class: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`
-  5. If no calibration file or domain has no data: proceed normally.
-  6. **Prediction memory scan**: If 2+ resolved predictions in `data/predictions/` for this domain, load 2 most recent; extract reasoning errors and effective signposts. Display: "Loaded {n} prior predictions as priors for {domain}." Use as guardrails.
-- **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for relevant entries. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability → `security`; AI/LLM/orchestration → `ai-infra`. Load up to 3 most recent relevant articles as priors. Note: "Loaded N domain knowledge articles as priors."
-- Once input is validated, proceed to Step 0.5
+- **Calibration injection**: If `data/calibration.json` exists, identify domain + maturity (`immature`=n_fwd<10 display only; `provisional`=10-19 apply with warning; `calibrated`=20+ apply fully). Display before proceeding:
+  ```
+  Calibration for {domain}: [{maturity}]
+    Accuracy: {accuracy}% | n={n} ({n_forward} fwd, {n_backtest} bt) | Bias: {over|under} by {delta}%
+    Adjustment: {adjustment:+.0%} {applied|informational only}
+  ```
+  If provisional/calibrated: apply in Step 2 (reduce probs by delta, renormalize). In Step 4 add: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`. No file or no domain data: proceed normally.
+  - **Prior scan**: 2+ resolved predictions in `data/predictions/` for this domain → load 2 most recent; extract reasoning errors and signposts. Note: "Loaded {n} prior predictions as priors."
+- **Domain knowledge scan**: Read `memory/knowledge/index.md`. Domain map: crypto/DeFi/BTC → `crypto`; security → `security`; AI/LLM → `ai-infra`. Load ≤3 relevant articles. Note: "Loaded N domain knowledge articles."
+- Once input validated, proceed to Step 0.5
 
 ## Step 0.5: CONVERSATIONAL PARAMETER CLARIFICATION
 
-Ask 1-3 brief questions to lock down:
-1. **What specifically** — Binary, range, or directional? Restate in falsifiable form.
-2. **Time horizon** — By when? Propose if not stated.
-3. **Domain scope** — Multiple domains? Which is primary?
+Ask 1-3 questions: (1) Binary/range/directional? Restate in falsifiable form. (2) By when? (3) Multiple domains? Which is primary?
 
-- Skip if question is already clear and specific
-- Do NOT let hints about preferred outcomes bias analysis — if Eric implies a preference, acknowledge and set aside explicitly
-- Restate in final falsifiable form before proceeding
+- Skip if question is already clear
+- If Eric implies a preferred outcome, acknowledge and set aside; don't let it bias analysis
+- Restate in falsifiable form before proceeding
 
 ## Step 1: ORIENT
 
@@ -221,14 +211,9 @@ Same structure as quick mode but:
 
 ### Backcast Mode Output (--backcast flag)
 
-Before generating any output, ask Eric three clarifying questions to validate the ideal state input:
-1. What does failure look like at full ideal state? (sharpens the goal)
-2. What is the single most important constraint? (anchors phase gate conditions)
-3. Name one thing that must NOT be true at ideal state. (surfaces anti-criteria early)
+Ask 3 clarifying questions first: (1) What does failure look like at ideal state? (2) Single most important constraint? (3) What must NOT be true at ideal state? If Eric can't answer, stop and suggest `/research` first.
 
-If Eric cannot answer these, stop and suggest `/research` or a more specific ideal state description first.
-
-Then generate these 6 sections in order. Write each section to disk at `memory/work/_backcast-{slug}/section-{N}.md` as it's produced — do not wait until the end. Synthesis reads from disk, not context (compaction guard).
+Generate the 6 sections below in order, writing each to `memory/work/_backcast-{slug}/section-{N}.md` as produced (compaction guard).
 
 ```
 ## BACKCAST: [one-sentence falsifiable ideal state]
@@ -307,7 +292,6 @@ status: open
 [base rate and source]
 
 ## Resolution
-<!-- Fill in when outcome is known -->
 - Actual outcome:
 - Date resolved:
 - Which scenario materialized:

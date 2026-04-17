@@ -49,23 +49,10 @@ true
 - Read all absorbed content from `memory/learning/absorbed/` -- external insights absorbed via /absorb are synthesis input alongside session signals
 - Read existing synthesis documents from `memory/learning/synthesis/` for context
 - **Input sources** (all three are required): `signals/` (session learnings) + `failures/` (what went wrong) + `absorbed/` (external insights). The combined unprocessed count across all three directories determines synthesis threshold (35 items).
-- The grouping is already done by the script. Review the groups:
-- Identify recurring themes across signals:
-  - What keeps coming up? (repeated patterns = important)
-  - What contradicts previous assumptions? (anomalies = investigate)
-  - What improvements have been requested multiple times? (priorities)
-- For each theme, write a synthesis entry that:
-  - Names the pattern or insight
-  - Lists the supporting signals (by filename)
-  - Assigns a **maturity level** (see Confidence Model below)
-  - States the implication for future behavior
-  - Proposes a concrete action (steering rule, TELOS update, workflow change)
-- Apply the **harm multiplier**: failures and anti-patterns weigh 4x compared to positive signals. One failure outweighs four successes when determining theme priority.
-- Check if any synthesis findings warrant:
-  - A new AI Steering Rule — apply the `/update-steering-rules` routing decision tree to select the target file (CLAUDE.md for universal rules; platform-specific.md for Windows/PS/hooks; autonomous-rules.md for producer-only; etc.)
-  - A TELOS update (route to /telos-update)
-  - A new skill or skill modification
-  - A failure prevention rule
+- The grouping is already done by the script. Review the groups and identify recurring themes (repeated patterns, contradictions to prior assumptions, frequently-requested improvements).
+- For each theme: name the pattern, list supporting signals by filename, assign maturity level (see Confidence Model), state the implication, propose a concrete action (steering rule, TELOS update, workflow change).
+- Apply the **harm multiplier**: failures weigh 4x — one failure outweighs four successes.
+- Check if findings warrant: a new steering rule (apply `/update-steering-rules` routing tree for target file); a TELOS update; a new/modified skill; a failure prevention rule.
 - For every proposed steering rule, record: target file, rule text, evidence signals, why it matters — not just the rule text
 - Review existing synthesis themes from prior runs for **confidence decay**: any theme not revalidated by new signals within 90 days should be downgraded one maturity level. Themes that decay below candidate become archived.
 - Write the synthesis document to `memory/learning/synthesis/`
@@ -87,17 +74,15 @@ Each synthesized theme carries a maturity level and confidence score. Inspired b
 
 ## Confidence Decay
 
-- Themes have a **90-day half-life**. If no new supporting signal arrives within 90 days, downgrade one level.
-- proven -> established -> candidate -> archived
-- Decay prevents stale patterns from driving behavior indefinitely.
+90-day half-life: proven → established → candidate → archived if no revalidating signal.
 
 ## Harm Multiplier
 
-- Failures and anti-patterns count **4x** in theme scoring — one mistake outweighs four successes.
+Failures count **4x** — one failure outweighs four successes.
 
 ## Anti-Pattern Inversion
 
-- When a tried action fails, invert the theme: "Do NOT do X because Y." Store with `anti-pattern: true` and its own maturity level.
+Failed actions become "Do NOT do X because Y" — store with `anti-pattern: true`.
 
 # SYNTHESIS FORMAT
 
@@ -194,7 +179,7 @@ If no rules are warranted: "(none proposed)"
 # LEARN
 
 - If synthesis regularly produces the same 2-3 themes across multiple runs, those themes are strong candidates for promotion to `memory/work/TELOS.md` via /telos-update
-- If synthesis reveals cross-project patterns (same insight appears in signals from crypto-bot, jarvis, and brain-map), flag them for /project-orchestrator review
+- If synthesis reveals cross-project patterns (same insight appears in signals from crypto-bot, jarvis, and jarvis-app), flag them for /project-orchestrator review
 - Track which signal categories (insight, pattern, anomaly, improvement) generate the most synthesis themes -- this reveals where Eric's system is producing the most learning
 - If synthesis is running more often than weekly, the signal volume is high enough to justify a dedicated synthesis schedule
 

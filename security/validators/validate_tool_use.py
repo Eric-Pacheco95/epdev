@@ -591,6 +591,37 @@ def _check_autonomous_file_containment(tool: str, inp: dict) -> dict[str, Any] |
     return None
 
 
+def _remap_worktree_path(filepath: str) -> str | None:
+    """If filepath is in a git worktree, return equivalent main-repo path.
+
+    Hooks run from the main repo -- the main repo path guard uses REPO_ROOT
+    anchored to the main repo.  When overnight sessions run in a worktree,
+    writes target the worktree path which the main-repo guard doesn't know
+    about.  This remaps the worktree path to its main-repo equivalent so
+    validate_write_path sees a path it can authorise.
+    """
+    p = Path(filepath).resolve()
+    for parent in [p] + list(p.parents):
+        git_path = parent / ".git"
+        if git_path.is_file():
+            try:
+                text = git_path.read_text().strip()
+                if text.startswith("gitdir:"):
+                    gitdir_str = text.split(":", 1)[1].strip()
+                    gitdir = Path(gitdir_str).resolve()
+                    # gitdir = <main>/.git/worktrees/<name>
+                    main_repo = gitdir.parent.parent.parent
+                    if main_repo.is_dir():
+                        rel = p.relative_to(parent)
+                        return str(main_repo / rel)
+            except (OSError, ValueError):
+                pass
+            break
+        elif git_path.is_dir():
+            break
+    return None
+
+
 def _check_overnight_path_scope(tool: str, inp: dict) -> dict[str, Any] | None:
     """Enforce dimension-scoped write rules for overnight autonomous sessions.
 
@@ -624,8 +655,13 @@ def _check_overnight_path_scope(tool: str, inp: dict) -> dict[str, Any] | None:
             f"Blocking {tool} to {file_path} to prevent unvalidated writes."
         )
 
+    # Remap worktree paths to main-repo equivalents before validating.
+    # Hooks run from main repo; its path guard expects main-repo paths.
+    remapped = _remap_worktree_path(file_path)
+    check_path = remapped if remapped is not None else file_path
+
     try:
-        validate_write_path(file_path, dimension=dimension)
+        validate_write_path(check_path, dimension=dimension)
         return None  # allowed
     except PathViolation as exc:
         return _result(

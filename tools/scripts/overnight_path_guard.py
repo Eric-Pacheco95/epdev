@@ -83,6 +83,33 @@ class PathViolation(Exception):
     pass
 
 
+
+def _to_main_repo_path(p: Path) -> Path | None:
+    """Remap a worktree path to the equivalent main-repo path.
+
+    In a git worktree, .git is a file (not a dir) pointing to
+    the main repo's .git/worktrees/<name>. If p is under such a
+    worktree and it belongs to REPO_ROOT, return REPO_ROOT / rel.
+    """
+    for parent in [p] + list(p.parents):
+        git_path = parent / ".git"
+        if git_path.is_file():
+            try:
+                text = git_path.read_text().strip()
+                if text.startswith("gitdir:"):
+                    gitdir = Path(text.split(":", 1)[1].strip()).resolve()
+                    main_git = gitdir.parent.parent
+                    if main_git == (REPO_ROOT / ".git").resolve():
+                        rel = p.relative_to(parent)
+                        return REPO_ROOT / rel
+            except (OSError, ValueError):
+                pass
+            break
+        elif git_path.is_dir():
+            break
+    return None
+
+
 def validate_write_path(filepath: str | Path, dimension: str = "unknown") -> Path:
     """Validate that a file path is safe for overnight agent writes.
 
@@ -112,9 +139,14 @@ def validate_write_path(filepath: str | Path, dimension: str = "unknown") -> Pat
             p_abs.relative_to(REPO_ROOT)
             p_check = p_abs
         except ValueError:
-            raise PathViolation(
-                f"BLOCKED: path outside repo root: {p}"
-            )
+            # Worktree fallback: remap to main repo path
+            main_p = _to_main_repo_path(p)
+            if main_p is not None:
+                p_check = main_p
+            else:
+                raise PathViolation(
+                    f"BLOCKED: path outside repo root: {p}"
+                )
 
     # 2. Check blocked paths (TELOS, constitutional rules, secrets)
     for blocked in BLOCKED_PATHS:
@@ -246,7 +278,17 @@ def run_self_test() -> bool:
         "codebase_health", "Script write allowed (codebase_health)"
     )
 
-    # Scope enforcement (wrong dimension)
+    # Worktree helper -- non-worktree path returns None
+    from overnight_path_guard import _to_main_repo_path
+    non_wt = _to_main_repo_path(REPO_ROOT / "data" / "test.json")
+    if non_wt is None:
+        print(f"  PASS: _to_main_repo_path returns None for main-repo paths")
+        passed += 1
+    else:
+        print(f"  FAIL: _to_main_repo_path should return None for main-repo paths, got {non_wt}")
+        failed += 1
+
+        # Scope enforcement (wrong dimension)
     expect_blocked(
         REPO_ROOT / ".claude/skills/test/SKILL.md",
         "codebase_health", "Skill write blocked (wrong dimension)"

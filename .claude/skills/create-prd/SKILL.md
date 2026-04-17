@@ -66,15 +66,14 @@ false
 
 ## Step 0.7: SOCRATIC BRAINSTORM (before extracting requirements)
 
-- Before generating any PRD content, ask Eric 3-5 targeted questions to surface unstated assumptions, constraints, and rejected alternatives. Do NOT skip this even if the input feels complete — the input usually under-specifies tradeoffs.
-- Question targets (pick the 3-5 most relevant to the input):
-  1. **Problem framing**: "What's the underlying problem this solves? Is there a simpler version that solves 80% of it?"
-  2. **Rejected alternatives**: "What approaches did you consider and discard? Why?"
-  3. **Success shape**: "What does 'done' look like in one sentence? What would make you abandon this mid-build?"
-  4. **Hidden constraints**: "What can this NOT touch or break? Any existing skills/files this overlaps?"
-  5. **Scope edge**: "What's the smallest version you'd ship? What's explicitly out?"
-- Present questions as a numbered list and WAIT for answers before proceeding to Step 1. Do not generate placeholder PRD content while waiting.
-- If Eric responds "skip" or "just write it", proceed but flag in OPEN QUESTIONS that the PRD was written without brainstorming and may have unstated assumptions.
+Ask 3-5 targeted questions before generating any content — input usually under-specifies tradeoffs. Pick the most relevant:
+1. What's the underlying problem? Is there a simpler 80% version?
+2. What approaches were considered and discarded? Why?
+3. What does 'done' look like in one sentence? What would make you abandon this mid-build?
+4. What can this NOT touch or break? Any existing skills/files overlap?
+5. What's the smallest shippable version? What's explicitly out?
+
+WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPEN QUESTIONS that brainstorming was skipped.
 
 ## Step 0.9: LOAD AUTONOMOUS STEERING RULES
 
@@ -101,12 +100,7 @@ false
   3. Criterion text contains any of: `create`, `write`, `implement`, `refactor`, `generate`, `build` AND no Opus-trigger keywords → `| model: sonnet |`
   4. Anything ambiguous or mixed-concern → **no annotation** (Opus default — safe fallback)
 
-  Present proposed annotations to Eric:
-  > "Model routing proposals for this PRD's ISC items — confirm, edit, or remove any annotation before I write the file:
-  > 1. [criterion text shortened] → model: sonnet
-  > 2. [criterion text shortened] → Opus (no annotation)
-  > ..."
-  Wait for Eric's response before writing. If Eric's response is ambiguous or not clearly directed at the annotation list, ask once: "Confirming approval of the model routing list above before I write — correct?" before writing. If Eric approves without changes, write all proposed annotations. If Eric edits any annotation, use their version.
+  Present proposed annotations to Eric and wait for confirmation. If response is ambiguous, ask once: "Confirming model routing list above?" If Eric approves without changes: write all proposed annotations. If Eric edits any: use their version.
 
 - After outputting the PRD, remind the user: "Next step: `/implement-prd` to execute this PRD through the full BUILD → VERIFY → LEARN loop"
 

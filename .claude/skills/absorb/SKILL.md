@@ -108,16 +108,7 @@ Proceed to Step 5.
 
 ## Step 5: ASSESS TELOS RELEVANCE
 
-- Review the analysis output for content that maps to TELOS identity files:
-  - Beliefs or values expressed/challenged -> BELIEFS.md
-  - Life lessons, hard-won truths -> WISDOM.md
-  - Mental models, thinking frameworks -> MODELS.md or FRAMES.md
-  - Self-narratives, identity reflections -> NARRATIVES.md
-  - Predictions about the future -> PREDICTIONS.md
-  - New knowledge about Eric's interests -> LEARNED.md
-  - Goals mentioned or implied -> GOALS.md
-  - Strategies or approaches -> STRATEGIES.md
-  - Ideas worth exploring -> IDEAS.md
+- Map analysis output to TELOS files: beliefs/values → BELIEFS.md; life lessons → WISDOM.md; mental models/frameworks → MODELS.md or FRAMES.md; self-narratives → NARRATIVES.md; predictions → PREDICTIONS.md; new knowledge → LEARNED.md; goals → GOALS.md; strategies → STRATEGIES.md; ideas → IDEAS.md
 - For each relevant insight, create a proposal:
   - **Target file**: which TELOS file
   - **Proposed addition**: YOUR synthesized interpretation (never verbatim source text)
@@ -183,20 +174,8 @@ signal_file: {signal filename}
 
 ## Step 7: TELOS PROPOSAL REVIEW (Interactive Mode)
 
-- If this is an interactive session (not via poller/`claude -p`):
-  - For each TELOS proposal, present it individually:
-    ```
-    TELOS Proposal {N}/{total}
-    Target: {TELOS file}
-    Proposed: {synthesized text} [source: external]
-    Rationale: {why}
-
-    Approve this entry? (y/n)
-    ```
-  - If approved: add to the approved list for writing in Step 8
-  - If rejected: mark proposal as `status: REJECTED` in the analysis file
-  - After all proposals reviewed: proceed to Step 8
-- If this is autonomous context: proposals stay queued as PENDING. Skip to Step 9.
+- If interactive (not `claude -p`): present each proposal (target file, proposed text, rationale) one at a time and ask "Approve? (y/n)". Approved → write in Step 8. Rejected → mark `status: REJECTED`. After all reviewed: proceed to Step 8.
+- If autonomous: proposals stay queued as PENDING. Skip to Step 9.
 
 ## Step 8: WRITE TELOS ENTRIES (Interactive Mode Only)
 

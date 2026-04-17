@@ -1,12 +1,12 @@
 # Frontend UI -- Graph Canvas and Cross-Platform Framework Selection
 
 ## Overview
-Two independent frontend decisions with overlapping technology constraints: (1) interactive graph canvas for Jarvis brain-map using React Flow, and (2) cross-platform framework selection for future mobile/desktop expansion. Both inform the jarvis-app Sprint 3+ roadmap.
+Two independent frontend decisions with overlapping technology constraints: (1) interactive graph canvas for jarvis-app using React Flow, and (2) cross-platform framework selection for future mobile/desktop expansion. Both inform the jarvis-app Sprint 3+ roadmap.
 
 ## Key Findings
 
 ### Graph Canvas for Brain Map (Article: 2026-03-27_jarvis-brain-map-graph-pm)
-- No existing tool combines: markdown/git source-of-truth, interactive zoomable graph canvas, semantic node typing (TELOS -> Goals -> Projects -> ISC -> Tasks), AI gap-closing co-pilot, and write-back to source files. Jarvis brain-map is a confirmed greenfield build.
+- No existing tool combines: markdown/git source-of-truth, interactive zoomable graph canvas, semantic node typing (TELOS -> Goals -> Projects -> ISC -> Tasks), AI gap-closing co-pilot, and write-back to source files. jarvis-app is a confirmed greenfield build.
 - React Flow confirmed: 35.6K GitHub stars, 4.59M weekly npm installs, MIT license. Contextual Zoom is a documented built-in pattern using useStore hook -- nodes read zoom level and render accordingly.
 - Zoom-layer design: <0.2 = TELOS+Goals only; mid-zoom = Projects+ISC; full-zoom = Tasks+details. Prevents information overload at high altitude view.
 - Git-native principle: all graph state maps back to markdown files; the canvas is a view layer, not the database. Write-back to source files is a first-class requirement, not an add-on.

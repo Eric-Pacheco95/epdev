@@ -324,7 +324,7 @@ python tools/scripts/jarvis_heartbeat.py
 - **2026-03-27** -- [knowledge-index] -- `python tools/scripts/jarvis_index.py search "topic"` finds answers from any past session, signal, failure, or decision. Use it before asking Jarvis to re-research something.
 - **2026-03-27** -- [workflow] -- Session direction is mood/energy-driven by design. Follow your interest -- Jarvis adapts. Don't force a task order.
 - **2026-03-27** -- [meta] -- If you don't know which skill to use, just describe what you want. Jarvis will suggest the right slash command.
-- **2026-03-27** -- [algorithm] -- Always check: did we THINK before we BUILD? The brain-map shipped without the workflow spec. Building feels productive but specs prevent rework.
+- **2026-03-27** -- [algorithm] -- Always check: did we THINK before we BUILD? The jarvis-app shipped without the workflow spec. Building feels productive but specs prevent rework.
 
 ---
 

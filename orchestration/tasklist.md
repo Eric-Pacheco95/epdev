@@ -22,7 +22,7 @@
 | Project | Status | Health | Next Action |
 |---------|--------|--------|-------------|
 | epdev-jarvis | active | green | Phase 5D data-gated items; 5E-1 falsification 2026-04-21 |
-| crypto-bot | active | yellow | Paper trading → production gate — `memory/work/crypto_trading_bot/project_state.md` |
+| crypto-bot | active | yellow | Paper trading → production gate — `memory/work/crypto-bot/PRD_v4.md` |
 | jarvis-app | active | green | Sprints 1-4 COMPLETE (/dashboard 3-tab, Phase 4 gate closed). Sprint 5: design system — `memory/work/jarvis-app/PRD.md` |
 
 ---
@@ -101,6 +101,7 @@
 
 - **App development skills (iOS/Windows/.exe)** — Research brief at `memory/work/frontend-research/research_brief.md`. Revisit when a concrete app needs App Store/Windows distribution.
 - **Slack Bot Socket Mode** — Slash commands + Block Kit. No active use case beyond current poller.
+- **crypto-bot Telegram→Slack migration** — crypto-bot CLAUDE.md references planned Slack migration for alerts/telegram_bot.py but no task exists. Gate: crypto-bot production-stable + Slack Bot Socket Mode live.
 - **3C-8/9/10: Whisper STT, ElevenLabs TTS, voice loop** — Deferred to Phase 6. Native iOS dictation sufficient.
 
 ---

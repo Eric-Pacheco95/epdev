@@ -153,14 +153,7 @@ Create the target repo structure:
 
 ### Active Context Population rules (add to CLAUDE.md):
 
-The target CLAUDE.md MUST include steering rules that make Claude actively write to context dirs during sessions:
-- Glossary auto-append: when new terms appear, add to `context/glossary.md` without being asked
-- Template loading: when generating artifacts, load relevant template from `templates/` first
-- Decision logging: after architecture/design decisions, write ADR to `history/decisions/`
-- Regulatory flags: when touching compliance-adjacent work, check `knowledge/regulatory/` and inject NFRs
-- Stakeholder map: when starting new project, check/offer to create `context/stakeholders/{project}.md`
-- Sprint log: after completing deliverables, append to `context/sprint-log/{project}.md`
-- Lessons learned: after sprint/milestone completion, prompt user to add entry to `history/lessons-learned/`
+Target CLAUDE.md must include rules for: glossary auto-append to `context/glossary.md`; template loading from `templates/` before generating artifacts; ADR logging to `history/decisions/`; regulatory NFR injection from `knowledge/regulatory/`; stakeholder map creation at `context/stakeholders/{project}.md`; sprint log append to `context/sprint-log/{project}.md`; lessons-learned prompt after milestones.
 
 ### CLAUDE.md: Remove personal identity, TELOS, learning-capture, autonomous steering rules, personal MCP rules, cross-project references. Update skill count + context routing. Keep: Algorithm, ISC Quality Gate, security rules, workflow discipline, platform rules.
 
@@ -172,12 +165,7 @@ The target CLAUDE.md MUST include steering rules that make Claude actively write
 
 ## Step 3.5: ENTERPRISE (only if --enterprise flag)
 
-Gap analysis for regulated/team environments. Evaluate:
-1. **Workflow gaps**: Repetitive tasks with no skill (meeting → action items, email → requirements, regulatory update → impact analysis, code review → risk checklist, retro → lessons capture)
-2. **Knowledge gaps**: Missing domain reference in `knowledge/` (regulations, architecture patterns, QA checklists)
-3. **Template gaps**: Artifacts produced regularly with no template
-4. **LLM compliance**: CLAUDE.md covers data send/don't-send, AI audit trail, artifact disclaimers, model usage logging?
-5. **Strategic assessment**: Internal play (team adoption → innovation leadership) vs. External play (revenue, higher risk)
+Gap analysis for regulated/team environments. Evaluate: (1) **Workflow gaps** — repetitive tasks with no skill (meeting → actions, email → requirements, regulatory update → impact analysis); (2) **Knowledge gaps** — missing `knowledge/` domain reference; (3) **Template gaps** — artifacts with no template; (4) **LLM compliance** — CLAUDE.md data send/don't-send, audit trail, disclaimers, model logging; (5) **Strategic assessment** — internal adoption vs. external revenue play.
 
 Output: numbered list with effort (S/M/L) and priority. Do NOT build — present proposal, add approved to `docs/backlog.md`.
 

@@ -53,13 +53,13 @@ false
 
 ### Routing Decision Tree (7 destinations — apply top-down, first match wins)
 
-1. **`security/constitutional-rules.md`** — if the rule restricts irreversible/high-blast-radius actions (credential handling, prompt injection defense, git push protection, trust boundary enforcement)
-2. **`orchestration/steering/autonomous-rules.md`** — if the rule governs autonomous `claude -p` worker behavior exclusively (producer/dispatcher/worktree patterns, overnight runner conventions, model routing, ISC pipeline behavior); rule must NOT apply to interactive sessions
-3. **`orchestration/steering/platform-specific.md`** — if the rule is Windows/Task Scheduler/PowerShell/MCP/hooks specific; applies equally in interactive and autonomous contexts but NOT in non-Windows environments
-4. **`orchestration/steering/research-patterns.md`** — if the rule governs how Jarvis consumes external information (web research, absorb, counterfactual filter, adopt-vs-absorb decisions)
-5. **`orchestration/steering/cross-project.md`** — if the rule constrains cross-repo operations (crypto-bot, brain-map, non-epdev edits); rule applies whenever touching a repo other than epdev
-6. **`orchestration/steering/trade-development.md`** — if the rule governs financial research, trade signal evaluation, or alpha development workflows
-7. **`CLAUDE.md`** — if the rule is universal (applies in interactive AND autonomous sessions, across platforms, across projects) AND does not fit any of the above domains
+1. **`security/constitutional-rules.md`** — irreversible/high-blast-radius actions (credentials, injection defense, git push protection)
+2. **`orchestration/steering/autonomous-rules.md`** — autonomous `claude -p` worker behavior only (producers, dispatcher, worktree, overnight runner); must NOT apply to interactive sessions
+3. **`orchestration/steering/platform-specific.md`** — Windows/PS/hooks/MCP-specific; applies in both interactive and autonomous but NOT on non-Windows
+4. **`orchestration/steering/research-patterns.md`** — external info consumption (web research, absorb, adopt-vs-absorb)
+5. **`orchestration/steering/cross-project.md`** — cross-repo operations (crypto-bot, jarvis-app, non-epdev)
+6. **`orchestration/steering/trade-development.md`** — financial research, trade signals, alpha development
+7. **`CLAUDE.md`** — universal (interactive + autonomous, all platforms, all projects) and no domain above matches
 
 **Accumulation rule:** If a proposed rule belongs to a domain with no existing sub-steering file AND a second rule for the same domain emerges in the same or adjacent session, propose a new sub-steering file (see "Proposing new sub-steering files" below) rather than adding both to CLAUDE.md.
 
@@ -103,20 +103,10 @@ Run these checks and report results before proposing any changes:
 
 1. **Size check**: `wc -c CLAUDE.md` — report bytes and pass/fail against 20KB (20480 bytes)
 2. **Rule count**: `grep -c '^- ' CLAUDE.md` — report count and pass/fail against 45-rule ceiling
-3. **MODEL-DEP review**: `grep 'MODEL-DEP' CLAUDE.md` — list all model-limitation rules; for each, check if the limitation is still current (e.g., does MCP still require session restart? does claude -p still return exit 0 on rate limits?)
-4. **Conflict scan**: Read all steering rules and check for:
-   - Rules that contradict each other (e.g., "always X" vs. "never X" in different sections)
-   - Rules scoped as universal that only apply to autonomous/specific contexts
-   - Compound rules that violate the ISC "no compound criteria" principle
-5. **Cross-file consistency (multi-file loop)**: Read ALL files listed in the CLAUDE.md Context Routing table, not just CLAUDE.md. For each file that exists:
-   - Read the file and collect its rules
-   - Check for rules duplicated between CLAUDE.md and sub-steering files (exact or near-duplicate)
-   - Check for rules misrouted: a universal rule sitting in a domain-specific file, or a domain rule still in CLAUDE.md after the split
-   - Files to check (read Context Routing table first, then iterate): `security/constitutional-rules.md`, `orchestration/steering/autonomous-rules.md`, `orchestration/steering/platform-specific.md`, `orchestration/steering/research-patterns.md`, `orchestration/steering/cross-project.md`, `orchestration/steering/trade-development.md` (plus any new files added to the table)
-6. **Staleness scan**: Flag rules that reference:
-   - Completed phases or shipped features (should be archived)
-   - One-time debugging notes or specific incident workarounds without ongoing relevance
-   - Magic numbers that should be in config files, not steering rules
+3. **MODEL-DEP review**: `grep 'MODEL-DEP' CLAUDE.md` — list model-limitation rules; verify each is still current
+4. **Conflict scan**: contradicting rules; universal-scoped rules that apply only to autonomous/specific contexts; compound rules violating ISC no-compound principle
+5. **Cross-file consistency**: Read ALL sub-steering files in Context Routing table. Check for: rules duplicated between CLAUDE.md and sub-files; misrouted rules. Files: `security/constitutional-rules.md`, `orchestration/steering/autonomous-rules.md`, `platform-specific.md`, `research-patterns.md`, `cross-project.md`, `trade-development.md`
+6. **Staleness scan**: completed phases, one-time incident workarounds, magic numbers belonging in config
 
 Present health check results as a table before proceeding.
 

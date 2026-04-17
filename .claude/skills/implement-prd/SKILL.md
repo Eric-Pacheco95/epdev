@@ -106,7 +106,7 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
   5. Re-run the same verify method
   6. If still failing after cycle 3: log the failure to `memory/learning/failures/`, mark ISC item as BLOCKED with diagnosis notes, and move to next item — do NOT silently skip
 - Track loop iterations: after BUILD completes, report in IMPLEMENTATION LOG how many items needed 0, 1, 2, or 3 fix cycles (this measures loop value)
-- **Mid-build commit checkpoint**: After every 3-4 completed ISC items, prompt Eric to commit: "Checkpoint: {N} ISC items verified. Run /commit to save progress?" This creates recovery points against context compaction. Do not auto-commit — wait for confirmation. If Eric declines, continue building
+- **Mid-build commit checkpoint**: After every 3-4 completed ISC items, prompt: "Checkpoint: {N} ISC items verified. Run /commit?" Do not auto-commit. If Eric declines, continue.
 
 ### REVIEW GATE: Deterministic prescan + cross-model review
 
@@ -141,15 +141,7 @@ Non-optional gate once all ISC items are built/blocked.
 
 ### OWNERSHIP CHECK (non-bypassable gate before COMPLETION STATUS)
 
-For each completed ISC item, present a scaffold sentence for Eric to edit or approve:
-
-> "OWNERSHIP CHECK: edit or approve each description (what was built and why, not what file changed):
-> 1. [scaffold: one plain sentence for ISC item 1]
-> 2. [scaffold for ISC item 2]"
-
-- Do not write COMPLETION STATUS until Eric responds
-- Use his edited version verbatim; use scaffold if he approves without editing
-- Record sentences in VERIFY RESULTS table under OWNERSHIP CHECK column
+Present a scaffold sentence per ISC item (what was built and why, not what file changed). Do not write COMPLETION STATUS until Eric responds. Use his edited version verbatim; use scaffold if approved without edits. Record in VERIFY RESULTS table.
 
 - Log a brief decision record to `history/decisions/` noting what was built, which ISC items passed, and any deferred items
 - **Final commit prompt**: Run `git status` — if there are uncommitted changes, prompt: "BUILD complete and verified. Ready to commit? Run /commit or I can stage and commit now." Do not auto-commit — wait for Eric's confirmation. If Eric declines, proceed to /learning-capture

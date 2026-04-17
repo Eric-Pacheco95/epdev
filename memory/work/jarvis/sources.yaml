@@ -14,8 +14,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
-  last_notable: "Apr 6 — Anthropic expands partnership with Google and Broadcom for multiple gigawatts of next-gen compute; Apr 5 — Anthropic launches employee PAC amid AI policy tensions"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — Claude Opus 4.7 launched (stronger coding, agents, vision, multi-step; xhigh effort tier); Apr 14 — Vas Narasimhan to Long-Term Benefit Trust Board; Apr 6 — Google/Broadcom compute partnership"
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
@@ -23,8 +23,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
-  last_notable: "v2.1.92 (Apr 4) — Bedrock setup wizard, /cost per-model breakdown, Write tool 60% faster, remote settings forceRemoteSettingsRefresh, /release-notes interactive; no confirmed new release Apr 5-9"
+  last_checked: "2026-04-17"
+  last_notable: "v2.1.112 (Apr 16) — Opus 4.7 fix; v2.1.111 — Opus 4.7 Auto mode, xhigh effort, /less-permission-prompts, /ultrareview, Windows PowerShell tool; v2.1.110 — /tui fullscreen, push notifications, session recap; v2.1.108 — ENABLE_PROMPT_CACHING_1H, /recap, Skill auto-discovery"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
@@ -32,8 +32,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
-  last_notable: "Apr 6 — Google AI Edge Gallery (Gemma 4 on-device iOS app with tool calling); scan-for-secrets 0.3 (redact flag + redact_file() API); datasette-ports 0.2 (no Datasette dep); Cleanup Claude Code Paste tool"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — llm-anthropic 0.25 (Opus 4.7 + thinking_effort), Qwen3.6-35B-A3B local beats Opus 4.7 on SVG; datasette 1.0a28; Apr 15 — datasette 1.0a27 (header CSRF), Gemini 3.1 Flash TTS; Apr 14 — GPT-5.4-Cyber; Apr 11 — SQLite 3.53.0 (ALTER TABLE constraints)"
 
 - name: "Daniel Miessler"
   url: "https://danielmiessler.com/newsletter"
@@ -41,8 +41,8 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
-  last_notable: "Apr 6 — Inference Costs Are Not Sustainable (Claude Code burning sub budget in hours; multi-model + local/cloud hybrid as fix); Mar 28 — Most Important AI Ideas April 2026"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 17 — Jensen vs Dwarkesh on China chips; Apr 16 — Mythos is Just the New Normal; Apr 15 — Single Digital Assistant future; Apr 14 — Good and Bad Harness Engineering (context > steps); Apr 13 — Full Activation; Apr 12 — AI Only Has to Beat 3/10; Apr 10 — Aperture Collapse"
 
 - name: "Hacker News"
   url: "https://news.ycombinator.com"
@@ -50,8 +50,8 @@
   type: community
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
-  last_notable: "Apr 9 — CISA Fortinet CVE deadline day; Scion early community exploration; Bitcoin $66-68K consolidation; Apr 8 — Docker CVE-2026-34040 patch discussion; crypto tariff macro headwind"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 17 — Claude Opus 4.7; Bluesky DDoS all day; Substrate AI hiring harness engineers; Apr 14 — AI infra scanning (IP probing Claude/OpenAI/HuggingFace since Mar 10); Apr 9 — nginx-ui MCPwn CVSS 9.8"
 
 - name: "MLOps YouTube"
   url: "https://www.youtube.com/@MLOps"
@@ -59,7 +59,7 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
 
 - name: "Andrej Karpathy YouTube"
   url: "https://www.youtube.com/@AndrejKarpathy"
@@ -67,7 +67,7 @@
   type: ai_education
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
 
 - name: "The Pragmatic Engineer"
   url: "https://newsletter.pragmaticengineer.com"
@@ -75,7 +75,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 12-14 issue expected — no new issue detected in feed; Gergely weekly cadence typically Thursdays; watch for Claude Opus 4.7 enterprise implications coverage"
   note: "Added 2026-04-07 — Gergely Orosz weekly newsletter; covers GitHub Copilot, AI coding tools, enterprise AI adoption patterns, and developer market trends; high signal-to-noise for practical AI engineering implications"
 
 # =============================================================================
@@ -88,8 +89,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "No new release detected Apr 8-9; Ollama is the primary local LLM runtime for model serving on macOS/Linux/Windows; watch for Gemma 4 model pack support"
+  last_checked: "2026-04-17"
+  last_notable: "v0.21.0 (Apr 17) — Hermes Agent integration (learns skills from workflows), Copilot CLI integration; v0.20.8 (Apr 14) — ROCm 7.2.1, Gemma4 renderer/compiler fixes, MLX Conv2d/Pad; v0.20.7 — Gemma quality without thinking"
   note: "Added 2026-04-09 — Ollama is the de facto local LLM runner; version upgrades enable new model families (Gemma 4, GLM-5.1) and affect on-device inference quality; relevant to Jarvis local model fallback strategy"
 
 - name: "The Batch (DeepLearning.AI)"
@@ -98,8 +99,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  note: "Replaces OpenAI Blog (403 blocked, no RSS). The Batch covers all major lab releases weekly. Feed 404 since 2026-04-05 (5 days); if not resolved by 2026-04-14, consider downgrade to URL-only or replacement. OpenAI coverage via HN + Zvi + OpenAI Changelog (added this cycle) as fallback."
+  last_checked: "2026-04-17"
+  note: "Replaces OpenAI Blog (403 blocked, no RSS). Feed 404 for 12 days (since 2026-04-05) — persistent failure. OpenAI coverage now via HN + Zvi + OpenAI Changelog. Recommend removal or downgrade to URL-only tier 3."
 
 - name: "Krebs on Security"
   url: "https://krebsonsecurity.com"
@@ -107,8 +108,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 6 — Germany doxes 'UNKN' (Daniil Shchukin, 31, Russia) as head of GandCrab and REvil ransomware; 130+ German victims, EUR 35M damage; double extortion pioneers"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 14 — Patch Tuesday April 2026 (167 patches, SharePoint zero-day CVE-2026-32201, Chrome 4th zero-day 2026, Adobe Reader exploited vuln); Apr 6 — Germany doxes UNKN (REvil/GandCrab head)"
 
 - name: "The Hacker News"
   url: "https://thehackernews.com"
@@ -116,8 +117,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 9 — No new high-severity CVEs detected; Apr 7 — Docker CVE-2026-34040 (CVSS 8.8) auth plugin bypass; 1000+ ComfyUI instances in cryptomining botnet; GPUBreach RowHammer GDDR6 privilege escalation"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 17 — nginx-ui CVE-2026-33032 (CVSS 9.8, MCPwn, pre-auth RCE, Nginx takeover); Apache ActiveMQ CVE-2026-34197 (CVSS 8.8, active); Marimo CVE-2026-39987 (CVSS 9.3, Python notebook RCE, 10h exploitation); SAP CVE-2026-27681 (CVSS 9.9); n8n webhook exploitation for phishing"
 
 - name: "LangChain Blog"
   url: "https://blog.langchain.com"
@@ -125,8 +126,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 9 — No new posts detected; Apr 7 — Deep Agents v0.5; Arcade.dev tools in LangSmith Fleet; Apr 3 — Self-healing agents in production (auto-PR on regression)"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — Running Subagents in Background; Reusable Evaluators in LangSmith; Apr 15 — Self-testing docs; Apr 11 — Your harness, your memory (directly Jarvis-relevant); Apr 9 — Deep Agents Deploy (open alt to Claude Managed Agents); Human judgment in agent loop"
 
 - name: "LlamaIndex Blog"
   url: "https://www.llamaindex.ai/blog"
@@ -134,8 +135,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "No new posts detected Apr 8-9; LlamaIndex focuses on RAG, agentic pipelines, and structured data extraction; complements LangChain coverage for agent framework patterns"
+  last_checked: "2026-04-17"
+  last_notable: "Feed 404 (persistent — was 404 at check); last known content pre-Apr 9; LlamaIndex blog RSS dead; monitor via URL directly or HN coverage"
   note: "Added 2026-04-09 — LlamaIndex (formerly GPT Index) is the second major Python agent/RAG framework after LangChain; relevant to Jarvis knowledge pipeline design and dispatcher patterns; covers LlamaParse, LlamaHub, and production RAG"
 
 - name: "Hugging Face Blog"
@@ -144,8 +145,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 2 — Gemma 4 multimodal (2B-31B, Apache 2.0); Apr 1 — Holo3 computer use frontier; no new posts Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — HF Transformers to MLX conversion PR guide; Apr 15 — VAKRA benchmark (IBM agent reasoning/failure modes); HoloTab AI browser companion; Apr 9 — Waypoint-1.5 interactive worlds on consumer GPUs; Safetensors joining PyTorch Foundation"
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
@@ -153,7 +154,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
 
 - name: "Fabric GitHub Releases"
   url: "https://github.com/danielmiessler/fabric/releases"
@@ -161,8 +162,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Mar 26 — v1.4.442 OAuth refactor (auth logic extracted to dedicated module); no new release Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "v1.4.448 (Apr 17) — Codex empty response fallback fix; v1.4.447 — Claude Opus 4.7 support + 1M context beta; v1.4.446 — --readpattern CLI flag; v1.4.445 — CVE-2025-47273 remediated (setuptools upgrade), non-root container; v1.4.444 — SDK go deps update"
 
 - name: "Latent Space Podcast"
   url: "https://www.latent.space"
@@ -170,8 +171,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 3 — AINews Good Friday (Gemma 4, Hermes Agent as breakout open-source agent framework); Marc Andreessen on death of browser + why this time is different"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 17 — AINews Claude Opus 4.7 (better in every dimension); Apr 16 — RIP Pull Requests (GitHub disabling PRs, agents making PRs obsolete); Apr 15 — Notion token town (5 rebuilds, MCP vs CLIs, software factory vision); Humanity Last Gasp (workers busier despite AI)"
 
 - name: "Meta AI Llama Releases"
   url: "https://github.com/meta-llama/llama-models/releases"
@@ -179,8 +180,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "No new releases Apr 8-9; latest known is Llama 3.3 (Dec 2024); watch for Llama 4 Scout/Maverick production releases"
+  last_checked: "2026-04-17"
+  last_notable: "v0.2.0 (Apr 5, 2025) added Llama 4 support (last release in feed); no new releases Apr 9-17; Llama 4 Scout/Maverick/Behemoth still latest known"
   note: "Added 2026-04-09 — Meta Llama open-weight series is the largest open-weight ecosystem; Llama 4 Scout/Maverick/Behemoth announced; Llama models drive open-weight competition with GLM-5, Gemma 4, Mistral; key for Jarvis local model fallback options"
 
 - name: "Blockworks"
@@ -189,8 +190,8 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  note: "Replaces CoinDesk (RSS 403 blocked). URL updated: blockworks.co 308-redirects to blockworks.com. Feed stale (Jan 2026 entries) — persistent recovery issue."
+  last_checked: "2026-04-17"
+  note: "Replaces CoinDesk (RSS 403 blocked). Feed persistently stale (Jan 2026 most recent entries despite Apr 17 feed timestamp) — 3+ months stale. Candidate for removal; CoinTelegraph covers crypto adequately."
 
 - name: "CoinTelegraph"
   url: "https://cointelegraph.com"
@@ -198,8 +199,8 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 9 — Bitcoin $66-68K consolidation; tariff uncertainty dampens recovery; Apr 8 — BTC dips to $65.5K as Iran deadline partially resolves, $2.1B liquidations, recovery to $66.5K; Apr 7 — $68K, ETF inflows $471M"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 17 — Bitcoin $73-75K (recovery from $65.5K); $283M liquidations on short squeeze above $75K; Charles Schwab spot BTC/ETH for retail; Kalshi prediction markets may go to Supreme Court; Drift hack Circle class-action + Tether $150M recovery fund"
 
 - name: "Google Cloud Threat Intelligence"
   url: "https://cloud.google.com/blog/topics/threat-intelligence"
@@ -207,9 +208,9 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 3 — Attributed axios npm supply chain attack to North Korea UNC1069 (WAVESHAPER.V2 backdoor)"
-  note: "Added 2026-04-04 — Google Mandiant/GTIG primary attribution source; cited in axios compromise, APT reports; feed returned JS framework only on Apr 7 check"
+  last_checked: "2026-04-17"
+  last_notable: "Feed returning JS framework only (persistent — since Apr 7); Apr 3 — UNC1069/North Korea axios npm supply chain (WAVESHAPER.V2); checking via URL only"
+  note: "Added 2026-04-04 — Google Mandiant/GTIG primary attribution source; cited in axios compromise, APT reports; feed broken since Apr 7 (JS only)"
 
 - name: "Mistral AI Blog"
   url: "https://mistral.ai/news"
@@ -217,8 +218,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Mar 31 — Spaces CLI built for humans and agents; Mar 23 — Voxtral TTS; no new posts Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "No new posts detected Apr 9-17 via URL check; URL-only monitoring (no RSS); last known: Mar 31 Spaces CLI"
   note: "Added 2026-04-05 — Mistral is a key open-model lab (Mixtral, Mistral Large, Codestral, Voxtral); no RSS feed detected, URL-only monitoring"
 
 - name: "Microsoft Security Blog"
@@ -227,8 +228,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 1 — Mitigation guide for axios npm supply chain compromise (WAVESHAPER.V2); no new posts Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — Sapphire Sleet macOS campaign (North Korea, fake software updates, credential theft + crypto assets); quantum-safe cryptographic inventory strategy"
   note: "Added 2026-04-04 — Microsoft MSRC + Defender research; key for supply chain mitigations and Patch Tuesday coverage"
 
 - name: "Google Security Blog"
@@ -237,8 +238,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 2 — Multi-layer indirect prompt injection defense in Workspace; Mar 31 — VRP 2025 Year in Review ($17M to 700+ researchers); no new posts Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 10 — Rust DNS parser in Pixel 10 baseband (memory-safe modem firmware); Apr 9 — Device Bound Session Credentials Chrome 146 (hardware-backed cookie theft prevention)"
   note: "Added 2026-04-05 — Google application security research blog; complements GTIC with defensive architecture and vulnerability research"
 
 - name: "NVIDIA Developer Blog"
@@ -247,7 +248,7 @@
   type: ai_engineering
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
 
 - name: "AWS Machine Learning Blog"
   url: "https://aws.amazon.com/blogs/machine-learning/"
@@ -255,7 +256,7 @@
   type: ai_engineering
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
   last_notable: "No new posts detected Apr 8-9; AWS ML covers SageMaker, Bedrock, Trainium/Inferentia, and enterprise AI patterns"
   note: "Added 2026-04-09 — AWS Bedrock is the primary Claude enterprise deployment path; SageMaker patterns apply to Jarvis production pipeline design; Trainium/Inferentia coverage relevant to inference cost reduction strategies per Miessler Apr 6"
   note: "Added 2026-04-07 — NVIDIA GPU/CUDA releases, inference hardware, TensorRT updates; relevant for on-device AI inference and GPUBreach-class hardware security research; ties to Google AI Edge Gallery (device inference) and RowHammer attack class"
@@ -270,8 +271,8 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0); no new posts Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0); no new posts Apr 9-17; Gemini 3.1 Flash TTS noted via Simon Willison Apr 15"
 
 - name: "Meta AI Blog"
   url: "https://ai.meta.com/blog"
@@ -279,7 +280,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
 
 - name: "Microsoft AI Blog"
   url: "https://news.microsoft.com/source/topics/ai/"
@@ -287,7 +288,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -295,8 +296,8 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 7 — Cybersecurity in the Age of Instant Software (AI-generated code at scale, vuln/patch velocity implications); Hong Kong NSL forces encryption key disclosure; New Mexico Meta ruling threatens E2E encryption"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — Human Trust of AI Agents; Apr 14 — How Hackers Are Thinking About AI; Apr 13 — Anthropic Mythos Preview + Project Glasswing (powerful model restricted, vuln-finding initiative); AI Chatbot flattery undermining critical thinking; Apr 10 — Sen. Sanders / Claude on AI policy; Apr 9 — Microsoft cloud security (federal approval despite flaws)"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
@@ -304,7 +305,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -312,7 +313,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
@@ -320,8 +321,8 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 6 — GitHub Copilot CLI combines model families for second opinion (multi-model routing); Apr 3 — PR diff performance (React virtualization); Apr 1 — Supply chain security (CI/CD OIDC token mitigations)"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — eBPF for deployment safety (circular dep detection); Apr 15 — Copilot CLI personal org command center; developer policy update (transparency 2025); Apr 14 — Hack the AI agent (free security training for agentic AI vulns); Code Security Risk Assessment (free vuln scanning)"
 
 - name: "Cohere Blog"
   url: "https://cohere.com/blog"
@@ -329,7 +330,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
   note: "Added 2026-04-05 — Cohere focuses on enterprise RAG, Command models, Embed; relevant for Jarvis embedding pipeline (nomic-embed-text context); URL-only, no RSS feed detected"
 
 - name: "Anthropic Python SDK Releases"
@@ -338,8 +339,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
-  last_notable: "v0.89.0 (Apr 3) — Vertex AI multi-region, deprecated client-side compaction helpers; no new release Apr 5-9; watch: compaction helper deprecation may affect overnight runner"
+  last_checked: "2026-04-17"
+  last_notable: "v0.96.0 (Apr 16) — claude-opus-4-7 support, token budgets, user_profiles; v0.95.0 (Apr 14) — Sonnet 4 and Opus 4 DEPRECATED; v0.94.1 (Apr 13) — streaming fix; v0.94.0 (Apr 10) — Vertex EU region; v0.93.0 (Apr 9) — beta advisor tool"
   note: "Added 2026-04-05 — Jarvis dispatcher and all claude -p invocations depend on this SDK; deprecation of client-side compaction helpers in v0.89.0 may impact overnight runner"
 
 - name: "OpenAI Platform Changelog"
@@ -348,8 +349,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-09"
-  last_notable: "No new changelog entry Apr 8-9; latest known: GPT-4.1 function calling improvements and Assistants API v2 stable; watch for o3/o4 API access expansion"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 14 — GPT-5.4-Cyber (Trusted Access program for cybersecurity sector); ChatGPT voice mode confirmed running older GPT-4o era model; no direct platform.openai.com changelog change detected"
   note: "Added 2026-04-09 — OpenAI is the primary competitor ecosystem; platform API changes affect agent patterns, tool calling specs, and model availability; URL-only (no RSS detected)"
 
 - name: "MCP Specification (modelcontextprotocol)"
@@ -358,8 +359,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "2025-11-25 — v2025-11-25 stable release (current); no new releases Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "No new releases Apr 9-17; v2025-11-25 still current stable; NOTE: nginx-ui CVE-2026-33032 named MCPwn by researchers — active exploitation of AI infrastructure targets"
   note: "Added 2026-04-05 — Jarvis uses MCP extensively for tool servers; spec releases drive breaking changes in stdio transport, tool discovery, and session lifecycle; currently on stable 2025-11-25"
 
 - name: "Anthropic Safety & Policy"
@@ -368,8 +369,8 @@
   type: ai_safety
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 1 — RSP v3.0 published (Responsible Scaling Policy update; lacks concrete commitments per Zvi); Mar 31 — Australia/Anthropic MOU; no new posts Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 13 — Project Glasswing launched (pre-release vulnerability finding initiative for powerful models); Mythos preview restricted before release; Apr 9 — Trustworthy agents in practice (Policy research)"
   note: "Added 2026-04-05 — Separate from Anthropic Blog (products/news); tracks constitutional AI, interpretability, RSP safety milestone commitments; URL-only (no separate RSS)"
 
 - name: "Rekt News (DeFi Exploits)"
@@ -378,9 +379,8 @@
   type: crypto
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 8 — Drift Protocol $280M exploit post-mortem expected imminently (Apr 5 exploit; stablecoin depeg mechanism); Mar 18 — Venus Protocol Rekt IV ($3.7M); Mar 16 — Price Impact Kills (Aave $50M in)"
-  last_notable: "Drift Protocol $280M exploit (Apr 5) post-mortem pending — likely incoming; Mar 18 — Venus Protocol Rekt IV ($3.7M); Mar 16 — Price Impact Kills (Aave $50M in, 327 AAVE out)"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 9 — Drift Protocol $285M post-mortem (North Korea 6-month social engineering, fake token, no code exploit); Apr 14 — Sumsub KYC platform (4K+ clients, opaque ownership, 18mo undetected breach)"
   note: "Added 2026-04-05 — Authoritative DeFi exploit post-mortems; relevant to crypto-bot risk model; no RSS, URL-only"
 
 - name: "AI Safety Newsletter (Zvi)"
@@ -389,8 +389,8 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 6 — Housing Roundup #13 (off-topic); Apr 3 — Anthropic RSP v3 critique (lacks concrete commitments); Apr 2 — AI #162 Visions of Mythos"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — Jensen Huang/China chips export control critique; Apr 15 — Claude Code Auto Mode + Agentic Coding #7 (parallel agents, xhigh effort, computer use for Pro/Max)"
 
 - name: "SANS Internet Storm Center"
   url: "https://isc.sans.edu"
@@ -398,8 +398,8 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 9 — ISC Stormcast ep 9883 (audio digest); Apr 7 — ep 9882; no high-priority handlers diary entries Apr 8-9"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 17 — Lumma Stealer+Sectop RAT via fake Adobe Premiere (806MB null-padded EXE evades AV); Apr 16 — Compromised Dahua DVRs via default creds (202 compromised of 5313 exposed); Apr 14 — MS Patch Tuesday 243 total patches (TCP/IP RCE CVE-2026-33827, RDP RCE, IKE RCE); AI infra scanning (81.168.83.103)"
   note: "Added 2026-04-05 — Daily threat handlers diary; high signal-to-noise for active exploits and IOCs; good complement to THN/Krebs for early-warning CVE exploitation"
 
 - name: "ArXiv CS.AI (Daily Papers)"
@@ -408,8 +408,8 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 8-9 — No single breakout paper; ArXiv CS.AI RSS provides daily preprint titles; filter for agent safety, prompt injection defenses, and inference optimization papers relevant to Jarvis"
+  last_checked: "2026-04-17"
+  last_notable: "VAKRA benchmark (IBM, Apr 15 via HuggingFace) — agent reasoning and failure modes analysis; AI infra credential scanning research (SANS Apr 14 — reconnaissance against Claude/OpenAI/HuggingFace endpoints)"
   note: "Added 2026-04-09 — ArXiv CS.AI preprints are the earliest signal for new attack classes, model capabilities, and safety research before blog/media coverage; filter by keyword (agent, prompt injection, inference, calibration) rather than reading in full; RSS feed available at rss.arxiv.org/rss/cs.AI"
 
 - name: "CISA Known Exploited Vulnerabilities (KEV)"
@@ -418,8 +418,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 9 — CVE-2026-35616 Fortinet FortiClient EMS remediation deadline passes; no new KEV entries Apr 8-9; Apr 6 — CVE-2026-35616 added (unauthenticated code exec); Apr 2 — TrueConf; Mar 26 — Trivy supply chain"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 16 — CVE-2026-34197 Apache ActiveMQ (active exploit); Apr 14 — CVE-2026-32201 SharePoint zero-day, CVE-2009-0238 Office; Apr 13 — CVE-2025-60710 Windows, CVE-2026-34621 Adobe Acrobat (active), CVE-2026-21643 Fortinet FortiClient EMS; Apr 10 KEV — 10 new CVEs added Apr 10-16"
   note: "Added 2026-04-05 — CISA KEV is the authoritative list of CVEs with confirmed in-the-wild exploitation; JSON feed at /feeds/known_exploited_vulnerabilities.json; Trivy entry directly relevant to Jarvis CI/CD pipeline"
 
 - name: "GitHub Security Advisory Database (npm)"
@@ -428,8 +428,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 4 — GHSA-9jpj-g8vv-j5mf: openclaw High (Gemini OAuth PKCE verifier exposed); GHSA-737v-mqg7-c878: defu High (prototype pollution); no new high advisories Apr 5-7"
+  last_checked: "2026-04-17"
+  last_notable: "Apr 14 — CPUID hardware tool supply chain (CPU-Z/HWMonitor update hijacked, STX RAT distributed); Smart Slider 3 Pro backdoor (800K+ WordPress installs); EngageLab SDK (50M users, 30M crypto wallets exposed); SANS reports ~242 MS patches"
   note: "Added 2026-04-05 — Reviewed npm advisories; no RSS feed (GraphQL API available). High-value for supply chain and dev-dependency threat tracking."
 
 - name: "Weights & Biases (W&B) Blog"
@@ -438,7 +438,7 @@
   type: ai_engineering
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-09"
+  last_checked: "2026-04-17"
   note: "Added 2026-04-07 — W&B covers MLOps, experiment tracking, LLM evaluation, and production AI monitoring; relevant to Jarvis overnight metrics and vitals pipeline design; complements LangChain/LangSmith coverage"
 
 - name: "ZhipuAI GLM-4 Releases"
@@ -447,8 +447,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "GLM-5.1 (Apr 7 HN) — long-horizon multi-step task model; GLM-5 previously matched closed frontier on agent tasks (LangChain Apr 2)"
+  last_checked: "2026-04-17"
+  last_notable: "Feed metadata only (no release entries returned); GLM-5.1 still latest known signal (Apr 7 HN); feed may be broken or org renamed (THUDM/GLM-4 -> zai-org/GLM-4)"
   note: "Added 2026-04-07 — ZhipuAI (THUDM) open-weight models; GLM-4/5 series competitive with frontier on agent benchmarks per LangChain Apr 2 report; GLM-5.1 focused on long-horizon planning; key open-weight competitor to track"
 
 - name: "Google DeepMind Scion"
@@ -457,6 +457,6 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-09"
-  last_notable: "Apr 7 HN — open-sourced as experimental multi-agent orchestration testbed for testing and coordinating multiple AI agents in orchestrated workflows"
+  last_checked: "2026-04-17"
+  last_notable: "No new GitHub releases Apr 9-17 (releases.atom 404 — repo may have moved); still monitoring for design patterns post open-source; community exploration ongoing per HN"
   note: "Added 2026-04-07 — Google DeepMind's agent orchestration research platform open-sourced 2026-04-07; directly relevant to Jarvis Phase 5 autonomous agent design and multi-agent coordination patterns; monitor for design patterns and API"
