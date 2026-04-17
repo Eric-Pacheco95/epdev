@@ -8,6 +8,7 @@
 
 - Autonomous capabilities must follow the three-layer pattern: SENSE (read-only monitoring), DECIDE (dispatcher logic), ACT (worker execution in isolated worktrees) — never combine sensing and acting in the same component
 - Any scheduled or background process that mutates git state must operate in a git worktree, never in the main working tree — worktrees with self-healing cleanup (auto-prune stale worktrees on next run) eliminate dirty-tree bugs entirely
+- **Dispatcher monitoring must use single authority per resource.** When two monitoring systems both cover the same producers (e.g. `producer_recency` via producers.json + `producer_health` via DB), the one with the allowlist and canonical source is authoritative; the other must be demoted to informational-only and removed from the remediation map. When both fire simultaneously and dedup logic depends on one being OK, genuine failures trigger a close-reopen task loop instead of resolution. How to apply: `producer_recency` (producers.json + file mtimes) is the canonical health check; `producer_health` (DB query) is read-only context. Why: dual-authority produces infinite remediation loops on real failures — exactly when correct behavior matters most.
 
 ## Producer Behavior
 
@@ -49,6 +50,7 @@
 ## Cleanup & Retention
 
 - **Never call `git worktree remove --force` directly — use `_safe_worktree_remove()` from `tools/scripts/lib/worktree.py`.** The `memory/learning/synthesis/` directory must be excluded from ALL pipeline cleanup, rotation, and move-to-processed logic. Why: git's internal rm-rf follows Windows junctions and destroyed 367 signals across 4 days; the same class of cleanup bug independently destroyed a synthesis doc. How to apply: any overnight or dispatcher cleanup step that prunes worktrees or rotates output directories must call `_safe_worktree_remove()` and explicitly exclude `memory/learning/synthesis/` from its scope.
+- **When a worktree setup step modifies tracked files, hide those changes from git before any `git add -A` runs.** Use `git update-index --skip-worktree <file>` (keeps the index entry intact, silences `git status` and `git add -A`) plus a `/.git/info/exclude` entry for the replacement path (junction/symlink). Never assume worktree setup is git-neutral — verify with `git status --porcelain` after setup completes. Why: 2026-04-17 — `_symlink_local_memory` replaced tracked `.keep` dirs with junctions; pre-loop auto-commit used `git add -A` and committed them; overnight branch merged to main producing self-referential symlinks (mode 120000). `git rm --cached` is the wrong fix — it stages a deletion that `git commit` will include. How to apply: `_hide_symlink_from_git()` in `tools/scripts/lib/worktree.py` is the reference implementation.
 
 ## Loaded by
 
