@@ -1,9 +1,11 @@
+> **SUPERSEDED by PRD_v4.md on 2026-04-17.** v3.0 preserved for historical reference. See v4.0 for current outcome-shaped ISC and phase ladder.
+
 # PRD: Crypto-Bot Profit Validation Sprint
 
 **Version:** 3.0
 **Date:** 2026-04-01
 **Author:** Jarvis (deep code audit + research synthesis + architecture review)
-**Status:** DRAFT — awaiting Eric approval
+**Status:** SUPERSEDED — replaced by PRD_v4.md on 2026-04-17. Activity-shaped ISC (35-bug list) replaced with outcome-shaped ISC (paper 3x, closed-loop learning, 6-phase ladder).
 
 ---
 
