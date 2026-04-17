@@ -42,7 +42,7 @@ true
 
 # WHEN TO INVOKE
 
-Run `/architecture-review` BEFORE any hard-to-reverse decision: architecture choice, tool/dependency adoption, or any decision with 3+ viable paths. ADHD build velocity defaults to the option with the most energy, not the best fit — this skill exists to interrupt that default and force a structured comparison. If you're about to start building and there are multiple ways to do it, you should be running this first.
+Run before any hard-to-reverse decision: architecture choice, tool/dependency adoption, or any decision with 3+ viable paths. ADHD build velocity defaults to highest-energy option — this interrupts that default. If multiple ways to build something exist, run this first.
 
 # STEPS
 
@@ -64,11 +64,7 @@ Run `/architecture-review` BEFORE any hard-to-reverse decision: architecture cho
 - Extract the key constraints, requirements, and context from the proposal
 - List the viable alternatives (minimum 2) — if only one path is described, identify what was implicitly rejected
 - Determine if STRIDE overlay is warranted (explicit --stride flag, or proposal involves: external input, file system writes, network access, credential handling, autonomous execution)
-- **Backcast eligibility check**: Before launching agents, assess if the proposal spans multiple phases, involves a multi-year roadmap, or asks "how should we evolve X over time." If any of these are true, prompt Eric:
-  > "This proposal spans multiple phases / involves a long-horizon roadmap. `/make-prediction --backcast` would surface phase-specific failure modes BEFORE the architecture review — so the agents have richer problems to evaluate. Recommend running that first. Proceed with /architecture-review only, or run `/make-prediction --backcast <ideal state>` first?"
-  - If Eric confirms architecture-review only: proceed to Step 2
-  - If Eric wants --backcast first: STOP; direct to `/make-prediction --backcast` with a suggested ideal state restatement
-  - Skip this check if: the proposal is scoped to a single phase, a specific implementation decision, or a binary choice with no multi-phase dependency
+- **Backcast eligibility**: If proposal spans multiple phases or a multi-year roadmap, prompt: "This spans multiple phases — `/make-prediction --backcast` would surface phase-specific failure modes first. Proceed with /architecture-review only, or run --backcast first?" If Eric wants --backcast: STOP and direct there. Skip if proposal is single-phase, single decision, or binary.
 - Present the framing to Eric for confirmation before launching agents:
   > **Architecture Decision:** {one sentence}
   > **Alternatives:** {2-3 options}
