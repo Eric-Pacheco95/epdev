@@ -70,14 +70,11 @@ false
 
 ## Step 0.5: CONVERSATIONAL PARAMETER CLARIFICATION
 
-Ask 1-3 brief questions to lock down:
-1. **What specifically** — Binary, range, or directional? Restate in falsifiable form.
-2. **Time horizon** — By when? Propose if not stated.
-3. **Domain scope** — Multiple domains? Which is primary?
+Ask 1-3 questions: (1) Binary/range/directional? Restate in falsifiable form. (2) By when? (3) Multiple domains? Which is primary?
 
-- Skip if question is already clear and specific
-- Do NOT let hints about preferred outcomes bias analysis — if Eric implies a preference, acknowledge and set aside explicitly
-- Restate in final falsifiable form before proceeding
+- Skip if question is already clear
+- If Eric implies a preferred outcome, acknowledge and set aside; don't let it bias analysis
+- Restate in falsifiable form before proceeding
 
 ## Step 1: ORIENT
 
@@ -295,7 +292,6 @@ status: open
 [base rate and source]
 
 ## Resolution
-<!-- Fill in when outcome is known -->
 - Actual outcome:
 - Date resolved:
 - Which scenario materialized:
