@@ -13,10 +13,12 @@
 import React from "react";
 import { PAICliDemoCompositions } from "./compositions/pai-cli-demo";
 import { TDKeynoteCompositions } from "./compositions/td-keynote";
+import { WorkbenchPhase3Compositions } from "./compositions/workbench-phase3";
 
 export const RemotionRoot: React.FC = () => (
   <>
     <PAICliDemoCompositions />
     <TDKeynoteCompositions />
+    <WorkbenchPhase3Compositions />
   </>
 );
