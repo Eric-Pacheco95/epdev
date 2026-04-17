@@ -17,6 +17,7 @@
 - Every verification/audit layer must emit its own health signal — if the verifier itself fails to execute, it must produce a louder alert than a verification failure; silent verifier failures create false confidence
 - Synthesis threshold is set to 35 (hard ceiling) with tiers at 15/48h and 10/72h — lower ceiling to 15 when velocity drops below 3/day
 - After any autonomous /absorb run (Slack poller Tier 1), verify the output chain: signal file exists, TELOS update is appropriate, audit trail is complete
+- **Autonomous producers must dedup against non-terminal status before backlog injection.** Query for existing rows with the same `routine_id` OR description fingerprint in any active status (pending, pending_review, executing, verifying, claimed) — not just `done`. Dedup-against-done-only allows duplicate tasks to accumulate hourly on persistent failures. How to apply: add an open-row guard in `propose_task()` and `backlog_append()` callers; autoresearch pre-apply workflows must also verify the underlying condition is still true before generating proposals. Why: 8 identical auto-heal tasks injected hourly for the same already-fixed bug (2026-04-17); ISC producer re-proposed the same 5 criteria on consecutive days.
 
 ## Agent Definitions
 
