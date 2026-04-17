@@ -475,14 +475,14 @@ def _g2_streak_check() -> list[str]:
     return []
 
 
-def _context_status_line() -> str:
-    """Estimate context fill % from most recent session JSONL. Returns banner line."""
+def _compute_ctx_metrics() -> dict | None:
+    """Read most recent session JSONL and return raw context metrics, or None on error."""
     try:
         if not CLAUDE_PROJ_DIR.is_dir():
-            return "CTX [----------] ~?%"
+            return None
         files = [p for p in CLAUDE_PROJ_DIR.iterdir() if p.suffix == ".jsonl"]
         if not files:
-            return "CTX [----------] ~?%"
+            return None
         path = max(files, key=lambda p: p.stat().st_mtime)
 
         entries: list = []
@@ -496,7 +496,6 @@ def _context_status_line() -> str:
                 except Exception:
                     pass
 
-        # Find last isMeta (auto-compact marker) timestamp
         last_compact_ts = None
         compact_count = 0
         for e in entries:
@@ -511,14 +510,47 @@ def _context_status_line() -> str:
         user_turns = sum(1 for e in live if e.get("type") == "user")
         pct = min(99, int(est_tokens / CONTEXT_LIMIT_TOKENS * 100))
 
-        filled = pct // 10
-        bar = "#" * filled + "-" * (10 - filled)
-        k = est_tokens // 1_000
-        limit_k = CONTEXT_LIMIT_TOKENS // 1_000
-        compact_str = f" /{compact_count}cx" if compact_count > 0 else ""
-        return f"CTX [{bar}] ~{pct}% ~{k}K/{limit_k}K{compact_str} {user_turns}t"
+        return {
+            "session_id": path.stem,
+            "pct": pct,
+            "compact_count": compact_count,
+            "est_tokens_k": est_tokens // 1_000,
+            "user_turns": user_turns,
+        }
     except Exception:
+        return None
+
+
+def _context_status_line() -> str:
+    """Format CTX banner line from computed metrics."""
+    m = _compute_ctx_metrics()
+    if m is None:
         return "CTX [----------] ~?%"
+    pct = m["pct"]
+    filled = pct // 10
+    bar = "#" * filled + "-" * (10 - filled)
+    compact_str = f" /{m['compact_count']}cx" if m["compact_count"] > 0 else ""
+    limit_k = CONTEXT_LIMIT_TOKENS // 1_000
+    return f"CTX [{bar}] ~{pct}% ~{m['est_tokens_k']}K/{limit_k}K{compact_str} {m['user_turns']}t"
+
+
+def _log_context_metrics() -> None:
+    """Append one metrics row to data/context_metrics.jsonl for trend tracking."""
+    m = _compute_ctx_metrics()
+    if m is None:
+        return
+    try:
+        log_file = REPO_ROOT / "data" / "context_metrics.jsonl"
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        row = {
+            "date": datetime.now().astimezone().strftime("%Y-%m-%d"),
+            "ts": datetime.now().astimezone().isoformat(),
+            **m,
+        }
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(row) + "\n")
+    except OSError:
+        pass
 
 
 _PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
@@ -699,6 +731,7 @@ def main() -> None:
 
     # ── Banner header (always emitted — contains live timestamp) ──────────
     ctx_line = _context_status_line()
+    _log_context_metrics()
     print()
     print(f"╔{'═' * _W}╗")
     print(_box_line("JARVIS :: NEURAL LINK ESTABLISHED"))
