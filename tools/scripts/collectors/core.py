@@ -201,10 +201,10 @@ def _get_query_events_data(root_dir: Path) -> dict | None:
     try:
         result = subprocess.run(
             [sys.executable, str(script), "--json"],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
             cwd=str(root_dir),
         )
-        if result.returncode == 0 and result.stdout.strip():
+        if result.returncode == 0 and result.stdout and result.stdout.strip():
             _query_events_cache = json.loads(result.stdout)
             return _query_events_cache
     except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
@@ -311,10 +311,10 @@ def collect_hook_output_size(cfg: dict, root_dir: Path, _prev: dict = None) -> d
     try:
         result = subprocess.run(
             [sys.executable, str(script)],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15,
             cwd=str(root_dir),
         )
-        char_count = len(result.stdout)
+        char_count = len(result.stdout or "")
         return _result(name, char_count, "chars")
     except (subprocess.TimeoutExpired, OSError) as exc:
         return _result(name, None, "chars", f"hook execution failed: {exc}")
@@ -338,7 +338,7 @@ def collect_scheduled_tasks(cfg: dict, root_dir: Path, _prev: dict = None) -> di
         )
         result = subprocess.run(
             ["powershell", "-NoProfile", "-Command", ps_cmd],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15,
         )
         if result.returncode != 0:
             return _result(name, None, "count",
@@ -1057,7 +1057,7 @@ def collect_learning_retention(cfg: dict, root_dir: Path, _prev: dict = None) ->
     try:
         result = subprocess.run(
             [sys.executable, str(script)],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
             cwd=str(root_dir),
         )
         if result.returncode == 0:
