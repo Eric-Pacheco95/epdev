@@ -57,7 +57,7 @@ false
 2. **`orchestration/steering/autonomous-rules.md`** — if the rule governs autonomous `claude -p` worker behavior exclusively (producer/dispatcher/worktree patterns, overnight runner conventions, model routing, ISC pipeline behavior); rule must NOT apply to interactive sessions
 3. **`orchestration/steering/platform-specific.md`** — if the rule is Windows/Task Scheduler/PowerShell/MCP/hooks specific; applies equally in interactive and autonomous contexts but NOT in non-Windows environments
 4. **`orchestration/steering/research-patterns.md`** — if the rule governs how Jarvis consumes external information (web research, absorb, counterfactual filter, adopt-vs-absorb decisions)
-5. **`orchestration/steering/cross-project.md`** — if the rule constrains cross-repo operations (crypto-bot, brain-map, non-epdev edits); rule applies whenever touching a repo other than epdev
+5. **`orchestration/steering/cross-project.md`** — if the rule constrains cross-repo operations (crypto-bot, jarvis-app, non-epdev edits); rule applies whenever touching a repo other than epdev
 6. **`orchestration/steering/trade-development.md`** — if the rule governs financial research, trade signal evaluation, or alpha development workflows
 7. **`CLAUDE.md`** — if the rule is universal (applies in interactive AND autonomous sessions, across platforms, across projects) AND does not fit any of the above domains
 

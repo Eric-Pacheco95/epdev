@@ -18,7 +18,7 @@ Six research articles spanning agent orchestration, harness tooling, and fronten
 - Emanuel's dcg covers 49+ security pattern packs filling validate_tool_use.py gaps; WSL dependency makes direct adoption impractical -- extract pattern list instead.
 
 ### frontend-ui
-- React Flow (35.6K stars, MIT) confirmed for brain-map canvas; Contextual Zoom built-in via useStore; zoom-layer design gates node detail by zoom level.
+- React Flow (35.6K stars, MIT) confirmed for jarvis-app canvas; Contextual Zoom built-in via useStore; zoom-layer design gates node detail by zoom level.
 - React Native + Expo = lowest friction for iOS + Windows App Stores; Tauri v2 = best Windows desktop (1-10 MB vs Electron 100-150 MB, <500ms startup).
 - React Native New Architecture (default since 0.76): 43% faster cold starts, 39% faster rendering, 26% lower memory.
 

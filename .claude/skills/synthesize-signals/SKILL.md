@@ -194,7 +194,7 @@ If no rules are warranted: "(none proposed)"
 # LEARN
 
 - If synthesis regularly produces the same 2-3 themes across multiple runs, those themes are strong candidates for promotion to `memory/work/TELOS.md` via /telos-update
-- If synthesis reveals cross-project patterns (same insight appears in signals from crypto-bot, jarvis, and brain-map), flag them for /project-orchestrator review
+- If synthesis reveals cross-project patterns (same insight appears in signals from crypto-bot, jarvis, and jarvis-app), flag them for /project-orchestrator review
 - Track which signal categories (insight, pattern, anomaly, improvement) generate the most synthesis themes -- this reveals where Eric's system is producing the most learning
 - If synthesis is running more often than weekly, the signal volume is high enough to justify a dedicated synthesis schedule
 
