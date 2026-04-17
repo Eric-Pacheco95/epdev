@@ -57,23 +57,16 @@ false
 - If input is fewer than 5 words: enter Step 0.5 (conversational clarification) to understand what Eric wants to predict
 - If --research flag is set: invoke /research on the topic first, then proceed with the research output as additional context
 - If the question clearly requires post-training-cutoff data and --research is not set: suggest "This prediction would benefit from current data. Run with --research flag, or run /research first?"
-- **Calibration injection**: Check if `data/calibration.json` exists. If it does:
-  1. Identify domain (geopolitics, market, technology, planning, other) and maturity:
-     - `immature` (n_forward < 10): INFORMATIONAL ONLY — display but don't apply
-     - `provisional` (10-19 forward): apply with warning label
-     - `calibrated` (20+): apply with full confidence
-  2. If non-zero adjustment exists, display before proceeding:
-     ```
-     Calibration for {domain}: [{maturity}]
-       Accuracy: {accuracy}% | n={n} ({n_forward} fwd, {n_backtest} bt) | Bias: {over|under} by {delta}%
-       Adjustment: {adjustment:+.0%} {applied|informational only}
-     ```
-  3. If maturity `provisional`/`calibrated`: apply adjustment during Step 2 (reduce outcome probs by delta, renormalize to 100%). If `immature`: display only.
-  4. In Step 4 OUTPUT: add after reference class: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`
-  5. If no calibration file or domain has no data: proceed normally.
-  6. **Prediction memory scan**: If 2+ resolved predictions in `data/predictions/` for this domain, load 2 most recent; extract reasoning errors and effective signposts. Display: "Loaded {n} prior predictions as priors for {domain}." Use as guardrails.
-- **Domain knowledge scan**: Read `memory/knowledge/index.md` and scan for relevant entries. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability → `security`; AI/LLM/orchestration → `ai-infra`. Load up to 3 most recent relevant articles as priors. Note: "Loaded N domain knowledge articles as priors."
-- Once input is validated, proceed to Step 0.5
+- **Calibration injection**: If `data/calibration.json` exists, identify domain + maturity (`immature`=n_fwd<10 display only; `provisional`=10-19 apply with warning; `calibrated`=20+ apply fully). Display before proceeding:
+  ```
+  Calibration for {domain}: [{maturity}]
+    Accuracy: {accuracy}% | n={n} ({n_forward} fwd, {n_backtest} bt) | Bias: {over|under} by {delta}%
+    Adjustment: {adjustment:+.0%} {applied|informational only}
+  ```
+  If provisional/calibrated: apply in Step 2 (reduce probs by delta, renormalize). In Step 4 add: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`. No file or no domain data: proceed normally.
+  - **Prior scan**: 2+ resolved predictions in `data/predictions/` for this domain → load 2 most recent; extract reasoning errors and signposts. Note: "Loaded {n} prior predictions as priors."
+- **Domain knowledge scan**: Read `memory/knowledge/index.md`. Domain map: crypto/DeFi/BTC → `crypto`; security → `security`; AI/LLM → `ai-infra`. Load ≤3 relevant articles. Note: "Loaded N domain knowledge articles."
+- Once input validated, proceed to Step 0.5
 
 ## Step 0.5: CONVERSATIONAL PARAMETER CLARIFICATION
 
