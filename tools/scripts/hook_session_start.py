@@ -6,8 +6,10 @@ Loads rich context so Jarvis starts every session with full awareness.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
+import os
 import re
 import subprocess
 import sys
@@ -53,6 +55,17 @@ def _section(label: str) -> str:
     return f"\n◈ {label} {bar}"
 
 
+CLAUDE_PROJ_DIR = Path.home() / ".claude" / "projects" / str(REPO_ROOT).replace("\\", "-").replace(":", "-")
+CONTEXT_LIMIT_TOKENS = 200_000
+
+# Empirical token weights per JSONL entry type (from session analysis 2026-04-16)
+_CTX_TOKENS_PER_TYPE = {
+    "user": 2_500,
+    "assistant": 1_500,
+    "attachment": 1_200,
+    "system": 800,
+}
+
 TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
@@ -63,6 +76,7 @@ ABSORBED_DIR = REPO_ROOT / "memory" / "learning" / "absorbed"
 LINEAGE_FILE = REPO_ROOT / "data" / "signal_lineage.jsonl"
 VALUE_FILE = REPO_ROOT / "data" / "autonomous_value.jsonl"
 G2_STREAK_FILE = REPO_ROOT / "data" / "g2_streak.json"
+BANNER_CACHE_FILE = REPO_ROOT / "data" / "banner_cache.json"
 CRYPTO_BOT_ROOT = Path("C:/Users/ericp/Github/crypto-bot")
 
 # Signal filename keywords that indicate non-G2 activity
@@ -461,6 +475,52 @@ def _g2_streak_check() -> list[str]:
     return []
 
 
+def _context_status_line() -> str:
+    """Estimate context fill % from most recent session JSONL. Returns banner line."""
+    try:
+        if not CLAUDE_PROJ_DIR.is_dir():
+            return "CTX [----------] ~?%"
+        files = [p for p in CLAUDE_PROJ_DIR.iterdir() if p.suffix == ".jsonl"]
+        if not files:
+            return "CTX [----------] ~?%"
+        path = max(files, key=lambda p: p.stat().st_mtime)
+
+        entries: list = []
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entries.append(json.loads(line))
+                except Exception:
+                    pass
+
+        # Find last isMeta (auto-compact marker) timestamp
+        last_compact_ts = None
+        compact_count = 0
+        for e in entries:
+            if e.get("isMeta"):
+                compact_count += 1
+                ts = e.get("timestamp", "")
+                if ts and (last_compact_ts is None or ts > last_compact_ts):
+                    last_compact_ts = ts
+
+        live = [e for e in entries if e.get("timestamp", "") > last_compact_ts] if last_compact_ts else entries
+        est_tokens = sum(_CTX_TOKENS_PER_TYPE.get(e.get("type", ""), 300) for e in live)
+        user_turns = sum(1 for e in live if e.get("type") == "user")
+        pct = min(99, int(est_tokens / CONTEXT_LIMIT_TOKENS * 100))
+
+        filled = pct // 10
+        bar = "#" * filled + "-" * (10 - filled)
+        k = est_tokens // 1_000
+        limit_k = CONTEXT_LIMIT_TOKENS // 1_000
+        compact_str = f" /{compact_count}cx" if compact_count > 0 else ""
+        return f"CTX [{bar}] ~{pct}% ~{k}K/{limit_k}K{compact_str} {user_turns}t"
+    except Exception:
+        return "CTX [----------] ~?%"
+
+
 _PROMPT_TS_FILE = Path(__file__).resolve().parents[2] / ".claude" / "prompt_ts.json"
 
 
@@ -561,6 +621,59 @@ def _stamp_prompt_ts() -> None:
         pass
 
 
+def _section_hash(rendered: str) -> str:
+    return hashlib.sha256(rendered.encode("utf-8")).hexdigest()[:8]
+
+
+def _load_banner_cache() -> dict | None:
+    try:
+        return json.loads(BANNER_CACHE_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _save_banner_cache(cache: dict) -> None:
+    tmp = BANNER_CACHE_FILE.with_suffix(".json.tmp")
+    try:
+        BANNER_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp.write_text(json.dumps(cache, indent=2), encoding="utf-8")
+        os.replace(str(tmp), str(BANNER_CACHE_FILE))
+    except OSError:
+        pass
+
+
+def _ismeta_newer_than_cache() -> bool:
+    # No cache → no baseline for comparison → force full render (True = invalidate)
+    if not BANNER_CACHE_FILE.exists():
+        return True
+    try:
+        cache_mtime = BANNER_CACHE_FILE.stat().st_mtime
+        if not CLAUDE_PROJ_DIR.is_dir():
+            return False
+        files = [p for p in CLAUDE_PROJ_DIR.iterdir() if p.suffix == ".jsonl"]
+        if not files:
+            return False
+        path = max(files, key=lambda p: p.stat().st_mtime)
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                    if entry.get("isMeta"):
+                        ts = entry.get("timestamp", "")
+                        if ts:
+                            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                            if dt.timestamp() > cache_mtime:
+                                return True
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    return False
+
+
 def main() -> None:
     _stamp_prompt_ts()
 
@@ -584,76 +697,91 @@ def main() -> None:
 
     now = datetime.now().astimezone()
 
-    # ── Banner ──────────────────────────────────────────────────────────
+    # ── Banner header (always emitted — contains live timestamp) ──────────
+    ctx_line = _context_status_line()
     print()
     print(f"╔{'═' * _W}╗")
     print(_box_line("JARVIS :: NEURAL LINK ESTABLISHED"))
-    print(_box_line(f"SESSION // {now.strftime('%Y-%m-%d %H:%M:%S %Z')}  [DENSE]"))
+    print(_box_line(f"SESSION // {now.strftime('%Y-%m-%d %H:%M:%S %Z')}"))
+    print(_box_line(ctx_line))
     print(f"╚{'═' * _W}╝")
 
-    # ── Git Safety ──────────────────────────────────────────────────────
+    # ── Delta-mode setup ──────────────────────────────────────────────────
+    use_delta = False
+    cache: dict = {}
+    try:
+        loaded = _load_banner_cache()
+        if loaded is not None and not _ismeta_newer_than_cache():
+            cache = loaded
+            use_delta = True
+    except Exception:
+        pass
+
+    new_cache: dict = {}
+    sections_emitted = 0
+
+    def _emit(key: str, lines: list) -> None:
+        nonlocal sections_emitted
+        rendered = "\n".join(lines) + ("\n" if lines else "")
+        h = _section_hash(rendered)
+        new_cache[key] = h
+        if not use_delta or cache.get(key) != h:
+            if rendered:
+                sys.stdout.write(rendered)
+                sections_emitted += 1
+
+    # ── GIT SAFETY ────────────────────────────────────────────────────────
+    git_lines: list = []
     git_warnings = _git_safety_check()
     if git_warnings:
-        print(_section("GIT SAFETY"))
-        for w in git_warnings:
-            print(_ascii_safe(w))
+        git_lines.append(_section("GIT SAFETY"))
+        git_lines.extend(_ascii_safe(w) for w in git_warnings)
+    _emit("GIT_SAFETY", git_lines)
 
-    # ── Goal Balance ────────────────────────────────────────────────────
+    # ── GOAL BALANCE ──────────────────────────────────────────────────────
+    goal_lines: list = []
     g2_warnings = _g2_streak_check()
     if g2_warnings:
-        print(_section("GOAL BALANCE"))
-        for w in g2_warnings:
-            print(_ascii_safe(w))
+        goal_lines.append(_section("GOAL BALANCE"))
+        goal_lines.extend(_ascii_safe(w) for w in g2_warnings)
+    _emit("GOAL_BALANCE", goal_lines)
 
-    # ── Crypto-bot ──────────────────────────────────────────────────────
+    # ── CRYPTO-BOT ────────────────────────────────────────────────────────
+    crypto_lines: list = []
     crypto_status = _crypto_bot_status()
     if crypto_status:
-        print(_section("CRYPTO-BOT"))
-        for line in crypto_status:
-            print(_ascii_safe(line))
+        crypto_lines.append(_section("CRYPTO-BOT"))
+        crypto_lines.extend(_ascii_safe(line) for line in crypto_status)
+    _emit("CRYPTO_BOT", crypto_lines)
 
-    # ── TELOS ───────────────────────────────────────────────────────────
-    print(_section("TELOS"))
-    print(_ascii_safe(_load_telos_status()))
+    # ── TELOS ─────────────────────────────────────────────────────────────
+    _emit("TELOS", [_section("TELOS"), _ascii_safe(_load_telos_status())])
 
-    # ── Active Tasks ────────────────────────────────────────────────────
-    print(_section("ACTIVE TASKS"))
+    # ── ACTIVE TASKS (bundles tasks + validations + absorb + dream) ────────
+    active_lines: list = [_section("ACTIVE TASKS")]
     if TASKLIST.is_file():
         tasks = _unchecked_tasks(TASKLIST.read_text(encoding="utf-8", errors="replace"))
         if tasks:
             for t in tasks[:5]:
-                print(f"  [ ] {_ascii_safe(t)}")
+                active_lines.append(f"  [ ] {_ascii_safe(t)}")
             if len(tasks) > 5:
-                print(f"  ... and {len(tasks) - 5} more")
+                active_lines.append(f"  ... and {len(tasks) - 5} more")
         else:
-            print("  (none)")
+            active_lines.append("  (none)")
     else:
-        print(f"  (missing: {TASKLIST})")
+        active_lines.append(f"  (missing: {TASKLIST})")
 
-    # ── Learning ────────────────────────────────────────────────────────
-    n_total_signals, n_unprocessed = _count_unprocessed_signals()
-    n_failures = _count_files(FAILURES_DIR)
-    print(_section("LEARNING"))
-    print(f"  {n_total_signals} signals ({n_unprocessed} unprocessed) | {n_failures} failures")
-    due, reason = _synthesis_due(n_unprocessed)
-    if due:
-        print(f"  ⚡ Synthesis due: {reason}")
-        print("     Run /synthesize-signals when ready.")
-
-    # ── Open Validations ────────────────────────────────────────────────
     validations = _check_open_validations()
     if validations:
-        print(_section("OPEN VALIDATIONS"))
+        active_lines.append(_section("OPEN VALIDATIONS"))
         for v in validations:
-            print(f"  ⚡ {_ascii_safe(v)}")
+            active_lines.append(f"  ⚡ {_ascii_safe(v)}")
 
-    # ── Pending Absorb ──────────────────────────────────────────────────
     pending = _count_pending_absorb_proposals()
     if pending:
-        print(_section("PENDING /ABSORB"))
-        print(f"  ⚡ {pending} TELOS proposal(s) pending -- run `/absorb --review`")
+        active_lines.append(_section("PENDING /ABSORB"))
+        active_lines.append(f"  ⚡ {pending} TELOS proposal(s) pending -- run `/absorb --review`")
 
-    # ── Dream report ────────────────────────────────────────────────────
     dream_report = REPO_ROOT / "data" / "dream_last_report.md"
     dream_last_run = REPO_ROOT / "data" / "dream_last_run.txt"
     if dream_report.exists():
@@ -661,21 +789,43 @@ def main() -> None:
             report_text = dream_report.read_text(encoding="utf-8", errors="replace")
             if any(k in report_text for k in ["[MERGE", "[STALE", "[DATES"]):
                 last_run = dream_last_run.read_text().strip() if dream_last_run.exists() else "unknown"
-                print(_section("DREAM CONSOLIDATION"))
-                print(f"  ⚡ /dream ran at {last_run} -- run `/dream --dry-run` to review")
+                active_lines.append(_section("DREAM CONSOLIDATION"))
+                active_lines.append(f"  ⚡ /dream ran at {last_run} -- run `/dream --dry-run` to review")
         except Exception:
             pass
 
-    # ── Security ────────────────────────────────────────────────────────
-    print(_section("SECURITY (7d)"))
+    _emit("ACTIVE_TASKS", active_lines)
+
+    # ── LEARNING ──────────────────────────────────────────────────────────
+    n_total_signals, n_unprocessed = _count_unprocessed_signals()
+    n_failures = _count_files(FAILURES_DIR)
+    learn_lines: list = [
+        _section("LEARNING"),
+        f"  {n_total_signals} signals ({n_unprocessed} unprocessed) | {n_failures} failures",
+    ]
+    due, reason = _synthesis_due(n_unprocessed)
+    if due:
+        learn_lines.append(f"  ⚡ Synthesis due: {reason}")
+        learn_lines.append("     Run /synthesize-signals when ready.")
+    _emit("LEARNING", learn_lines)
+
+    # ── SECURITY ──────────────────────────────────────────────────────────
+    sec_lines: list = [_section("SECURITY (7d)")]
     sec = _recent_security_events()
     if sec:
-        print("\n".join(sec))
+        sec_lines.extend(sec)
     else:
-        print("  (none logged)")
+        sec_lines.append("  (none logged)")
+    _emit("SECURITY", sec_lines)
 
-    # ── Footer ──────────────────────────────────────────────────────────
-    print(f"\n╚{'═' * _W}╝\n")
+    # ── Save cache + conditional footer ───────────────────────────────────
+    try:
+        _save_banner_cache(new_cache)
+    except Exception:
+        pass
+
+    if sections_emitted > 0:
+        print(f"\n╚{'═' * _W}╝\n")
 
 
 if __name__ == "__main__":

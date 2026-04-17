@@ -114,6 +114,7 @@ Load documentation on-demand, not upfront:
 - **When relocating a file other code reads, delete/stub/symlink the old path in the same commit.** Gitignored orphans are invisible to `git status` — grep hits both copies and the stale one misleads future investigations. Why: 2026-04-09 — `memory/learning/signal_lineage.jsonl` was left behind when the canonical moved to `data/signal_lineage.jsonl`; 11 days later a lineage investigation grepped the orphan and reached the wrong conclusion. How to apply: same-commit `rm`, error-stub, or symlink. Never leave a gitignored parallel copy.
 - **Before enabling any pair of autonomous capabilities, run a loop-closure check.** Autonomous backlog generation + autonomous PRD generation together close a self-referential loop with no human ground-truth break — bad patterns accumulate silently because the merge gate reviews code, not goal alignment. Any backlog task requiring `/create-prd` as an intermediate step is a `deferred` (manual review) item — never auto-executed. How to apply: add loop-closure check as a step in `/architecture-review` for any pair of autonomous features; require human approval gate at each signal→PRD and PRD→backlog transition, loop-health metric (alert >70% autonomous task ratio), and provenance tags on autonomously-generated content.
 - **Safety/review gate sections must structurally precede actionable items in any multi-section output.** Any artifact producing both a gate/review section (items requiring arch-review, risks, blockers) and task-ready items (roadmap copy, backlog entries) must place the gate first — gate-last is bypassed on every session by ADHD build velocity. This is an output format constraint, not a reading preference. Applies to: skill roadmap outputs, PRDs (RISKS before IMPLEMENTATION PLAN), skill output sections with review lists.
+- **When CTX reaches 60%, surface the option to write current ISC/task state to disk and start a fresh session.** Write in-progress ISC items and task status to `memory/work/session_checkpoint.md`, then open a new session — demand-side decomposition prevents 8-compaction accumulation and preserves context fidelity through the clean-break point.
 
 ### Skill Flag Discoverability
 
@@ -143,39 +144,6 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 **Full build chain: `/research` -> `/create-prd` -> `/implement-prd` -> `/quality-gate` -> `/learning-capture`**
 
 **47 active skills available.** Skills are auto-discovered at session start. Run `/jarvis-help` for the full registry.
-
-## Directory Structure
-
-```
-epdev/
-├── CLAUDE.md                  # This file — root context
-├── .claude/                   # Claude Code config & skills
-│   ├── settings.json          # Permissions, hooks, MCP config
-│   └── skills/                # Modular skill definitions (SKILL.md per skill)
-├── memory/                    # 3-tier persistent memory
-│   ├── work/                  # Warm: active project PRDs & state
-│   └── learning/              # Cold: accumulated wisdom
-│       ├── failures/          # What went wrong + root cause
-│       ├── signals/           # Raw observations (1-10 rated)
-│       └── synthesis/         # Periodic distillation of signals
-├── history/                   # Immutable audit trail
-│   ├── decisions/             # Decision log with rationale
-│   ├── changes/               # Code/config change records
-│   └── security/              # Security event log
-├── orchestration/             # Multi-project management
-│   ├── agents/                # Named agent definitions
-│   └── tasklist.md            # Unified task console
-├── security/                  # Defense layer
-│   ├── constitutional-rules.md
-│   └── validators/            # PreToolUse validation scripts
-├── tools/                     # Utilities & patterns
-│   ├── scripts/               # CLI utilities, hook scripts, collectors
-│   └── fabric-upstream/       # Upstream Fabric patterns
-├── data/                      # Runtime state (heartbeat, indexes, logs)
-└── tests/                     # Continuous verification
-    ├── defensive/             # Ongoing security tests
-    └── self-heal/             # Self-healing verification
-```
 
 ## TELOS
 
