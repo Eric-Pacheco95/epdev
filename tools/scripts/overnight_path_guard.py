@@ -278,7 +278,17 @@ def run_self_test() -> bool:
         "codebase_health", "Script write allowed (codebase_health)"
     )
 
-    # Scope enforcement (wrong dimension)
+    # Worktree helper -- non-worktree path returns None
+    from overnight_path_guard import _to_main_repo_path
+    non_wt = _to_main_repo_path(REPO_ROOT / "data" / "test.json")
+    if non_wt is None:
+        print(f"  PASS: _to_main_repo_path returns None for main-repo paths")
+        passed += 1
+    else:
+        print(f"  FAIL: _to_main_repo_path should return None for main-repo paths, got {non_wt}")
+        failed += 1
+
+        # Scope enforcement (wrong dimension)
     expect_blocked(
         REPO_ROOT / ".claude/skills/test/SKILL.md",
         "codebase_health", "Skill write blocked (wrong dimension)"
