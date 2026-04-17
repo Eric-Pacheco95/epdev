@@ -101,6 +101,7 @@
 
 - **App development skills (iOS/Windows/.exe)** — Research brief at `memory/work/frontend-research/research_brief.md`. Revisit when a concrete app needs App Store/Windows distribution.
 - **Slack Bot Socket Mode** — Slash commands + Block Kit. No active use case beyond current poller.
+- **crypto-bot Telegram→Slack migration** — crypto-bot CLAUDE.md references planned Slack migration for alerts/telegram_bot.py but no task exists. Gate: crypto-bot production-stable + Slack Bot Socket Mode live.
 - **3C-8/9/10: Whisper STT, ElevenLabs TTS, voice loop** — Deferred to Phase 6. Native iOS dictation sufficient.
 
 ---
