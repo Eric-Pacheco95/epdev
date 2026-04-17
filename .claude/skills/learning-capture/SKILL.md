@@ -73,18 +73,10 @@ false
   - Count distinct, actionable ideas in the signal (not restatements)
   - Evaluate relevance to Eric's core themes: AI/orchestration | security | crypto/finance | business | music | personal growth | systems thinking
   - Assign a tier:
-    - **S Tier** (18+ ideas OR strong multi-theme match): critical signal, must capture
-    - **A Tier** (15+ ideas OR good theme match): high-value, write signal
-    - **B Tier** (12+ ideas OR decent match): worth a signal, keep concise
-    - **C Tier** (10+ ideas OR some match): skip unless Eric specifically asked
-    - **D Tier** (few ideas, weak match): do not write -- noise
+    - **S** (18+ ideas / strong multi-theme): must capture | **A** (15+ / good match): write | **B** (12+ / decent): write concise | **C** (10+ / some match): skip unless asked | **D**: noise, skip
   - Only write signals rated B tier or above. For C/D tier learnings, note them in the output summary as "filtered out" with the tier so Eric can override
   - Add the tier to the signal file header (see updated SIGNAL FORMAT)
-- Assess session sentiment: Was the user satisfied, frustrated, neutral, energized? Look for:
-  - Explicit feedback ("great", "no not that", "perfect")
-  - Implicit signals (repeated corrections = frustration, quick approvals = satisfaction)
-  - Energy indicators (long engaged sessions = high energy, short abrupt sessions = low)
-  - Log sentiment as a signal with category "pattern" and tag "sentiment:{positive|negative|neutral}"
+- Assess session sentiment (positive/negative/neutral). Signals: explicit feedback, repeated corrections (frustration), quick approvals (satisfaction), session length (energy). Log as pattern signal tagged `sentiment:{positive|negative|neutral}`.
 - Check if any learnings qualify as **failures** (something went wrong, broke, or produced bad output). Failures get extra fields: root cause, fix applied, prevention
 - **Worktree-safe path resolution**: Signal and failure files MUST be written to the main working tree, not the current working directory. Use the absolute path `C:/Users/ericp/Github/epdev/memory/learning/signals/` (and `.../failures/`) regardless of whether the session is running in a worktree context. Worktree-relative writes vanish when the worktree is pruned.
 - Write each signal to `C:/Users/ericp/Github/epdev/memory/learning/signals/` using the format below
