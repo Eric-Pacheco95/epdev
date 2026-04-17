@@ -214,7 +214,7 @@ class TestBacklogAppend:
         assert result["skills"] == []
         assert result["model"] == "sonnet"
         assert result["review_model"] is None
-        assert result["status"] == "pending"
+        assert result["status"] == "pending_review"  # autonomous_safe=False forces promotion
         assert result["retry_count"] == 0
         assert result["notes"] == ""
 

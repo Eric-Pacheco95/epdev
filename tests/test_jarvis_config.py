@@ -49,7 +49,8 @@ class TestIsProtected:
 
     def test_file_outside_protected_dir_not_protected(self, tmp_path):
         mod = _load()
-        normal_dir = tmp_path / "memory" / "work" / "other"
+        # memory/work/ is now fully protected; use an unprotected top-level dir
+        normal_dir = tmp_path / "logs" / "other"
         normal_dir.mkdir(parents=True)
         f = normal_dir / "notes.md"
         f.write_text("notes")
