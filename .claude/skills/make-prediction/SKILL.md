@@ -214,14 +214,9 @@ Same structure as quick mode but:
 
 ### Backcast Mode Output (--backcast flag)
 
-Before generating any output, ask Eric three clarifying questions to validate the ideal state input:
-1. What does failure look like at full ideal state? (sharpens the goal)
-2. What is the single most important constraint? (anchors phase gate conditions)
-3. Name one thing that must NOT be true at ideal state. (surfaces anti-criteria early)
+Ask 3 clarifying questions first: (1) What does failure look like at ideal state? (2) Single most important constraint? (3) What must NOT be true at ideal state? If Eric can't answer, stop and suggest `/research` first.
 
-If Eric cannot answer these, stop and suggest `/research` or a more specific ideal state description first.
-
-Then generate these 6 sections in order. Write each section to disk at `memory/work/_backcast-{slug}/section-{N}.md` as it's produced — do not wait until the end. Synthesis reads from disk, not context (compaction guard).
+Generate the 6 sections below in order, writing each to `memory/work/_backcast-{slug}/section-{N}.md` as produced (compaction guard).
 
 ```
 ## BACKCAST: [one-sentence falsifiable ideal state]
