@@ -22,7 +22,7 @@
 | Project | Status | Health | Next Action |
 |---------|--------|--------|-------------|
 | epdev-jarvis | active | green | Phase 5D data-gated items; 5E-1 falsification 2026-04-21 |
-| crypto-bot | active | yellow | Paper trading → production gate — `memory/work/crypto_trading_bot/project_state.md` |
+| crypto-bot | active | yellow | Paper trading → production gate — `memory/work/crypto-bot/PRD_v4.md` |
 | jarvis-app | active | green | Sprints 1-4 COMPLETE (/dashboard 3-tab, Phase 4 gate closed). Sprint 5: design system — `memory/work/jarvis-app/PRD.md` |
 
 ---
