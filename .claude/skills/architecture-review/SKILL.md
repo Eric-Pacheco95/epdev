@@ -65,11 +65,7 @@ Run before any hard-to-reverse decision: architecture choice, tool/dependency ad
 - List the viable alternatives (minimum 2) — if only one path is described, identify what was implicitly rejected
 - Determine if STRIDE overlay is warranted (explicit --stride flag, or proposal involves: external input, file system writes, network access, credential handling, autonomous execution)
 - **Backcast eligibility**: If proposal spans multiple phases or a multi-year roadmap, prompt: "This spans multiple phases — `/make-prediction --backcast` would surface phase-specific failure modes first. Proceed with /architecture-review only, or run --backcast first?" If Eric wants --backcast: STOP and direct there. Skip if proposal is single-phase, single decision, or binary.
-- Present the framing to Eric for confirmation before launching agents:
-  > **Architecture Decision:** {one sentence}
-  > **Alternatives:** {2-3 options}
-  > **Launching:** /first-principles + /find-logical-fallacies + /red-team {+ STRIDE if applicable} {+ Reasoning Blindspot Check if --thinking}
-  > Proceed?
+- Present framing before launching: state the Architecture Decision (1 sentence), list Alternatives (2-3), confirm which agents will run (+STRIDE if applicable, +blindspot if --thinking). Wait for confirmation.
 
 ## Step 2: LAUNCH PARALLEL AGENTS
 
@@ -101,7 +97,7 @@ After all 3 agent outputs exist on disk, run one lightweight agent to do a cross
 > `{"date": "YYYY-MM-DD", "review_slug": "{slug}", "topic": "{1-sentence topic}", "canary_agent": "{agent-name}", "original_stance": "{1 sentence}", "cross_read_delta": "{delta or 'none'}", "would_change_conclusion": true/false}`
 > Only set `would_change_conclusion: true` if the delta would have materially changed the recommendation — not just added nuance.
 
-**What this data is for:** Building a failure-mode ledger to evaluate whether cross-agent communication improves /architecture-review output quality. Three `would_change_conclusion: true` entries = demand signal to revisit Agent Teams adoption. Zero or one after 10 reviews = current independence architecture is validated.
+**What this data is for:** failure-mode ledger for Agent Teams adoption decision. 3+ `would_change_conclusion: true` entries = revisit; 0-1 after 10 reviews = independence architecture validated.
 
 **Canary rules:**
 - Synthesis in Step 3 uses ORIGINAL independent outputs ONLY — canary output never feeds back into the recommendation
@@ -119,7 +115,7 @@ After all 3 agent outputs exist on disk, run one lightweight agent to do a cross
   - **Corrected**: One or more agents identified a flaw; state the correction
   - **Contested**: Agents disagree — **a verdict is required**: declare one position correct, name the evidence, and state specifically why the other position is wrong. "Both positions have merit" is NOT an acceptable resolution — it is a synthesis failure.
   - **Risk identified**: Not wrong, but carries specific risk that needs mitigation
-- **Opportunistic bug capture**: If any agent surfaces a bug, security finding, or code-quality issue UNRELATED to the architecture decision under review, do NOT fix it inline — instead append it to `orchestration/task_backlog.jsonl` (or surface it as a "side findings" bullet in the output if backlog write isn't available). Why: architecture reviews must stay scoped to the decision being made; inline bug fixes expand the diff and bury the architectural recommendation. How to apply: after Step 3 synthesis, scan agent outputs for any finding tagged "unrelated", "while we're here", or covering files outside the proposal scope — route those to backlog, keep the review focused.
+- **Opportunistic bug capture**: If any agent surfaces a bug or finding UNRELATED to the decision under review, append to `orchestration/task_backlog.jsonl` (or "side findings" bullet if unavailable) — never fix inline. Architecture reviews stay scoped; inline fixes bury the recommendation.
 - Produce the unified output using the format below
 
 ## Step 4: RECOMMEND
