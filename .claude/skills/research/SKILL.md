@@ -78,9 +78,7 @@ false
 
 2. **Knowledge index**: Read `memory/knowledge/index.md`. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability → `security`; AI/LLM/orchestration → `ai-infra`.
 
-3. Prior articles found: surface 2-3 one-liners, load most relevant. Tell Eric: "N prior articles on {domain}. Most recent: {title} ({date})." Sub-questions fill gaps — don't re-cover known ground.
-
-4. None found: note "No prior domain knowledge — starting fresh".
+3. Prior articles found: surface 2-3 one-liners, load most relevant, tell Eric, fill sub-question gaps not already covered. None found: note "No prior domain knowledge.".
 
 ## Phase 1: PLAN — Generate sub-questions
 
@@ -178,11 +176,7 @@ After writing the research brief (market and technical types only — skip for l
 
 5. **Print:** "Domain knowledge filed: memory/knowledge/{domain}/YYYY-MM-DD_{slug}.md"
 
-**Rules:**
-- Keep articles under 500 words (embedding-chunk sized for future vector search)
-- Confidence rating: 8-10 = multiple high-quality sources agree; 5-7 = decent coverage but gaps; 1-4 = limited sources, speculative
-- source_files field is mandatory — provides provenance chain
-- If domain doesn't map to crypto/security/ai-infra, create a new domain directory and add a new section header in index.md
+**Rules:** keep articles under 500 words; confidence 8-10=multi-source agreement, 5-7=decent/gaps, 1-4=limited/speculative; source_files mandatory; new domain → new dir + new section in index.md
 
 Append to `history/changes/research_log.md`:
 ```
