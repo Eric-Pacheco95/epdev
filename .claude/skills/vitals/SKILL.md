@@ -96,28 +96,13 @@ Tell Eric: "Step 1 complete -- /vitals ran, dashboard displayed, Slack posted. S
 If WARN or CRITICAL: "Flag: {threshold crossings summary}. Keep these in mind as we go."
 
 **Step 2 -- THINK: Merge overnight**
-Tell Eric what branch(es) are unmerged and give the exact command:
-```
-Step 2 -- Merge overnight branch
-  Branch: jarvis/overnight-YYYY-MM-DD ({n} commits)
-  Command: git merge jarvis/overnight-YYYY-MM-DD
-  Then run: python -m pytest tests/ -q --tb=no
-Say "merged" when done, or "skip" to defer.
-```
-If no unmerged branches: "Step 2 -- No overnight branches to merge. Skip."
+Tell Eric what branch(es) are unmerged and give the exact command: branch name, `git merge <branch>`, then `python -m pytest tests/ -q --tb=no`. Ask for "merged" or "skip". If no unmerged branches: "Step 2 -- No overnight branches. Skip."
 
 **Step 3 -- PLAN: Backlog triage + wisdom proposals**
 
 **3a. Wisdom promotion proposals**
 Run `python tools/scripts/promotion_check.py --pending --json` to check for pending promotion proposals.
-If proposals exist, tell Eric:
-```
-Step 3a -- Wisdom promotions ({n} pending)
-  {for each proposal: [route] theme_name (maturity, confidence%)}
-  For each: say "approve", "reject", or "defer".
-  Approve = promote now. Reject = dismiss. Defer = review later.
-```
-When Eric approves a proposal, run `python tools/scripts/promotion_check.py --approve "{proposal_id}"`.
+If proposals exist, list them (route, theme_name, maturity, confidence%) and ask Eric to "approve", "reject", or "defer" each. When approved, run `python tools/scripts/promotion_check.py --approve "{proposal_id}"`.
 - wisdom route: auto-writes to memory/learning/wisdom/
 - telos route: stages for /telos-update (remind Eric to run it)
 - steering route: stages for /update-steering-rules (remind Eric to run it)
@@ -126,14 +111,7 @@ If no proposals: "Step 3a -- No wisdom promotions pending."
 
 **3b. Backlog triage**
 Pull the pending_review and failed items from the collector data (backlog_pending_review_count, backlog_failed_count).
-Tell Eric:
-```
-Step 3b -- Backlog triage ({n} items need review)
-  I'll surface each item. For each: say "approve", "reject", or "defer".
-  Approve = dispatch autonomously. Reject = close. Defer = leave pending.
-Say "ready" to start, or "skip" to defer the whole triage.
-```
-When Eric says ready, present each pending_review item one at a time with a 1-line description and ask for their decision. For failed items: "Task {id} failed ({description}) -- requeue or close?"
+Tell Eric: "Step 3b -- Backlog triage ({n} items). Say 'ready' to start or 'skip' to defer." When ready, surface each item 1-line with approve/reject/defer options. For failed items: "Task {id} failed -- requeue or close?"
 
 **Step 4 -- BUILD: TELOS scan**
 Surface the top contradiction(s) from today's autoresearch run (contradictions_structured, highest severity first):
