@@ -268,16 +268,32 @@ def _safe_worktree_remove(wt: Path) -> bool:
 
 
 def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
-    """Remove rel_path from git index and add to local exclude so git add -A ignores it.
+    """Hide symlink/junction from git so it is never committed back to main.
 
-    Called after a symlink/junction is created in the worktree so the replacement
-    never gets committed and merged back into main as a self-referential symlink.
+    Two operations:
+    1. --skip-worktree on every tracked file under rel_path: git pretends
+       those files are unchanged even though the dir is now a junction.
+       Unlike 'git rm --cached', this leaves the index entry intact and
+       stages no deletion — so git status / git add -A see nothing.
+    2. Add rel_path to .git/info/exclude so the junction/symlink entry
+       itself is invisible to git add -A (untracked file suppression).
+
+    Called after a symlink/junction is created in the worktree so the
+    replacement is never committed and never merged back into main.
     """
-    # Remove .keep (and any other tracked file) from the worktree's git index
-    subprocess.run(
-        ["git", "rm", "--cached", "-r", "-q", "--ignore-unmatch", rel_path],
-        capture_output=True, cwd=str(wt),
+    # Mark every tracked file under rel_path as skip-worktree
+    ls = subprocess.run(
+        ["git", "ls-files", rel_path],
+        capture_output=True, text=True, encoding="utf-8", cwd=str(wt),
     )
+    for tracked in ls.stdout.splitlines():
+        tracked = tracked.strip()
+        if tracked:
+            subprocess.run(
+                ["git", "update-index", "--skip-worktree", tracked],
+                capture_output=True, cwd=str(wt),
+            )
+
     # Add to worktree-local exclude so the symlink/junction is invisible to git add -A
     exclude_path = wt / ".git" / "info" / "exclude"
     try:
