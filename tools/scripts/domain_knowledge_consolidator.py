@@ -996,6 +996,16 @@ def run_consolidation(dry_run: bool = False, autonomous: bool = False) -> int:
             subdomains_written.append({"name": name, "title": sd.get("title", name), "chars": chars})
             print(f"  {name}.md: {chars} chars")
 
+        # Prune stale sub-domain files (slug drift: LLM may rename across runs)
+        new_names = {s["name"] for s in subdomains_written}
+        old_names = state.get(domain, {}).get("subdomain_files", [])
+        for stale in old_names:
+            if stale not in new_names:
+                stale_path = domain_out_dir / f"{stale}.md"
+                if stale_path.exists():
+                    stale_path.unlink()
+                    print(f"  PRUNED stale: {stale}.md")
+
         # Update state
         all_source_paths = already_incorporated + [s["path"] for s in new_sources]
         state.setdefault(domain, {})
