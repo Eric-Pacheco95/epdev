@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+import tempfile
+
 from security.validators.validate_tool_use import (
     _blocked_git_destructive,
     _blocked_git_force_main,
@@ -30,6 +32,7 @@ from security.validators.validate_tool_use import (
     _inline_script_destructive,
     _protected_path,
     _remote_pipe_shell,
+    _remap_worktree_path,
     _system_paths_write,
     validate_bash_command,
 )
@@ -304,6 +307,41 @@ check_result(
 
 # Clean up env
 del os.environ["JARVIS_SESSION_TYPE"]
+
+
+# ---------------------------------------------------------------------------
+# _remap_worktree_path
+# ---------------------------------------------------------------------------
+# Non-worktree path (main repo, no .git file) -> None
+_remap_non_wt = _remap_worktree_path(str(ROOT / "data" / "test.json"))
+if _remap_non_wt is None:
+    print("PASS: _remap_worktree_path returns None for main-repo paths")
+else:
+    failures.append(f"  FAIL [_remap_worktree_path non-worktree]: expected None, got {_remap_non_wt}")
+    print("FAIL: _remap_worktree_path returns None for main-repo paths")
+
+# Simulated worktree path: create a temp dir with a .git file pointing back to a fake main repo
+with tempfile.TemporaryDirectory() as _wt_dir:
+    _wt = Path(_wt_dir)
+    _fake_main = _wt / "main_repo"
+    _fake_main.mkdir()
+    (_fake_main / ".git").mkdir()
+    _wt_sub = _wt / "worktree_copy"
+    _wt_sub.mkdir()
+    git_file = _wt_sub / ".git"
+    git_file.write_text(f"gitdir: {_fake_main / '.git' / 'worktrees' / 'wt1'}")
+    (_fake_main / ".git" / "worktrees").mkdir(parents=True)
+    (_fake_main / ".git" / "worktrees" / "wt1").mkdir()
+    _target = _wt_sub / "data" / "out.json"
+    (_wt_sub / "data").mkdir()
+    _target.touch()
+    _remapped = _remap_worktree_path(str(_target))
+    _expected = str(_fake_main / "data" / "out.json")
+    if _remapped == _expected:
+        print("PASS: _remap_worktree_path remaps worktree path to main repo")
+    else:
+        failures.append(f"  FAIL [_remap_worktree_path worktree]: expected {_expected}, got {_remapped}")
+        print("FAIL: _remap_worktree_path remaps worktree path to main repo")
 
 
 # ---------------------------------------------------------------------------
