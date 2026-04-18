@@ -7,18 +7,16 @@
 $ErrorActionPreference = "Stop"
 
 $taskName = "Jarvis-OrphanSnapshot"
-$taskPath = "\Jarvis"
+$taskPath = "\Jarvis\"  # trailing slash required -- Windows stores tasks under \Jarvis\ and the readback CIM query is literal
 $batPath = "C:\Users\ericp\Github\epdev\tools\scripts\run_orphan_snapshot.bat"
 $workDir = "C:\Users\ericp\Github\epdev"
 $userId = $env:USERNAME
 
 # Remove existing task if present (idempotent re-registration)
-try {
-    Get-ScheduledTask -TaskPath $taskPath -TaskName $taskName -ErrorAction Stop |
-        Unregister-ScheduledTask -Confirm:$false -ErrorAction Stop
-    Write-Host "Removed existing $taskPath$taskName"
-} catch [Microsoft.Management.Infrastructure.CimException] {
-    # Task not present -- first registration, ignore
+$existing = Get-ScheduledTask -TaskPath $taskPath -TaskName $taskName -ErrorAction SilentlyContinue
+if ($existing) {
+    $existing | Unregister-ScheduledTask -Confirm:$false -ErrorAction Stop
+    Write-Host "Removed existing $taskPath\$taskName"
 }
 
 $action = New-ScheduledTaskAction `
