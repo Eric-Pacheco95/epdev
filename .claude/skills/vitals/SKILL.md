@@ -57,6 +57,8 @@ true
 
 ## Phase 2: Terminal Dashboard
 
+6.5. Scan for unimplemented PRDs: run `grep -rl "\- \[ \]" memory/work/` and filter to paths matching `*/PRD.md`. These are PRDs with unchecked ISC items -- not yet fully /implement-prd'd. Store the list as `pending_prds` (file paths only, strip `memory/work/` prefix for display). PRDs where all ISC items are `[x]` are excluded.
+
 7. Interpret the collected data and format the compact terminal dashboard (see TERMINAL FORMAT)
 8. For threshold crossings: explain what each crossing means
 9. Generate "Top 3 Today" -- the 3 highest-value actions for today grounded in evidence from the collector data:
@@ -127,13 +129,15 @@ Say your choice, or "skip" to move on.
 ```
 
 **Step 5 -- EXECUTE: Set session intent**
-Ask Eric what he wants to build or focus on today. Suggest the Top 3 from the dashboard as options:
+Ask Eric what he wants to build or focus on today. Suggest the Top 3 from the dashboard as options. If `pending_prds` is non-empty, surface them as explicit options:
 ```
 Step 5 -- Set session intent
   Suggested (from Top 3):
     1. {top action}
     2. {second action}
     3. {third action}
+  Pending PRDs ready to build:
+    - {slug}: /implement-prd memory/work/{slug}/PRD.md
 What's your focus for today? (Name 1-2 things, or say "top 1" to take the top suggestion.)
 ```
 When Eric names a focus, confirm it and optionally offer to run /telos-update to log it.
@@ -172,6 +176,8 @@ Overnight ({date}): {n} dimensions, {total_kept} kept, {total_min}m
   Highlight: {one-line top finding}
 Autoresearch: {contradictions}c / {coverage}% cov / {proposals}p
 Scheduled tasks: {healthy}/{total} healthy
+
+Pending PRDs ({n}): {slug1/PRD.md, slug2/PRD.md} or "None"
 
 Threshold Crossings:
   {[SEV] metric: value} or "None"
@@ -230,6 +236,10 @@ Contradictions: {n} | Coverage: {n}% | Proposals: {n}
 {full text from cross_project if available, or "No report from latest overnight run"}
 
 ---
+
+*Pending PRDs (unimplemented)*
+{bulleted list of slug/PRD.md paths with one-line PRD title, or "None"}
+Next step for each: `/implement-prd memory/work/{slug}/PRD.md`
 
 *Threshold Crossings*
 {[SEV] metric: value (detail)} or "All clear"
