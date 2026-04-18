@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -209,17 +210,57 @@ def handle_read(method_body: str) -> tuple[str, bool]:
         return evidence, exists
 
 
-def handle_test(method_body: str) -> tuple[str, bool]:
-    """Test: command -- PASS if exit code 0. 60-second timeout."""
+# Shell metacharacters that require a shell interpreter. Appearance outside quoted
+# regions routes the command to MANUAL -- we never fall back to shell dispatch,
+# because on Windows the cmd.exe intermediary does not cascade termination to its
+# python.exe grandchild, leaking orphans (2026-04-18 incident).
+_SHELL_METACHAR_RE = re.compile(r'[&|;<>]')
+
+
+def _strip_quoted(s: str) -> str:
+    """Remove quoted substrings so we can scan only the unquoted portion."""
+    return re.sub(r'"[^"]*"|\'[^\']*\'', "", s)
+
+
+def handle_test(method_body: str) -> tuple[str, str]:
+    """Test: command -- PASS if exit code 0, FAIL on non-zero, MANUAL if the
+    command needs a shell interpreter. Returns (evidence, verdict).
+
+    Rationale: subprocess was previously invoked with shell dispatch enabled,
+    which on Windows spawned a cmd.exe intermediary whose termination did not
+    cascade to the python.exe grandchild, leaking orphaned processes. Commands
+    containing shell metacharacters (&&, |, redirects, env expansion) route to
+    MANUAL with a recorded reason.
+    """
     command = method_body.strip()
-    # shell=True is required to run arbitrary test commands (pytest, python scripts, etc.).
-    # CLI-type verify methods are intentionally blocked (routed to MANUAL) to prevent
-    # AI-authored shell injection. Test-type is accepted risk -- ISC authors are responsible
-    # for only using Test: with safe, idempotent commands. v2 will add an explicit allowlist.
+    if not command:
+        return "Test: empty command -- route to MANUAL", "MANUAL"
+
+    unquoted = _strip_quoted(command)
+    hit = _SHELL_METACHAR_RE.search(unquoted)
+    if hit:
+        return (
+            f"Test: `{command}` contains unquoted shell metacharacter '{hit.group(0)}' "
+            f"that requires a shell interpreter; route to MANUAL",
+            "MANUAL",
+        )
+
+    try:
+        cmd_list = shlex.split(command, posix=True)
+    except ValueError as exc:
+        return (
+            f"Test: `{command}` cannot be shlex-split ({exc}); "
+            f"verify manually or rewrite without unmatched quotes",
+            "MANUAL",
+        )
+
+    if not cmd_list:
+        return f"Test: `{command}` parsed to empty argv -- route to MANUAL", "MANUAL"
+
     try:
         result = subprocess.run(
-            command,
-            shell=True,
+            cmd_list,
+            shell=False,
             timeout=60,
             capture_output=True,
             text=True,
@@ -233,17 +274,18 @@ def handle_test(method_body: str) -> tuple[str, bool]:
         evidence = f"Test: `{command}` -> {status}"
         if combined:
             evidence += f" | output: {combined[:300]}"
-        return scrub_secrets(evidence), passed
+        return scrub_secrets(evidence), ("PASS" if passed else "FAIL")
+    except FileNotFoundError as exc:
+        return f"Test: `{command}` command not found: {exc}", "FAIL"
     except subprocess.TimeoutExpired as e:
-        # Explicitly kill on Windows
         if e.process is not None:
             try:
                 e.process.kill()
             except Exception:
                 pass
-        return f"Test: `{command}` timed out after 60s", False
+        return f"Test: `{command}` timed out after 60s", "FAIL"
     except Exception as exc:
-        return f"Test: `{command}` error: {exc}", False
+        return f"Test: `{command}` error: {exc}", "FAIL"
 
 
 def handle_schema(method_body: str) -> tuple[str, bool]:
@@ -363,8 +405,7 @@ def dispatch(verify_method: str) -> tuple[str, str]:
 
     if lower.startswith("test:"):
         body = raw[5:].strip()
-        evidence, passed = handle_test(body)
-        return evidence, "PASS" if passed else "FAIL"
+        return handle_test(body)
 
     if lower.startswith("schema:"):
         body = raw[7:].strip()
