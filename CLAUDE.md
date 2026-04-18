@@ -1,6 +1,6 @@
 # EPDEV Jarvis AI Brain
 
-> Personal AI Infrastructure for Eric P — built on Daniel Miessler's PAI framework, TheAlgorithm, and Fabric.
+> Personal AI Infrastructure for Eric P — built on Daniel Miessler's PAI framework and TheAlgorithm; uses Fabric pattern format (SKILL.md schema) but not Fabric CLI runtime.
 
 ## Identity
 
@@ -100,6 +100,7 @@ Load documentation on-demand, not upfront:
 - Before any commit operation that names specific paths — including when drafting a sub-agent commit task — run `git check-ignore <each-path>` first and exclude or escalate any matches; never `git add -f` a gitignored path without Eric's explicit same-session approval. Why: 2026-04-07 `/commit` meta-failure — Opus drafted a sub-agent task naming gitignored TELOS files (GOALS/STATUS/LEARNED), Sonnet executed faithfully with `-f`, and the personal-content scrub from commit `882805d` regressed into a public commit. How to apply: the gitignore gate must fire at BOTH prompt construction (when building a sub-agent task) AND commit execution — sub-agents follow instructions literally, so the defense cannot live in their judgment.
 - After adding or modifying validator scripts in security/validators/, verify the settings.json hook matcher matches the tools the validator actually handles — unit tests that call functions directly don't test hook registration
 - When adding a new validator, security check, or trust-boundary test, extend the existing trust-topology test suite rather than creating a parallel suite. Why: parallel suites duplicate coverage, drift apart over time, and orphan when the original maintainer forgets the second one exists. How to apply: search `tests/defensive/` for the existing trust-topology test before scaffolding any new test file; if a related test exists, add cases to it; only create a new file when the new check has no conceptual overlap with existing ones.
+- Never add `fabric` subprocess calls to any skill with `autonomous_safe: true` or any script in the overnight/dispatcher execution path. Why: `fabric` executes outside the Claude Code PreToolUse/PostToolUse hook chain — memory/ content piped through it exits the constitutional sandbox with zero audit trail, no model-routing policy enforcement, and no session log entry. The `fabric` binary is retained for manual ad-hoc terminal use only (e.g., `yt | fabric -p extract_wisdom`); it is not a system dependency.
 
 ### Workflow Discipline
 
