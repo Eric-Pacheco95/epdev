@@ -6,7 +6,7 @@ cd /d "C:\Users\ericp\Github\epdev"
 
 if not exist "data\logs" mkdir "data\logs"
 
-for /f %%I in ('C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe C:\Users\ericp\Github\epdev\tools\scripts\today.py') do set LOGDATE=%%I
+set LOGDATE=%DATE%
 set LOGFILE=data\logs\tasklist_stale_%LOGDATE%.log
 
 echo [%date% %time%] Tasklist stale check starting >> "%LOGFILE%" 2>&1

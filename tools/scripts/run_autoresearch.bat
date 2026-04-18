@@ -10,7 +10,7 @@ REM Create log directory if missing
 if not exist "data\logs" mkdir "data\logs"
 
 REM Log file: one per day, append
-for /f %%I in ('C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe C:\Users\ericp\Github\epdev\tools\scripts\today.py') do set LOGDATE=%%I
+set LOGDATE=%DATE%
 set LOGFILE=data\logs\autoresearch_%LOGDATE%.log
 
 REM Suspend check -- exits non-zero if watchdog has suspended this producer
