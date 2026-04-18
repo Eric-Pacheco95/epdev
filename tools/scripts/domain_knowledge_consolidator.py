@@ -61,7 +61,25 @@ _DOMAIN_KEYWORDS: dict[str, list[str]] = {
                     "base rate", "superforecasting", "metaculus", "polymarket"],
     "automotive": ["byd", "ev", "electric vehicle", "car", "ioniq", "automotive"],
     "smart-home": ["smart home", "home assistant", "iot", "alexa", "google home"],
+    "music": ["guitar", "music", "band", "jazz", "grateful dead", "chord", "improvisation",
+              "song", "performance", "instrument"],
+    "health-fitness": ["gym", "workout", "cardio", "weightlifting", "nutrition",
+                       "health tracker", "body composition", "macros", "protein intake"],
+    "financial-independence": ["revenue", "substack", "freelance", "side hustle", "passive income",
+                               "business income", "consulting income", "content creator"],
     "general": [],
+}
+
+# TELOS goal references per domain — drives reason string attribution
+_DOMAIN_TELOS_REFS: dict[str, str] = {
+    "ai-infra": "G2 (Master AI systems)",
+    "crypto": "G1 (Financial independence — crypto-bot)",
+    "fintech": "G1 (Financial independence — fintech knowledge)",
+    "geopolitics": "G2 (Master AI systems — geopolitical forecasting)",
+    "predictions": "G2 (Master AI systems — calibration framework)",
+    "music": "G3 (Guitar mastery)",
+    "health-fitness": "G4 (Physical health)",
+    "financial-independence": "G1 (Financial independence)",
 }
 
 # CLAUDE.md routing trigger keywords per domain (for Phase 4 update)
@@ -476,52 +494,69 @@ def _detect_domains(state: dict) -> list[str]:
             if d.is_dir() and not d.name.startswith(".")]
 
 
-def _propose_new_domains(existing_domains: list[str]) -> list[dict]:
-    """Propose new domains from absorbed articles not matching existing domains."""
-    proposals = []
-    if not ABSORBED_DIR.exists():
-        return proposals
-
-    # Check absorbed articles for keyword clusters outside existing domains
-    unmatched: list[dict] = []
-    for f in sorted(ABSORBED_DIR.glob("2[0-9]*_*.md")):
+def _read_synthesis_theme_hints() -> list[str]:
+    """Return theme names from the 3 most recent synthesis files."""
+    import re as _re
+    if not SYNTHESIS_DIR.exists():
+        return []
+    themes = []
+    for f in sorted(SYNTHESIS_DIR.glob("*_synthesis.md"))[-3:]:
         try:
-            content = f.read_text(encoding="utf-8", errors="replace").lower()
+            content = f.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        matched = False
-        for domain, keywords in _DOMAIN_KEYWORDS.items():
-            if domain in existing_domains and any(kw.lower() in content for kw in keywords):
-                matched = True
-                break
-        if not matched:
-            unmatched.append({"filename": f.name, "path": str(f.relative_to(REPO_ROOT))})
+        for m in _re.finditer(r"### Theme \d+: (.+)", content):
+            themes.append(m.group(1).strip())
+    return themes
 
-    # Propose geopolitics domain if not already existing
-    if "geopolitics" not in existing_domains:
-        geo_keywords = _DOMAIN_KEYWORDS.get("geopolitics", [])
-        geo_matches = []
+
+def _propose_new_domains(existing_domains: list[str]) -> list[dict]:
+    """Propose new domains from _DOMAIN_KEYWORDS entries not yet created.
+
+    Evidence sources (in reason string):
+    - Absorbed article count matching domain keywords
+    - TELOS goal reference from _DOMAIN_TELOS_REFS
+    - Synthesis theme name if theme text overlaps domain keywords
+    """
+    if not ABSORBED_DIR.exists():
+        return []
+
+    synthesis_themes = _read_synthesis_theme_hints()
+    proposals = []
+
+    for domain, keywords in _DOMAIN_KEYWORDS.items():
+        if domain in existing_domains or domain == "general" or not keywords:
+            continue
+
+        # Count absorbed articles matching domain keywords
+        matched_files: list[str] = []
         for f in sorted(ABSORBED_DIR.glob("2[0-9]*_*.md")):
             try:
                 content = f.read_text(encoding="utf-8", errors="replace").lower()
-                if any(kw.lower() in content for kw in geo_keywords):
-                    geo_matches.append(f.name)
             except OSError:
-                pass
-        if geo_matches or True:  # Create on first run per PRD Phase 2
-            proposals.append({
-                "domain": "geopolitics",
-                "reason": "absorbed articles + prediction backtest files",
-                "source_files": geo_matches,
-            })
+                continue
+            if any(kw.lower() in content for kw in keywords):
+                matched_files.append(f.name)
 
-    # Propose predictions domain if not already existing
-    if "predictions" not in existing_domains:
+        if not matched_files:
+            continue
+
+        # Build reason string: articles + TELOS ref + synthesis theme if relevant
+        reason_parts = [f"{len(matched_files)} absorbed article(s) matching '{', '.join(keywords[:3])}'"]
+
+        telos_ref = _DOMAIN_TELOS_REFS.get(domain)
+        if telos_ref:
+            reason_parts.append(f"TELOS {telos_ref}")
+
+        relevant_themes = [t for t in synthesis_themes
+                           if any(kw.lower() in t.lower() for kw in keywords[:4])]
+        if relevant_themes:
+            reason_parts.append(f"synthesis theme: '{relevant_themes[0]}'")
+
         proposals.append({
-            "domain": "predictions",
-            "reason": "prediction-framework.md, calibration_narrative.md, backtest results",
-            "source_files": ["ai-infra/2026-04-02_prediction-framework.md",
-                             "ai-infra/2026-04-06_prediction-market-mechanics.md"],
+            "domain": domain,
+            "reason": " — ".join(reason_parts),
+            "source_files": matched_files[:5],
         })
 
     return proposals
