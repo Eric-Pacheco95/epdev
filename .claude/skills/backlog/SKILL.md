@@ -30,6 +30,7 @@ ORCHESTRATE
 - Input: task description (free text)
 - Output: confirmation with task ID
 - Side effects: appends task to orchestration/task_backlog.jsonl via backlog_append()
+- **Output ordering (multi-section outputs only)**: if the skill emits both a safety/review-gate section (items requiring arch-review, risks, blockers) and a task-ready section (roadmap copy, backlog entries), the gate section must appear FIRST. Gate-last output is bypassed by ADHD build velocity.
 
 ## autonomous_safe
 false

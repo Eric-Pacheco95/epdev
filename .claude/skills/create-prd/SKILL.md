@@ -92,6 +92,8 @@ WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPE
 - Structure the output using the prescribed sections below
 - **ISC Quality Gate** — Before finalizing the PRD, validate every ISC criterion against the 6-check gate (see CLAUDE.md > ISC Quality Gate). For each criterion, confirm: (1) count is 3-8 per phase, (2) single sentence with no compound "and", (3) state-not-action phrasing, (4) binary pass/fail, (5) at least one anti-criterion exists, (6) `| Verify:` suffix present. If any check fails, fix the criterion inline before writing the PRD file. Append a one-line "ISC Quality Gate: PASS (6/6)" or "PARTIAL (N/6 — {which failed})" note at the end of the ACCEPTANCE CRITERIA section
 
+- **Forward-causal ISC test (autonomous capabilities only)** — For any PRD enabling an autonomous capability, apply the forward-causal test to each gate: does it measure forward/causal/money-layer reality, or a code-quality/historical/calendar proxy? Calendar-duration thresholds are universally suspect in low-activity regimes — the system is least active exactly when verification matters most. Correlation checks require shuffle-test + regime-detector before they become causal claims. If a criterion fails the test, mark it with `[PROXY — needs causal replacement]` and require a replacement criterion before ISC Quality Gate passes. Why: 4 of 5 crypto-bot autonomy gates were proxies; only parallel adversarial arch-review caught them.
+
 - **Model Annotation** — After the ISC Quality Gate passes, apply the keyword heuristic to each criterion and propose `| model: X |` annotations. Present them as a numbered review list and wait for Eric to confirm, edit, or reject before writing to the PRD file:
 
   Heuristic rules (apply in order — first match wins):
@@ -119,7 +121,7 @@ WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPE
 - SUCCESS METRICS: bullets; "(to be defined)" when missing
 - OUT OF SCOPE: bullets; if everything in scope: "(none stated)"
 - DEPENDENCIES AND INTEGRATIONS: bullets — teams, systems, APIs, data sources
-- RISKS AND ASSUMPTIONS: subsections for risks vs assumptions
+- RISKS AND ASSUMPTIONS: subsections for risks vs assumptions — **must appear BEFORE any IMPLEMENTATION PLAN or task-ready section** when both are present. Safety/review gate sections always structurally precede actionable items; gate-last output is bypassed by ADHD build velocity.
 - OPEN QUESTIONS: bullets of decisions or info still needed
 - Do not invent revenue figures, legal commitments, or named customers not in input.
 - Do not add meta-commentary.

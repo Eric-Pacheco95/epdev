@@ -13,12 +13,13 @@ Parallel multi-angle architecture analysis — first-principles + fallacies + re
 THINK
 
 ## Syntax
-/architecture-review [--stride] [--thinking] <proposal description or file path>
+/architecture-review [--stride] [--thinking] [--incident] <proposal description or file path>
 
 ## Parameters
 - proposal: free-text description of the architecture/design decision, or a file path to a PRD/spec/design doc (required for execution, omit for usage help)
 - --stride: add STRIDE threat modeling to the red-team agent's analysis (default: red-team runs without STRIDE)
 - --thinking: add a 4th parallel agent that runs /red-team --thinking against TELOS to surface blindspots in how Eric is framing the decision BEFORE the other 3 agents analyze the proposal; most useful when the decision feels hard or the right framing is unclear
+- --incident: incident-response mode. Inserts Step 1.5 (EVIDENCE GATHERING) that spawns N parallel triage agents to collect live-system evidence (processes, logs, file audits) BEFORE the 3 review agents run; review agents read evidence outputs as input. Adds INCIDENT FIX CLASSIFICATION output section and a root-cause-before-safety-net sequencing rule. Auto-enables --stride when incident touches trust boundaries (auth, secrets, process spawning, external I/O).
 
 ## Examples
 - /architecture-review Should we integrate task dispatch into the heartbeat or keep it separate?
@@ -26,6 +27,7 @@ THINK
 - /architecture-review --stride The autonomous dispatcher will spawn claude -p agents in git worktrees with file system access
 - /architecture-review We want to add a settings editor to the dashboard that writes directly to config files
 - /architecture-review --thinking Should we build a custom crypto execution engine or extend the current bot?
+- /architecture-review --incident memory/work/_overnight-oom-2026-04-18/SESSION_TRIAGE_HANDOFF.md
 
 ## Chains
 - Before: /research (provides context for the proposal)
@@ -43,6 +45,11 @@ true
 # WHEN TO INVOKE
 
 Run before any hard-to-reverse decision: architecture choice, tool/dependency adoption, or any decision with 3+ viable paths. ADHD build velocity defaults to highest-energy option — this interrupts that default. If multiple ways to build something exist, run this first.
+
+**Mandatory triggers:**
+- **2+ prior failed fixes on the same system.** The next fix must run `/architecture-review` before coding — no exceptions. Reason: "correct-but-narrow" fixes survive single-angle review; adversarial agents surface the class of failure the author is blind to. Proven across dispatcher, ISC producer, and junction-fix sessions.
+- **Pairing two autonomous capabilities.** Any proposal enabling a second autonomous capability that shares data flow with an existing one must run this skill first — autonomous-backlog + autonomous-PRD together close a self-referential loop with no human ground-truth break.
+- **Parallel not sequential.** Always launch all three agents (first-principles, fallacy, red-team) in a single message; sequential review lets author bias leak between passes.
 
 # STEPS
 
@@ -63,9 +70,20 @@ Run before any hard-to-reverse decision: architecture choice, tool/dependency ad
 - Identify the core architecture decision being made
 - Extract the key constraints, requirements, and context from the proposal
 - List the viable alternatives (minimum 2) — if only one path is described, identify what was implicitly rejected
-- Determine if STRIDE overlay is warranted (explicit --stride flag, or proposal involves: external input, file system writes, network access, credential handling, autonomous execution)
+- Determine if STRIDE overlay is warranted (explicit --stride flag, or proposal involves: external input, file system writes, network access, credential handling, autonomous execution). When `--incident` is set AND incident touches trust boundaries (auth, secrets, process spawning, external I/O), auto-enable --stride.
 - **Backcast eligibility**: If proposal spans multiple phases or a multi-year roadmap, prompt: "This spans multiple phases — `/make-prediction --backcast` would surface phase-specific failure modes first. Proceed with /architecture-review only, or run --backcast first?" If Eric wants --backcast: STOP and direct there. Skip if proposal is single-phase, single decision, or binary.
-- Present framing before launching: state the Architecture Decision (1 sentence), list Alternatives (2-3), confirm which agents will run (+STRIDE if applicable, +blindspot if --thinking). Wait for confirmation.
+- **Loop-closure check**: If the proposal pairs two autonomous capabilities that share a data flow (e.g., autonomous backlog generation + autonomous PRD generation), flag the self-referential loop in the framing. Any backlog task requiring `/create-prd` as an intermediate step must be marked `deferred` (human review) — never auto-executed. Require: human approval gate at each signal→PRD and PRD→backlog transition, loop-health metric (alert >70% autonomous task ratio), provenance tags on auto-generated content. Include these constraints in the Architectural Risks table in the output.
+- Present framing before launching: state the Architecture Decision (1 sentence), list Alternatives (2-3), confirm which agents will run (+STRIDE if applicable, +blindspot if --thinking, +evidence agents if --incident). Wait for confirmation.
+
+## Step 1.5: EVIDENCE GATHERING [--incident only]
+
+Before launching the 3 review agents, collect live-system evidence so review agents reason against primary data rather than narrative.
+
+- **Identify evidence dimensions** — ask: "What evidence dimensions need parallel collection for this incident?" Common dimensions: process/resource state (ps, CIM — prefer `Get-Process` under memory pressure, R3), log grep (error/timeout/OOM patterns over the incident window), file audit (recent writes, orphan files, stale locks), config audit (spawn patterns, shell=True, .bat wrappers), correlation (timeline overlay of events vs symptoms).
+- **Spawn N triage agents in parallel** — one Agent tool call per dimension, all in a single message. Each gets a self-contained prompt naming: the specific files/commands to read, the incident window, the output schema. Each writes findings to `memory/work/_arch-review-{timestamp}/evidence/agent-{dimension}.md` as LAST action.
+- **Evidence-agent prompt skeleton:** "You are a triage agent collecting evidence for an incident review. Incident: {1-sentence}. Your dimension: {name}. Read: {files/commands}. Window: {timeframe}. Output schema: {Observation | Evidence-citation | Confidence}. Write to {path} as your LAST action. Do not propose fixes — evidence only."
+- **Rule: evidence-only, no fix proposals** — triage agents collect; review agents in Step 2 interpret. Keeps epistemic layers separate.
+- After all evidence agents return (check `memory/work/_arch-review-{timestamp}/evidence/` exists with one file per dimension), proceed to Step 2. Review agent prompts in Step 2 must include: "Before analyzing, read all files in `memory/work/_arch-review-{timestamp}/evidence/` — these are the primary findings; the proposal is a hypothesis to test against them."
 
 ## Step 2: LAUNCH PARALLEL AGENTS
 
@@ -118,24 +136,32 @@ After all 3 agent outputs exist on disk, run one lightweight agent to do a cross
 - **Opportunistic bug capture**: If any agent surfaces a bug or finding UNRELATED to the decision under review, append to `orchestration/task_backlog.jsonl` (or "side findings" bullet if unavailable) — never fix inline. Architecture reviews stay scoped; inline fixes bury the recommendation.
 - Produce the unified output using the format below
 
+## Step 3.5: INCIDENT FIX CLASSIFICATION [--incident only]
+
+- For each proposed fix element, classify as one of: **root-cause** (removes the mechanism producing the failure), **safety-net** (catches failures the mechanism will still produce), or **observability** (makes the failure visible but does not fix or catch it).
+- Apply the **sequencing rule**: safety-net ships AFTER root-cause has been observed in production for a validation window (default 7 days). Never ship safety-net in parallel with root-cause — the safety-net masks whether the root-cause fix worked.
+- Observability ships in parallel with root-cause (needed to measure whether root-cause worked).
+- Emit the INCIDENT FIX CLASSIFICATION output section (see OUTPUT INSTRUCTIONS).
+
 ## Step 4: RECOMMEND
 
 - State the recommended architecture clearly in 2-3 sentences
 - List the top 3 changes from the original proposal (if any)
 - Identify the single highest-risk element that should be validated first
-- Suggest the next step: /create-prd, /implement-prd, or "needs more research on X"
-- Clean up the temp directory: delete `memory/work/_arch-review-{timestamp}/` after synthesis is complete
+- Suggest the next step: /create-prd, /implement-prd, or "needs more research on X". For `--incident` mode, recommend `/create-prd --multi-part` with one PRD per fix class (root-cause / observability / safety-net) and explicit ship-order.
+- Clean up the temp directory: delete `memory/work/_arch-review-{timestamp}/` after synthesis is complete. For `--incident` mode, preserve `memory/work/_arch-review-{timestamp}/evidence/` — Eric may want it for the PRD sessions.
 
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown
-- Output exactly these 7 sections (level-2 headings), in order:
+- Output exactly these 7 sections (level-2 headings), in order. Add the 8th section **only when --incident is set**:
   - **DECISION SUMMARY**: 1-para — decision named, alternatives considered, which agents ran
   - **CONVERGENT FINDINGS**: numbered — finding + which agents confirmed it
   - **CORRECTED ASSUMPTIONS**: numbered — original assumption | what's wrong | corrected version; skip with "(none)" if clean
   - **ARCHITECTURAL RISKS**: table — Risk | Severity (High/Med/Low) | Mitigation | Source
   - **CONTESTED POINTS**: numbered — disagreement | Agent 1 pos | Agent 2 pos | **verdict** (one position declared correct + why the other is wrong); "both have merit" is a synthesis failure; skip with "(none)" if agents converged
   - **VALIDATED ELEMENTS**: bullets — sound elements; brief, no explanation needed
+  - **INCIDENT FIX CLASSIFICATION** [--incident only]: table — Fix | Class (root-cause / safety-net / observability) | Ship-before (dependency) | Validation-window (days). Below table, state the ship-order one sentence: "Ship {root-cause fixes} + {observability} now; observe {N} days; then ship {safety-net fixes} calibrated from real data."
   - **RECOMMENDATION**: 2-3 sentence approach; "Top 3 changes:" numbered; "Highest-risk element:"; "Next step:" with skill
 - Synthesize agent outputs — do not repeat them in full
 - Keep total output under 1500 words

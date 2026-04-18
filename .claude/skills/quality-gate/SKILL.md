@@ -45,6 +45,8 @@ true
 # STEPS
 
 - Read `orchestration/steering/autonomous-rules.md` — load anti-criterion verification constraints (detector-for-class requirement, anti-criteria exit-code rules) before evaluating ISC compliance
+- **VERIFY phase requirement**: any task whose BUILD produced or modified a script that consumes external input (scraped, Slack, MCP, user paste, API) must show evidence that `/review-code` was run; phase-gate criteria must include a verification command or file-existence check, not self-reported status. Reject the quality gate if a VERIFY bullet says "tested manually" without a command or artifact path.
+- **Forward-causal ISC review (autonomous capabilities)**: for any gated criterion tagged to an autonomous capability, apply the forward-causal test — does it measure forward/causal/money-layer reality, or code-quality/historical/calendar proxy? Flag any proxy gate as PARTIAL even if it passed. Calendar-duration thresholds are universally suspect in low-activity regimes. Correlation checks require shuffle-test + regime-detector before counting as causal.
 - Run `python tools/scripts/quality_gate_check.py --check-files` to get the deterministic report: tasklist stats, open items, decision log coverage, and file reference validation. If a `--phase` argument was provided, pass it through: `python tools/scripts/quality_gate_check.py --check-files --phase <PHASE>`
 - If a PRD is being gated, also run `python tools/scripts/quality_gate_check.py --prd <path>` to validate ISC items (verify methods present, minimum count, completion percentage)
 - Parse the report output — the script handles all file counting, cross-referencing, and existence checks deterministically. You only need to interpret the findings
