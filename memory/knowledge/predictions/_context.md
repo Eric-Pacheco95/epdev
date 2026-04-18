@@ -1,6 +1,8 @@
 # Predictions Domain Knowledge
 
+## Calibration State
 
+See `memory/knowledge/predictions/calibration.md` for current bias adjustments by domain. Summary: geo +5.8%, market +6.1%, tech +15.0% (clamped). Machine-readable state in `data/calibration.json` (read by `/make-prediction` Step 0 automatically).
 
 ## Overview
 
