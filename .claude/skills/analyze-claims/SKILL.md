@@ -7,7 +7,7 @@ Your task is to analyze the input text and produce a structured audit of claims,
 # DISCOVERY
 
 ## One-liner
-Audit claims, map evidence, and rate how well an argument is supported
+Audit claims, map evidence, and rate how well an argument is supported — uses only the input's own cited sources (no web search; use /research + Tavily for cross-source verification)
 
 ## Stage
 THINK
