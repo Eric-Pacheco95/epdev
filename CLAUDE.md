@@ -60,6 +60,7 @@ Load documentation on-demand, not upfront:
 | Cross-project & integrations | `orchestration/steering/cross-project.md` |
 | Trade development | `orchestration/steering/trade-development.md` |
 | Model and effort routing | `orchestration/steering/model-effort-routing.md` |
+| Topic includes: OOM, RCA, root cause, post-mortem, drain, memory pressure, incident, thrash, pagefile, preflight | `orchestration/steering/incident-triage.md` |
 | Decision rationale | `history/decisions/` |
 | Math reference (university-level) | WebFetch `algebrica.org/<slug>` — CC BY-NC, cite "Antonio Lupetti / algebrica.org" on any reuse; no local mirror, no Substack quoting |
 | Topic includes: agent, orchestration, harness, embedding, LLM, autonomous coding, Claude API, agentic | `memory/knowledge/ai-infra/_context.md` → sub-domains: `agent-orchestration.md`, `harness-engineering.md`, `autonomous-coding.md`, `harness-tooling.md`, `frontend-ui.md` |
