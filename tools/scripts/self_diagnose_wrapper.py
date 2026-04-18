@@ -40,6 +40,11 @@ sys.path.insert(0, str(REPO_ROOT))
 _claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
 CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 
+# Job-object-managed subprocess wrapper -- prevents claude.exe grandchild orphan leak
+# (2026-04-18 orphan-prevention-oom). The diagnosis call uses this.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.windows_job import run_with_job_object  # noqa: E402
+
 FAILURES_DIR = REPO_ROOT / "memory" / "learning" / "failures"
 BACKLOG_FILE = REPO_ROOT / "orchestration" / "task_backlog.jsonl"
 
@@ -196,14 +201,14 @@ Be specific and grounded in the error output. Do not speculate beyond what the o
 def call_claude_diagnose(prompt: str) -> str:
     """Call claude -p for diagnosis. Returns response or error string."""
     try:
-        result = subprocess.run(
+        result = run_with_job_object(
             [CLAUDE_BIN, "-p", "-"],
+            timeout=DIAGNOSE_TIMEOUT_S,  # cascades to hook python.exe grandchildren
             input=prompt,
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=DIAGNOSE_TIMEOUT_S,
             cwd=str(REPO_ROOT),
         )
         if result.returncode == 0 and result.stdout.strip():

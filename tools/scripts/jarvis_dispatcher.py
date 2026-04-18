@@ -72,6 +72,11 @@ EVENTS_DIR = REPO_ROOT / "history" / "events"
 _claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
 CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 
+# Job-object-managed subprocess wrapper -- prevents claude.exe grandchild orphan leak
+# (2026-04-18 orphan-prevention-oom). The claude -p worker spawn uses this.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.windows_job import run_with_job_object  # noqa: E402
+
 # -- Config -----------------------------------------------------------------
 
 MAX_TIER = int(os.environ.get("JARVIS_MAX_TIER", "2"))
@@ -1746,14 +1751,14 @@ def run_worker(task: dict, branch: str, wt_path: Path, dry_run: bool = False) ->
 
     print(f"  Invoking claude -p --model {model} in {wt_path}")
     try:
-        result = subprocess.run(
+        result = run_with_job_object(
             [CLAUDE_BIN, "-p", "--model", model],
+            timeout=MAX_WALL_TIME_PER_TASK_S,  # cascades to hook python.exe grandchildren
             input=prompt,
             capture_output=True,
             text=True,
             encoding="utf-8",
             cwd=str(wt_path),
-            timeout=MAX_WALL_TIME_PER_TASK_S,
             env=_worker_env,
         )
         report["exit_code"] = result.returncode

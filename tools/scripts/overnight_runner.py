@@ -35,6 +35,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+# Job-object-managed subprocess wrapper -- prevents claude.exe grandchild orphan leak
+# (2026-04-18 orphan-prevention-oom). Every claude.exe spawn goes through this.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.windows_job import run_with_job_object  # noqa: E402
+
 # Absolute path to claude CLI -- Task Scheduler doesn't have .local/bin on PATH
 _claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
 CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
@@ -549,11 +554,11 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
         claude_cmd = [CLAUDE_BIN, "-p", "--verbose", "-"]
         if dim_model:
             claude_cmd = [CLAUDE_BIN, "-p", "--verbose", "--model", dim_model, "-"]
-        proc = subprocess.run(
+        proc = run_with_job_object(
             claude_cmd,
+            timeout=7200,  # 2 hour hard kill; cascades to hook python.exe grandchildren
             input=prompt,
             capture_output=True, text=True, encoding="utf-8", cwd=run_cwd,
-            timeout=7200,  # 2 hour hard kill
             env=env,
         )
 
@@ -620,12 +625,12 @@ Check the git diff for this branch. Look for:
 Print a one-line result: QUALITY_GATE: PASS or QUALITY_GATE: FAIL: <reason>"""
 
     try:
-        proc = subprocess.run(
+        proc = run_with_job_object(
             [CLAUDE_BIN, "-p", "-"],
+            timeout=600,  # 10 min
             input=prompt,
             capture_output=True, text=True, encoding="utf-8",
             cwd=cwd or str(REPO_ROOT),
-            timeout=600,  # 10 min
         )
         output = proc.stdout or ""
         for line in output.splitlines():
@@ -651,12 +656,12 @@ Check the git diff for this branch. Look for:
 Print a one-line result: SECURITY_AUDIT: PASS or SECURITY_AUDIT: FAIL: <reason>"""
 
     try:
-        proc = subprocess.run(
+        proc = run_with_job_object(
             [CLAUDE_BIN, "-p", "-"],
+            timeout=600,  # 10 min
             input=prompt,
             capture_output=True, text=True, encoding="utf-8",
             cwd=cwd or str(REPO_ROOT),
-            timeout=600,  # 10 min
         )
         output = proc.stdout or ""
         for line in output.splitlines():
@@ -933,12 +938,12 @@ def main() -> int:
                 if check_synthesis_trigger():
                     print("  Running /synthesize-signals pre-check ...")
                     try:
-                        synth_proc = subprocess.run(
+                        synth_proc = run_with_job_object(
                             [CLAUDE_BIN, "-p", "-"],
+                            timeout=600,  # 10 min
                             input="/synthesize-signals",
                             capture_output=True, text=True, encoding="utf-8",
                             cwd=wt_cwd,
-                            timeout=600,  # 10 min
                         )
                         synth_out = (synth_proc.stdout or "").strip()
                         if synth_out:
