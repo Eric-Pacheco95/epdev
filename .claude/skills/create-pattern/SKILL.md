@@ -61,7 +61,9 @@ Before creating any new skill, evaluate these 4 checks in order. If any check re
 
 4. **Is a promotion trigger defined?** Every new `--flag` mode should include a promotion trigger: "If used N+ times across M+ different contexts, evaluate promoting to standalone skill." Every new standalone skill should include a retirement trigger: "If unused for 6+ months, archive." Document both in the skill's constraints section.
 
-If all 4 checks pass (or the user explicitly overrides after seeing the recommendations), proceed to Step 1.
+5. **Has the workflow been validated manually 1–3 times first?** Even when the skill shape seems clear, do not scaffold SKILL.md from a hypothesized workflow — the steps freeze in before real friction surfaces. Default response when proposing a new skill: "let's do this manually this session, then extract the pattern next time." Only proceed to Step 1 when there is at least one completed manual run that informed the step list, OR when the user explicitly overrides. Why: 2026-04-19 — `/create-design-prd` proposal had a clear shape on paper but Eric deferred until Phase A sessions surfaced the real spec needs; this prevents premature freezing of an unvalidated workflow.
+
+If all 5 checks pass (or the user explicitly overrides after seeing the recommendations), proceed to Step 1.
 
 ## Step 1: PARSE AND GENERATE
 

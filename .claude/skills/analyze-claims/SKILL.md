@@ -42,6 +42,7 @@ true
 - No input: print DISCOVERY as usage block, STOP
 - Input under 50 words: ask for more substantial content to analyze, STOP
 - File path: read file, use content as input
+- URL detected: if YouTube URL (`youtube.com/watch` or `youtu.be`), auto-invoke `mcp__tavily__tavily_extract` on the URL and use result as content input; if extract returns empty/undefined, fall back to `mcp__tavily__tavily_search` using the video title; STOP only if both fail. For non-YouTube URLs: suggest running /research first to fetch, STOP
 - Input contains no discernible claims (pure fiction, poetry, lists): note limitation, proceed with best effort
 - **Trade domain:** if the input involves a political deadline, ultimatum, or "by date X" announcement, read `orchestration/steering/trade-development.md` — the extension-history rule applies before any position sizing recommendation
 

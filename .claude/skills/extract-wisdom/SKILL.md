@@ -49,7 +49,7 @@ true
 - No input: print DISCOVERY as usage block, STOP
 - Input under 200 words: warn content may be too short for meaningful extraction, proceed
 - File path: read file, use content as input
-- URL without content: suggest running /research first to fetch, STOP
+- URL without content: if YouTube URL detected (`youtube.com/watch` or `youtu.be`), auto-invoke `mcp__tavily__tavily_extract` on the URL and use result as content input; if extract returns empty/undefined, fall back to `mcp__tavily__tavily_search` using the video title from the URL page; STOP only if both fail. For non-YouTube URLs: suggest running /research first to fetch, STOP
 
 ## Step 0: MODE CHECK
 
