@@ -50,8 +50,8 @@
   type: community
   tier: 1
   frequency: daily
-  last_checked: "2026-04-17"
-  last_notable: "Apr 17 — Claude Opus 4.7; Bluesky DDoS all day; Substrate AI hiring harness engineers; Apr 14 — AI infra scanning (IP probing Claude/OpenAI/HuggingFace since Mar 10); Apr 9 — nginx-ui MCPwn CVSS 9.8"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 19 — Section 702 reform 10-day extension (EFF); Apr 18 — Opus 4.6 vs 4.7 token benchmarks; typewriters vs AI in colleges; Zero-copy GPU inference WebAssembly Apple Silicon; thoughts on Claude Design; Apr 17 — Claude Opus 4.7; Bluesky DDoS all day"
 
 - name: "MLOps YouTube"
   url: "https://www.youtube.com/@MLOps"
@@ -409,8 +409,8 @@
   type: ai_safety
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 13 — Project Glasswing launched (pre-release vulnerability finding initiative for powerful models); Mythos preview restricted before release; Apr 9 — Trustworthy agents in practice (Policy research)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 14 — Automated Alignment Researchers (LLMs for scalable oversight); Apr 9 — Trustworthy agents in practice; no new publications Apr 17-19; Claude Mythos (via Zvi Apr 17) and Project Glasswing visible externally but not via research page"
   note: "Added 2026-04-05 — Separate from Anthropic Blog (products/news); tracks constitutional AI, interpretability, RSP safety milestone commitments; URL-only (no separate RSS)"
 
 - name: "Bitcoin Magazine"
@@ -482,14 +482,24 @@
   last_notable: "Catalog version 2026.04.16 (Apr 16); Apr 16 — CVE-2026-34197 Apache ActiveMQ active exploit; Apr 14 — CVE-2026-32201 SharePoint zero-day, CVE-2009-0238 MS Office; Apr 13 — CVE-2025-60710 Windows, CVE-2026-34621 Adobe Acrobat, CVE-2026-21643 Fortinet FortiClient; no new additions Apr 17-19"
   note: "Added 2026-04-05 — CISA KEV is the authoritative list of CVEs with confirmed in-the-wild exploitation; JSON feed at /feeds/known_exploited_vulnerabilities.json; Trivy entry directly relevant to Jarvis CI/CD pipeline"
 
+- name: "PyPI Security Advisories"
+  url: "https://github.com/pypa/advisory-database/tree/main/vulns"
+  feed_url: "https://github.com/pypa/advisory-database/releases.atom"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-19"
+  last_notable: "No new advisory-database releases Apr 17-19; individual advisories tracked at github.com/pypa/advisory-database; Jarvis Python dependencies (anthropic, freqtrade, langchain) are primary exposure surface"
+  note: "Added 2026-04-19 — PyPI advisory database covers Python package vulnerabilities; Jarvis uses Python heavily (dispatcher, overnight runner, tools); complements npm advisory tracking; monitor for anthropic-sdk, requests, pyyaml, and cryptography package CVEs"
+
 - name: "GitHub Security Advisory Database (npm)"
   url: "https://github.com/advisories?query=type%3Areviewed&ecosystem=npm"
   feed_url: ""
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 14 — CPUID hardware tool supply chain (CPU-Z/HWMonitor update hijacked, STX RAT distributed); Smart Slider 3 Pro backdoor (800K+ WordPress installs); EngageLab SDK (50M users, 30M crypto wallets exposed); SANS reports ~242 MS patches"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 18 — Flowise GHSA-v38x (Airtable_Agent code injection RCE, Critical); Apr 17 — math-codegen GHSA-p6x5 (RCE string literal injection, Critical); OpenClaw 3 advisories (Feishu webhook fail-closed, webchat media containment, Matrix room auth bypass)"
   note: "Added 2026-04-05 — Reviewed npm advisories; no RSS feed (GraphQL API available). High-value for supply chain and dev-dependency threat tracking."
 
 - name: "Weights & Biases (W&B) Blog"
