@@ -549,6 +549,7 @@ def run_dimension(dim_name: str, dim_config: dict, branch: str,
     # Tell the PreToolUse hook which dimension is running so it can enforce
     # dimension-scoped write rules via overnight_path_guard.validate_write_path().
     env["JARVIS_OVERNIGHT_DIMENSION"] = dim_name
+    env["JARVIS_WORKTREE_ROOT"] = run_cwd
     try:
         dim_model = dim_config.get("model")
         claude_cmd = [CLAUDE_BIN, "-p", "--verbose", "-"]
