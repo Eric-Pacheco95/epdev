@@ -92,6 +92,15 @@
             "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_events.py"
           }
         ]
+      },
+      {
+        "matcher": "mcp__tavily__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_tavily_usage.py"
+          }
+        ]
       }
     ],
     "PostCompact": [

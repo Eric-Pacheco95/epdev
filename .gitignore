@@ -150,6 +150,7 @@ history/events/
 # ------------------------------------------------------------------------------
 .claude/prompt_ts.json
 data/
+data/tavily_usage.jsonl
 tools/scripts/.notify_state/
 _worker_prompt.txt
 # Demo builder output (rendered MP4 segments, not source)
