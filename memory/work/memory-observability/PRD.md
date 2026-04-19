@@ -1,9 +1,9 @@
 ---
 slug: memory-observability
 created: 2026-04-18
-status: Phases 1+2+3+5 + FR-010 COMPLETE (Phase 4 FR-006-009 pending; Phase 2 ≥95%-after-48h ISC window 2026-04-20T22:00)
+status: All phases COMPLETE; Phase 2 ≥95%-after-48h ISC BUILT-UNVALIDATED until window 2026-04-20T22:00 ET
 priority: P1
-phase: PHASE1-COMPLETE
+phase: ALL-PHASES-COMPLETE
 parent-incident: 2026-04-18 overnight OOM preflight abort + 13:00 live thrash (119.69 GB commit)
 related-prds: memory/work/orphan-prevention-oom/PRD.md (PRD-1, ships first)
 context-sources:
@@ -92,10 +92,10 @@ Close the observability blind spot that made the 2026-04-18 overnight OOM invisi
 
 ### Phase 4: /vitals integration
 
-- [ ] `/vitals` default terminal output contains a `MEMORY:` block with peak, ratio, top-1 consumer, and tick completion rate | Verify: Test — run `python tools/scripts/vitals_collector.py --pretty` and assert top-level `memory` key with required sub-fields | model: sonnet |
-- [ ] `/vitals --memory` returns hourly-bucketed commit data for last 24 h plus top-5 consumer histogram plus flagged over-commit crossings | Verify: Review — invoke `/vitals --memory` on real data, confirm all three sections render with non-empty values when data exists | model: sonnet |
-- [ ] `/vitals --context-files` outputs a count-ranked list of `.md` files from the last 7 days of hook_events data, limited to top 20 | Verify: Test — feed synthetic hook_events JSONL with 25 distinct `.md` paths, assert output has exactly 20 entries ordered by count desc | model: sonnet |
-- [ ] `/vitals --token-costs` and `/vitals --reaper-log` both print exactly the line `not yet available — blocked on [dependency]` with exit code 0 | Verify: Test — invoke each flag, assert stdout matches regex and exit code is 0 | model: sonnet |
+- [x] `/vitals` default terminal output contains a `MEMORY:` block with peak, ratio, top-1 consumer, and tick completion rate | Verify: Test — run `python tools/scripts/vitals_collector.py --pretty` and assert top-level `memory` key with required sub-fields | model: sonnet |
+- [x] `/vitals --memory` returns hourly-bucketed commit data for last 24 h plus top-5 consumer histogram plus flagged over-commit crossings | Verify: Review — invoke `/vitals --memory` on real data, confirm all three sections render with non-empty values when data exists | model: sonnet |
+- [x] `/vitals --context-files` outputs a count-ranked list of `.md` files from the last 7 days of hook_events data, limited to top 20 | Verify: Test — feed synthetic hook_events JSONL with 25 distinct `.md` paths, assert output has exactly 20 entries ordered by count desc | model: sonnet |
+- [x] `/vitals --token-costs` and `/vitals --reaper-log` both print exactly the line `not yet available — blocked on [dependency]` with exit code 0 | Verify: Test — invoke each flag, assert stdout matches regex and exit code is 0 | model: sonnet |
 - [x] `vitals_collector.py` output `_schema_version` is `1.1.0` and the `1.0.0` top-level key set is still present (additive-only change) | Verify: Custom — `python tools/scripts/verify_vitals_schema.py --compat 1.0.0` exits 1 if any 1.0.0 key is missing or renamed | model: sonnet |
 
 ### Phase 5: Cross-cutting anti-criteria

@@ -45,7 +45,7 @@ true
 
 1. Run `python tools/scripts/vitals_collector.py --file --pretty` to collect all vitals data
 2. Validate the output:
-   - Check `_schema_version` is `"1.0.0"` -- if mismatched, STOP and report: "Schema version mismatch -- vitals_collector.py and this skill are out of sync. Expected 1.0.0, got {version}."
+   - Check `_schema_version` starts with `"1."` -- the 1.x line is additive-compatible (1.0.0 baseline + 1.1.0 added `memory`). If the major version is not 1, STOP and report: "Schema version mismatch -- expected 1.x, got {version}."
    - Check `errors` array -- if non-empty, report each error inline with a [DEGRADED] marker
 
 ## Phase 1.5: Launch Jarvis App
@@ -176,6 +176,10 @@ Overnight ({date}): {n} dimensions, {total_kept} kept, {total_min}m
   Highlight: {one-line top finding}
 Autoresearch: {contradictions}c / {coverage}% cov / {proposals}p
 Scheduled tasks: {healthy}/{total} healthy
+
+MEMORY ({memory.status}): peak {memory.peak_commit_gb} GB ({memory.peak_ratio_pct}% of pagefile)
+  Top-1 at peak: {memory.top1_consumer_at_peak} | Ticks: {memory.tick_count}/{memory.expected_ticks} ({completion_pct}%)
+  Drill down: /vitals --memory | Heatmap: /vitals --context-files
 
 Pending PRDs ({n}): {slug1/PRD.md, slug2/PRD.md} or "None"
 

@@ -36,7 +36,15 @@ TASKLIST = REPO_ROOT / "orchestration" / "tasklist.md"
 MORNING_FEED_DIR = REPO_ROOT / "memory" / "work" / "jarvis" / "morning_feed"
 EVENTS_DIR = REPO_ROOT / "history" / "events"
 ISC_PRODUCER_REPORT = REPO_ROOT / "data" / "isc_producer_report.json"
+MEMORY_TIMESERIES = REPO_ROOT / "data" / "logs" / "memory_timeseries.jsonl"
 OUTPUT_FILE = REPO_ROOT / "data" / "vitals_latest.json"
+
+# FR-006 thresholds — ratio of peak commit to pagefile-allocated
+MEMORY_WARN_RATIO = 0.70
+MEMORY_CRITICAL_RATIO = 0.90
+
+# FR-009 stub message (exact string — tests match this)
+FR009_STUB = "not yet available — blocked on [dependency]"
 
 
 def _run_script(script_path: str, args: list[str]) -> dict | None:
@@ -771,12 +779,253 @@ def collect_git_hash() -> str:
     return "unknown"
 
 
+def _parse_ts(ts: str) -> datetime | None:
+    """Parse ISO-8601 Z timestamp used by sampler + hook_events."""
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        return None
+
+
+def load_memory_ticks(path: Path, since_hours: int, now: datetime | None = None) -> list[dict]:
+    """Return ticks from memory_timeseries.jsonl within the last `since_hours` window."""
+    if not path.exists():
+        return []
+    cutoff = (now or datetime.now(timezone.utc)) - timedelta(hours=since_hours)
+    out: list[dict] = []
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                tick = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            ts = _parse_ts(tick.get("ts", ""))
+            if ts is not None and ts >= cutoff:
+                out.append(tick)
+    except OSError:
+        return []
+    return out
+
+
+def _pagefile_total_bytes() -> int:
+    """Return configured pagefile size in bytes, or 0 on failure."""
+    try:
+        import psutil
+        return int(psutil.swap_memory().total)
+    except Exception:
+        return 0
+
+
+def build_memory_summary(
+    ticks: list[dict],
+    pagefile_total_bytes: int,
+    window_hours: int = 24,
+) -> dict:
+    """FR-006 summary: peak commit + ratio + top-1 consumer at peak + completion rate.
+
+    Expected ticks in 24h window per PRD:
+      night (22:00–08:00, 2-min cadence) = 10 * 30 = 300
+      day   (08:00–22:00, 10-min cadence) = 14 * 6 = 84
+      total = 384
+    """
+    expected_ticks_24h = 384
+    expected = int(expected_ticks_24h * (window_hours / 24))
+
+    if not ticks:
+        return {
+            "status": "NO_DATA",
+            "window_hours": window_hours,
+            "tick_count": 0,
+            "expected_ticks": expected,
+            "tick_completion_rate": 0.0,
+            "peak_commit_bytes": 0,
+            "peak_commit_gb": 0.0,
+            "peak_ratio": 0.0,
+            "top1_consumer_at_peak": None,
+            "pagefile_total_bytes": pagefile_total_bytes,
+            "warn_threshold_ratio": MEMORY_WARN_RATIO,
+            "critical_threshold_ratio": MEMORY_CRITICAL_RATIO,
+        }
+
+    peak_tick = max(ticks, key=lambda t: int(t.get("commit_bytes_sum") or 0))
+    peak_bytes = int(peak_tick.get("commit_bytes_sum") or 0)
+    peak_ratio = (peak_bytes / pagefile_total_bytes) if pagefile_total_bytes else 0.0
+
+    top5 = peak_tick.get("top5_procs") or []
+    top1_name = top5[0].get("name") if top5 and isinstance(top5[0], dict) else None
+
+    if peak_ratio >= MEMORY_CRITICAL_RATIO:
+        status = "CRITICAL"
+    elif peak_ratio >= MEMORY_WARN_RATIO:
+        status = "WARN"
+    else:
+        status = "HEALTHY"
+
+    completion_rate = min(1.0, len(ticks) / expected) if expected else 0.0
+
+    return {
+        "status": status,
+        "window_hours": window_hours,
+        "tick_count": len(ticks),
+        "expected_ticks": expected,
+        "tick_completion_rate": round(completion_rate, 4),
+        "peak_commit_bytes": peak_bytes,
+        "peak_commit_gb": round(peak_bytes / (1024 ** 3), 2),
+        "peak_ratio": round(peak_ratio, 4),
+        "top1_consumer_at_peak": top1_name,
+        "pagefile_total_bytes": pagefile_total_bytes,
+        "warn_threshold_ratio": MEMORY_WARN_RATIO,
+        "critical_threshold_ratio": MEMORY_CRITICAL_RATIO,
+    }
+
+
+def build_memory_detail(
+    ticks: list[dict],
+    pagefile_total_bytes: int,
+    window_hours: int = 24,
+) -> dict:
+    """FR-007 detail: hourly buckets (max/avg) + top-5 consumer histogram + over-commit crossings."""
+    from collections import defaultdict
+
+    summary = build_memory_summary(ticks, pagefile_total_bytes, window_hours)
+
+    buckets: dict[str, list[int]] = defaultdict(list)
+    histogram: dict[str, dict[str, float]] = {}
+    overcommits: list[dict] = []
+
+    for t in ticks:
+        ts = _parse_ts(t.get("ts", ""))
+        commit = int(t.get("commit_bytes_sum") or 0)
+        if ts is not None:
+            bucket = ts.strftime("%Y-%m-%dT%H:00Z")
+            buckets[bucket].append(commit)
+        if pagefile_total_bytes and commit > pagefile_total_bytes:
+            overcommits.append({
+                "ts": t.get("ts"),
+                "commit_gb": round(commit / (1024 ** 3), 2),
+                "pagefile_gb": round(pagefile_total_bytes / (1024 ** 3), 2),
+                "ratio": round(commit / pagefile_total_bytes, 4),
+            })
+        for proc in t.get("top5_procs") or []:
+            if not isinstance(proc, dict):
+                continue
+            name = proc.get("name") or "unknown"
+            paged_mb = float(proc.get("paged_mb") or 0)
+            entry = histogram.setdefault(name, {"occurrences": 0, "total_paged_mb": 0.0})
+            entry["occurrences"] += 1
+            entry["total_paged_mb"] += paged_mb
+
+    hourly = [
+        {
+            "hour": bucket,
+            "tick_count": len(vals),
+            "max_gb": round(max(vals) / (1024 ** 3), 2),
+            "avg_gb": round((sum(vals) / len(vals)) / (1024 ** 3), 2),
+        }
+        for bucket, vals in sorted(buckets.items())
+    ]
+
+    top5_histogram = sorted(
+        (
+            {
+                "name": name,
+                "occurrences": int(entry["occurrences"]),
+                "avg_paged_mb": round(entry["total_paged_mb"] / entry["occurrences"], 1),
+            }
+            for name, entry in histogram.items()
+        ),
+        key=lambda x: x["occurrences"],
+        reverse=True,
+    )[:5]
+
+    return {
+        "summary": summary,
+        "hourly_buckets": hourly,
+        "top5_histogram": top5_histogram,
+        "overcommit_crossings": overcommits,
+    }
+
+
+def load_context_file_counts(
+    events_dir: Path,
+    days: int = 7,
+    top_n: int = 20,
+    now: datetime | None = None,
+) -> list[dict]:
+    """FR-008: aggregate Read.file_path occurrences from hook_events JSONL, filter .md, top-N by count."""
+    if not events_dir.exists():
+        return []
+    cutoff = (now or datetime.now(timezone.utc)) - timedelta(days=days)
+    counts: dict[str, int] = {}
+
+    for jsonl in events_dir.glob("*.jsonl"):
+        try:
+            lines = jsonl.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if rec.get("tool") != "Read" or rec.get("hook") != "PostToolUse":
+                continue
+            fp = rec.get("file_path")
+            if not isinstance(fp, str) or not fp.lower().endswith(".md"):
+                continue
+            ts = _parse_ts(rec.get("ts", ""))
+            if ts is None or ts < cutoff:
+                continue
+            counts[fp] = counts.get(fp, 0) + 1
+
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:top_n]
+    return [{"file_path": fp, "count": c} for fp, c in ranked]
+
+
+def collect_memory_summary() -> dict:
+    """Wrapper for main() default path — window = 24h."""
+    ticks = load_memory_ticks(MEMORY_TIMESERIES, since_hours=24)
+    return build_memory_summary(ticks, _pagefile_total_bytes(), window_hours=24)
+
+
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Collect Jarvis vitals into JSON")
     parser.add_argument("--file", action="store_true", help="Also write to data/vitals_latest.json")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
+    parser.add_argument("--memory", action="store_true", help="FR-007: emit detailed memory panel (hourly buckets, top-5 histogram, over-commit crossings) and exit")
+    parser.add_argument("--context-files", action="store_true", help="FR-008: emit top-20 .md files Read in last 7 days and exit")
+    parser.add_argument("--token-costs", action="store_true", help="FR-009 stub: print blocked-on message and exit")
+    parser.add_argument("--reaper-log", action="store_true", help="FR-009 stub: print blocked-on message and exit")
     args = parser.parse_args()
+
+    # FR-009 stubs — fast path, no full collection.
+    # Write bytes directly so the em dash survives Windows cp1252 stdout default.
+    if args.token_costs or args.reaper_log:
+        sys.stdout.buffer.write((FR009_STUB + "\n").encode("utf-8"))
+        sys.stdout.flush()
+        sys.exit(0)
+
+    # FR-007 detailed memory panel — fast path
+    if args.memory:
+        ticks = load_memory_ticks(MEMORY_TIMESERIES, since_hours=24)
+        detail = build_memory_detail(ticks, _pagefile_total_bytes(), window_hours=24)
+        indent = 2 if args.pretty else None
+        print(json.dumps(detail, indent=indent, ensure_ascii=True))
+        sys.exit(0)
+
+    # FR-008 context-files — fast path
+    if args.context_files:
+        rows = load_context_file_counts(EVENTS_DIR, days=7, top_n=20)
+        indent = 2 if args.pretty else None
+        print(json.dumps({"context_files": rows, "window_days": 7}, indent=indent, ensure_ascii=True))
+        sys.exit(0)
 
     start_time = time.time()
     errors: list[str] = []
@@ -874,7 +1123,7 @@ def main() -> None:
         "contradictions_structured": contradictions_structured,
         "proposals_structured": proposals_structured,
         "isc_producer": isc_producer,
-        "memory": {},
+        "memory": collect_memory_summary(),
         "errors": errors,
     }
 
