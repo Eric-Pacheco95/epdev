@@ -108,8 +108,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 14 — Patch Tuesday April 2026 (167 patches, SharePoint zero-day CVE-2026-32201, Chrome 4th zero-day 2026, Adobe Reader exploited vuln); Apr 6 — Germany doxes UNKN (REvil/GandCrab head)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 14 — Patch Tuesday April 2026 (167 patches, SharePoint zero-day, BlueHammer Windows Defender); Apr 7 — Russia hacked routers to steal MS Office tokens; Apr 6 — Germany doxes UNKN (REvil/GandCrab head Shchukin); no new posts Apr 14-19"
 
 - name: "The Hacker News"
   url: "https://thehackernews.com"
@@ -117,8 +117,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 17 — nginx-ui CVE-2026-33032 (CVSS 9.8, MCPwn, pre-auth RCE, Nginx takeover); Apache ActiveMQ CVE-2026-34197 (CVSS 8.8, active); Marimo CVE-2026-39987 (CVSS 9.3, Python notebook RCE, 10h exploitation); SAP CVE-2026-27681 (CVSS 9.9); n8n webhook exploitation for phishing"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 19 — Ghost Identities webinar (NHIs behind 68% cloud breaches); Apr 18 — Grinex exchange hack $13.74M, Mirai Nexcorium exploits CVE-2024-3721 in TBK DVRs; Apr 17 — 3 MS Defender zero-days (BlueHammer/RedSun/UnDefend), NIST limits CVE enrichment; Google blocks 8.3B policy-violating ads"
 
 - name: "LangChain Blog"
   url: "https://blog.langchain.com"
@@ -126,8 +126,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — Running Subagents in Background; Reusable Evaluators in LangSmith; Apr 15 — Self-testing docs; Apr 11 — Your harness, your memory (directly Jarvis-relevant); Apr 9 — Deep Agents Deploy (open alt to Claude Managed Agents); Human judgment in agent loop"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 17 — Agentic Engineering: How AI Agent Swarms Redefine Software Engineering; Apr 16 — Running Subagents in Background; Reusable Evaluators in LangSmith; Cisco AI Defense integration; Apr 15 — Self-testing docs; Apr 11 — Your harness, your memory"
 
 - name: "LlamaIndex Blog"
   url: "https://www.llamaindex.ai/blog"
@@ -324,6 +324,16 @@
   tier: 3
   frequency: monthly
   last_checked: "2026-04-17"
+
+- name: "Google AI Blog"
+  url: "https://blog.google/technology/ai/"
+  feed_url: "https://blog.google/technology/ai/rss/"
+  type: ai_releases
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-19"
+  last_notable: "Apr 17 — 7 AI travel tools for summer; Apr 16 — Chrome AI Mode web interaction upgrades; personalized Gemini app image generation with Google Photos"
+  note: "Added 2026-04-19 — Google consumer AI announcements; covers Gemini app, Chrome AI Mode, Google Photos AI, and Google AI product releases separate from DeepMind research"
 
 - name: "GitHub Blog"
   url: "https://github.blog"
