@@ -145,8 +145,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — HF Transformers to MLX conversion PR guide; Apr 15 — VAKRA benchmark (IBM agent reasoning/failure modes); HoloTab AI browser companion; Apr 9 — Waypoint-1.5 interactive worlds on consumer GPUs; Safetensors joining PyTorch Foundation"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 17 — NVIDIA NeMo multilingual OCR v2 (synthetic data); Apr 16 — Ecom-RLVE adaptive verifiable environments for e-commerce agents; Transformers to MLX conversion guide; Sentence Transformers multimodal embedding; Apr 15 — Inside VAKRA: agent reasoning failure modes"
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
@@ -199,8 +199,8 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 17 — Bitcoin $73-75K (recovery from $65.5K); $283M liquidations on short squeeze above $75K; Charles Schwab spot BTC/ETH for retail; Kalshi prediction markets may go to Supreme Court; Drift hack Circle class-action + Tether $150M recovery fund"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 19 — RaveDAO RAVE token manipulation investigation (Binance/Bitget); Schwab + Citadel exploring prediction markets (no sports); Caitlyn Jenner memecoin lawsuit dismissed; Apr 18 — Kelp Protocol restaking exploit $293M (cross-protocol contagion, 9+ protocols); Solana futures OI +20%"
 
 - name: "Google Cloud Threat Intelligence"
   url: "https://cloud.google.com/blog/topics/threat-intelligence"
@@ -399,8 +399,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "No new releases Apr 9-17; v2025-11-25 still current stable; NOTE: nginx-ui CVE-2026-33032 named MCPwn by researchers — active exploitation of AI infrastructure targets"
+  last_checked: "2026-04-19"
+  last_notable: "No new releases Apr 17-19; v2025-11-25 still current stable; nginx-ui CVE-2026-33032 named MCPwn by researchers (CVSS 9.8, pre-auth RCE, active exploitation of AI infrastructure)"
   note: "Added 2026-04-05 — Jarvis uses MCP extensively for tool servers; spec releases drive breaking changes in stdio transport, tool discovery, and session lifecycle; currently on stable 2025-11-25"
 
 - name: "Anthropic Safety & Policy"
@@ -412,6 +412,16 @@
   last_checked: "2026-04-17"
   last_notable: "Apr 13 — Project Glasswing launched (pre-release vulnerability finding initiative for powerful models); Mythos preview restricted before release; Apr 9 — Trustworthy agents in practice (Policy research)"
   note: "Added 2026-04-05 — Separate from Anthropic Blog (products/news); tracks constitutional AI, interpretability, RSP safety milestone commitments; URL-only (no separate RSS)"
+
+- name: "Bitcoin Magazine"
+  url: "https://bitcoinmagazine.com"
+  feed_url: "https://bitcoinmagazine.com/feed"
+  type: crypto
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-19"
+  last_notable: "Apr 17 — Quantum computers and Bitcoin property law (BIP-361 freeze mechanism, dormancy vs abandonment); Congresswoman Biggs discloses up to $250K BTC via iShares ETF; 21M bitcoin painting debut at Bitcoin 2026"
+  note: "Added 2026-04-19 — Bitcoin Magazine covers Bitcoin-specific news, legal, and culture; higher signal than CoinTelegraph for Bitcoin-specific regulatory and technical developments; relevant to Eric long-term BTC thesis tracking"
 
 - name: "Rekt News (DeFi Exploits)"
   url: "https://rekt.news"
@@ -468,8 +478,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — CVE-2026-34197 Apache ActiveMQ (active exploit); Apr 14 — CVE-2026-32201 SharePoint zero-day, CVE-2009-0238 Office; Apr 13 — CVE-2025-60710 Windows, CVE-2026-34621 Adobe Acrobat (active), CVE-2026-21643 Fortinet FortiClient EMS; Apr 10 KEV — 10 new CVEs added Apr 10-16"
+  last_checked: "2026-04-19"
+  last_notable: "Catalog version 2026.04.16 (Apr 16); Apr 16 — CVE-2026-34197 Apache ActiveMQ active exploit; Apr 14 — CVE-2026-32201 SharePoint zero-day, CVE-2009-0238 MS Office; Apr 13 — CVE-2025-60710 Windows, CVE-2026-34621 Adobe Acrobat, CVE-2026-21643 Fortinet FortiClient; no new additions Apr 17-19"
   note: "Added 2026-04-05 — CISA KEV is the authoritative list of CVEs with confirmed in-the-wild exploitation; JSON feed at /feeds/known_exploited_vulnerabilities.json; Trivy entry directly relevant to Jarvis CI/CD pipeline"
 
 - name: "GitHub Security Advisory Database (npm)"
