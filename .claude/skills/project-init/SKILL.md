@@ -47,6 +47,12 @@ false
 
 # STEPS
 
+## Phase 0: INPUT CHECK
+
+- If no `<topic>` is provided (bare `/project-init` with no arguments): print `'Usage: /project-init <topic> [quick|resume]'` and STOP
+- If mode argument is not one of: `quick`, `resume`, or absent: print valid modes and STOP
+- Extract topic and mode, then proceed to Phase 1
+
 ## Phase 1: OBSERVE — Research the space
 
 1. Check if a research brief already exists at `memory/work/{slug}/research_brief.md`
