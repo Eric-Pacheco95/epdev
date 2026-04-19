@@ -32,8 +32,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — llm-anthropic 0.25 (Opus 4.7 + thinking_effort), Qwen3.6-35B-A3B local beats Opus 4.7 on SVG; datasette 1.0a28; Apr 15 — datasette 1.0a27 (header CSRF), Gemini 3.1 Flash TTS; Apr 14 — GPT-5.4-Cyber; Apr 11 — SQLite 3.53.0 (ALTER TABLE constraints)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 18 — Opus 4.6 vs 4.7 sysprompt diff (expanded child safety, less verbose, tool search improvements), sysprompt git timeline repo; Apr 17 — datasette 1.0a28, PyCon US 2026 AI+Security tracks; Apr 16 — llm-anthropic 0.25 (Opus 4.7 + thinking_effort)"
 
 - name: "Daniel Miessler"
   url: "https://danielmiessler.com/newsletter"
@@ -41,8 +41,8 @@
   type: ai_security
   tier: 1
   frequency: daily
-  last_checked: "2026-04-17"
-  last_notable: "Apr 17 — Jensen vs Dwarkesh on China chips; Apr 16 — Mythos is Just the New Normal; Apr 15 — Single Digital Assistant future; Apr 14 — Good and Bad Harness Engineering (context > steps); Apr 13 — Full Activation; Apr 12 — AI Only Has to Beat 3/10; Apr 10 — Aperture Collapse"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 18 — AI SaaS Replacement is the Fire of Fires (AI forces SaaS to prove core value); Apr 17 — Jensen vs Dwarkesh on China chips (financial incentive blocks honest assessment); Apr 16 — Mythos is the New Normal; Apr 15 — PAI 5.0 single digital assistant vision"
 
 - name: "Hacker News"
   url: "https://news.ycombinator.com"
@@ -242,6 +242,16 @@
   last_notable: "Apr 10 — Rust DNS parser in Pixel 10 baseband (memory-safe modem firmware); Apr 9 — Device Bound Session Credentials Chrome 146 (hardware-backed cookie theft prevention)"
   note: "Added 2026-04-05 — Google application security research blog; complements GTIC with defensive architecture and vulnerability research"
 
+- name: "SecurityWeek"
+  url: "https://www.securityweek.com"
+  feed_url: "https://www.securityweek.com/feed/"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-19"
+  last_notable: "Apr 19 — Ghost Identities (NHIs 68% of cloud breaches); Apr 18 — Grinex exchange hack $13.74M; Apr 17 — White House met Anthropic CEO on AI model security; Apache ActiveMQ CVE-2026-34197 active exploitation; ZionSiphon malware targets Israeli water"
+  note: "Added 2026-04-19 — SecurityWeek covers enterprise security, threat intel, AI security policy; complements THN/Krebs/SANS with broader industry context"
+
 - name: "NVIDIA Developer Blog"
   url: "https://developer.nvidia.com/blog"
   feed_url: "https://developer.nvidia.com/blog/feed/"
@@ -409,8 +419,8 @@
   type: ai_safety
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — Jensen Huang/China chips export control critique; Apr 15 — Claude Code Auto Mode + Agentic Coding #7 (parallel agents, xhigh effort, computer use for Pro/Max)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 17 — AI #164 Pre Opus (delayed for Dwarkesh discourse); Claude Mythos safety-card analysis + Project Glasswing (controlled access for vetted cybersecurity firms pre-release); Agentic Coding #7 — Auto Mode parallel agents"
 
 - name: "SANS Internet Storm Center"
   url: "https://isc.sans.edu"
