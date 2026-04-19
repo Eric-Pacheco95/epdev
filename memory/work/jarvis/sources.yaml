@@ -75,8 +75,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 12-14 issue expected — no new issue detected in feed; Gergely weekly cadence typically Thursdays; watch for Claude Opus 4.7 enterprise implications coverage"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 16 — Tokenmaxxing: devs burning tokens to inflate AI usage metrics; agent subsidy end; Cal.com closed source; Apr 14 — AI impact on SWE 2026 survey (900+ responses, 30% hit usage limits, builders/shippers/coasters); Apr 8 — DHH agent-first workflows"
   note: "Added 2026-04-07 — Gergely Orosz weekly newsletter; covers GitHub Copilot, AI coding tools, enterprise AI adoption patterns, and developer market trends; high signal-to-noise for practical AI engineering implications"
 
 # =============================================================================
@@ -171,8 +171,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 17 — AINews Claude Opus 4.7 (better in every dimension); Apr 16 — RIP Pull Requests (GitHub disabling PRs, agents making PRs obsolete); Apr 15 — Notion token town (5 rebuilds, MCP vs CLIs, software factory vision); Humanity Last Gasp (workers busier despite AI)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 18 — OpenClaw two sides (inspiring public narrative vs security/scaling challenges); Apr 17 — AINews Opus 4.7 (better in every dimension); Apr 16 — RIP Pull Requests (GitHub disabling PRs, agents making PRs obsolete); Apr 15 — Notion token town (5 rebuilds, software factory vision)"
 
 - name: "Meta AI Llama Releases"
   url: "https://github.com/meta-llama/llama-models/releases"
@@ -306,8 +306,8 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — Human Trust of AI Agents; Apr 14 — How Hackers Are Thinking About AI; Apr 13 — Anthropic Mythos Preview + Project Glasswing (powerful model restricted, vuln-finding initiative); AI Chatbot flattery undermining critical thinking; Apr 10 — Sen. Sanders / Claude on AI policy; Apr 9 — Microsoft cloud security (federal approval despite flaws)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 17 — Mythos and Cybersecurity (Anthropic restricted Mythos raises responsible disclosure questions, equitable access); Apr 17 — Friday Squid Blogging; no other new posts Apr 17-19"
 
 - name: "Python Insider"
   url: "https://blog.python.org"
@@ -438,9 +438,19 @@
   type: security
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 17 — Lumma Stealer+Sectop RAT via fake Adobe Premiere (806MB null-padded EXE evades AV); Apr 16 — Compromised Dahua DVRs via default creds (202 compromised of 5313 exposed); Apr 14 — MS Patch Tuesday 243 total patches (TCP/IP RCE CVE-2026-33827, RDP RCE, IKE RCE); AI infra scanning (81.168.83.103)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 17 — Lumma Stealer + Sectop RAT via cracked software (Bradley Duncan); Apr 16 — Compromised Dahua DVRs via default creds (Alec Jaffe); Apr 14 — MS Patch Tuesday 243 patches (TCP/IP RCE CVE-2026-33827, RDP RCE, IKE RCE); no new entries Apr 18-19"
   note: "Added 2026-04-05 — Daily threat handlers diary; high signal-to-noise for active exploits and IOCs; good complement to THN/Krebs for early-warning CVE exploitation"
+
+- name: "Import AI (Jack Clark)"
+  url: "https://importai.substack.com"
+  feed_url: "https://importai.substack.com/feed"
+  type: ai_safety
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-19"
+  last_notable: "No new issue detected Apr 17-19; Jack Clark co-founded Anthropic; weekly newsletter covers AI safety, capabilities research, and policy; relevant for pre-publication safety research signals"
+  note: "Added 2026-04-19 — Import AI is one of the highest-signal AI safety newsletters; Jack Clark (Anthropic co-founder) covers capability jumps, safety research, and geopolitical AI policy; complements Zvi coverage"
 
 - name: "ArXiv CS.AI (Daily Papers)"
   url: "https://arxiv.org/list/cs.AI/recent"
