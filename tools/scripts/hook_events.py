@@ -53,6 +53,7 @@ def main() -> None:
     error_msg = None
     input_len = 0
     stop_reason = None
+    read_file_path: str | None = None
     _skill_name = ""
     _advisor_word_count = 0
 
@@ -85,6 +86,11 @@ def main() -> None:
                     error_msg = str(content)[:120] if content else "error"
             tool_input = data.get("tool_input", {})
             input_len = len(json.dumps(tool_input))
+            # FR-005 whitelist: Read.file_path only; no other tool input captured
+            if tool_name == "Read" and isinstance(tool_input, dict):
+                fp = tool_input.get("file_path")
+                if isinstance(fp, str):
+                    read_file_path = fp
             if tool_name == "advisor":
                 adv_content = response.get("content", "") if isinstance(response, dict) else ""
                 if isinstance(adv_content, list):
@@ -128,6 +134,8 @@ def main() -> None:
     }
     if stop_reason is not None:
         record["stop_reason"] = stop_reason
+    if read_file_path is not None:
+        record["file_path"] = read_file_path
 
     log_path = EVENTS_DIR / f"{now_utc.strftime('%Y-%m-%d')}.jsonl"
     locked_append(log_path, json.dumps(record))

@@ -136,3 +136,49 @@ class TestHookEventsRecord:
         r = records[-1]
         assert "ts" in r
         assert "T" in r["ts"]  # ISO-8601 shape
+
+    def test_read_post_tool_use_captures_file_path(self, tmp_path):
+        payload = {
+            "hook_event_name": "PostToolUse",
+            "tool_name": "Read",
+            "session_id": "sess-read",
+            "tool_input": {"file_path": "C:/repo/CLAUDE.md", "offset": 0, "limit": 100},
+            "tool_response": {"is_error": False},
+        }
+        records = _run_main(payload, tmp_path)
+        r = records[-1]
+        assert r["tool"] == "Read"
+        assert r["file_path"] == "C:/repo/CLAUDE.md"
+        # Whitelist guard: only file_path from tool_input, not offset/limit/etc.
+        assert "offset" not in r
+        assert "limit" not in r
+        assert "tool_input" not in r
+
+    def test_bash_post_tool_use_no_input_capture(self, tmp_path):
+        payload = {
+            "hook_event_name": "PostToolUse",
+            "tool_name": "Bash",
+            "session_id": "sess-bash",
+            "tool_input": {"command": "ls -la /secret/path", "description": "list"},
+            "tool_response": {"is_error": False},
+        }
+        records = _run_main(payload, tmp_path)
+        r = records[-1]
+        assert r["tool"] == "Bash"
+        assert "file_path" not in r
+        assert "command" not in r
+        assert "description" not in r
+        assert "tool_input" not in r
+        assert r["input_len"] > 0
+
+    def test_pre_tool_use_read_does_not_capture_file_path(self, tmp_path):
+        payload = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Read",
+            "session_id": "sess-pre-read",
+            "tool_input": {"file_path": "C:/repo/secrets.env"},
+        }
+        records = _run_main(payload, tmp_path)
+        r = records[-1]
+        # FR-005 scope: PostToolUse only
+        assert "file_path" not in r

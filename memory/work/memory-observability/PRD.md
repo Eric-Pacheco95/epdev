@@ -1,7 +1,7 @@
 ---
 slug: memory-observability
 created: 2026-04-18
-status: Phase 1 COMPLETE (Phases 2-5 pending)
+status: Phases 1+2+3+5 + FR-010 COMPLETE (Phase 4 FR-006-009 pending; Phase 2 ≥95%-after-48h ISC window 2026-04-20T22:00)
 priority: P1
 phase: PHASE1-COMPLETE
 parent-incident: 2026-04-18 overnight OOM preflight abort + 13:00 live thrash (119.69 GB commit)
@@ -72,36 +72,36 @@ Close the observability blind spot that made the 2026-04-18 overnight OOM invisi
 
 ## ACCEPTANCE CRITERIA
 
-### Phase: Ship FR-001 / FR-002 / FR-003 (sampler + schedule)
+### Phase 1: Sampler + schedule
 
 - [x] `tools/scripts/memory_sampler.py` exists and is invokable as `python tools/scripts/memory_sampler.py` with no args, appending exactly one line to `data/logs/memory_timeseries.jsonl` per invocation | Verify: Test — run once, assert file grows by exactly 1 line and JSON parses with all required fields | model: sonnet |
 - [x] Every JSONL line contains the required keys `ts`, `commit_bytes_sum`, `pagefile_free_gb`, `ram_free_gb`, `top5_procs` with non-null values | Verify: Custom — `python tools/scripts/verify_sampler_schema.py` reads last 10 lines, exits 1 if any key missing or null | model: sonnet |
 - [x] Both scheduled tasks `Jarvis-MemorySampler-Night` and `Jarvis-MemorySampler-Day` are registered with correct triggers and MultipleInstances=IgnoreNew | Verify: `schtasks /query /tn "Jarvis-MemorySampler-Night" /v /fo LIST` and day equivalent — both return active schedules matching the documented cadence | model: haiku |
 - [x] **Anti-criterion**: Sampler source contains zero occurrences of `CimInstance`, `WmiObject`, `Get-Counter`, or `Win32_` class names | Verify: `grep -En "CimInstance|WmiObject|Get-Counter|Win32_" tools/scripts/memory_sampler.py` exits non-zero with empty output | model: haiku |
 
-### Phase: Ship FR-004 (coverage verifier)
+### Phase 2: Coverage verifier
 
-- [ ] `tools/scripts/verify_sampler_coverage.py` computes tick completion rate and identifies contiguous gaps | Verify: Test — unit test feeds synthetic JSONL with a 25-min night gap; verifier exits 1 and names the gap window | model: sonnet |
-- [ ] After 48 h of continuous sampling, tick completion rate is ≥95% when measured against the time-of-day cadence schedule | Verify: Custom — `python tools/scripts/verify_sampler_coverage.py --window 48h --min-rate 0.95` exits 0 | model: sonnet |
-- [ ] The verifier counts tick-loss during known observed pressure events separately (any tick gap within a window where `commit_bytes_sum > 70%` of pagefile budget is flagged as a pressure-gap) | Verify: Read — inspect verifier output for a `pressure_gaps[]` key populated from the most recent sampling window | model: sonnet |
+- [x] `tools/scripts/verify_sampler_coverage.py` computes tick completion rate and identifies contiguous gaps | Verify: Test — unit test feeds synthetic JSONL with a 25-min night gap; verifier exits 1 and names the gap window | model: sonnet |
+- [ ] After 48 h of continuous sampling, tick completion rate is ≥95% when measured against the time-of-day cadence schedule | Verify: Custom — `python tools/scripts/verify_sampler_coverage.py --window 48h --min-rate 0.95` exits 0 | model: sonnet | STATUS: BUILT-UNVALIDATED — window 2026-04-20T22:00 ET |
+- [x] The verifier counts tick-loss during known observed pressure events separately (any tick gap within a window where `commit_bytes_sum > 70%` of pagefile budget is flagged as a pressure-gap) | Verify: Read — inspect verifier output for a `pressure_gaps[]` key populated from the most recent sampling window | model: sonnet |
 
-### Phase: Ship FR-005 (hook instrumentation for context-file heatmap)
+### Phase 3: Hook instrumentation
 
-- [ ] `tools/scripts/hook_events.py` records Read-tool `file_path` into each PostToolUse event (whitelist: only `tool=="Read"` AND only the `file_path` string captured) | Verify: Test — unit test sends a simulated Read PostToolUse payload, asserts written JSONL contains `file_path` and no other input fields | model: sonnet |
-- [ ] **Anti-criterion**: No tool other than `Read` has its `file_path` / input contents captured — all other tools continue to record only `input_len` per existing schema | Verify: Test — assert Bash PostToolUse event contains no `file_path` or `command` field | model: sonnet |
+- [x] `tools/scripts/hook_events.py` records Read-tool `file_path` into each PostToolUse event (whitelist: only `tool=="Read"` AND only the `file_path` string captured) | Verify: Test — unit test sends a simulated Read PostToolUse payload, asserts written JSONL contains `file_path` and no other input fields | model: sonnet |
+- [x] **Anti-criterion**: No tool other than `Read` has its `file_path` / input contents captured — all other tools continue to record only `input_len` per existing schema | Verify: Test — assert Bash PostToolUse event contains no `file_path` or `command` field | model: sonnet |
 
-### Phase: Ship FR-006 / FR-007 / FR-008 / FR-009 / FR-010 (/vitals integration)
+### Phase 4: /vitals integration
 
 - [ ] `/vitals` default terminal output contains a `MEMORY:` block with peak, ratio, top-1 consumer, and tick completion rate | Verify: Test — run `python tools/scripts/vitals_collector.py --pretty` and assert top-level `memory` key with required sub-fields | model: sonnet |
 - [ ] `/vitals --memory` returns hourly-bucketed commit data for last 24 h plus top-5 consumer histogram plus flagged over-commit crossings | Verify: Review — invoke `/vitals --memory` on real data, confirm all three sections render with non-empty values when data exists | model: sonnet |
 - [ ] `/vitals --context-files` outputs a count-ranked list of `.md` files from the last 7 days of hook_events data, limited to top 20 | Verify: Test — feed synthetic hook_events JSONL with 25 distinct `.md` paths, assert output has exactly 20 entries ordered by count desc | model: sonnet |
 - [ ] `/vitals --token-costs` and `/vitals --reaper-log` both print exactly the line `not yet available — blocked on [dependency]` with exit code 0 | Verify: Test — invoke each flag, assert stdout matches regex and exit code is 0 | model: sonnet |
-- [ ] `vitals_collector.py` output `_schema_version` is `1.1.0` and the `1.0.0` top-level key set is still present (additive-only change) | Verify: Custom — `python tools/scripts/verify_vitals_schema.py --compat 1.0.0` exits 1 if any 1.0.0 key is missing or renamed | model: sonnet |
+- [x] `vitals_collector.py` output `_schema_version` is `1.1.0` and the `1.0.0` top-level key set is still present (additive-only change) | Verify: Custom — `python tools/scripts/verify_vitals_schema.py --compat 1.0.0` exits 1 if any 1.0.0 key is missing or renamed | model: sonnet |
 
-### Phase: Cross-cutting anti-criteria
+### Phase 5: Cross-cutting anti-criteria
 
-- [ ] **Anti-criterion**: No PRD-2-shipped code issues overnight Slack alerts (`slack_notify.notify` call) for memory pressure; only `/vitals` morning brief surfaces the signal | Verify: `grep -rEn "slack_notify|slack_send" tools/scripts/memory_sampler.py tools/scripts/verify_sampler_coverage.py` exits non-zero with empty output | model: haiku |
-- [ ] **Anti-criterion**: Sampler hot path never invokes Python `subprocess.run` with `shell=True` (consistency with PRD-1 orphan-prevention policy) | Verify: `grep -En "shell=True" tools/scripts/memory_sampler.py` exits non-zero with empty output | model: haiku |
+- [x] **Anti-criterion**: No PRD-2-shipped code issues overnight Slack alerts (`slack_notify.notify` call) for memory pressure; only `/vitals` morning brief surfaces the signal | Verify: `grep -rEn "slack_notify|slack_send" tools/scripts/memory_sampler.py tools/scripts/verify_sampler_coverage.py` exits non-zero with empty output | model: haiku |
+- [x] **Anti-criterion**: Sampler hot path never invokes Python `subprocess.run` with `shell=True` (consistency with PRD-1 orphan-prevention policy) | Verify: `grep -En "shell=True" tools/scripts/memory_sampler.py` exits non-zero with empty output | model: haiku |
 
 **ISC Quality Gate: PASS (6/6)** — 16 criteria across 5 phases (≤8 per phase ✓); single-sentence, state-not-action ✓; binary pass/fail ✓; 4 anti-criteria ✓; every criterion has `| Verify:` suffix ✓; vacuous-truth guards present (custom verifiers exit 1 on absent data; anti-criteria name explicit forbidden strings; verify commands target the primary data source named in the criterion text — e.g. completion-rate criterion reads `memory_timeseries.jsonl` which is the artifact the criterion describes).
 

@@ -23,7 +23,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
 
 # --- Data source paths ---
 HEARTBEAT_LATEST = REPO_ROOT / "memory" / "work" / "isce" / "heartbeat_latest.json"
@@ -874,6 +874,7 @@ def main() -> None:
         "contradictions_structured": contradictions_structured,
         "proposals_structured": proposals_structured,
         "isc_producer": isc_producer,
+        "memory": {},
         "errors": errors,
     }
 
