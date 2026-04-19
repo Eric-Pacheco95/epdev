@@ -329,11 +329,11 @@ INPUT:
 
 # VERIFY
 
-- Confirm the prediction file was written to data/predictions/YYYY-MM-DD-[slug].md (unless --no-track was passed)
-- Confirm the prediction contains a falsifiable statement (binary-testable outcome with a resolution date or trigger)
-- Confirm at least two distinct outcome scenarios with probabilities that sum to 100% are present
-- Confirm probabilities are calibrated against a stated reference class (not just intuition)
-- If --track and file is missing: write it before returning; if probabilities don't sum to 100%: recalibrate
+- Prediction file written to `data/predictions/YYYY-MM-DD-[slug].md` (unless --no-track) | Verify: `ls data/predictions/` and confirm file with today's date exists
+- Prediction contains a falsifiable statement with a resolution date or trigger | Verify: Read prediction file — must have concrete outcome condition and date
+- At least two distinct outcome scenarios are present with probabilities summing to 100% | Verify: Read scenarios and sum probabilities — must equal 100
+- Probabilities calibrated against a stated reference class (not intuition alone) | Verify: Read calibration section — must name a reference class or base rate
+- No missing --track file or uncorrected probability sum error in final output | Verify: Re-check file existence and probability sum after any fix
 
 # LEARN
 

@@ -238,11 +238,11 @@ INPUT:
 
 # VERIFY
 
-- Confirm Step 4 VALIDATE ran all six checks (dangling references, personal data, path validation, Jarvis references, skill count, security rules)
-- Confirm validation report was output to Eric before any files were written to disk
-- Confirm extraction did not auto-push without explicit user confirmation
-- Confirm all six validation checks returned PASS (or document what failed and was fixed)
-- If any personal data or Jarvis reference was found in output: block delivery and surface the specific matches
+- Step 4 VALIDATE ran all six checks: dangling references, personal data, path validation, Jarvis references, skill count, security rules | Verify: Read validation report — all six check names must appear
+- Validation report was output before any files were written to disk | Verify: Check session timeline — validate output must precede any write confirmation
+- Extraction did not auto-push to remote without explicit user confirmation | Verify: Check session output for push confirmation prompt — must not be absent
+- All six validation checks returned PASS, or failures were documented with resolution | Verify: Read validation report — each check shows PASS or FIXED
+- If personal data or Jarvis references were found, delivery was blocked and specific matches were surfaced | Verify: Read output — delivery confirmation absent if any match was found
 
 # LEARN
 

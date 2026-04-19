@@ -89,11 +89,11 @@ If Eric wants to revert a merge:
 
 # VERIFY
 
-- Read data/dream_last_report.md and confirm it exists and is non-empty (dream ran successfully)
-- Confirm no merges occurred on protected files (TELOS.md, constitutional-rules.md, CLAUDE.md)
-- Confirm the similarity threshold used was >= 0.80 (recalibration threshold for nomic-embed-text on sparse corpora)
-- If data/dream_last_report.md is missing: report dream failure and surface the CONTRACT error recovery steps
-- If a protected file was merged: alert Eric immediately and provide rollback path from data/dream_snapshots/
+- `data/dream_last_report.md` exists and is non-empty (dream ran successfully) | Verify: `ls data/dream_last_report.md` exits 0 and file size > 0
+- No merges occurred on protected files (TELOS.md, constitutional-rules.md, CLAUDE.md) | Verify: Read dream_last_report.md merge list — protected filenames must not appear
+- Similarity threshold used was >= 0.80 (nomic-embed-text sparse corpus floor) | Verify: Read dream_last_report.md threshold field
+- If dream_last_report.md is missing, failure was reported and CONTRACT error recovery steps were surfaced | Verify: Read session output for error report
+- If a protected file was merged, alert issued immediately with rollback path from `data/dream_snapshots/` | Verify: Read session output for rollback path if applicable
 
 # LEARN
 
