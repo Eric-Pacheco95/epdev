@@ -78,3 +78,11 @@ Sub-domains: `ai-infra/agent-orchestration.md`
 | Date | Topic | Key Finding | Path |
 |------|-------|-------------|------|
 | (synthesized) | Prediction framework, calibration, and backtest results | Bayesian + BDM game theory chassis; Brier Score calibration; base rate more predictive than domain expertise | `predictions/_context.md` |
+
+## cooking
+
+Sub-domains: `cooking/techniques.md`, `cooking/pairings.md`, `cooking/eric-preferences.md`
+
+| Date | Topic | Key Finding | Path |
+|------|-------|-------------|------|
+| 2026-04-18 | Cooking domain seeded (techniques, pairings, Eric profile) | Pilaf method (bloom fat → toast rice → liquid → rest) works with any spice blend; TJ Chile Lime + cinnamon + garlic + butter = Mexican-leaning combo, pairs with chicken | `cooking/_context.md` |

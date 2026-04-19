@@ -69,6 +69,7 @@ Load documentation on-demand, not upfront:
 | Topic includes: security, injection, prompt injection, MCP threat, agentic attack, vulnerability | `memory/knowledge/security/_context.md` → sub-domains: (see domain dir) |
 | Topic includes: geopolitics, Iran, Russia, Ukraine, NATO, geopolitical, foreign policy, election | `memory/knowledge/geopolitics/_context.md` → sub-domains: (see domain dir) |
 | Topic includes: prediction, forecast, backtest, calibration, Superforecaster, geopolitical prediction | `memory/knowledge/predictions/_context.md` → sub-domains: `backtested-geopolitics.md`, `geopolitics-military-conflict.md`, `market-crypto.md` |
+| Topic includes: cooking, recipe, pairing, spice, technique, protein, starch, pantry, flavor, kitchen, cuisine | `memory/knowledge/cooking/_context.md` → sub-domains: `techniques.md`, `pairings.md`, `eric-preferences.md` |
 
 ## Core Principles
 
