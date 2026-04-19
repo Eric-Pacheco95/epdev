@@ -94,11 +94,11 @@ INPUT:
 
 # VERIFY
 
-- Confirm the output contains all required sections: Executive Summary, Tier 1 -- Blockers, Tier 2 -- Hardening, Tier 3 -- Tech Debt, Strengths, plus the mode-specific section (Recommendations | Onboarding Plan | Extractable Patterns)
-- Confirm no actual secret values are exposed in the output (security rule)
-- Confirm all ISC items follow the format: `- [ ] Criterion | Verify: method`
-- Confirm Tier 1 items have at least one concrete remediation path (not just identification)
-- If any Tier 1 finding involves a secret or credential exposure: flag it immediately before completing the audit
+- Output contains all required sections: Executive Summary, Tier 1 — Blockers, Tier 2 — Hardening, Tier 3 — Tech Debt, Strengths, plus mode-specific section | Verify: Read output, scan for each heading
+- No actual secret values exposed in output (API keys, tokens, passwords) | Verify: Review — confirm output references secret paths only, never values
+- All ISC items follow the format: `- [ ] Criterion | Verify: method` | Verify: `grep '- \[ \]' output` — each hit must contain '| Verify:'
+- Every Tier 1 item has at least one concrete remediation path (not just identification) | Verify: Read Tier 1 — Blockers, confirm each item includes a 'Fix:' or equivalent action
+- Tier 1 secret/credential findings were flagged before audit completion (not buried in output) | Verify: If any Tier 1 item involves secret exposure, confirm it appears before the full output narrative
 
 # LEARN
 

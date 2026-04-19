@@ -74,10 +74,10 @@ INPUT:
 
 # VERIFY
 
-- Confirm the output file exists at `--out` and is non-empty
-- Confirm `{REVIEWER}`, `{TARGET}`, `{DATE}`, `{REPO_HINT}` placeholders are all substituted (grep the output for literal `{` should return zero hits inside the prompt body)
-- Confirm the file is NOT written inside a gitignored path unless Eric explicitly requested it
-- Confirm the mode section matches the flag: dynamic prompts contain "Phase 3 — Dynamic" and harness playbook H1-H8; static prompts do NOT
+- Output file exists at `--out` path and is non-empty | Verify: `ls --out` exits 0 and file size > 0
+- All template placeholders ({REVIEWER}, {TARGET}, {DATE}, {REPO_HINT}) are substituted | Verify: `grep '{' <output-file>` returns zero hits inside the prompt body
+- Output file is NOT written inside a gitignored path (unless explicitly requested) | Verify: `git check-ignore <--out path>` returns no match
+- Mode section matches flag: dynamic → contains 'Phase 3 — Dynamic' and H1-H8 playbook; static → does NOT contain those strings | Verify: `grep 'Phase 3' <output>` for dynamic; absence for static
 
 # LEARN
 
