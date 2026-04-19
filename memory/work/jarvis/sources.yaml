@@ -99,7 +99,7 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
   note: "Replaces OpenAI Blog (403 blocked, no RSS). Feed 404 for 12 days (since 2026-04-05) — persistent failure. OpenAI coverage now via HN + Zvi + OpenAI Changelog. Recommend removal or downgrade to URL-only tier 3."
 
 - name: "Krebs on Security"
@@ -109,7 +109,7 @@
   tier: 2
   frequency: weekly
   last_checked: "2026-04-19"
-  last_notable: "Apr 14 — Patch Tuesday April 2026 (167 patches, SharePoint zero-day, BlueHammer Windows Defender); Apr 7 — Russia hacked routers to steal MS Office tokens; Apr 6 — Germany doxes UNKN (REvil/GandCrab head Shchukin); no new posts Apr 14-19"
+  last_notable: "Feed 404 persistent since Apr 5; OpenAI coverage via HN + Zvi + OpenAI Changelog; recommend removal or downgrade to URL-only tier 3"
 
 - name: "The Hacker News"
   url: "https://thehackernews.com"
@@ -135,8 +135,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Feed 404 (persistent — was 404 at check); last known content pre-Apr 9; LlamaIndex blog RSS dead; monitor via URL directly or HN coverage"
+  last_checked: "2026-04-19"
+  last_notable: "Feed 404 persistent; no new content detected Apr 17-19; monitor via HN coverage only"
   note: "Added 2026-04-09 — LlamaIndex (formerly GPT Index) is the second major Python agent/RAG framework after LangChain; relevant to Jarvis knowledge pipeline design and dispatcher patterns; covers LlamaParse, LlamaHub, and production RAG"
 
 - name: "Hugging Face Blog"
@@ -147,6 +147,16 @@
   frequency: weekly
   last_checked: "2026-04-19"
   last_notable: "Apr 17 — NVIDIA NeMo multilingual OCR v2 (synthetic data); Apr 16 — Ecom-RLVE adaptive verifiable environments for e-commerce agents; Transformers to MLX conversion guide; Sentence Transformers multimodal embedding; Apr 15 — Inside VAKRA: agent reasoning failure modes"
+
+- name: "Cloudflare Blog (Security)"
+  url: "https://blog.cloudflare.com/tag/security/"
+  feed_url: "https://blog.cloudflare.com/tag/security/rss/"
+  type: security
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-19"
+  last_notable: "Apr 14 — MCP governance at scale (Code Mode -94% token cost, shadow MCP detection, GA scoped permissions); Apr 14 — Securing NHI (scannable API tokens, OAuth visibility, resource-scoped permissions); Apr 7 — Post-quantum roadmap (full PQ security target 2029)"
+  note: "Added 2026-04-19 — Cloudflare covers network security, DDoS, MCP governance, and post-quantum migration; MCP governance post is directly Jarvis-relevant; high signal for AI infrastructure security"
 
 - name: "OWASP News"
   url: "https://owasp.org/news"
@@ -228,8 +238,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — Sapphire Sleet macOS campaign (North Korea, fake software updates, credential theft + crypto assets); quantum-safe cryptographic inventory strategy"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 16 — Sapphire Sleet macOS campaign (North Korea, fake software updates, credential theft + crypto assets); quantum-safe cryptographic inventory strategy; no new posts Apr 17-19"
   note: "Added 2026-04-04 — Microsoft MSRC + Defender research; key for supply chain mitigations and Patch Tuesday coverage"
 
 - name: "Google Security Blog"
@@ -238,8 +248,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 10 — Rust DNS parser in Pixel 10 baseband (memory-safe modem firmware); Apr 9 — Device Bound Session Credentials Chrome 146 (hardware-backed cookie theft prevention)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 10 — Rust DNS parser in Pixel 10 baseband (memory-safe modem); Apr 9 — Device Bound Session Credentials Chrome 146 (hardware-backed cookie theft prevention); Apr 2 — Workspace indirect prompt injection mitigations; no new posts Apr 17-19"
   note: "Added 2026-04-05 — Google application security research blog; complements GTIC with defensive architecture and vulnerability research"
 
 - name: "SecurityWeek"
@@ -341,8 +351,8 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — eBPF for deployment safety (circular dep detection); Apr 15 — Copilot CLI personal org command center; developer policy update (transparency 2025); Apr 14 — Hack the AI agent (free security training for agentic AI vulns); Code Security Risk Assessment (free vuln scanning)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 16 — eBPF for deployment safety (circular dep detection); Apr 15 — Copilot CLI personal org command center; Code Security Risk Assessment (free vuln scanning); Apr 14 — Hack the AI Agent (free security training for agentic AI vulns)"
 
 - name: "Cohere Blog"
   url: "https://cohere.com/blog"
@@ -359,8 +369,8 @@
   type: ai_engineering
   tier: 1
   frequency: daily
-  last_checked: "2026-04-17"
-  last_notable: "v0.96.0 (Apr 16) — claude-opus-4-7 support, token budgets, user_profiles; v0.95.0 (Apr 14) — Sonnet 4 and Opus 4 DEPRECATED; v0.94.1 (Apr 13) — streaming fix; v0.94.0 (Apr 10) — Vertex EU region; v0.93.0 (Apr 9) — beta advisor tool"
+  last_checked: "2026-04-19"
+  last_notable: "v0.96.0 (Apr 16) — claude-opus-4-7 support, token budgets, user_profiles; v0.95.0 (Apr 14) — Sonnet 4 and Opus 4 DEPRECATED; v0.94.1 — streaming fix; no new releases Apr 17-19"
   note: "Added 2026-04-05 — Jarvis dispatcher and all claude -p invocations depend on this SDK; deprecation of client-side compaction helpers in v0.89.0 may impact overnight runner"
 
 - name: "Freqtrade Releases"
@@ -389,8 +399,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-17"
-  last_notable: "Apr 14 — GPT-5.4-Cyber (Trusted Access program for cybersecurity sector); ChatGPT voice mode confirmed running older GPT-4o era model; no direct platform.openai.com changelog change detected"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 14 — GPT-5.4-Cyber (Trusted Access program for cybersecurity sector); ChatGPT voice mode running older GPT-4o era model; no new platform changes Apr 17-19"
   note: "Added 2026-04-09 — OpenAI is the primary competitor ecosystem; platform API changes affect agent patterns, tool calling specs, and model availability; URL-only (no RSS detected)"
 
 - name: "MCP Specification (modelcontextprotocol)"
