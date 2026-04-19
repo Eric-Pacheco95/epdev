@@ -74,10 +74,10 @@ INPUT:
 
 # VERIFY
 
-- Confirm all six required output sections are present: CLAIM INVENTORY, EVIDENCE MAP, SUPPORT ASSESSMENT, GAPS AND ASSUMPTIONS, INTERNAL CONSISTENCY, VERDICT
-- Confirm no outside facts, statistics, or sources were introduced that are not in the input
-- Confirm every claim in CLAIM INVENTORY has a corresponding entry in EVIDENCE MAP and SUPPORT ASSESSMENT
-- If any section is missing: regenerate that section before returning output
+- All six required output sections present: CLAIM INVENTORY, EVIDENCE MAP, SUPPORT ASSESSMENT, GAPS AND ASSUMPTIONS, INTERNAL CONSISTENCY, VERDICT | Verify: Read output, scan for each heading
+- No outside facts or sources introduced that are not in the input (hallucination check) | Verify: Review — trace every cited stat/source back to input text
+- Every claim in CLAIM INVENTORY has a corresponding entry in EVIDENCE MAP and SUPPORT ASSESSMENT | Verify: Cross-reference CLAIM INVENTORY claim IDs against other sections
+- No VERDICT issued without a SUPPORT ASSESSMENT rating (prevents unsupported conclusion) | Verify: Read VERDICT and confirm it cites SUPPORT ASSESSMENT ratings
 
 # LEARN
 
