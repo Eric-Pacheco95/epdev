@@ -416,3 +416,103 @@ events:
     status: approved
     at_time_context: >
       GameStop (GME) stock rose from $19 on Jan 12 to $43 on Jan 20, 2021. WallStreetBets subreddit (2M+ members) was coordinating a short squeeze. Short interest was ~140% of the float -- one of the highest in history. Melvin Capital and Citron Research had publicly disclosed large short positions. Ryan Cohen (Chewy founder) joined the board in January, sparking renewed optimism. Institutional shorts had been in place since GME was trading at $4-5 in 2019-2020. Most analysts viewed GME as a failing brick-and-mortar retailer losing to digital gaming. Robinhood and other brokers still allowed both buying and selling.
+
+  - event_id: plan-amazon-hq2-single-city
+    description: "Will Amazon select a single city for its second headquarters (HQ2) from its 20 finalist cities, rather than splitting the location?"
+    domain: planning
+    knowledge_cutoff_date: "2018-01-18"
+    known_outcome: "Amazon announced two HQ2 locations in November 2018 â€” Crystal City in Arlington VA and Long Island City in New York. New York withdrew in February 2019 after political opposition; final single HQ2 is in Arlington VA."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      Amazon announced its HQ2 search in September 2017, receiving proposals from 238 North American cities and regions. On January 18, 2018, Amazon revealed a shortlist of 20 finalists including Toronto, Boston, Washington DC, New York, Chicago, and Austin. Cities were offering billions in tax incentives to win; all public bidding, media framing, and analyst commentary assumed Amazon would choose one winner city. Amazon had given no public indication it was considering a split headquarters arrangement.
+
+  - event_id: plan-boeing-737max-return-2019
+    description: "Will the Boeing 737 MAX return to commercial passenger service before the end of 2019?"
+    domain: planning
+    knowledge_cutoff_date: "2019-07-01"
+    known_outcome: "The 737 MAX did not return to service in 2019. The FAA recertified it on November 18, 2020, and commercial service resumed in late November 2020 â€” over 20 months after grounding."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      The 737 MAX was grounded globally on March 13, 2019, following the Ethiopian Airlines crash â€” the second fatal accident in five months after Lion Air in October 2018. Boeing's CEO was publicly projecting the MAX would return to service by mid-summer 2019, and the FAA's recertification process was described as nearing completion. Boeing had already produced roughly 400 undelivered MAX aircraft, creating enormous financial pressure to return quickly. Analyst consensus expected recertification no later than Q4 2019; the grounding was widely characterized as a manageable software fix.
+
+  - event_id: plan-spacex-starship-orbital-2021
+    description: "Will SpaceX conduct a successful orbital test flight of its Starship vehicle in 2021?"
+    domain: planning
+    knowledge_cutoff_date: "2021-01-01"
+    known_outcome: "No orbital Starship test occurred in 2021. The first orbital attempt took place in April 2023, over two years behind Musk's stated timeline."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      As of January 2021, SpaceX had conducted several dramatic suborbital hop tests with Starship prototypes at Boca Chica, Texas, with SN8 reaching 12.5km in December 2020. Elon Musk had publicly stated an orbital flight attempt was planned for 2021, and SpaceX was visibly stacking Super Heavy booster prototypes at pace. SpaceX's track record on Falcon 9 and Crew Dragon â€” which had just carried NASA astronauts to ISS in May 2020 â€” gave credibility to ambitious timelines. FAA environmental review for Boca Chica was underway but not yet publicly flagged as a significant bottleneck.
+
+  - event_id: plan-us-infrastructure-bill-2019
+    description: "Will the US Congress pass a major infrastructure investment bill in 2019, following the April 2019 White House bipartisan agreement in principle?"
+    domain: planning
+    knowledge_cutoff_date: "2019-04-30"
+    known_outcome: "No infrastructure bill passed in 2019 or 2020. Talks collapsed in May 2019 when Trump walked out of a meeting. The bipartisan Infrastructure Investment and Jobs Act eventually passed in November 2021."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      On April 30, 2019, President Trump, House Speaker Pelosi, and Senate Minority Leader Schumer emerged from a White House meeting announcing a bipartisan agreement in principle on a $2 trillion infrastructure package. Both parties described the meeting publicly as productive; infrastructure was one of the few policy areas with stated cross-aisle interest in the Trump era. No funding mechanism had been agreed upon, and the political backdrop included ongoing House investigations of the president and early 2020 campaign positioning. Multiple prior "infrastructure weeks" had been announced without producing legislation, but this meeting had produced a specific dollar figure, which analysts treated as a meaningful advance.
+
+  - event_id: tech-google-stadia-viability-2020
+    description: "Will Google Stadia establish a viable paid subscriber base exceeding 1 million users by end of 2020?"
+    domain: technology
+    knowledge_cutoff_date: "2019-11-19"
+    known_outcome: "Google never disclosed Stadia subscriber numbers. The service was widely considered a commercial failure and was shut down on January 18, 2023, with Google refunding all game purchases."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      Google launched Stadia on November 19, 2019, as a cloud gaming platform requiring no console â€” games streamed at up to 4K/60fps from Google's global data center infrastructure. Google had positioned Stadia as a potential disruptor to PlayStation and Xbox, backed by a $9.99/month Stadia Pro subscription and exclusive developer partnerships. Initial reviews criticized a thin game library and confusing game-purchase model, but Google's engineering scale and financial commitment were seen as capable of sustaining the platform through a ramp-up period. Cloud gaming was broadly viewed as the future of distribution; Microsoft and Amazon were simultaneously entering the space, validating the category.
+
+  - event_id: tech-5g-nationwide-us-2020
+    description: "Will any major US carrier achieve genuine mid-band or high-band 5G coverage reaching more than 100 million Americans by end of 2020?"
+    domain: technology
+    knowledge_cutoff_date: "2019-12-01"
+    known_outcome: "No US carrier achieved genuine mid-band or high-band 5G at that scale in 2020. T-Mobile launched nationwide 5G in December 2020 but used low-band 600MHz spectrum offering only marginal speed improvements over 4G LTE."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      By December 2019, all major US carriers had announced aggressive 5G rollout plans with full-year 2020 deployment targets. Verizon had launched millimeter-wave 5G in portions of several cities; T-Mobile and Sprint had a pending merger intended to combine mid-band spectrum assets for broader 5G deployment. AT&T was advertising "5GE" on handsets â€” actually LTE-Advanced â€” blurring consumer expectations about actual 5G performance. Carrier CEOs were publicly committing to nationwide 5G availability by year-end 2020, and Samsung and Apple were preparing 5G-capable flagship devices for 2020.
+
+  - event_id: tech-zoom-stock-sustained-2021
+    description: "Will Zoom Video Communications stock remain above $300/share through the end of 2021?"
+    domain: technology
+    knowledge_cutoff_date: "2020-10-01"
+    known_outcome: "Zoom stock fell sharply throughout 2021 as COVID vaccines rolled out and return-to-office accelerated; it closed 2021 at approximately $185/share, well below $300."
+    difficulty: medium
+    status: approved
+    at_time_context: >
+      By October 2020, Zoom's stock had risen from $68 at the start of the year to over $500 â€” a roughly 7x increase driven by pandemic-forced global remote work adoption. Zoom reported 300 million daily meeting participants and quarterly revenue growth of 355% year-over-year. Multiple COVID vaccines were in Phase 3 trials but none had yet received emergency use authorization; the timeline for widespread vaccination and return to office was highly uncertain. Wall Street analysts were sharply divided on whether Zoom's growth represented a durable structural shift to hybrid work or a temporary pandemic artifact.
+
+  - event_id: geo-venezuela-maduro-removal-2019
+    description: "Following recognition of Juan GuaidÃ³ as interim president by over 50 countries including the US, will NicolÃ¡s Maduro be removed from power in Venezuela by end of 2019?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2019-01-23"
+    known_outcome: "Maduro remained in power through 2019 and beyond. Venezuela's military did not defect; GuaidÃ³'s movement gradually lost momentum and international backing faded over subsequent years."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      On January 23, 2019, Venezuelan opposition leader Juan GuaidÃ³ declared himself interim president, and the United States, Canada, and most of Latin America recognized him as legitimate within hours. US National Security Advisor John Bolton was photographed with a notepad reading "5,000 troops to Colombia," fueling speculation of potential military intervention. Venezuela's economy had collapsed with hyperinflation exceeding 1,000,000%, and an estimated 3 million Venezuelans had fled the country; Maduro's domestic approval was extremely low. Historical precedent from Latin American transitions suggested that military defection â€” not mass protest alone â€” was the decisive variable, and early signals were ambiguous about where Venezuela's armed forces would land.
+
+  - event_id: geo-north-korea-denuclearization-2019
+    description: "Will North Korea take verifiable steps toward denuclearization in the 12 months following the June 2018 Singapore Summit agreement with the United States?"
+    domain: geopolitics
+    knowledge_cutoff_date: "2018-06-12"
+    known_outcome: "North Korea took no verifiable denuclearization steps. The follow-up Hanoi Summit in February 2019 collapsed without agreement, and North Korea resumed ballistic missile tests in May 2019."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      On June 12, 2018, President Trump and Kim Jong-un signed a joint statement in Singapore in which North Korea committed to work toward "complete denuclearization of the Korean Peninsula." Trump declared the summit a historic breakthrough and announced a suspension of US-South Korea military exercises as a goodwill gesture; both leaders described the relationship as transformed. The mood was broadly optimistic â€” this was the first sitting US president to meet a North Korean leader, and Kim's willingness to engage was widely treated as unprecedented diplomatic progress. Critics noted the joint statement contained no specific timelines, verification mechanisms, or agreed definition of denuclearization, but the diplomatic momentum was considered real.
+
+  - event_id: mkt-softbank-vision-fund-2-raise
+    description: "Will SoftBank successfully close Vision Fund 2 at or near its announced $108 billion target by end of 2019?"
+    domain: market
+    knowledge_cutoff_date: "2019-07-26"
+    known_outcome: "Vision Fund 2 failed to attract the expected sovereign wealth fund investors. By year-end 2019, only Microsoft had committed $2B externally; SoftBank committed most of the capital itself. The WeWork collapse in Q4 2019 further damaged SoftBank's fundraising narrative and VF2 never approached the $108B target."
+    difficulty: high
+    status: approved
+    at_time_context: >
+      On July 26, 2019, SoftBank announced Vision Fund 2 with a target of $108 billion, nearly identical in size to Vision Fund 1. Vision Fund 1 had been massively oversubscribed â€” Saudi Arabia's Public Investment Fund had committed $45 billion and Abu Dhabi's Mubadala had committed $15 billion â€” establishing SoftBank as the dominant force in late-stage tech investing. However, relations between SoftBank and Saudi Arabia had become publicly strained following the October 2018 murder of journalist Jamal Khashoggi, and both sovereign wealth funds were reconsidering high-profile Western commitments. SoftBank's most prominent recent IPOs â€” Uber and Slack â€” had launched below expected valuations, and WeWork's IPO was in preparation but had not yet filed its S-1.
