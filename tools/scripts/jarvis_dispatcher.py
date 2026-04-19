@@ -873,7 +873,7 @@ def _emit_followon(
     return child
 
 
-def select_next_task(backlog: list[dict]) -> Optional[dict]:
+def select_next_task(backlog: list[dict], exclude_ids: set[str] | None = None) -> Optional[dict]:
     """Select the highest-priority eligible task."""
     candidates = []
     mutated = False
@@ -885,6 +885,8 @@ def select_next_task(backlog: list[dict]) -> Optional[dict]:
             mutated = True
             continue
         if t.get("status") != "pending":
+            continue
+        if exclude_ids and t.get("id") in exclude_ids:
             continue
         if not t.get("autonomous_safe", False):
             continue
@@ -2423,6 +2425,7 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
     inline = bool(task.get("inline"))
     inline_original_branch: str | None = None
     report = {}
+    _acquired_lock = False
 
     try:
         # Update status
@@ -2504,6 +2507,15 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
                 release_lock()
                 return "continue"
 
+        # Acquire global claude -p mutex before worktree creation (fail fast).
+        # Pipeline/local-model paths exit above; this guard covers LLM tasks only.
+        if not dry_run and not acquire_claude_lock("dispatcher"):
+            print("  Another claude -p process is running -- aborting")
+            task["status"] = "pending"
+            write_backlog(backlog)
+            return "stop_lock"
+        _acquired_lock = not dry_run
+
         if not dry_run:
             if inline:
                 # Inline branch -- run worker on REPO_ROOT, no worktree.
@@ -2526,13 +2538,6 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
                     handle_task_failure(task, "Failed to create worktree", backlog)
                     write_backlog(backlog)
                     return "continue"
-
-        # Acquire global claude -p mutex (prevents contention with overnight/autoresearch)
-        if not dry_run and not acquire_claude_lock("dispatcher"):
-            print("  Another claude -p process is running -- aborting")
-            task["status"] = "pending"
-            write_backlog(backlog)
-            return "stop_lock"
 
         # Execute
         task["status"] = "executing"
@@ -2672,7 +2677,8 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         # The consolidation script (run after all overnight jobs finish)
         # merges completed branches into jarvis/review-YYYY-MM-DD and
         # cleans up worktrees + stale branches.
-        release_claude_lock()
+        if _acquired_lock:
+            release_claude_lock()
         release_lock()
         if wt_path and not dry_run:
             if inline:
@@ -2727,14 +2733,15 @@ def dispatch(dry_run: bool = False) -> None:
     print(f"  Backlog: {len(backlog)} tasks")
 
     tasks_attempted = 0
+    lock_deferred: set[str] = set()
 
     while True:
         # Re-read backlog each iteration (status changes from prior task)
         if tasks_attempted > 0:
             backlog = read_backlog()
 
-        # Select next task
-        task = select_next_task(backlog)
+        # Select next task; skip any LLM tasks deferred due to held lock this session
+        task = select_next_task(backlog, exclude_ids=lock_deferred)
         if task is None:
             if tasks_attempted == 0:
                 print("  No eligible tasks. Idle Is Success.")
@@ -2764,7 +2771,10 @@ def dispatch(dry_run: bool = False) -> None:
         result = _dispatch_one(task, backlog, dry_run=dry_run)
         tasks_attempted += 1
 
-        if result != "continue":
+        if result == "stop_lock":
+            lock_deferred.add(task["id"])
+            print(f"  Lock held: deferring {task['id']}, trying next task")
+        elif result != "continue":
             reason = result.replace("stop_", "")
             print(f"  Dispatch loop stopped: {reason} (after {tasks_attempted} task(s))")
             return
