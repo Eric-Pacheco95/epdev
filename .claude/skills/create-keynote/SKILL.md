@@ -64,6 +64,13 @@ Default to **consumer** if unspecified and topic is general, **technical** if to
 
 # STEPS
 
+## Step 0: INPUT CHECK
+
+- If no topic or input is provided: print `'Usage: /create-keynote <topic or input> [--no-images] [--pptx]'` and STOP
+- If input is < 3 words and does not look like a topic title: ask Eric to clarify the presentation topic before proceeding
+
+## Step 1: PRE-FLIGHT
+
 1. **Run pre-flight checks** -- prompt for audience, PPTX, paired decks if not specified.
 
 2. **Identify the real takeaway first** -- what is the ONE practical thing the audience should leave with? Build backwards from that.

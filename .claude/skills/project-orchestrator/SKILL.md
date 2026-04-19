@@ -46,6 +46,14 @@ false
 
 # STEPS
 
+## Step 0: MODE CHECK
+
+- If input is `status` or empty: run full status report (default mode)
+- If input is `prioritize`: focus output on priority recommendations across active projects
+- If input is any other unrecognized argument: print valid modes (`status`, `prioritize`) and STOP
+
+## Step 1: LOAD DATA
+
 - Run `python tools/scripts/tasklist_parser.py --json --pretty` for structured tasklist data (tasks, tiers, phases, completion stats, active projects) -- this replaces manual markdown parsing
 - Run `python tools/scripts/tasklist_parser.py --completion` for a quick completion summary if only a status check is needed
 - Read TELOS context from:

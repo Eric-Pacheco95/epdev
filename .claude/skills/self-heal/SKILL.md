@@ -39,6 +39,13 @@ false
 
 # STEPS
 
+## Step 0: INPUT CHECK
+
+- If no error description or failing command was provided AND no recent failure context is visible in the session: print `'Usage: /self-heal <error description or paste the failing output>'` and STOP
+- If invoked with bare `/self-heal` (no arguments): ask Eric to paste the error or describe what failed before proceeding
+
+## Step 1: IDENTIFY FAILURE
+
 - Identify what failed: read the error output, test result, or failure description
 - Gather context: what was the system doing when it failed? What changed recently?
 - Run the failing test or command again to confirm it's reproducible (don't fix phantom failures)
