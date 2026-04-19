@@ -100,12 +100,12 @@ INPUT:
 
 # VERIFY
 
-- Confirm the generated skill starts with exactly `# IDENTITY and PURPOSE` (no title above it)
-- Confirm the four required sections are present in order: IDENTITY and PURPOSE, STEPS, OUTPUT INSTRUCTIONS, INPUT
-- Confirm the skill ends with `INPUT:` on its own line with no trailing text
-- Confirm the generated skill is not wrapped in fenced code blocks
-- Confirm the generated OUTPUT INSTRUCTIONS inside the skill prescribes Markdown-only output
-- If any structural check fails: regenerate the affected section before returning
+- Generated skill starts with exactly `# IDENTITY and PURPOSE` (no title above it) | Verify: Read first line of generated SKILL.md -- must be `# IDENTITY and PURPOSE`
+- Four required sections present in order: IDENTITY and PURPOSE, STEPS, OUTPUT INSTRUCTIONS, INPUT | Verify: Read generated SKILL.md, scan for each heading in order
+- Skill ends with `INPUT:` on its own line with no trailing text | Verify: Read last line of generated SKILL.md -- must be `INPUT:` only
+- Generated skill is not wrapped in fenced code blocks | Verify: Confirm file does not start or end with triple-backtick fences
+- OUTPUT INSTRUCTIONS section prescribes Markdown-only output | Verify: Read OUTPUT INSTRUCTIONS -- must contain 'Only use Markdown' or equivalent
+- No structural check failures remain in final generated skill | Verify: Re-run all five checks after any regeneration
 
 # LEARN
 

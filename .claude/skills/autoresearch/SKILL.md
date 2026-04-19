@@ -92,12 +92,12 @@ INPUT:
 
 # VERIFY
 
-- Confirm the report file was written to memory/work/jarvis/autoresearch/YYYY-MM-DD_{slug}/report.md
-- Confirm the TSV run log contains one row per iteration with all five fields: iteration, commit_hash, metric_value, delta, status, description
-- Confirm the metric improved or held (never regressed from a kept iteration)
-- Confirm no files outside DATA[scope] were modified
-- Confirm git push was NOT run
-- If any protected file (TELOS, constitutional-rules.md, CLAUDE.md) was touched: immediately alert and surface the relevant commit hash
+- Report file written to `memory/work/jarvis/autoresearch/YYYY-MM-DD_{slug}/report.md` | Verify: `ls memory/work/jarvis/autoresearch/` and confirm report.md exists
+- TSV run log contains one row per iteration with all six fields: iteration, commit_hash, metric_value, delta, status, description | Verify: Read report.md TSV block -- row count matches iteration count, all six columns present
+- Metric never regressed from a kept iteration (every KEEP row has metric_value >= previous KEEP row) | Verify: Read TSV log -- confirm monotonic metric_value for KEEP rows
+- No files outside DATA[scope] were modified | Verify: `git diff --name-only HEAD~N HEAD` -- all changed paths must match DATA[scope] glob
+- Remote was NOT pushed during the run | Verify: Check session output -- no remote push confirmation present
+- No protected files (TELOS, constitutional-rules.md, CLAUDE.md) were touched; if any were, alert was raised immediately | Verify: `git diff --name-only HEAD~N HEAD` must not include protected paths
 
 # LEARN
 

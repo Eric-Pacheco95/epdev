@@ -188,12 +188,12 @@ INPUT:
 
 # VERIFY
 
-- Confirm output contains all seven required sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION
-- Confirm the temp directory memory/work/_arch-review-{timestamp}/ was deleted after synthesis
-- Confirm RECOMMENDATION ends with a concrete next step (specific skill invocation or research action)
-- Confirm total output is under 1500 words
-- If any section is missing or temp dir still exists: fix before returning
-- If execution plan requires any files dependecies or required infrastructure, verify/ensure already exists
+- Output contains all seven required sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION | Verify: Read output, scan for each heading
+- Temp directory `memory/work/_arch-review-{timestamp}/` was deleted after synthesis | Verify: `ls memory/work/` -- no _arch-review-* directory remains
+- RECOMMENDATION ends with a concrete next step (specific skill invocation or research action, not vague guidance) | Verify: Read RECOMMENDATION final sentence -- must name a specific action
+- Total output is under 1500 words | Verify: Word count output -- must be < 1500
+- No missing sections or leftover temp directories after any fix | Verify: Re-scan headings and re-check `ls memory/work/` after fix
+- All file dependencies and required infrastructure referenced in RECOMMENDATION already exist | Verify: Read RECOMMENDATION -- for each referenced path or tool, confirm it exists in the repo
 
 # LEARN
 
