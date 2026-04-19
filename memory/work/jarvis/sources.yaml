@@ -164,7 +164,7 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
 
 - name: "Fabric GitHub Releases"
   url: "https://github.com/danielmiessler/fabric/releases"
@@ -200,7 +200,7 @@
   type: crypto
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
   note: "Replaces CoinDesk (RSS 403 blocked). Feed persistently stale (Jan 2026 most recent entries despite Apr 17 feed timestamp) — 3+ months stale. Candidate for removal; CoinTelegraph covers crypto adequately."
 
 - name: "CoinTelegraph"
@@ -210,7 +210,7 @@
   tier: 2
   frequency: weekly
   last_checked: "2026-04-19"
-  last_notable: "Apr 19 — RaveDAO RAVE token manipulation investigation (Binance/Bitget); Schwab + Citadel exploring prediction markets (no sports); Caitlyn Jenner memecoin lawsuit dismissed; Apr 18 — Kelp Protocol restaking exploit $293M (cross-protocol contagion, 9+ protocols); Solana futures OI +20%"
+  last_notable: "Feed persistently stale (Jan 2026 most recent entries); no new content Apr 17-19; candidate for removal; CoinTelegraph covers crypto adequately"
 
 - name: "Google Cloud Threat Intelligence"
   url: "https://cloud.google.com/blog/topics/threat-intelligence"
@@ -218,8 +218,8 @@
   type: security
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Feed returning JS framework only (persistent — since Apr 7); Apr 3 — UNC1069/North Korea axios npm supply chain (WAVESHAPER.V2); checking via URL only"
+  last_checked: "2026-04-19"
+  last_notable: "Feed returning JS framework only (persistent since Apr 7); Apr 3 — UNC1069/North Korea axios npm supply chain (WAVESHAPER.V2); URL-only check Apr 17-19 — no new posts detected"
   note: "Added 2026-04-04 — Google Mandiant/GTIG primary attribution source; cited in axios compromise, APT reports; feed broken since Apr 7 (JS only)"
 
 - name: "Mistral AI Blog"
@@ -268,7 +268,7 @@
   type: ai_engineering
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
 
 - name: "AWS Machine Learning Blog"
   url: "https://aws.amazon.com/blogs/machine-learning/"
@@ -276,7 +276,7 @@
   type: ai_engineering
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
   last_notable: "No new posts detected Apr 8-9; AWS ML covers SageMaker, Bedrock, Trainium/Inferentia, and enterprise AI patterns"
   note: "Added 2026-04-09 — AWS Bedrock is the primary Claude enterprise deployment path; SageMaker patterns apply to Jarvis production pipeline design; Trainium/Inferentia coverage relevant to inference cost reduction strategies per Miessler Apr 6"
   note: "Added 2026-04-07 — NVIDIA GPU/CUDA releases, inference hardware, TensorRT updates; relevant for on-device AI inference and GPUBreach-class hardware security research; ties to Google AI Edge Gallery (device inference) and RowHammer attack class"
@@ -325,7 +325,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
 
 - name: "Node.js Blog"
   url: "https://nodejs.org/en/blog"
@@ -333,7 +333,7 @@
   type: dev_tools
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
 
 - name: "Google AI Blog"
   url: "https://blog.google/technology/ai/"
@@ -342,7 +342,7 @@
   tier: 2
   frequency: weekly
   last_checked: "2026-04-19"
-  last_notable: "Apr 17 — 7 AI travel tools for summer; Apr 16 — Chrome AI Mode web interaction upgrades; personalized Gemini app image generation with Google Photos"
+  last_notable: "Apr 8 — Rust for CPython progress update April 2026 (Emma Smith); Apr 7 — Python 3.15.0a8, 3.14.4, 3.13.13 released; no new posts Apr 17-19"
   note: "Added 2026-04-19 — Google consumer AI announcements; covers Gemini app, Chrome AI Mode, Google Photos AI, and Google AI product releases separate from DeepMind research"
 
 - name: "GitHub Blog"
@@ -360,7 +360,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
   note: "Added 2026-04-05 — Cohere focuses on enterprise RAG, Command models, Embed; relevant for Jarvis embedding pipeline (nomic-embed-text context); URL-only, no RSS feed detected"
 
 - name: "Anthropic Python SDK Releases"
@@ -439,8 +439,8 @@
   type: crypto
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 9 — Drift Protocol $285M post-mortem (North Korea 6-month social engineering, fake token, no code exploit); Apr 14 — Sumsub KYC platform (4K+ clients, opaque ownership, 18mo undetected breach)"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 18 — Kelp Protocol restaking $293M (cross-protocol contagion, 9+ protocols); Apr 9 — Drift Protocol $285M (North Korea 6-month social engineering); Apr 14 — Sumsub KYC breach (4K+ clients, 18mo undetected)"
   note: "Added 2026-04-05 — Authoritative DeFi exploit post-mortems; relevant to crypto-bot risk model; no RSS, URL-only"
 
 - name: "AI Safety Newsletter (Zvi)"
@@ -451,6 +451,16 @@
   frequency: monthly
   last_checked: "2026-04-19"
   last_notable: "Apr 17 — AI #164 Pre Opus (delayed for Dwarkesh discourse); Claude Mythos safety-card analysis + Project Glasswing (controlled access for vetted cybersecurity firms pre-release); Agentic Coding #7 — Auto Mode parallel agents"
+
+- name: "AI Snake Oil (Sayash Kapoor)"
+  url: "https://www.aisnakeoil.com"
+  feed_url: "https://www.aisnakeoil.com/feed"
+  type: ai_safety
+  tier: 3
+  frequency: monthly
+  last_checked: "2026-04-19"
+  last_notable: "No new posts detected Apr 17-19; Sayash Kapoor (Princeton) covers AI capability hype, benchmark evaluation critique, and AI governance; high signal for grounding AI capability claims"
+  note: "Added 2026-04-19 — AI Snake Oil provides rigorous critique of AI capability claims and benchmarks; valuable counter-signal to hype in AI releases; complements Zvi and Import AI for balanced AI safety picture"
 
 - name: "SANS Internet Storm Center"
   url: "https://isc.sans.edu"
@@ -478,8 +488,8 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
-  last_notable: "VAKRA benchmark (IBM, Apr 15 via HuggingFace) — agent reasoning and failure modes analysis; AI infra credential scanning research (SANS Apr 14 — reconnaissance against Claude/OpenAI/HuggingFace endpoints)"
+  last_checked: "2026-04-19"
+  last_notable: "Feed returning empty items (Apr 19 metadata only, no paper entries in RSS); VAKRA benchmark (IBM, Apr 15) — agent reasoning failure modes; AI infra credential scanning research (SANS Apr 14); Opus 4.6 vs 4.7 token benchmarks (HN Apr 18)"
   note: "Added 2026-04-09 — ArXiv CS.AI preprints are the earliest signal for new attack classes, model capabilities, and safety research before blog/media coverage; filter by keyword (agent, prompt injection, inference, calibration) rather than reading in full; RSS feed available at rss.arxiv.org/rss/cs.AI"
 
 - name: "CISA Known Exploited Vulnerabilities (KEV)"
