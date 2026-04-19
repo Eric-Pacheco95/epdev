@@ -37,6 +37,13 @@ false
 
 # STEPS
 
+## Step 0: INPUT CHECK
+
+- If no input is provided (empty invocation with no context after `/telos-update`): print usage hint `'Usage: /telos-update <session notes, observations, or updates to record>'` and STOP
+- If input is < 10 words: ask Eric for more context before proceeding
+
+## Step 1: READ TELOS STATE
+
 - Read the current state of relevant TELOS files (load only what you need based on the input)
 - Analyze the input for signals that map to TELOS categories:
   - **LEARNED.md**: New observations about Eric's working style, communication preferences, decision patterns, energy patterns

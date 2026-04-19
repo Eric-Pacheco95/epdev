@@ -44,6 +44,13 @@ false
 
 # STEPS
 
+## Step 0: INPUT CHECK
+
+- If no input is provided (empty invocation with no `<input>` text): print the DISCOVERY section as a usage block, then STOP
+- If `<type>` is specified but not one of: brain, workflow, project, investigate, system, auto: print valid types and STOP
+
+## Step 1: UNDERSTAND INPUT
+
 1. **Fully understand the input** — read it completely before starting the diagram.
 
 2. **Identify the visualization type** based on input or explicit argument:
