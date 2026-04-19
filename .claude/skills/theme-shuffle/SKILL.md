@@ -64,6 +64,7 @@ No summary, no explanation beyond what the script prints.
 - `data/theme_state.json` updated with new current/previous values after a shuffle or revert | Verify: `cat data/theme_state.json`
 - --revert applies the theme stored in previous field, not a random pick | Verify: Compare theme_state.json previous field to output theme name
 - --theme <key> output confirms the exact requested key was applied | Verify: Read output for requested key
+- Previous theme was not lost -- `data/theme_state.json` previous field is non-blank after any shuffle or revert | Verify: `cat data/theme_state.json` -- previous field must not be null or empty string
 
 # LEARN
 

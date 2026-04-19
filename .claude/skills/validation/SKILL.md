@@ -167,7 +167,7 @@ Interpret the exit code and deliver the final verdict:
 - All ISC criteria in the PRD were checked (not just a subset) | Verify: Count PASS/FAIL/SKIP rows in output against total ISC items in PRD
 - Failed ISC items have a specific error message (not just 'FAIL') | Verify: Read FAIL rows for diagnostic detail
 - If /self-heal was invoked: the self-heal completed and the failing ISC item was re-verified | Verify: Check self-heal output and re-run result
-- Exit code from isc_validator.py matches the reported status (0 = all pass, 1 = failures) | Verify: `echo 0` after the run
+- Exit code from isc_validator.py was not ignored -- non-zero exit code halts the skill and reports failure | Verify: Confirm session output shows failure state if validator exits non-zero
 
 # LEARN
 

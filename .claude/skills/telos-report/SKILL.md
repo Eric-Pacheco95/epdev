@@ -86,6 +86,7 @@ If the Notion write fails, log the error but do not fail the skill — the local
 - SYSTEM HEALTH table includes all TELOS files (not just recently updated ones) | Verify: Count rows against files in `memory/work/telos/`
 - If Notion write was attempted: confirmation or failure message is present in output | Verify: Check output for 'Report pushed to Notion' or error message
 - Report is dated accurately (uses today's date, not a prior report's date) | Verify: Check report heading date
+- Report was not generated from a cached prior read -- TELOS files were freshly read in this session | Verify: Review session tool calls -- Read calls for TELOS files must precede report generation
 
 # LEARN
 

@@ -298,6 +298,7 @@ Run vitals check now.
 - Collector JSON was the sole data source (no additional file reads for metric values) | Verify: Review — all metric values traceable to collector JSON fields
 - Slack post was attempted; if failed, fallback to `data/logs/vitals_YYYY-MM-DD.md` was executed | Verify: Read session output for Slack confirmation or fallback file path
 - If schema_version != "1.0.0" in collector output, execution was stopped and mismatch was surfaced | Verify: Read session output for schema mismatch error if applicable
+- Raw collector JSON was not included in terminal output or Slack post (exposes internal state) | Verify: Read output -- must contain formatted metrics, not raw JSON blobs
 
 # LEARN
 

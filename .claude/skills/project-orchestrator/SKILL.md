@@ -121,6 +121,7 @@ When reading an external ISC tasklist:
 - Projects with Tier-1 blockers were surfaced prominently in output | Verify: Check output for blocker callouts
 - `tasklist.md` and `PROJECTS.md` are in sync after any updates | Verify: `git diff orchestration/tasklist.md memory/work/PROJECTS.md` (both changed or neither)
 - Each project recommendation traces back to a TELOS Goal or Problem | Verify: Read recommendations for Goal/Problem reference
+- No recommendations were made that expand project scope without reading the current PRD | Verify: Review -- any scope suggestion must cite a specific PRD or tasklist source
 
 # LEARN
 
