@@ -15,6 +15,11 @@ VERIFY
 ## Syntax
 /security-audit [scope]
 
+## Parameters
+- (no args): full security audit (gitignore gate + secrets scan + TELOS + constitutional rules)
+- `secrets-only`: run only the secrets/credential scan step
+- `post-commit`: run the gitignore gate and secrets check appropriate for post-commit context
+
 ## Examples
 - /security-audit
 - /security-audit secrets-only

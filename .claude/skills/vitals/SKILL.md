@@ -20,6 +20,9 @@ OBSERVE
 ## Syntax
 /vitals
 
+## Parameters
+- (no args): collect all metrics, display terminal report, post to Slack
+
 ## Examples
 - /vitals
 
