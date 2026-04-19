@@ -71,10 +71,10 @@ INPUT:
 
 # VERIFY
 
-- Confirm all four required sections are present: OVERVIEW, FALLACY FINDINGS, NON-FALLACIOUS STRENGTHS, RECOMMENDED FIXES
-- Confirm every numbered item in FALLACY FINDINGS has a corresponding entry in RECOMMENDED FIXES
-- Confirm FALLACY FINDINGS has at most 12 items (merge if over limit)
-- If any section is missing or count exceeds 12: fix before returning output
+- All four required sections present: OVERVIEW, FALLACY FINDINGS, NON-FALLACIOUS STRENGTHS, RECOMMENDED FIXES | Verify: Read output, scan for each heading
+- Every numbered item in FALLACY FINDINGS has a corresponding entry in RECOMMENDED FIXES | Verify: Cross-reference FALLACY FINDINGS numbers against RECOMMENDED FIXES
+- FALLACY FINDINGS has at most 12 items | Verify: Count numbered items in FALLACY FINDINGS section
+- No missing sections or oversized FALLACY FINDINGS after any fix pass | Verify: Re-scan section headings and recount after any merge/fix
 
 # LEARN
 

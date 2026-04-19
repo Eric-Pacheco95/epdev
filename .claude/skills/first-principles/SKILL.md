@@ -92,10 +92,10 @@ INPUT:
 
 # VERIFY
 
-- Confirm all seven required sections are present: PROBLEM, KNOWN AND UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION
-- Confirm ALTERNATIVE FRAMINGS contains at least two distinct paths
-- Confirm NEXT TEST OR ACTION is concrete (not vague guidance) and actionable in the current context
-- If any check fails: fix before returning output
+- All seven required sections present: PROBLEM, KNOWN AND UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION | Verify: Read output, scan for each heading
+- ALTERNATIVE FRAMINGS contains at least two distinct paths | Verify: Count distinct path entries in ALTERNATIVE FRAMINGS
+- NEXT TEST OR ACTION is concrete and actionable (not vague guidance like 'explore further') | Verify: Read NEXT TEST OR ACTION — must name a specific experiment, command, or decision
+- No unresolved check failures remain in the output | Verify: Re-run all three checks above after any fix
 
 # LEARN
 
