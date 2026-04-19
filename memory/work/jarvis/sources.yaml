@@ -14,8 +14,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-17"
-  last_notable: "Apr 16 — Claude Opus 4.7 launched (stronger coding, agents, vision, multi-step; xhigh effort tier); Apr 14 — Vas Narasimhan to Long-Term Benefit Trust Board; Apr 6 — Google/Broadcom compute partnership"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 16 — Claude Opus 4.7 launched; Apr 18 — Claude Mythos referenced by Zvi (Project Glasswing cybersecurity initiative for vetted firms); Apr 14 — Vas Narasimhan to Long-Term Benefit Trust Board"
 
 - name: "Claude Code Changelog"
   url: "https://github.com/anthropics/claude-code/releases"
@@ -23,8 +23,8 @@
   type: ai_releases
   tier: 1
   frequency: daily
-  last_checked: "2026-04-17"
-  last_notable: "v2.1.112 (Apr 16) — Opus 4.7 fix; v2.1.111 — Opus 4.7 Auto mode, xhigh effort, /less-permission-prompts, /ultrareview, Windows PowerShell tool; v2.1.110 — /tui fullscreen, push notifications, session recap; v2.1.108 — ENABLE_PROMPT_CACHING_1H, /recap, Skill auto-discovery"
+  last_checked: "2026-04-19"
+  last_notable: "v2.1.114 (Apr 18) — agent team permission dialog crash fix; v2.1.113 (Apr 17) — native binary spawn, sandbox.network.deniedDomains, /ultrareview parallelized, subagent 10min stall timeout, Ctrl+A/E multiline, Windows Ctrl+Backspace; v2.1.112 — Opus 4.7 fix; v2.1.111 — xhigh effort, /less-permission-prompts, PowerShell tool"
 
 - name: "Simon Willison Blog"
   url: "https://simonwillison.net"
@@ -342,6 +342,16 @@
   last_checked: "2026-04-17"
   last_notable: "v0.96.0 (Apr 16) — claude-opus-4-7 support, token budgets, user_profiles; v0.95.0 (Apr 14) — Sonnet 4 and Opus 4 DEPRECATED; v0.94.1 (Apr 13) — streaming fix; v0.94.0 (Apr 10) — Vertex EU region; v0.93.0 (Apr 9) — beta advisor tool"
   note: "Added 2026-04-05 — Jarvis dispatcher and all claude -p invocations depend on this SDK; deprecation of client-side compaction helpers in v0.89.0 may impact overnight runner"
+
+- name: "Freqtrade Releases"
+  url: "https://github.com/freqtrade/freqtrade/releases"
+  feed_url: "https://github.com/freqtrade/freqtrade/releases.atom"
+  type: crypto
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-19"
+  last_notable: "v2026.3 (Mar 30) — Kraken futures support, CrossMarketPairList, Hyperliquid unified account, non-ASCII pair handling, FreqAI early stopping; v2026.2 (Feb 28) — ROI accuracy, MaxDrawdown protection, JWT security"
+  note: "Added 2026-04-19 — Freqtrade is the crypto-bot framework; version upgrades directly affect bot strategy compatibility, exchange support, and FreqAI training pipeline"
 
 - name: "OpenAI Platform Changelog"
   url: "https://platform.openai.com/docs/changelog"
