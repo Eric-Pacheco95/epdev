@@ -89,6 +89,16 @@ WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPE
 
 - Read `orchestration/steering/autonomous-rules.md` — load ISC anti-criterion verification constraints (detector-for-class requirement, vacuous-truth guards) before drafting acceptance criteria
 
+## Step 0.95: BLOCKER-LIST EVIDENCE PRE-CHECK
+
+Before surfacing any PRD blocker to Eric, grep current session context (tool results, file reads, screenshots, deferred-tool registries already loaded, URLs Eric pasted, earlier-turn responses) for evidence that resolves it. Surface to Eric ONLY if:
+- (a) it's a preference / option choice (option A vs B, naming, scope inclusion), or
+- (b) it requires live external verification (billing page, current network state, external system state Claude cannot observe).
+
+If a blocker is evidence-resolvable from session state, resolve it silently and note the resolution in the PRD's ASSUMPTIONS section rather than asking Eric.
+
+**Reference incident:** 2026-04-19 Phase B PRD v2 — initial blocker list had 4 items; 2 were resolvable from evidence already in context (Tavily hard-cap screenshot, MCP matcher from deferred-tools registry). Refined list asked Eric only the 2 genuine preferences, reducing decision load.
+
 ## Step 1: EXTRACT
 
 - Extract the product or feature name, intended audience, and the problem being solved from the input

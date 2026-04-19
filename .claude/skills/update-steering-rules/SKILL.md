@@ -69,6 +69,7 @@ false
   - Explain why it matters (what goes wrong without it)
   - Apply the routing decision tree — name the target file and the destination number that matched
   - Check it doesn't conflict with existing rules in the target file
+- **Pre-encode duplicate check (MANDATORY):** before writing a new rule, grep the target file AND adjacent steering docs (CLAUDE.md + every file listed in the Context Routing table) for overlapping scope, same evidence signals, or identical how-to-apply bullets. If a match is found, UPDATE the existing rule (reinforce evidence list, tighten language) rather than appending a duplicate. Incidental duplicate catches don't scale; each duplicate inflates every cold session's context. Reference: 2026-04-19 — R4 (endpoint-only RCA confidence ceiling) was already encoded as R1 in `incident-triage.md` before writing; caught only by ad-hoc scan.
 - Present all proposed rules for review before writing
 - After approval, add rules to the appropriate file (not always CLAUDE.md — follow the routing)
 - Log the update to `history/decisions/` with rationale

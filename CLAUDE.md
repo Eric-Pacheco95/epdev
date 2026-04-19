@@ -59,6 +59,7 @@ Load documentation on-demand, not upfront:
 | Research & dependency adoption | `orchestration/steering/research-patterns.md` |
 | Cross-project & integrations | `orchestration/steering/cross-project.md` |
 | Trade development | `orchestration/steering/trade-development.md` |
+| Frontend/UI (Tailwind, CSS, jarvis-app styling) | `orchestration/steering/frontend-ui.md` |
 | Model and effort routing | `orchestration/steering/model-effort-routing.md` |
 | Topic includes: OOM, RCA, root cause, post-mortem, drain, memory pressure, incident, thrash, pagefile, preflight | `orchestration/steering/incident-triage.md` |
 | Decision rationale | `history/decisions/` |
@@ -119,6 +120,7 @@ Load documentation on-demand, not upfront:
 - **Tests that exist as proof of a specific behavior must use deterministic setup — not mocks, not best-effort fixtures.** (a) Git-manipulation tests: use real `git init` in `tmp_path`, not mock subprocess — mocks pass on semantically wrong ops (2026-03 `git rm --cached` staged a deletion that passed 9/11 tests and code review). (b) ISC-proof tests: never `pytest.skip` on setup races — skipped counts as pass toward PRD completion; use PID files / `tmp_path` / sync primitives, not stdout buffering for inter-process PID capture (2026-04-18 orphan-prevention-oom — a stdout-buffering race would have silently shipped an unverified cascade-kill guarantee).
 - **When changing sentinel structures (PROTECTED_DIR_PREFIXES, COLLECTOR_TYPES, _OPTIONAL_DEFAULTS, any registry/enum set), grep for test assertions on the old values in the same change.** Stale assertions are invisible until a carry-forward or CI run surfaces them.
 - **Status fields that gate downstream work (PRD APPROVED, VALIDATED, DEPLOY_READY) may only be changed on explicit confirmation** ("yes, approve it", "mark it approved"). Contextual or exploratory questions ("can we unblock X?", "should we do X?") are not approvals — default to DRAFT and ask. Risk window: late-night re-engagement after context compaction. Why: 2026-04-19 advisor catch — "can we unblock /implement-prd?" written as APPROVED into PRD_v4; reverted to DRAFT.
+- **Before BUILD on any proposal that changes trust boundaries, MCP/tool classes, or cross-cutting infrastructure, run `/architecture-review` first.** ADHD build velocity makes premature "X is best / Y won't work" conclusions likely; the three-agent convergence (first-principles + fallacy + red-team) catches different failure classes independently. Sub-rule: before proposing native extraction of any MCP, consult `memory/knowledge/harness/mcp_class_taxonomy.md` — Class 2 (`mcp__claude_ai_*` Anthropic-managed OAuth) is not extractable regardless of review outcome; Class 3 (unknown origin) requires investigation before migration planning. Why: 2026-04-19 MCP-native migration proposal dissolved on arch-review — 5 wrong assumptions caught including OAuth ownership inversion; full native build would have cost ~2 weeks on MCPs Anthropic owns.
 
 ### Eric's Working Style
 
