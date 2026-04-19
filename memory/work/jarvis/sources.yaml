@@ -89,8 +89,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "v0.21.0 (Apr 17) — Hermes Agent integration (learns skills from workflows), Copilot CLI integration; v0.20.8 (Apr 14) — ROCm 7.2.1, Gemma4 renderer/compiler fixes, MLX Conv2d/Pad; v0.20.7 — Gemma quality without thinking"
+  last_checked: "2026-04-19"
+  last_notable: "v0.21.0 (Apr 18) — Hermes Agent (learns skills from workflows, auto-creates reusable skills), Gemma 4 MLX mixed-precision; v0.20.7 (Apr 14) — Gemma quality without thinking, parallel tool calling streaming; v0.20.6 — Gemma 4 tool calling fixes"
   note: "Added 2026-04-09 — Ollama is the de facto local LLM runner; version upgrades enable new model families (Gemma 4, GLM-5.1) and affect on-device inference quality; relevant to Jarvis local model fallback strategy"
 
 - name: "The Batch (DeepLearning.AI)"
@@ -162,8 +162,8 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "v1.4.448 (Apr 17) — Codex empty response fallback fix; v1.4.447 — Claude Opus 4.7 support + 1M context beta; v1.4.446 — --readpattern CLI flag; v1.4.445 — CVE-2025-47273 remediated (setuptools upgrade), non-root container; v1.4.444 — SDK go deps update"
+  last_checked: "2026-04-19"
+  last_notable: "v1.4.448 (Apr 17) — Codex empty response fallback fix + regression tests; v1.4.447 — Claude Opus 4.7 support + 1M context beta, Anthropic SDK v1.37.0; v1.4.446 — --readpattern CLI flag; v1.4.445 — CVE-2025-47273 remediated (non-root container)"
 
 - name: "Latent Space Podcast"
   url: "https://www.latent.space"
@@ -352,6 +352,16 @@
   last_checked: "2026-04-19"
   last_notable: "v2026.3 (Mar 30) — Kraken futures support, CrossMarketPairList, Hyperliquid unified account, non-ASCII pair handling, FreqAI early stopping; v2026.2 (Feb 28) — ROI accuracy, MaxDrawdown protection, JWT security"
   note: "Added 2026-04-19 — Freqtrade is the crypto-bot framework; version upgrades directly affect bot strategy compatibility, exchange support, and FreqAI training pipeline"
+
+- name: "OpenAI Python SDK Releases"
+  url: "https://github.com/openai/openai-python/releases"
+  feed_url: "https://github.com/openai/openai-python/releases.atom"
+  type: ai_engineering
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-19"
+  last_notable: "v2.32.0 (Apr 15) — InputFileContent detail, websocket reconnection, OAuthErrorCode; v2.31.0 (Apr 8) — conversation phase field, short-lived tokens, indices array format; v2.30.0 (Mar 25) — computer action keys field"
+  note: "Added 2026-04-19 — OpenAI SDK tracks API surface changes for agentic patterns and tool calling specs; useful for cross-compatibility awareness in Jarvis dispatcher"
 
 - name: "OpenAI Platform Changelog"
   url: "https://platform.openai.com/docs/changelog"
