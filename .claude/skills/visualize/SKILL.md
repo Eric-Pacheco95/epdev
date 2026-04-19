@@ -132,11 +132,11 @@ INPUT:
 
 # VERIFY
 
-- Confirm the Mermaid diagram is syntactically valid (no unclosed brackets, valid node types, valid edge syntax)
-- Confirm all edge labels have explicit verbs/subjects (not bare arrows)
-- Confirm the HTML viewer file was generated and saved unless --no-html was passed
-- Confirm auto-open was attempted with `start <file>` on Windows
-- If the diagram contains syntax errors: fix before returning output
+- Mermaid diagram is syntactically valid (no unclosed brackets, valid node types, valid edge syntax) | Verify: Read diagram — scan for unclosed `[`, `(`, `{`; verify all edge arrows use valid syntax
+- All edge labels have explicit verbs or subjects (no bare arrows with no label) | Verify: Read diagram edges — each `-->` must have a label
+- HTML viewer file was generated and saved (unless --no-html was passed) | Verify: `ls data/visualizations/*.html` confirms file exists
+- Auto-open was attempted on Windows | Verify: Read session output for start command or equivalent auto-open attempt
+- No syntax errors remain in final diagram | Verify: Re-scan diagram after any fix
 
 # LEARN
 

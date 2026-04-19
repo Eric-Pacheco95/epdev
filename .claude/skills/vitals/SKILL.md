@@ -293,11 +293,11 @@ Run vitals check now.
 
 # VERIFY
 
-- Confirm terminal output is ASCII-only and under 40 lines (Windows cp1252 safety)
-- Confirm terminal output was displayed BEFORE the Slack post
-- Confirm collector JSON was used as the sole data source (no additional file reads)
-- Confirm Slack post was attempted; if it failed, confirm fallback to data/logs/vitals_YYYY-MM-DD.md was executed
-- If schema_version != "1.0.0" in collector output: STOP and surface schema mismatch before proceeding
+- Terminal output is ASCII-only and under 40 lines (Windows cp1252 safety) | Verify: Read output — check for non-ASCII chars and line count
+- Terminal output was displayed before the Slack post | Verify: Check session output order — terminal block precedes Slack confirmation
+- Collector JSON was the sole data source (no additional file reads for metric values) | Verify: Review — all metric values traceable to collector JSON fields
+- Slack post was attempted; if failed, fallback to `data/logs/vitals_YYYY-MM-DD.md` was executed | Verify: Read session output for Slack confirmation or fallback file path
+- If schema_version != "1.0.0" in collector output, execution was stopped and mismatch was surfaced | Verify: Read session output for schema mismatch error if applicable
 
 # LEARN
 

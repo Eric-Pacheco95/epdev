@@ -124,11 +124,11 @@ INPUT:
 
 # VERIFY
 
-- Confirm the pipeline diagram was displayed before execution began
-- Confirm each step's output was used as context for the next step (not dropped silently)
-- Confirm the completion summary shows: pipeline name, steps executed, total skills invoked
-- Confirm the workflow definition was logged for reuse if this is a custom pipeline
-- If any step produced an error: surface it explicitly rather than continuing to the next step with incomplete input
+- Pipeline diagram was displayed before execution began | Verify: Read session output — diagram block precedes first step execution
+- Each step's output was used as context for the next step, not dropped silently | Verify: Read session output — step N output appears as input to step N+1
+- Completion summary shows: pipeline name, steps executed, total skills invoked | Verify: Read completion summary for all three fields
+- Custom pipeline definition was logged for reuse | Verify: Read session output for pipeline log confirmation (or absence if built-in pipeline)
+- No step errors were silently swallowed — each error was surfaced explicitly before the next step | Verify: Check session output for error surfaces if any step failed
 
 # LEARN
 
