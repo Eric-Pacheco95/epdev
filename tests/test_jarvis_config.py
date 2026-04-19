@@ -1,4 +1,4 @@
-"""Tests for jarvis_config.is_protected."""
+"""Tests for jarvis_config.py -- is_protected() and constants."""
 from __future__ import annotations
 
 import sys
@@ -53,3 +53,26 @@ class TestIsProtected:
         f = tmp_path / "CLAUDE.md"
         f.touch()
         assert is_protected(f, tmp_path) is True
+
+    def test_file_in_logs_not_protected(self, tmp_path):
+        d = tmp_path / "logs" / "other"
+        d.mkdir(parents=True)
+        f = d / "notes.md"
+        f.touch()
+        assert is_protected(f, tmp_path) is False
+
+
+class TestConstants:
+    def test_protected_files_is_set(self):
+        assert isinstance(PROTECTED_FILES, set)
+
+    def test_protected_files_contains_key_entries(self):
+        assert "TELOS.md" in PROTECTED_FILES
+        assert "CLAUDE.md" in PROTECTED_FILES
+        assert "constitutional-rules.md" in PROTECTED_FILES
+
+    def test_protected_dir_prefixes_is_set(self):
+        assert isinstance(PROTECTED_DIR_PREFIXES, set)
+
+    def test_telos_dir_in_prefixes(self):
+        assert any("telos" in p for p in PROTECTED_DIR_PREFIXES)
