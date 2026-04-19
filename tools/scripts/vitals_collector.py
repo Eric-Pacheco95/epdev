@@ -38,6 +38,9 @@ EVENTS_DIR = REPO_ROOT / "history" / "events"
 ISC_PRODUCER_REPORT = REPO_ROOT / "data" / "isc_producer_report.json"
 MEMORY_TIMESERIES = REPO_ROOT / "data" / "logs" / "memory_timeseries.jsonl"
 OUTPUT_FILE = REPO_ROOT / "data" / "vitals_latest.json"
+AI_PRICING = REPO_ROOT / "config" / "ai_pricing.json"
+TAVILY_USAGE = REPO_ROOT / "data" / "tavily_usage.jsonl"
+AI_PRICING_STALE_DAYS = 90
 
 # FR-006 thresholds — ratio of peak commit to pagefile-allocated
 MEMORY_WARN_RATIO = 0.70
@@ -614,6 +617,131 @@ def collect_session_usage() -> dict | None:
     }
 
 
+def load_ai_pricing(path: Path = AI_PRICING) -> dict | None:
+    """Load config/ai_pricing.json. Returns None on missing/invalid."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def check_ai_pricing_staleness(
+    pricing: dict | None,
+    now: datetime | None = None,
+    stale_days: int = AI_PRICING_STALE_DAYS,
+) -> str | None:
+    """Return error-key string for errors[] or None if pricing is fresh.
+
+    Return values:
+      - "ai_pricing_stale"        -- verified_at > stale_days old
+      - "ai_pricing_unparseable"  -- verified_at missing or malformed
+      - None                      -- fresh
+    """
+    if not pricing:
+        return None
+    verified_at = pricing.get("verified_at", "")
+    if not verified_at:
+        return "ai_pricing_unparseable"
+    try:
+        dt = datetime.fromisoformat(str(verified_at))
+    except (ValueError, TypeError):
+        return "ai_pricing_unparseable"
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    age_days = ((now or datetime.now(timezone.utc)) - dt).days
+    if age_days > stale_days:
+        return "ai_pricing_stale"
+    return None
+
+
+def apply_gemini_pricing(gemini: dict | None, pricing: dict | None) -> None:
+    """Mutate gemini dict in place: add cost_usd_month, cost_usd_week using Flash output rate.
+
+    Nanobanana image generation is output-dominated; using output rate as an
+    upper-bound estimate. Per-token input/output split not available from the
+    source events (gemini_usage records total_tokens only).
+    """
+    if gemini is None or not pricing:
+        return
+    flash = (pricing.get("gemini") or {}).get("flash") or {}
+    output_rate = flash.get("output_per_1m_usd")
+    input_rate = flash.get("input_per_1m_usd")
+    try:
+        rate = float(output_rate)
+        _ = float(input_rate)
+    except (TypeError, ValueError):
+        return
+    if rate <= 0:
+        return
+    tokens_month = int((gemini.get("month") or {}).get("tokens") or 0)
+    tokens_week = int((gemini.get("week") or {}).get("tokens") or 0)
+    gemini["cost_usd_month"] = round(tokens_month * rate / 1_000_000, 4)
+    gemini["cost_usd_week"] = round(tokens_week * rate / 1_000_000, 4)
+    gemini["pricing_rate_per_1m_usd"] = rate
+    gemini["pricing_assumption"] = "output_rate_upper_bound"
+
+
+def collect_tavily_usage(
+    path: Path = TAVILY_USAGE,
+    pricing: dict | None = None,
+    now: datetime | None = None,
+) -> dict:
+    """Roll up data/tavily_usage.jsonl into monthly/weekly call counts.
+
+    "Month" = current calendar month (from first of month, UTC). "Week" = last 7 days.
+    """
+    now = now or datetime.now(timezone.utc)
+    today_dt = now.date()
+    month_start = today_dt.replace(day=1)
+    week_cutoff = today_dt - timedelta(days=7)
+
+    calls_month = 0
+    calls_week = 0
+    total = 0
+    if path.is_file():
+        try:
+            for line in path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                ts = rec.get("ts", "")
+                try:
+                    dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00")).date()
+                except (ValueError, AttributeError, TypeError):
+                    continue
+                total += 1
+                if dt >= month_start:
+                    calls_month += 1
+                if dt >= week_cutoff:
+                    calls_week += 1
+        except OSError:
+            pass
+
+    free_tier_limit = None
+    if pricing:
+        try:
+            free_tier_limit = (
+                (pricing.get("tavily") or {})
+                .get("researcher_tier", {})
+                .get("monthly_credits")
+            )
+        except (AttributeError, TypeError):
+            free_tier_limit = None
+
+    return {
+        "calls_total": total,
+        "calls_month": calls_month,
+        "calls_week": calls_week,
+        "free_tier_limit": free_tier_limit,
+    }
+
+
 def collect_overnight_streak() -> list[dict]:
     """Compute 7-day overnight run streak from log files."""
     logs_dir = REPO_ROOT / "data" / "logs"
@@ -1003,6 +1131,8 @@ def main() -> None:
     parser.add_argument("--context-files", action="store_true", help="FR-008: emit top-20 .md files Read in last 7 days and exit")
     parser.add_argument("--token-costs", action="store_true", help="FR-009 stub: print blocked-on message and exit")
     parser.add_argument("--reaper-log", action="store_true", help="FR-009 stub: print blocked-on message and exit")
+    parser.add_argument("--tavily-log-file", default=None, help="Override path to tavily_usage.jsonl (defaults to data/tavily_usage.jsonl)")
+    parser.add_argument("--ai-pricing-file", default=None, help="Override path to config/ai_pricing.json (defaults to config/ai_pricing.json)")
     args = parser.parse_args()
 
     # FR-009 stubs — fast path, no full collection.
@@ -1076,6 +1206,22 @@ def main() -> None:
     session_usage = collect_session_usage()
     if session_usage:
         files_scanned.append(str(EVENTS_DIR))
+
+    # --- AI pricing + Tavily rollup (B2b) ---
+    pricing_path = Path(args.ai_pricing_file) if args.ai_pricing_file else AI_PRICING
+    tavily_path = Path(args.tavily_log_file) if args.tavily_log_file else TAVILY_USAGE
+    ai_pricing = load_ai_pricing(pricing_path)
+    if ai_pricing is not None:
+        files_scanned.append(str(pricing_path))
+        stale_key = check_ai_pricing_staleness(ai_pricing)
+        if stale_key:
+            errors.append(stale_key)
+    if session_usage is None:
+        session_usage = {"claude": {}, "gemini": {}}
+    apply_gemini_pricing(session_usage.get("gemini"), ai_pricing)
+    session_usage["tavily"] = collect_tavily_usage(tavily_path, ai_pricing)
+    if tavily_path.is_file():
+        files_scanned.append(str(tavily_path))
 
     isc_producer = collect_isc_producer()
     if isc_producer.get("status") == "OK":
