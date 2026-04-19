@@ -117,10 +117,10 @@ INPUT:
 
 # VERIFY
 
-- Confirm all required output sections are present (SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE AND ABUSE CASES, DATA AND TRUST RISKS, RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS) plus STRIDE sections if --stride was active
-- Confirm every item in RANKED FINDINGS has a corresponding entry in MITIGATIONS (or explicit note that no mitigation exists)
-- Confirm severity ratings are not all the same level (uniform severity across findings signals insufficient discrimination)
-- If any required section is missing: generate it before returning output
+- All required output sections present (SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE AND ABUSE CASES, DATA AND TRUST RISKS, RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS; plus STRIDE sections if --stride was used) | Verify: Read output, scan for each heading
+- Every item in RANKED FINDINGS has a corresponding MITIGATIONS entry (or explicit 'no mitigation' note) | Verify: Cross-reference RANKED FINDINGS item IDs against MITIGATIONS
+- Severity ratings in RANKED FINDINGS span at least two distinct levels (uniform ratings = insufficient discrimination) | Verify: Count distinct severity values in RANKED FINDINGS
+- No required sections missing after any generation pass | Verify: Re-scan output headings after generation
 
 # LEARN
 

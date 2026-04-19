@@ -69,10 +69,10 @@ INPUT:
 
 # VERIFY
 
-- Confirm all four sections are present: DIAGNOSIS, IMPROVED PROMPT, OPTIONAL ADDITIONS, CHECKLIST FOR THE USER
-- Confirm IMPROVED PROMPT contains exactly one fenced code block with the rewritten prompt
-- Confirm DIAGNOSIS lists at least one concrete issue (not generic feedback)
-- If DIAGNOSIS is empty or IMPROVED PROMPT is outside a fence: fix before returning output
+- All four sections present: DIAGNOSIS, IMPROVED PROMPT, OPTIONAL ADDITIONS, CHECKLIST FOR THE USER | Verify: Read output, scan for each heading
+- IMPROVED PROMPT contains exactly one fenced code block with the rewritten prompt | Verify: Count ``` fences in output — must be exactly one pair
+- DIAGNOSIS lists at least one concrete, specific issue (not 'could be clearer') | Verify: Read DIAGNOSIS — must name a specific structural or content problem
+- No empty DIAGNOSIS or unfenced IMPROVED PROMPT after any fix pass | Verify: Re-check DIAGNOSIS content and fence presence after any fix
 
 # LEARN
 
