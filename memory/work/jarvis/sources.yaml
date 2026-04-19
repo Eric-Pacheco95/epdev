@@ -190,8 +190,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "v0.2.0 (Apr 5, 2025) added Llama 4 support (last release in feed); no new releases Apr 9-17; Llama 4 Scout/Maverick/Behemoth still latest known"
+  last_checked: "2026-04-19"
+  last_notable: "v0.2.0 (Apr 5, 2025) — last release in feed; no new releases Apr 17-19; Llama 4 Scout/Maverick still latest known"
   note: "Added 2026-04-09 — Meta Llama open-weight series is the largest open-weight ecosystem; Llama 4 Scout/Maverick/Behemoth announced; Llama models drive open-weight competition with GLM-5, Gemma 4, Mistral; key for Jarvis local model fallback options"
 
 - name: "Blockworks"
@@ -228,8 +228,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "No new posts detected Apr 9-17 via URL check; URL-only monitoring (no RSS); last known: Mar 31 Spaces CLI"
+  last_checked: "2026-04-19"
+  last_notable: "Mar 23 — Voxtral TTS (frontier open-weights TTS, fast, voice agents); no new posts Apr 2026; URL-only monitoring"
   note: "Added 2026-04-05 — Mistral is a key open-model lab (Mixtral, Mistral Large, Codestral, Voxtral); no RSS feed detected, URL-only monitoring"
 
 - name: "Microsoft Security Blog"
@@ -291,8 +291,8 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
-  last_notable: "Apr 2 — Gemma 4 open models (2B-31B, vision, Apache 2.0); no new posts Apr 9-17; Gemini 3.1 Flash TTS noted via Simon Willison Apr 15"
+  last_checked: "2026-04-19"
+  last_notable: "Apr 2026 — Gemma 4 (byte-for-byte most capable open models); Gemini 3.1 Flash TTS (expressive AI speech); Gemini Robotics-ER 1.6 (enhanced embodied reasoning); no new posts with specific Apr 17-19 dates detected"
 
 - name: "Meta AI Blog"
   url: "https://ai.meta.com/blog"
@@ -300,7 +300,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
 
 - name: "Microsoft AI Blog"
   url: "https://news.microsoft.com/source/topics/ai/"
@@ -308,7 +308,7 @@
   type: ai_releases
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
 
 - name: "Schneier on Security"
   url: "https://www.schneier.com"
@@ -512,13 +512,23 @@
   last_notable: "Apr 18 — Flowise GHSA-v38x (Airtable_Agent code injection RCE, Critical); Apr 17 — math-codegen GHSA-p6x5 (RCE string literal injection, Critical); OpenClaw 3 advisories (Feishu webhook fail-closed, webchat media containment, Matrix room auth bypass)"
   note: "Added 2026-04-05 — Reviewed npm advisories; no RSS feed (GraphQL API available). High-value for supply chain and dev-dependency threat tracking."
 
+- name: "Langfuse Releases"
+  url: "https://github.com/langfuse/langfuse/releases"
+  feed_url: "https://github.com/langfuse/langfuse/releases.atom"
+  type: ai_engineering
+  tier: 2
+  frequency: weekly
+  last_checked: "2026-04-19"
+  last_notable: "v3.169.0 (Apr 17) — QueueMetricsRunner fixed-schedule aggregation; v3.168.0 (Apr 17) — AWS Bedrock Bearer Tokens, claude-opus-4-7 pricing, OCI Object Storage native SDK; v3.167.4 (Apr 10) — path-to-regexp security fix"
+  note: "Added 2026-04-19 — Langfuse is the leading open-source LLM observability platform; directly relevant to Jarvis Phase 5 usage tracking (per-model token/cost metrics); claude-opus-4-7 pricing added in v3.168 confirms active Anthropic integration"
+
 - name: "Weights & Biases (W&B) Blog"
   url: "https://wandb.ai/fully-connected"
   feed_url: "https://wandb.ai/fully-connected/feed"
   type: ai_engineering
   tier: 3
   frequency: monthly
-  last_checked: "2026-04-17"
+  last_checked: "2026-04-19"
   note: "Added 2026-04-07 — W&B covers MLOps, experiment tracking, LLM evaluation, and production AI monitoring; relevant to Jarvis overnight metrics and vitals pipeline design; complements LangChain/LangSmith coverage"
 
 - name: "ZhipuAI GLM-4 Releases"
@@ -527,8 +537,8 @@
   type: ai_releases
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "Feed metadata only (no release entries returned); GLM-5.1 still latest known signal (Apr 7 HN); feed may be broken or org renamed (THUDM/GLM-4 -> zai-org/GLM-4)"
+  last_checked: "2026-04-19"
+  last_notable: "Feed metadata only; no new releases; GLM-5.1 still latest; org may be at zai-org/GLM-4 (not THUDM/GLM-4)"
   note: "Added 2026-04-07 — ZhipuAI (THUDM) open-weight models; GLM-4/5 series competitive with frontier on agent benchmarks per LangChain Apr 2 report; GLM-5.1 focused on long-horizon planning; key open-weight competitor to track"
 
 - name: "Google DeepMind Scion"
@@ -537,6 +547,6 @@
   type: ai_engineering
   tier: 2
   frequency: weekly
-  last_checked: "2026-04-17"
-  last_notable: "No new GitHub releases Apr 9-17 (releases.atom 404 — repo may have moved); still monitoring for design patterns post open-source; community exploration ongoing per HN"
+  last_checked: "2026-04-19"
+  last_notable: "No new GitHub releases Apr 17-19; releases.atom 404 persistent; community exploration of design patterns ongoing"
   note: "Added 2026-04-07 — Google DeepMind's agent orchestration research platform open-sourced 2026-04-07; directly relevant to Jarvis Phase 5 autonomous agent design and multi-agent coordination patterns; monitor for design patterns and API"
