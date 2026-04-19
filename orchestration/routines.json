@@ -36,7 +36,7 @@
         "priority": 2,
         "goal_context": "Continuous security posture -- identify any new gaps since last audit",
         "isc": [
-          "A new security audit report exists in history/security/ dated today | Verify: find history/security -name '*audit*' -newer data/routine_state.json",
+          "A new security audit report exists in history/security/ dated today | Verify: find history/security -name '*audit*' -mmin -1440",
           "No CRITICAL findings left unresolved | Verify: Review security audit output for CRITICAL severity items"
         ],
         "context_files": [

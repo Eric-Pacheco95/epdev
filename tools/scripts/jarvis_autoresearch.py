@@ -44,6 +44,8 @@ from tools.scripts.lib.worktree import acquire_claude_lock, release_claude_lock 
 _claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
 CLAUDE_BIN = str(_claude_candidate) if _claude_candidate.is_file() else "claude"
 
+PROMPT_SIZE_LIMIT = 90_000  # hard gate -- never warn-and-proceed past this
+
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
 # NOTE: processed/ subdir was never created in production. Signals land
@@ -900,6 +902,43 @@ def _inject_autoresearch_backlog(metrics: dict, run_dir: Path) -> None:
         print("  WARNING: backlog injection failed: %s" % exc, file=sys.stderr)
 
 
+# -- Prompt size gate --------------------------------------------------------
+
+def _enforce_size_gate(inputs: dict) -> tuple[dict, list[str]]:
+    """Trim oldest signals until total prompt fits within PROMPT_SIZE_LIMIT.
+
+    Signals are sorted newest-first by read_recent_files(), so dropping from
+    the end removes the oldest entries first.  Falls back to raw_signals when
+    signals list is exhausted.  Returns (trimmed_inputs, dropped_filenames).
+    """
+    import copy
+    current = copy.deepcopy(inputs)
+    dropped: list[str] = []
+
+    while True:
+        sys_p, usr_p = build_analysis_prompt(current)
+        if len(sys_p) + len(usr_p) <= PROMPT_SIZE_LIMIT:
+            break
+        if current["signals"]:
+            entry = current["signals"].pop()  # oldest (end of newest-first list)
+            dropped.append(entry["name"])
+        elif current["raw_signals"]:
+            entry = current["raw_signals"].pop()
+            dropped.append(entry["name"])
+        else:
+            # Nothing left to drop — proceed and warn
+            sys_p, usr_p = build_analysis_prompt(current)
+            total = len(sys_p) + len(usr_p)
+            print(
+                "  WARNING: prompt still %d chars after exhausting all signals "
+                "(TELOS/synthesis files may be the source). Proceeding." % total,
+                file=sys.stderr,
+            )
+            break
+
+    return current, dropped
+
+
 # -- Main --------------------------------------------------------------------
 
 def main() -> int:
@@ -964,14 +1003,13 @@ def main() -> int:
 
     # Build prompts and call API
     print("\nAnalyzing TELOS vs signal evidence...")
+    inputs, dropped = _enforce_size_gate(inputs)
+    if dropped:
+        print("  Prompt exceeded %dK — dropped %d oldest signal(s): %s" % (
+            PROMPT_SIZE_LIMIT // 1000, len(dropped), ", ".join(dropped)),
+            file=sys.stderr)
     system, user = build_analysis_prompt(inputs)
-
-    # Prompt size guard (100K chars ~ 25K tokens)
-    total_chars = len(system) + len(user)
-    if total_chars > 100000:
-        print("  WARNING: Prompt is %d chars (>100K). "
-              "Consider reducing signal window." % total_chars,
-              file=sys.stderr)
+    print("  Prompt size: %d chars" % (len(system) + len(user)))
 
     try:
         response = call_claude(user, system)
