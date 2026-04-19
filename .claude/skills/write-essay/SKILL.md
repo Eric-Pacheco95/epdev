@@ -80,10 +80,10 @@ INPUT:
 
 # VERIFY
 
-- Confirm the essay contains no setup phrases ("In conclusion", "To summarize", "It's worth noting that", "In a world where...")
-- Confirm no title header was added unless the prompt explicitly requested one
-- Confirm the JARVIS INTEGRATION block (separator + Signal + TELOS relevance) is appended after the essay
-- If banned phrases are present: rewrite the affected sentences before returning output
+- Essay contains no banned setup phrases ("In conclusion", "To summarize", "worth noting", "In a world where") | Verify: `grep -i 'in conclusion\|to summarize\|worth noting\|in a world' <output>`
+- No `# Title` header added unless explicitly requested in prompt | Verify: Read first line of essay — must not be a markdown header
+- JARVIS INTEGRATION block (separator + Signal + TELOS relevance) appended after essay body | Verify: grep 'Signal' output — block and separator must be present
+- No banned phrases remain after any rewrite pass | Verify: Re-run grep check after rewrites complete
 
 # LEARN
 

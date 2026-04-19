@@ -106,10 +106,10 @@ INPUT:
 
 # VERIFY
 
-- Confirm the task was appended to orchestration/backlog.json (not overwritten)
-- Confirm all required fields are present in the task entry: id, title, priority, project, created_at
-- Confirm the task JSON is valid (no syntax errors)
-- If backlog.json is missing or invalid JSON: repair it before appending rather than overwriting silently
+- Task appended to `orchestration/backlog.json` without overwriting existing entries | Verify: `python -m json.tool orchestration/backlog.json` then confirm last entry matches submitted task
+- Last entry in backlog.json has all required fields: id, title, priority, project, created_at | Verify: Read last entry in `orchestration/backlog.json`
+- backlog.json is valid JSON after write | Verify: `python -m json.tool orchestration/backlog.json` exits 0
+- No silent data loss: if backlog.json was missing or invalid, it was repaired before append, not silently replaced | Verify: Read backlog.json entry count — must be ≥ previous count
 
 # LEARN
 
