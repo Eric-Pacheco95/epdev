@@ -63,7 +63,7 @@ Crypto-bot is re-scoped from a 35-bug activity list (v3.0) to an outcome-shaped 
 
 Requirements grouped by phase. Phase 3+ carry ⚠️ arch-review gates from `history/decisions/2026-04-17-arch-review-cryptobot-autonomy.md`; do not build gated items until conditions close.
 
-### Phase 1 — ALIVE (target 2026-05-01)
+### Phase 1 — ALIVE (target 2026-05-01) `| model: sonnet |`
 
 - **FR-P1-01:** Root-cause 77/77 dead-poll state documented in `history/decisions/YYYY-MM-DD_cryptobot-revival.md` before any restart is attempted.
 - **FR-P1-02:** Dead-man's switch alerts_fired_count increments AND emits Slack alert to `#epdev` (not `#jarvis-inbox`) within 60 min of induced 45-min API-down window.
@@ -74,7 +74,7 @@ Requirements grouped by phase. Phase 3+ carry ⚠️ arch-review gates from `his
 - **FR-P1-07:** Verify Grok P2 cleanup status from v3.0 (FR-P0-05/06/07/08) — if scoring pipeline still references Grok/Apify, complete cleanup; if already done, record "cleanup complete, confirmed 2026-04-17" in decisions. No rework if done.
 - **FR-P1-08:** Startup path in `daily-agent-run.bat` points to `C:\Users\ericp\Github\crypto-bot` (v3.0 FR-P0-03 verification; fix if drifted).
 
-### Phase 2 — TRADING (target 2026-Q2, complete by 2026-06-30)
+### Phase 2 — TRADING (target 2026-Q2, complete by 2026-06-30) `| model: sonnet |`
 
 **Correctness (from v3.0 triage):**
 - **FR-P2-01:** Short-position P&L computed with inverted sign on close (v3.0 FR-P0-09).
@@ -110,7 +110,7 @@ Requirements grouped by phase. Phase 3+ carry ⚠️ arch-review gates from `his
 **Investigation:**
 - **FR-P2-24:** LP events P4 diagnosed (v3.0 FR-P0-34); either revived with working WSS or explicitly disabled with rationale written to `history/decisions/` and removed from corroboration matrix.
 
-### Phase 3 — LEARNING (target 2026-Q3) ⚠️ GATED on arch-review #2
+### Phase 3 — LEARNING (target 2026-Q3) ⚠️ GATED on arch-review #2 `| model: opus |`
 
 - **FR-P3-01:** Attribution ledger infrastructure writes `data/attribution/{signal_id}_{trade_id}.jsonl` per closed trade; schema includes signal source, weight at trade time, trade outcome, counterfactual estimate.
 - **FR-P3-02:** Weight-update cycle gated by shuffle-test: permute signal-to-trade mapping, recompute attribution; if permuted magnitude ≥50% of real, no weight write that cycle.
@@ -125,7 +125,7 @@ Requirements grouped by phase. Phase 3+ carry ⚠️ arch-review gates from `his
 - **FR-P3-11:** Closed-loop smoke test: inject synthetic attribution delta, observe weight change within ≤24h, observe forward-trade selection change.
 - **FR-P3-12:** 2026-10-17 6-month checkpoint evaluated against 4-of-6 vector gate (see ACCEPTANCE CRITERIA below); pivot or continue per pre-committed rule.
 
-### Phase 4 — SELF-IMPROVING (target 2026-Q4) ⚠️ GATED on arch-review #2
+### Phase 4 — SELF-IMPROVING (target 2026-Q4) ⚠️ GATED on arch-review #2 `| model: sonnet |`
 
 - **FR-P4-01:** Jarvis improvement-PR pipeline operational: `/research` → `/create-prd` → `/implement-prd` (cross-repo worktree into crypto-bot) → `gh pr create`.
 - **FR-P4-02:** Each Jarvis-authored PR carries pre-registered expected P&L delta AND forward window length in PR template.
@@ -142,7 +142,7 @@ Requirements grouped by phase. Phase 3+ carry ⚠️ arch-review gates from `his
 - **FR-P4.5-03:** Fill-rate parity check — live 30-day fill rate within ±10% of backtest fill rate; deviation outside band triggers bridge-phase extension.
 - **FR-P4.5-04:** Precondition check: paper balance ≥$300K sustained ≥14 days before bridge phase entry.
 
-### Phase 5 — AUTONOMOUS (target 2027-Q1/Q2) ⚠️ GATED on arch-review #1, #3, #4, #5
+### Phase 5 — AUTONOMOUS (target 2027-Q1/Q2) ⚠️ GATED on arch-review #1, #3, #4, #5 `| model: opus |`
 
 - **FR-P5-01:** Guardrail stack deployed: (a) forward-P&L gate vs pre-registered delta, (b) cumulative drift meter, (c) cost ceiling (API $/day), (d) security scrub (no secrets / PII / .env in PR), (e) profit delta floor, (f) fill-rate parity, (g) walk-forward CI harness with strict t-1 gap, (h) drain-to-zero gate — no auto-merge while positions open.
 - **FR-P5-02:** $500 real-capital cap enforced at exchange sub-account funding level with scoped API key (no-transfer, no-withdraw permissions). Repo-level cap file is advisory only; hardware-level cap is the enforcement.
@@ -356,4 +356,4 @@ Evaluated on 2026-10-17 using data through that date. Continue to Phase 4 only i
 
 ---
 
-**Next step:** `/implement-prd memory/work/crypto-bot/PRD_v4.md` — but first, resolve Open Questions 1 (Phase 1 diagnosis prerequisite) and 6 (model routing) before handing to the execution chain. Questions 3, 4, 5 can be deferred to their phase's pre-build sprint.
+**Next step:** `/implement-prd memory/work/crypto-bot/PRD_v4.md` — OQ1 RESOLVED 2026-04-19 (`history/decisions/2026-04-19_cryptobot-revival.md`); OQ6 RESOLVED 2026-04-19 (model pins applied above). Questions 3, 4, 5 deferred to their phase's pre-build sprint. UNBLOCKED.

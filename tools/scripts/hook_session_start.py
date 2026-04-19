@@ -199,6 +199,10 @@ def _recent_security_events(days: int = 7) -> list[str]:
     return [f"  - {name}" for _, name in events[:10]]
 
 
+_CRYPTO_DMS_STATE_FILE = REPO_ROOT / "data" / "crypto_bot_dms_state.json"
+_CRYPTO_DOWNTIME_RED_FLAG_H = 24
+
+
 def _crypto_bot_status() -> list[str]:
     """Load crypto-bot status from data/crypto_bot_state.json for morning briefing (FR-003)."""
     state_file = REPO_ROOT / "data" / "crypto_bot_state.json"
@@ -210,11 +214,24 @@ def _crypto_bot_status() -> list[str]:
         return ["  (state file unreadable)"]
 
     ts = state.get("timestamp", "unknown")
-    # Staleness check: >30 min = stale
+    now = datetime.now(timezone.utc)
+
+    # Red-flag: unacknowledged downtime >24h (FR-P1-06)
     lines: list[str] = []
     try:
+        dms = json.loads(_CRYPTO_DMS_STATE_FILE.read_text(encoding="utf-8")) if _CRYPTO_DMS_STATE_FILE.is_file() else {}
+        if dms.get("incident_active") and dms.get("last_success"):
+            last_success_dt = datetime.fromisoformat(dms["last_success"])
+            hours_down = (now - last_success_dt).total_seconds() / 3600
+            if hours_down >= _CRYPTO_DOWNTIME_RED_FLAG_H:
+                lines.append(f"  *** RED FLAG: API DOWN {hours_down:.0f}h (since {dms['last_success'][:19]}Z) ***")
+    except (json.JSONDecodeError, OSError, ValueError, TypeError):
+        pass
+
+    # Staleness check: >30 min = stale
+    try:
         poll_dt = datetime.fromisoformat(ts)
-        age_min = (datetime.now(timezone.utc) - poll_dt).total_seconds() / 60
+        age_min = (now - poll_dt).total_seconds() / 60
         if age_min > 30:
             lines.append(f"  STALE -- last poll {ts} ({age_min:.0f} min ago)")
     except (ValueError, TypeError):

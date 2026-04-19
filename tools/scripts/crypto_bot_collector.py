@@ -286,7 +286,7 @@ def _load_dms_state() -> dict:
             return json.loads(DMS_STATE_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             pass
-    return {"consecutive_failures": 0, "alerts_sent": 0, "incident_active": False, "last_success": None}
+    return {"consecutive_failures": 0, "alerts_sent": 0, "incident_active": False, "last_success": None, "last_alert_at": None}
 
 
 def _save_dms_state(state: dict) -> None:
@@ -295,15 +295,19 @@ def _save_dms_state(state: dict) -> None:
     DMS_STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
 
+DMS_REALERT_INTERVAL_S = 86400  # 24h re-alert cadence while incident_active
+
+
 def dead_mans_switch(status_ok: bool, snapshot: dict) -> None:
     """Check dead-man's switch and send Slack alerts if needed.
 
     Rules:
     - 3 consecutive /api/status failures -> Slack alert
-    - Max 3 alerts per incident
+    - Max 3 initial alerts per incident; then re-alert every 24h while still down
     - Reset counter on recovery; send recovery message
     """
     dms = _load_dms_state()
+    now = datetime.now(timezone.utc)
 
     if status_ok:
         # Recovery
@@ -314,10 +318,10 @@ def dead_mans_switch(status_ok: bool, snapshot: dict) -> None:
                 severity="routine",
             )
             dms = {"consecutive_failures": 0, "alerts_sent": 0, "incident_active": False,
-                   "last_success": datetime.now(timezone.utc).isoformat()}
+                   "last_success": now.isoformat(), "last_alert_at": None}
         else:
             dms["consecutive_failures"] = 0
-            dms["last_success"] = datetime.now(timezone.utc).isoformat()
+            dms["last_success"] = now.isoformat()
     else:
         dms["consecutive_failures"] = dms.get("consecutive_failures", 0) + 1
 
@@ -325,9 +329,11 @@ def dead_mans_switch(status_ok: bool, snapshot: dict) -> None:
             if not dms.get("incident_active"):
                 dms["incident_active"] = True
                 dms["alerts_sent"] = 0
+                dms["last_alert_at"] = None
+
+            last_success = dms.get("last_success", "unknown")
 
             if dms.get("alerts_sent", 0) < DMS_MAX_ALERTS_PER_INCIDENT:
-                last_success = dms.get("last_success", "unknown")
                 _send_dms_alert(
                     "ALERT: crypto-bot API unreachable",
                     (
@@ -338,6 +344,30 @@ def dead_mans_switch(status_ok: bool, snapshot: dict) -> None:
                     severity="critical",
                 )
                 dms["alerts_sent"] = dms.get("alerts_sent", 0) + 1
+                dms["last_alert_at"] = now.isoformat()
+            else:
+                # Initial cap hit — re-alert every 24h while still down
+                last_alert_at = dms.get("last_alert_at")
+                elapsed = None
+                if last_alert_at:
+                    try:
+                        elapsed = (now - datetime.fromisoformat(last_alert_at)).total_seconds()
+                    except (ValueError, TypeError):
+                        elapsed = None
+
+                if elapsed is None or elapsed >= DMS_REALERT_INTERVAL_S:
+                    hours_down = round(dms["consecutive_failures"] * POLL_INTERVAL_S / 3600, 1)
+                    _send_dms_alert(
+                        "STILL DOWN: crypto-bot API unreachable",
+                        (
+                            f"GET /api/status still failing — {dms['consecutive_failures']} polls "
+                            f"({hours_down}h).\n"
+                            f"Last successful poll: {last_success}\n"
+                            f"Re-alerting every 24h."
+                        ),
+                        severity="critical",
+                    )
+                    dms["last_alert_at"] = now.isoformat()
 
     _save_dms_state(dms)
 
