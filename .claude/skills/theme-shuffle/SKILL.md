@@ -56,3 +56,21 @@ Print the script output as-is. Add one line:
 > Reopen your Windows Terminal tab to activate the theme.
 
 No summary, no explanation beyond what the script prints.
+
+# VERIFY
+
+- Script exited without Python errors (non-zero exit code → print error and STOP) | Verify: Check script exit code
+- Applied theme name appears in script output (not --list mode) | Verify: Read output for theme key name
+- `data/theme_state.json` updated with new current/previous values after a shuffle or revert | Verify: `cat data/theme_state.json`
+- --revert applies the theme stored in previous field, not a random pick | Verify: Compare theme_state.json previous field to output theme name
+- --theme <key> output confirms the exact requested key was applied | Verify: Read output for requested key
+
+# LEARN
+
+- If --revert is invoked immediately after a shuffle, the randomly selected theme was disliked — track which themes trigger frequent reverts to build a per-theme dislike signal
+- If the same theme appears repeatedly in random rotations, investigate the shuffle algorithm for selection bias
+- If `data/theme_state.json` drifts from the actual Windows Terminal theme (current ≠ active), a manual theme change bypassed this script — surface as a signal for adding an OS-level read-back check
+
+# INPUT
+
+INPUT:
