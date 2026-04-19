@@ -114,6 +114,7 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
   6. If still failing after cycle 3: log the failure to `memory/learning/failures/`, mark ISC item as BLOCKED with diagnosis notes, and move to next item — do NOT silently skip
 - Track loop iterations: after BUILD completes, report in IMPLEMENTATION LOG how many items needed 0, 1, 2, or 3 fix cycles (this measures loop value)
 - **Mid-build commit checkpoint**: After every 3-4 completed ISC items, prompt: "Checkpoint: {N} ISC items verified. Run /commit?" Do not auto-commit. If Eric declines, continue.
+- **Verify script hygiene**: any verify script that reads a fixed file path must expose a `--log-file` (or `--input-file`) CLI override defaulting to the production path — tests point at `tmp_path`, not production data. Pure helper functions must accept primitive inputs only (pagefile_budget_bytes, ticks, timestamps) — never call `psutil`/WMI/CIM internally; only `main()` does I/O and passes concrete values to helpers.
 
 ### REVIEW GATE: Deterministic prescan + cross-model review
 
