@@ -78,14 +78,17 @@ All IDs sourced from `memory/work/notion_brain.md`. Load that file first to conf
 
 ## Mode: inbox
 
-Check for new Inbox entries (typed notes, links, quick thoughts). For URL analysis, use `/absorb`. For voice dictation, use `#jarvis-voice`.
+Check for new Inbox entries — typed notes, links, quick thoughts, and voice transcripts in the Captures section. For URL analysis, use `/absorb`.
 
 1. Fetch Inbox page via `notion-fetch` with ID `32fbf5ae-a9e3-8198-9975-cbc6293c8690`
-2. Identify any entries not marked as processed and not voice transcripts
-3. For each: extract signals, rate 1–10, write to `memory/learning/signals/`
-4. Route to appropriate Brain section via `notion-update-page` or `notion-move-pages`
-5. Mark entries as processed in Inbox
-6. Log to `history/changes/notion_sync.md`
+2. Identify the **Captures** section: find the h2 heading block with text "Captures"; collect all blocks below it until the next heading or end of page; skip the italic instruction line and horizontal divider immediately after the heading
+3. Group Captures entries: each entry begins with a timestamp paragraph (e.g. "Mar 26, 2026 at 8:12 PM") followed by one or more transcript paragraphs; skip entries whose timestamp paragraph contains ✅ (already processed)
+4. For each unprocessed Captures entry: extract signals, rate 1–10, write to `memory/learning/signals/` with `Source: notion-voice-capture` and `Context: notion-inbox-captures`
+5. Identify non-Captures entries (paragraphs above the Captures heading) not marked as processed; for URL analysis, route to `/absorb`
+6. For each unprocessed non-Captures entry: extract signals, rate 1–10, write to `memory/learning/signals/` with `Source: notion-inbox`
+7. Route high-signal entries (rating ≥ 7) to appropriate Brain sections via `notion-update-page` or `notion-move-pages`
+8. Mark processed entries: append ✅ to each processed timestamp paragraph (Captures) or entry text (typed) via `notion-update-page`
+9. Log to `history/changes/notion_sync.md`
 
 ## Mode: journal
 
@@ -151,7 +154,7 @@ Write each signal as `memory/learning/signals/{date}_{slug}.md`:
 - Date: {YYYY-MM-DD}
 - Rating: {1-10}
 - Category: {pattern|insight|idea|anomaly|improvement}
-- Source: notion-journal | notion-goals | notion-inbox
+- Source: notion-journal | notion-goals | notion-inbox | notion-voice-capture
 - Observation: {what was expressed — factual, close to Eric's words}
 - Implication: {what this means for Jarvis or Eric's goals}
 - Context: {which Notion page, approximate date of entry}
