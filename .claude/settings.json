@@ -1,6 +1,6 @@
 {
   "enableAllProjectMcpServers": true,
-  "disabledMcpjsonServers": ["claude_ai_Notion"],
+  "disabledMcpjsonServers": [],
   "permissions": {
     "allow": [
       "Read(*)",
