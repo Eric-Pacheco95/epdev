@@ -1,6 +1,9 @@
 # Register Jarvis-OrphanSnapshot as a Task Scheduler task.
-# Run this ONCE (Admin not required -- uses RunLevel Limited per platform-specific.md rule).
-# Uses S4U logon -- runs without requiring a user session.
+# Run this ONCE from an elevated PowerShell. S4U logon requires admin to grant
+# "Log on as a batch job" to the target user; RunLevel=Limited governs the
+# runtime principal, not the registration privilege. See platform-specific.md
+# "Register-ScheduledTask with -LogonType S4U must be run from an elevated
+# PowerShell" rule. Uses S4U logon -- runs without requiring a user session.
 #
 # Success gate for orphan-prevention-oom PRD-1 Phase 4.
 
