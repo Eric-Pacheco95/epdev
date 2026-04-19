@@ -1,9 +1,9 @@
 ---
 slug: memory-observability
 created: 2026-04-18
-status: draft
+status: Phase 1 COMPLETE (Phases 2-5 pending)
 priority: P1
-phase: PLAN
+phase: PHASE1-COMPLETE
 parent-incident: 2026-04-18 overnight OOM preflight abort + 13:00 live thrash (119.69 GB commit)
 related-prds: memory/work/orphan-prevention-oom/PRD.md (PRD-1, ships first)
 context-sources:
@@ -74,10 +74,10 @@ Close the observability blind spot that made the 2026-04-18 overnight OOM invisi
 
 ### Phase: Ship FR-001 / FR-002 / FR-003 (sampler + schedule)
 
-- [ ] `tools/scripts/memory_sampler.py` exists and is invokable as `python tools/scripts/memory_sampler.py` with no args, appending exactly one line to `data/logs/memory_timeseries.jsonl` per invocation | Verify: Test — run once, assert file grows by exactly 1 line and JSON parses with all required fields | model: sonnet |
-- [ ] Every JSONL line contains the required keys `ts`, `commit_bytes_sum`, `pagefile_free_gb`, `ram_free_gb`, `top5_procs` with non-null values | Verify: Custom — `python tools/scripts/verify_sampler_schema.py` reads last 10 lines, exits 1 if any key missing or null | model: sonnet |
-- [ ] Both scheduled tasks `Jarvis-MemorySampler-Night` and `Jarvis-MemorySampler-Day` are registered with correct triggers and MultipleInstances=IgnoreNew | Verify: `schtasks /query /tn "Jarvis-MemorySampler-Night" /v /fo LIST` and day equivalent — both return active schedules matching the documented cadence | model: haiku |
-- [ ] **Anti-criterion**: Sampler source contains zero occurrences of `CimInstance`, `WmiObject`, `Get-Counter`, or `Win32_` class names | Verify: `grep -En "CimInstance|WmiObject|Get-Counter|Win32_" tools/scripts/memory_sampler.py` exits non-zero with empty output | model: haiku |
+- [x] `tools/scripts/memory_sampler.py` exists and is invokable as `python tools/scripts/memory_sampler.py` with no args, appending exactly one line to `data/logs/memory_timeseries.jsonl` per invocation | Verify: Test — run once, assert file grows by exactly 1 line and JSON parses with all required fields | model: sonnet |
+- [x] Every JSONL line contains the required keys `ts`, `commit_bytes_sum`, `pagefile_free_gb`, `ram_free_gb`, `top5_procs` with non-null values | Verify: Custom — `python tools/scripts/verify_sampler_schema.py` reads last 10 lines, exits 1 if any key missing or null | model: sonnet |
+- [x] Both scheduled tasks `Jarvis-MemorySampler-Night` and `Jarvis-MemorySampler-Day` are registered with correct triggers and MultipleInstances=IgnoreNew | Verify: `schtasks /query /tn "Jarvis-MemorySampler-Night" /v /fo LIST` and day equivalent — both return active schedules matching the documented cadence | model: haiku |
+- [x] **Anti-criterion**: Sampler source contains zero occurrences of `CimInstance`, `WmiObject`, `Get-Counter`, or `Win32_` class names | Verify: `grep -En "CimInstance|WmiObject|Get-Counter|Win32_" tools/scripts/memory_sampler.py` exits non-zero with empty output | model: haiku |
 
 ### Phase: Ship FR-004 (coverage verifier)
 
