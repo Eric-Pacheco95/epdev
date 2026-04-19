@@ -88,6 +88,7 @@ Before launching the 3 review agents, collect live-system evidence so review age
 ## Step 2: LAUNCH PARALLEL AGENTS
 
 - Create a temp directory for agent outputs: `memory/work/_arch-review-{timestamp}/`
+- Spawn with `model="claude-sonnet-4-6"` on every Agent() call per `memory/knowledge/harness/subagent_model_routing.md` (adversarial review downgrade).
 - Launch 3 Agent tool calls simultaneously in a single message (parallel — not sequential). Include full proposal context in every agent prompt.
 
   **Agent 1: First-Principles** — What's the fundamental problem, irreducible requirements, wrong assumptions, simplest solution? Examine each component independently.

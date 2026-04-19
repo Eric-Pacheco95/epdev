@@ -70,6 +70,7 @@ Load documentation on-demand, not upfront:
 | Topic includes: geopolitics, Iran, Russia, Ukraine, NATO, geopolitical, foreign policy, election | `memory/knowledge/geopolitics/_context.md` → sub-domains: (see domain dir) |
 | Topic includes: prediction, forecast, backtest, calibration, Superforecaster, geopolitical prediction | `memory/knowledge/predictions/_context.md` → sub-domains: `backtested-geopolitics.md`, `geopolitics-military-conflict.md`, `market-crypto.md` |
 | Topic includes: cooking, recipe, pairing, spice, technique, protein, starch, pantry, flavor, kitchen, cuisine | `memory/knowledge/cooking/_context.md` → sub-domains: `techniques.md`, `pairings.md`, `eric-preferences.md` |
+| Spawning a subagent (Agent tool) | `memory/knowledge/harness/subagent_model_routing.md` |
 
 ## Core Principles
 
@@ -113,7 +114,7 @@ Load documentation on-demand, not upfront:
 - **ISC criteria must live in a version-controlled file (PRD, CLAUDE.md, tasklist) — never only in conversation state.** Auto-compaction strips working context but on-disk files are re-read fresh post-compact. Before declaring ISC-tracked tasks complete, re-read the source-of-truth file and verify each criterion with evidence (not from memory). Commit cadence during long builds is owned by `/implement-prd`.
 - **When relocating a file other code reads, delete/stub/symlink the old path in the same commit.** Gitignored orphans are invisible to `git status` — grep hits both copies and the stale one misleads future investigations. Same-commit `rm`, error-stub, or symlink — never leave a gitignored parallel copy.
 - **When CTX reaches 60%: run `/compact` and continue. If CTX reaches 60% a second time in the same session, prompt Eric to start remaining work in a new session — decompose the task, don't checkpoint.** The root cause of 8-compaction accumulation is sessions that are too large, not sessions that lack checkpoints.
-- **Git-manipulation code tests must use real git against a real repo — not mock subprocess.** Mock tests pass on semantically wrong ops (e.g. `git rm --cached` staged a deletion that passed 9/11 tests and code review). Use `_init_fake_worktree`: real `git init` + commit in `tmp_path`.
+- **Tests that exist as proof of a specific behavior must use deterministic setup — not mocks, not best-effort fixtures.** (a) Git-manipulation tests: use real `git init` in `tmp_path`, not mock subprocess — mocks pass on semantically wrong ops (2026-03 `git rm --cached` staged a deletion that passed 9/11 tests and code review). (b) ISC-proof tests: never `pytest.skip` on setup races — skipped counts as pass toward PRD completion; use PID files / `tmp_path` / sync primitives, not stdout buffering for inter-process PID capture (2026-04-18 orphan-prevention-oom — a stdout-buffering race would have silently shipped an unverified cascade-kill guarantee).
 - **When changing sentinel structures (PROTECTED_DIR_PREFIXES, COLLECTOR_TYPES, _OPTIONAL_DEFAULTS, any registry/enum set), grep for test assertions on the old values in the same change.** Stale assertions are invisible until a carry-forward or CI run surfaces them.
 
 ### Eric's Working Style

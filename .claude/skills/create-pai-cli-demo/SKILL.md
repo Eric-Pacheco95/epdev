@@ -178,7 +178,7 @@ This skill handles CLI-terminal/PAI demos. Future `create-demo-video` generaliza
 3. **New XFADE_RULES entries**: expand lookup table for new component type pairs
 4. **New storyboard templates**: beyond algorithm-loop (e.g., `product-tour`, `data-story`, `incident-review`)
 5. **YAML scene config**: scenes defined as YAML contracts (requires/ensures per scene) rather than inline TSX — enables non-developer editing and per-scene agent parallelism; see OpenProse analysis note below
-6. **Per-scene agent parallelization**: once scenes are YAML-specified, spawn one agent per scene in parallel (each writes its own TSX stub) rather than sequential generation — meaningful speedup for 8-10 scene demos
+6. **Per-scene agent parallelization**: once scenes are YAML-specified, spawn one agent per scene in parallel (each writes its own TSX stub) rather than sequential generation — meaningful speedup for 8-10 scene demos. Spawn with `model="claude-sonnet-4-6"` per `memory/knowledge/harness/subagent_model_routing.md` (adversarial review downgrade).
 
 **OpenProse design note (2026-04-16)**: `github.com/openprose/prose` validated the YAML-contract-per-scene direction. OpenProse treats long-running AI sessions as Turing-complete programs with declared input/output contracts; the same model applies here — each scene is a contract (brand_config + scene_intent → valid TSX). **Do not adopt OpenProse as a dependency** — our dispatcher already handles orchestration; pull the concept only. The real blocker for `/create-demo-video` remains new Remotion component types (item 1 above), not orchestration architecture.
 

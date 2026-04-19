@@ -41,7 +41,7 @@ true
 
 1. Accept repo path or GitHub URL. Clone if URL.
 2. Determine mode from flags (default: --evaluate)
-3. Launch **5 parallel analysis passes**:
+3. Launch **5 parallel analysis passes** (spawn with `model="claude-sonnet-4-6"` on every Agent() call per `memory/knowledge/harness/subagent_model_routing.md` — adversarial review downgrade):
 
    **Architecture**: dependency graph, circular deps, layering violations, entry points, coupling hotspots, framework/language versions
    **Security**: exposed secrets, input validation, auth/authz, dependency CVEs, injection surfaces (SQL, command, path, prompt)
