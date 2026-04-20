@@ -161,7 +161,7 @@ Any standalone AI product feature in the eventual DA scope is a dead-end. The DA
 
 - [x] **Signal 1: retrieval-pain.jsonl** — Manual append by Eric. Schema + README at `memory/learning/signals/retrieval-pain.README.md`. BUILT 2026-04-20.
 - [x] **Signal 2: vector-wins.jsonl** — Auto-logged by `/research` Phase 0.5 when Eric confirms loading a semantic hit ≥ 0.80. Script: `tools/scripts/log_vector_win.py`. BUILT 2026-04-20.
-- [x] **Signal 3: data/memory_growth.jsonl** — Weekly cron via Task Scheduler. Script: `tools/scripts/log_memory_growth.py`. Registration: `tools/scripts/register_memory_growth_task.ps1` (run elevated). BUILT 2026-04-20. STATUS: BUILT-UNVALIDATED — awaiting `! powershell -ExecutionPolicy Bypass -File tools\scripts\register_memory_growth_task.ps1` (elevated).
+- [x] **Signal 3: data/memory_growth.jsonl** — Weekly cron via Task Scheduler. Script: `tools/scripts/log_memory_growth.py`. Task registered 2026-04-20 (Jarvis_MemoryGrowth_Weekly, Monday 08:00). VALIDATED.
 - [x] **Signal 4: data/retrieval_latency.jsonl** — Auto-logged by `embedding_service.py search()`. BUILT 2026-04-20.
 
 ### Decision gate: 2026-05-20
