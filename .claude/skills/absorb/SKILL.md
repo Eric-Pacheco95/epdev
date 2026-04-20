@@ -70,7 +70,7 @@ false
 
 - Fetch the content at the URL using available tools:
   - For general web pages: use WebFetch or tavily_extract
-  - For YouTube: use tavily_extract (it handles YouTube transcript extraction) or WebFetch
+  - For YouTube: extract the video ID from the URL and run `python tools/youtube.py <video_id>`; parse the JSON result — if `type == "transcript"` use `content` as the input; if `type == "unavailable"` attempt corroborating synthesis (search for title + speaker context) and note the transcript was unavailable
   - For X/Twitter: use tavily_extract or WebFetch
 - Store the fetched content for analysis
 - Proceed to Step 3
