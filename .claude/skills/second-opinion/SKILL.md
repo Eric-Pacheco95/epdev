@@ -41,6 +41,13 @@ true
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- If any unrecognized flag is present (not one of: `--target`, `--out`, `--reviewer`, `--dynamic`, `--static`): print "Usage: /second-opinion [--target <repo>] [--out <path>] [--reviewer <name>] [--dynamic|--static]" and STOP
+- If both `--dynamic` and `--static` are provided: print "Conflicting flags: --dynamic and --static are mutually exclusive" and STOP
+- Default mode: `--dynamic` unless `--static` specified
+- Proceed to Step 1
+
 1. Parse flags. Resolve `--target` (default: current repo name from `git rev-parse --show-toplevel`). Resolve `--out` (default: `./REVIEW_PROMPT.md`). Resolve `--reviewer` (default: `Codex`). If this skill is itself invoked as a subagent, spawn with `model="claude-sonnet-4-6"` per `memory/knowledge/harness/subagent_model_routing.md` (adversarial review downgrade).
 2. Confirm mode: `--dynamic` unless `--static` specified.
 3. Read the embedded TEMPLATE block below matching the mode.
