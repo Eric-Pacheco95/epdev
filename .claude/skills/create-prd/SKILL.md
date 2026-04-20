@@ -74,7 +74,6 @@ false
   2. An ASSUMPTIONS entry stating the sibling's shipping order relative to this one (e.g., "PRD-1 ships before this begins BUILD so [rule] is already policy")
   3. At least one anti-criterion in ACCEPTANCE CRITERIA that enforces the sibling's core rule LOCALLY in this PRD's surface (e.g., if sibling forbids `shell=True`, this PRD has an anti-criterion asserting no `shell=True` in its own new code)
 - If no marker is present and Eric has not named a sibling: skip silently.
-- Why: implicit coupling between paired PRDs drifts into implementation divergence — one PRD's policy is invisible to the author of the other if only referenced in prose. The local anti-criterion makes the sibling rule self-enforcing regardless of build order. Origin: 2026-04-18 parallel PRD-1/PRD-2 OOM response surfaced the pattern; without the local anti-criterion, PRD-2's sampler could reintroduce `shell=True` because PRD-1's rule lived only in PRD-1.
 
 ## Step 0.7: SOCRATIC BRAINSTORM (before extracting requirements)
 
@@ -98,8 +97,6 @@ Before surfacing any PRD blocker to Eric, grep current session context (tool res
 - (b) it requires live external verification (billing page, current network state, external system state Claude cannot observe).
 
 If a blocker is evidence-resolvable from session state, resolve it silently and note the resolution in the PRD's ASSUMPTIONS section rather than asking Eric.
-
-**Reference incident:** 2026-04-19 Phase B PRD v2 — initial blocker list had 4 items; 2 were resolvable from evidence already in context (Tavily hard-cap screenshot, MCP matcher from deferred-tools registry). Refined list asked Eric only the 2 genuine preferences, reducing decision load.
 
 ## Step 1: EXTRACT
 
