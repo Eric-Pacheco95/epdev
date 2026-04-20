@@ -312,13 +312,15 @@ del os.environ["JARVIS_SESSION_TYPE"]
 # ---------------------------------------------------------------------------
 # _remap_worktree_path
 # ---------------------------------------------------------------------------
-# Non-worktree path (main repo, no .git file) -> None
-_remap_non_wt = _remap_worktree_path(str(ROOT / "data" / "test.json"))
+# Non-worktree path: use a temp dir outside any git repo -> None
+with tempfile.TemporaryDirectory() as _non_wt_tmp:
+    _non_wt_path = str(Path(_non_wt_tmp) / "data" / "test.json")
+    _remap_non_wt = _remap_worktree_path(_non_wt_path)
 if _remap_non_wt is None:
-    print("PASS: _remap_worktree_path returns None for main-repo paths")
+    print("PASS: _remap_worktree_path returns None for non-repo paths")
 else:
     failures.append(f"  FAIL [_remap_worktree_path non-worktree]: expected None, got {_remap_non_wt}")
-    print("FAIL: _remap_worktree_path returns None for main-repo paths")
+    print("FAIL: _remap_worktree_path returns None for non-repo paths")
 
 # Simulated worktree path: create a temp dir with a .git file pointing back to a fake main repo
 with tempfile.TemporaryDirectory() as _wt_dir:
