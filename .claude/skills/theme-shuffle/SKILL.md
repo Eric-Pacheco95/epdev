@@ -40,6 +40,12 @@ false
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- If `--theme` flag is present but no key argument follows it: print "Usage: /theme-shuffle --theme <key>" and STOP
+- If any unrecognized flag is present (not one of: `--revert`, `--list`, `--theme`): print "Unknown flag. Usage: /theme-shuffle [--revert] [--list] [--theme <key>]" and STOP
+- Proceed to Step 1
+
 ## Step 1: RUN SCRIPT
 
 Run the theme shuffle script:
