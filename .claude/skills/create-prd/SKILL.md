@@ -13,17 +13,19 @@ Generate a product requirements document with ISC criteria
 PLAN
 
 ## Syntax
-/create-prd [--user-stories] <description or research-brief-path>
+/create-prd [--user-stories] [--design] <description or research-brief-path>
 
 ## Parameters
 - description: free-text feature/product description (required for execution, omit for usage help)
 - research-brief-path: optional file path to a /research output for richer context
 - --user-stories: force user story generation even for single-actor tasks; useful for jarvis-app frontend features or crypto-bot multi-role flows
+- --design: enable reference-design intake mode — prompts for a reference screenshot path, embeds it as PRD metadata, adds `--design` flag to ISC verify step, and wires `/design-verify` into the post-build VERIFY chain
 
 ## Examples
 - /create-prd Build an autonomous task runner for Jarvis that executes safe tasks on a schedule
 - /create-prd memory/work/jarvis/research_brief.md
 - /create-prd --user-stories crypto-bot Slack approval flow with trader, approver, and dispatcher roles
+- /create-prd --design --user-stories rebuild /costs page to match reference design
 
 ## Chains
 - Before: /research (brief as input), /red-team (stress-test findings as input)

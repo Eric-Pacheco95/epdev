@@ -98,6 +98,7 @@ true
   /quality-gate       -- Audit completed phases for compliance
   /validation         -- Validate PRD implementation | --prd --json --pretty --execute
   /self-heal          -- Auto-diagnose and fix failures
+  /design-verify      -- Post-build design fidelity reporter — screenshot diff + design token comparison
 
 **LEARN** (capture and grow)
   /learning-capture   -- End-of-session knowledge capture
