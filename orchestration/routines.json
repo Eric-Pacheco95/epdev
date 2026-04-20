@@ -349,6 +349,41 @@
       }
     },
     {
+      "routine_id": "karpathy-extraction-batch",
+      "enabled": true,
+      "schedule": {
+        "type": "nightly",
+        "interval_days": 1
+      },
+      "task_template": {
+        "description": "Karpathy corpus extraction batch -- pop 2 video IDs from memory/work/karpathy/queue.json, extract transcripts via youtube-transcript-api, analyze with parallel subagents (≤200-word JSON each), write signal to memory/knowledge/ai-infra/, update queue. If pending list is empty, report Idle Is Success and set enabled=false in routines.json.",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 1,
+        "priority": 5,
+        "goal_context": "Build out Karpathy domain knowledge for Jarvis ai-infra context. 12 videos queued. Batch size 2/night. Pattern: read queue.json → pop 2 IDs → fetch transcript via python -c 'from youtube_transcript_api import YouTubeTranscriptApi; api=YouTubeTranscriptApi(); t=api.fetch(video_id); ...' → spawn parallel subagents (1 per video) → receive JSON summaries → write knowledge files → update queue.json. Full subagent prompt template in memory/work/large-extract-pattern.md. Domain hint: ai-infra. Dedup check: existing files in memory/knowledge/ai-infra/.",
+        "isc": [
+          "2 IDs moved from pending to processed in queue.json (or pending was already empty → Idle Is Success) | Verify: python -c \"import json; q=json.load(open('memory/work/karpathy/queue.json')); print(len(q['processed']))\"",
+          "At least 1 new knowledge file written to memory/knowledge/ai-infra/ OR signal=LOW for both videos (routing_decision=stop) | Verify: find memory/knowledge/ai-infra -name 'karpathy_*' -newer memory/work/karpathy/queue.json",
+          "queue.json written_files list updated with any new knowledge file paths | Verify: python -c \"import json; q=json.load(open('memory/work/karpathy/queue.json')); print(q['written_files'])\""
+        ],
+        "context_files": [
+          "memory/work/karpathy/queue.json",
+          "memory/work/large-extract-pattern.md",
+          "memory/knowledge/ai-infra/_context.md"
+        ],
+        "expected_outputs": [
+          "memory/knowledge/ai-infra/",
+          "memory/work/karpathy/queue.json",
+          "memory/work/karpathy/evaluation.md"
+        ],
+        "skills": [],
+        "model": "sonnet",
+        "autonomous_safe": true,
+        "notes": "Drain-queue routine -- fires nightly until pending list is empty, then self-disables. Subagent template in large-extract-pattern.md. ISC-3 is the promoted phase: videos 1-5 by view count first, then the makemore series. Writes to memory/ so worktree isolation applies (not inline)."
+      }
+    },
+    {
       "routine_id": "weekly-backlog-health",
       "enabled": true,
       "schedule": {

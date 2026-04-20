@@ -41,6 +41,7 @@ Sub-domains: `ai-infra/agent-orchestration.md`
 | 2026-04-06 | Autonomous Coding Agent Capabilities -- Devin, SWE-agent, Claude Code, Cursor | Claude Code 80.8% SWE-bench (highest); mini-SWE-agent 74% in 100 lines; context overflow is silent not fatal; harness-first dominates for solo operators | `ai-infra/2026-04-06_autonomous-coding-agents.md` |
 | 2026-04-08 | Claude Managed Agents — Anthropic's hosted agent runtime | Sandbox-cloud-only + enterprise-fleet-shaped; do not migrate; absorb 3 patterns: typed event taxonomy, declarative permissions.yaml, agent+environment=session decomposition; $0.08/session-hour idle-excluded billing validates Idle Is Success | `ai-infra/2026-04-08_claude-managed-agents.md` |
 | 2026-04-18 | Self-evolving Cortex parasite — svpino/shujunliang teardown | 219-generation agent handoff via git-clone + system-prompt injection is load-bearing; P1 = formalize session_checkpoint.md into cold-boot handoff; P2 = Tavily budget sentinel; reject P5 auto-deploy (matches autonomous-rules.md anti-pattern); all scale numbers single-sourced from injured-party CTO | `ai-infra/2026-04-18_self-evolving-cortex-teardown.md` |
+| 2026-04-19 | Postgres-as-everything — Coding Gopher analysis + Jarvis fit | Markdown stays canonical, Postgres only as derived layer for Tier 1 (signals/dispatcher/vitals/predictions/vectors); 5 of 9 video claims map to Jarvis; reject PostgREST+RLS-as-backend; ChromaDB→pgvector is cheapest first move | `ai-infra/2026-04-19_postgres-as-everything-jarvis-fit.md` |
 
 ## automotive
 
