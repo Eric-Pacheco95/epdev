@@ -105,7 +105,7 @@ Apply domain lens (auto-detected or from flag), then anchor the prediction:
 
 ## Step 2: STRUCTURE
 
-Build 3-4 distinct outcome scenarios. These are not just "good/bad/middle" — they represent genuinely different futures driven by different causal mechanisms.
+Build 3-4 distinct outcome scenarios driven by different causal mechanisms (not just good/bad/middle).
 
 1. **Name each scenario** with domain-appropriate labels:
    - Geopolitics: e.g., Escalation / Status Quo / Realignment / Collapse
@@ -115,26 +115,21 @@ Build 3-4 distinct outcome scenarios. These are not just "good/bad/middle" — t
    - Committed probability (single number, e.g., "35%")
    - Key driver: one sentence explaining WHY this scenario happens
    - One observable signpost: a specific, concrete signal Eric can watch for that indicates this scenario is unfolding
-3. **Probabilities must sum to 100%** — this forces you to make real tradeoffs between outcomes
+3. **Probabilities must sum to 100%**
 4. **For long-horizon predictions (5+ years):** include intermediate signposts at multiple timeframes (e.g., "By 2028:", "By 2032:", "By 2036:")
 
 ### Actor Analysis (geopolitics and competitive markets only)
 
-For scenarios driven by strategic actors, include a **Key Actors** section:
-- 2-4 actors with most influence over the outcome
-- For each actor: what they want (self-interest, not ideology), what leverage they have, what would change their behavior
-- Written in prose (2-3 sentences per actor), not tables
-- This section appears inline between scenarios and calibration
-- OMIT this section entirely for non-actor domains (tech trends, personal decisions, natural systems)
+Include **Key Actors** section for strategic-actor scenarios: 2-4 actors, each 2-3 sentences (want/leverage/behavior-changer). Prose, not tables. Inline between scenarios and calibration. OMIT for non-actor domains.
 
 ## Step 3: CALIBRATE
 
 Stress-test the prediction before finalizing:
 
 1. **State the most-likely outcome** and its probability
-2. **State the strongest counterargument** against the most-likely outcome in one sentence — the best case for why you might be wrong
-3. **Adjust if warranted** — if the counterargument is genuinely strong, shift probabilities. Do not just state the counterargument and ignore it
-4. **For --deep mode:** explicitly check whether your scenario construction is missing a plausible outcome that doesn't fit your current framework
+2. **State the strongest counterargument** in one sentence
+3. **Adjust if warranted** — if strong, shift probabilities (do not ignore it)
+4. **--deep mode:** check for missing plausible outcomes outside current framework
 
 ## Step 4: OUTPUT
 
