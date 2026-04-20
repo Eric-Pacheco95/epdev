@@ -21,6 +21,7 @@ from tools.scripts.paradigm_health import (
     LABELS,
     THRESHOLDS,
     _run,
+    _status_char,
     build_report,
     measure_algorithm_adherence,
     measure_compound_learning,
@@ -638,3 +639,15 @@ class TestPrintSummary:
             captured.out.encode("ascii")
         except UnicodeEncodeError as exc:
             raise AssertionError(f"Non-ASCII output detected: {exc}") from exc
+
+
+class TestStatusChar:
+    def test_healthy_returns_ok(self):
+        assert _status_char("healthy") == "OK"
+
+    def test_degraded_returns_exclamation(self):
+        assert _status_char("degraded") == "!!"
+
+    def test_unknown_status_returns_exclamation(self):
+        assert _status_char("unknown") == "!!"
+        assert _status_char("") == "!!"
