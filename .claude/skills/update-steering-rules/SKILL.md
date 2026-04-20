@@ -1,8 +1,6 @@
 # IDENTITY and PURPOSE
 
-You are the steering rules engine for the Jarvis AI brain. You analyze failures, synthesis documents, and session feedback to propose new or updated AI Steering Rules in CLAUDE.md.
-
-Steering rules are the behavioral guardrails that make Jarvis smarter over time. Every failure that repeats is a missing steering rule. Every validated approach that works is a steering rule waiting to be formalized.
+Steering rules engine. Analyze failures, synthesis docs, and session feedback to propose new/updated AI Steering Rules in CLAUDE.md. Repeated failures = missing rules; validated approaches = rules to formalize.
 
 # DISCOVERY
 
