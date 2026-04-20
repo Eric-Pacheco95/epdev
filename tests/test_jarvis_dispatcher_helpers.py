@@ -4,6 +4,7 @@ from tools.scripts.jarvis_dispatcher import (
     all_deps_met,
     resolve_model,
     _scan_task_metadata_injection,
+    validate_followon_isc_shrinks,
 )
 
 
@@ -96,3 +97,36 @@ def test_scan_blocks_in_id():
 def test_scan_empty_fields():
     task = {"id": "", "description": "", "notes": ""}
     assert _scan_task_metadata_injection(task) is True
+
+
+# --- validate_followon_isc_shrinks ---
+
+def test_followon_isc_shrinks_allowed():
+    parent = ["c1", "c2", "c3"]
+    child = ["c1", "c2"]
+    assert validate_followon_isc_shrinks(parent, child) is None
+
+
+def test_followon_isc_same_count_blocked():
+    parent = ["c1", "c2"]
+    child = ["c1", "c2"]
+    result = validate_followon_isc_shrinks(parent, child)
+    assert result is not None
+    assert "did not decrease" in result
+
+
+def test_followon_isc_expands_blocked():
+    parent = ["c1"]
+    child = ["c1", "c2"]
+    result = validate_followon_isc_shrinks(parent, child)
+    assert result is not None
+
+
+def test_followon_isc_empty_parent_blocked():
+    result = validate_followon_isc_shrinks([], ["c1"])
+    assert result is not None
+
+
+def test_followon_isc_both_empty_blocked():
+    result = validate_followon_isc_shrinks([], [])
+    assert result is not None  # 0 >= 0 → scope expansion blocked
