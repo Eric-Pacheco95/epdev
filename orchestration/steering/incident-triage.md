@@ -41,8 +41,13 @@
 
 ## Investigation Sequencing
 
-### I1. Architecture review is mandatory when 2+ prior fixes failed (migrated from CLAUDE.md)
+### I1. Architecture review is mandatory when 2+ prior fixes failed
 
-Retained here for local ownership of the RCA/incident domain. See CLAUDE.md Workflow Discipline for the original phrasing; this is its permanent home once that entry is pruned.
+**Rule**: After 2+ failed fixes on the same system or symptom, `/architecture-review` (3-agent parallel: first-principles + fallacy + red-team) is mandatory before any further fix attempt. `advisor()` is not a substitute — advisor reviews the current plan in the existing conversation; it cannot see structural alternatives the code path rules out.
 
-(Entry deferred — CLAUDE.md rule remains authoritative until next `/update-steering-rules --audit` relocates it.)
+**Why**: Repeated localized fixes on the same surface indicate the bug isn't where it's being patched — the model has anchored on the symptom location. Three independent agents starting from a clean read are required to break the anchor. Live confirmation: 2026-04-18 OOM where the third proposed fix would have been a downstream reaper instead of the spawn-site Job Object containment that actually solved it.
+
+**How to apply**:
+- Track failed-fix count per symptom in the active session or PRD; on the third proposal for the same symptom, halt and run `/architecture-review` before writing more code.
+- The arch-review brief must name the prior 2 fixes and why each failed — without that history, the agents will re-derive the same wrong tree.
+- If arch-review still fails to converge after one cycle, escalate to a fresh Opus session (per `model-effort-routing.md` Escalation Order #4).

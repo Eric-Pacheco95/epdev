@@ -184,6 +184,9 @@ MEMORY ({memory.status}): peak {memory.peak_commit_gb} GB ({memory.peak_ratio_pc
   Top-1 at peak: {memory.top1_consumer_at_peak} | Ticks: {memory.tick_count}/{memory.expected_ticks} ({completion_pct}%)
   Drill down: /vitals --memory | Heatmap: /vitals --context-files
 
+MORALIS: {moralis_vitals.stream_status} | addr {moralis_vitals.addresses} | CU {moralis_vitals.cu_mtd}/{moralis_vitals.monthly_cap_cu} ({moralis_vitals.pct_used}%)
+  {Poll {moralis_vitals.last_poll_age_min}m ago} | Today {moralis_vitals.cu_today} CU | {ALERT >=70% if alert_70pct else OK}
+
 Pending PRDs ({n}): {slug1/PRD.md, slug2/PRD.md} or "None"
 
 Threshold Crossings:
@@ -233,6 +236,17 @@ Contradictions: {n} | Coverage: {n}% | Proposals: {n}
 
 *Proposals for review:*
 {full text from autoresearch_proposals, reformatted for Slack}
+
+---
+
+*Moralis Streams (crypto-bot)*
+- Stream status: `{moralis_vitals.stream_status}` ({moralis_vitals.status_message})
+- Addresses: {moralis_vitals.addresses} | Chains: {moralis_vitals.chain_ids}
+- CU month-to-date: {moralis_vitals.cu_mtd} / {moralis_vitals.monthly_cap_cu} ({moralis_vitals.pct_used}%)
+- CU today: {moralis_vitals.cu_today} | Events MTD: {moralis_vitals.events_mtd}
+- Last status poll: {moralis_vitals.last_poll_age_min}m ago
+- If `alert_70pct=true`: prepend `:warning: *Moralis CU >=70% of monthly cap*` line
+- If `stream_status != active`: prepend `:rotating_light: *Moralis stream {status}*` line
 
 ---
 

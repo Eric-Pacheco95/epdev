@@ -21,25 +21,6 @@ All non-trivial tasks use TheAlgorithm's 7-phase loop:
 6. **VERIFY** — Test against ISC, run defensive checks
 7. **LEARN** — Capture signals, update memory, log decisions
 
-## Ideal State Criteria (ISC) Rules
-
-- Each criterion: concise, state-based, binary-testable
-- Format: `- [ ] Criterion text here | Verify: method`
-- Tag confidence: `[E]`xplicit, `[I]`nferred, `[R]`everse-engineered
-- Tag verification type: `[M]`easurable (tested by collectors/metrics) or `[A]`rchitectural (enforced by code structure, verified by review) — prevents building unnecessary monitoring for invariants
-
-### ISC Quality Gate (blocks PLAN → BUILD)
-
-Before BUILD begins, every ISC set must pass these 6 checks. If any check fails, fix the criteria before proceeding — do not build against weak ISC:
-
-1. **Count** — At least 3 criteria for any non-trivial task; no more than 8 for a single phase (split if larger)
-2. **Conciseness** — Each criterion is one sentence; no compound criteria joined by "and"
-3. **State-not-action** — Criteria describe what IS true when done, not what to DO ("Auth tokens expire after 24h", not "Implement token expiry")
-4. **Binary-testable** — Each criterion has a clear pass/fail evaluation with no subjective judgment
-5. **Anti-criteria** — At least one criterion states what must NOT happen (prevents regressions, security violations)
-6. **Verify method** — Every criterion has a `| Verify:` suffix specifying how to test it (CLI, Test, Grep, Read, Review, Custom)
-7. **Vacuous-truth audit** — For every verify method, ask: does it exit 0 on empty output? Pass when its data source is absent? Count non-executable items toward the gate? Grep an artifact that stores its own verify string? Does the verify command reference the **same primary data source** named in the ISC criterion text (if ISC says "producers.json", verify must load producers.json — not a secondary DB)? Any "yes" requires a guard — "exit 0" is not confirmation of the target state. Additionally, any verify using `-newer {ref}`, `stat -c {ref}`, or `diff {ref}` must include a file-existence guard (`test -f {ref} || exit 1`) — a missing reference file must not produce the same exit code as a missing output file.
-
 ## Context Routing
 
 Load documentation on-demand, not upfront:
@@ -61,6 +42,7 @@ Load documentation on-demand, not upfront:
 | Trade development | `orchestration/steering/trade-development.md` |
 | Frontend/UI (Tailwind, CSS, jarvis-app styling) | `orchestration/steering/frontend-ui.md` |
 | Testing, test fixtures, sentinel structures, ISC-proof tests | `orchestration/steering/testing-governance.md` |
+| ISC authoring + PLAN→BUILD quality gate (vacuous-truth, anti-criteria, verify methods) | `orchestration/steering/isc-governance.md` |
 | Model and effort routing | `orchestration/steering/model-effort-routing.md` |
 | Topic includes: OOM, RCA, root cause, post-mortem, drain, memory pressure, incident, thrash, pagefile, preflight | `orchestration/steering/incident-triage.md` |
 | Decision rationale | `history/decisions/` |
@@ -101,7 +83,7 @@ Load documentation on-demand, not upfront:
 
 - When walking Eric through credential/secret setup, never ask him to paste secrets in chat — instead confirm setup by offering a file-existence check or a smoke-test command; session transcripts may be stored by Anthropic
 - When checking if a secret/credential exists in a file, always use `grep -c` (count only) — never content-mode grep on .env files; line-content output exposes key values in the session transcript
-- **Gitignore gate** — before any commit or sub-agent commit task, run `git check-ignore` on every named path; exclude or escalate matches. `git add -f` requires same-session approval. First-time-repo variant: `git ls-files memory/ history/`. The gate fires at BOTH prompt construction (drafting a sub-agent task) AND commit execution — sub-agents follow instructions literally, so the defense cannot live in their judgment. When delegating a git-add to a sub-agent: use closed-set phrasing ("Stage ONLY these paths; if `git status` reveals any file not on this list, enumerate them and STOP without committing"); when ≥2 concurrent sessions share the working tree, also include a named denylist ("DO NOT touch: `<path>` — owned by session X") — the sub-agent cannot infer session ownership from `git status` alone. Why: 2026-04-07 `/commit` meta-failure — Opus drafted, Sonnet executed with `-f`, personal content from commit `882805d` regressed; 2026-04-18 sub-agent included unlisted file under open-set phrasing. Sub-step of `/security-audit` Step 1.
+- **Gitignore gate** — before any commit or sub-agent commit task, run `git check-ignore` on every named path; exclude or escalate matches. `git add -f` requires same-session approval. First-time-repo variant: `git ls-files memory/ history/`. The gate fires at BOTH prompt construction (drafting a sub-agent task) AND commit execution — sub-agents follow instructions literally, so the defense cannot live in their judgment. When delegating a git-add to a sub-agent: use closed-set phrasing ("Stage ONLY these paths; if `git status` reveals any file not on this list, enumerate them and STOP without committing"). Multi-session denylist guidance lives in `orchestration/steering/platform-specific.md` Multi-Session Handoffs. Why: 2026-04-07 `/commit` meta-failure — Opus drafted, Sonnet executed with `-f`, personal content from commit `882805d` regressed; 2026-04-18 sub-agent included unlisted file under open-set phrasing. Sub-step of `/security-audit` Step 1.
 - After adding or modifying validator scripts in security/validators/, verify the settings.json hook matcher matches the tools the validator actually handles — unit tests that call functions directly don't test hook registration
 - When adding a new validator, security check, or trust-boundary test, extend the existing trust-topology test suite rather than creating a parallel suite. Why: parallel suites duplicate coverage, drift apart over time, and orphan when the original maintainer forgets the second one exists. How to apply: search `tests/defensive/` for the existing trust-topology test before scaffolding any new test file; if a related test exists, add cases to it; only create a new file when the new check has no conceptual overlap with existing ones.
 - Never add `fabric` subprocess calls to any `autonomous_safe: true` skill or overnight/dispatcher path. Why: fabric bypasses PreToolUse/PostToolUse hooks — no audit trail, no model routing, no session log. Retain binary for manual terminal use only.
@@ -116,7 +98,7 @@ Load documentation on-demand, not upfront:
 - **Durable files survive compaction — verify before reference.** ISC criteria and task-tracking state must live in a version-controlled file (PRD, CLAUDE.md, tasklist), never only in conversation state — auto-compaction strips working context but on-disk files are re-read fresh post-compact. Before declaring ISC-tracked tasks complete, re-read the source-of-truth file and verify each criterion with evidence (not from memory). Same rule applies to handoff files: when a user references any handoff file immediately before /compact or a new-session transition, verify the file path exists — if missing, block and offer to draft it rather than assuming it was written. Commit cadence during long builds is owned by `/implement-prd`.
 - **When CTX reaches 60%: run `/compact` and continue. If CTX reaches 60% a second time in the same session, prompt Eric to start remaining work in a new session — decompose the task, don't checkpoint.** The root cause of 8-compaction accumulation is sessions that are too large, not sessions that lack checkpoints. Before starting a new session on a context-heavy task, first ask: can this be decomposed into steps with a written handoff file, or delegated to a subagent returning a ≤300-word summary? A new session with the same task shape hits the same cliff.
 - **Status fields that gate downstream work (PRD APPROVED, VALIDATED, DEPLOY_READY) may only be changed on explicit confirmation** ("yes, approve it", "mark it approved"). Contextual or exploratory questions ("can we unblock X?", "should we do X?") are not approvals — default to DRAFT and ask. Risk window: late-night re-engagement after context compaction. Why: 2026-04-19 advisor catch — "can we unblock /implement-prd?" written as APPROVED into PRD_v4; reverted to DRAFT.
-- **Before BUILD on any proposal that changes trust boundaries, MCP/tool classes, or cross-cutting infrastructure, run `/architecture-review` first.** ADHD build velocity makes premature "X is best / Y won't work" conclusions likely; the three-agent convergence (first-principles + fallacy + red-team) catches different failure classes independently. Sub-rule: before proposing native extraction of any MCP, consult `memory/knowledge/harness/mcp_class_taxonomy.md` — Class 2 (`mcp__claude_ai_*` Anthropic-managed OAuth) is not extractable regardless of review outcome; Class 3 (unknown origin) requires investigation before migration planning. Why: 2026-04-19 MCP-native migration proposal dissolved on arch-review — 5 wrong assumptions caught including OAuth ownership inversion; full native build would have cost ~2 weeks on MCPs Anthropic owns.
+- **Run `/architecture-review` before BUILD on trust-boundary, MCP-class, or cross-cutting changes; also after 2+ failed fixes on the same symptom.** Full trigger matrix and MCP-class taxonomy guard live in `orchestration/steering/model-effort-routing.md` (pre-BUILD triggers) and `orchestration/steering/incident-triage.md#I1` (failed-fix trigger).
 
 ### Eric's Working Style
 

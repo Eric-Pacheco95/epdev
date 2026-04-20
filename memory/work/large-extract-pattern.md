@@ -22,7 +22,7 @@ Large corpora (YouTube channels, podcast archives, paper sets, book series) cont
 ### Phase 2 — Bounded first slice (HARD CAP)
 
 - Hard cap: **5 items** on first run
-- Selection: top view count OR explicit human pick
+- Selection: top view count OR explicit human pick OR top 3 matching domain-relevant keywords — **not pure view count alone**; for niche channels, viral content and domain-relevant content may not overlap
 - Extract full content (transcripts via `yt-dlp --write-auto-subs` or `youtube-transcript-api`)
 - Rate limit: `--sleep-interval 2`
 
@@ -47,6 +47,63 @@ Large corpora (YouTube channels, podcast archives, paper sets, book series) cont
 - Create new knowledge domain before dedup check — pollution risk
 - Promote to SKILL.md after 1st use — CLAUDE.md frequency gate requires 2nd confirming use
 
+## Batch Mode (Overnight Dispatcher)
+
+For channels with 10+ relevant videos, single-session extraction hits the CTX wall at ~3 videos. Use the overnight dispatcher queue instead.
+
+### Architecture
+
+```
+Main agent (dispatcher pass)
+  ├── Pop 1-2 video IDs from queue file
+  ├── Spawn subagent per video (parallel)
+  │     each: fetch transcript → extract signal → return ≤200-word JSON summary
+  └── Receive summaries → write knowledge files → update queue
+```
+
+### Subagent Prompt Template
+
+```
+You are a knowledge extraction agent for the Jarvis AI system.
+
+TASK: Extract domain-relevant signal from this YouTube video transcript.
+
+VIDEO_ID: {video_id}
+VIDEO_TITLE: {title}
+DOMAIN_HINT: {domain}  # e.g. "ai-infra", "crypto", "networking"
+
+TRANSCRIPT:
+{transcript_text}
+
+OUTPUT: Return ONLY a JSON object — no prose:
+{
+  "signal": "HIGH|MEDIUM|LOW",
+  "jarvis_relevance": "one sentence — why this matters to Jarvis specifically",
+  "routing_decision": "existing:<filename>|new_domain:<name>|stop",
+  "extractable_points": [
+    "concrete fact or pattern — max 25 words each",
+    ...
+  ],
+  "dedup_risk": "YES|NO — does this overlap existing ai-infra, crypto, or security knowledge?"
+}
+
+RULES:
+- extractable_points: max 8 items, each must be actionable or architectural (no definitions)
+- signal=LOW + no unique points → routing_decision must be "stop"
+- Do NOT write files. Return JSON only.
+```
+
+### Queue Format
+
+`memory/work/<corpus>/queue.json`:
+```json
+{ "pending": ["id1", "id2", ...], "processed": [], "written_files": [] }
+```
+
+### File-write ownership
+
+Main agent (not subagents) writes all knowledge files. Subagents return JSON only. Prevents duplicate writes and keeps routing centralized.
+
 ## Tooling baseline
 
 - `yt-dlp` for video metadata + subtitle fetch
@@ -54,6 +111,7 @@ Large corpora (YouTube channels, podcast archives, paper sets, book series) cont
 - `mcp__tavily__tavily_extract` for web-article corpora
 - Standard LLM extraction via existing `/extract-wisdom` or `/extract-alpha` skills
 
-## First-use log
+## Use log
 
-- 2026-04-19: TheCodingGopher channel — added to sources.yaml tier 1; bounded first slice (5 videos) pending. Tasklist entry under Active.
+- 2026-04-19: TheCodingGopher channel — FULL EXTRACTION COMPLETE. Phases 1-4 + expand-slice executed. Decision: ROUTE TO EXISTING AI-INFRA (no new sub-domain). 7 videos evaluated (5 top-by-views + 2 AI-targeted). Produced: `ai-infra/2026-04-19_mcp-protocol.md` (HIGH signal), `ai-infra/2026-04-19_postgres-unified-backend.md` (MEDIUM signal). Key lesson: top-5-by-views missed all AI content; keyword-filter selection corrected above. Full evaluation: `memory/work/thecodinggopher/evaluation.md`.
+- PENDING: Andrej Karpathy (`@AndrejKarpathy`, tier 1) — selected as second corpus to clear frequency gate. ~25 videos, all AI-relevant (no keyword-filter problem). Use overnight dispatcher batch mode. On completion: if pattern holds → promote to `/create-pattern`.

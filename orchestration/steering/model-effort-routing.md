@@ -29,10 +29,17 @@ Sonnet + normal effort. No change needed for routine tasks (file ops, status che
 
 `/architecture-review` runs 3 parallel adversarial agents (first-principles + fallacy + red-team). It is a structural analysis tool, not a conversation sanity check.
 
-**Use /architecture-review when:**
+**Pre-BUILD trigger matrix (canonical — CLAUDE.md WD points here):**
 - Pre-PRD design decision with 2+ viable paths and hard-to-reverse consequences
-- 2+ prior failed fixes on the same system (existing CLAUDE.md steering rule governs this — advisor() is NOT a substitute here)
-- Any decision crossing system boundaries (autonomous capabilities, trust-boundary changes, production architecture)
+- Trust-boundary changes (auth, secret access, validator scope, autonomous-session write boundaries)
+- MCP/tool class additions or extractions — see MCP-class taxonomy guard below
+- Cross-cutting infrastructure changes (dispatcher, hooks, worktree machinery, prompt-assembly pipelines)
+- Any decision crossing system boundaries (autonomous capabilities, production architecture)
+- 2+ prior failed fixes on the same symptom — see `incident-triage.md#I1` (advisor() is NOT a substitute)
+
+**MCP-class taxonomy guard (sub-rule for MCP extraction proposals):** Before proposing native extraction of any MCP, consult `memory/knowledge/harness/mcp_class_taxonomy.md`. Class 2 (`mcp__claude_ai_*` Anthropic-managed OAuth) is not extractable regardless of arch-review outcome. Class 3 (unknown origin) requires investigation before migration planning. Why: 2026-04-19 MCP-native migration proposal dissolved on arch-review — 5 wrong assumptions caught including OAuth ownership inversion; full native build would have cost ~2 weeks on MCPs Anthropic owns.
+
+**ADHD-velocity rationale:** Build-first instinct produces premature "X is best / Y won't work" conclusions; three-agent convergence catches different failure classes independently (first-principles questions assumptions, fallacy detects motivated reasoning, red-team enumerates abuse paths).
 
 **Boundary:** advisor() = plan review (reviews the HOW before execution); /architecture-review = design review (reviews the WHAT before planning). Run /architecture-review before the PRD, advisor() before BUILD.
 
@@ -49,7 +56,7 @@ There is no mid-session model switch in Claude Code — the session model is set
 
 1. Sonnet handles the task normally
 2. Triggers above → call advisor() before BUILD
-3. 2+ failures → /architecture-review (mandatory per Workflow Discipline rule)
+3. 2+ failures → /architecture-review (mandatory per `incident-triage.md#I1`)
 4. Repeated arch-review failures or TELOS-level → fresh Opus session
 
 ## Catch-Rate Logging (non-optional after every advisor() call)

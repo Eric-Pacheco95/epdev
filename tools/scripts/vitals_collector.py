@@ -16,6 +16,7 @@ Output contract: tools/schemas/vitals_collector.v1.json
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -40,6 +41,11 @@ MEMORY_TIMESERIES = REPO_ROOT / "data" / "logs" / "memory_timeseries.jsonl"
 OUTPUT_FILE = REPO_ROOT / "data" / "vitals_latest.json"
 AI_PRICING = REPO_ROOT / "config" / "ai_pricing.json"
 TAVILY_USAGE = REPO_ROOT / "data" / "tavily_usage.jsonl"
+CRYPTO_BOT_ROOT = Path(os.environ.get("CRYPTO_BOT_ROOT", r"C:\Users\ericp\Github\crypto-bot"))
+MORALIS_CU_LOG = CRYPTO_BOT_ROOT / "data" / "moralis_cu_counter.jsonl"
+MORALIS_STATUS_LOG = CRYPTO_BOT_ROOT / "data" / "moralis_stream_status.jsonl"
+MORALIS_MONTHLY_CAP_CU = 2_000_000
+MORALIS_ALERT_THRESHOLD_PCT = 70
 AI_PRICING_STALE_DAYS = 90
 
 # FR-006 thresholds — ratio of peak commit to pagefile-allocated
@@ -742,6 +748,113 @@ def collect_tavily_usage(
     }
 
 
+def collect_moralis_vitals(
+    cu_path: Path = MORALIS_CU_LOG,
+    status_path: Path = MORALIS_STATUS_LOG,
+    now: datetime | None = None,
+) -> dict:
+    """Roll up Moralis stream-status + local CU counter.
+
+    Ground truth sources (probe 2026-04-19 confirmed no usage/stats API exists):
+      - cu_path: JSONL written by dashboard/app.py:/moralis-webhook (event*10 CU)
+      - status_path: JSONL written by tools/moralis_stream_monitor.py (hourly)
+
+    Emits `alert_70pct` when month-to-date CU exceeds 70% of the 2M Starter cap.
+    Slack alerting at that threshold is the /vitals skill's job, not the
+    collector's — the collector only surfaces the flag.
+    """
+    now = now or datetime.now(timezone.utc)
+    today_dt = now.date()
+    month_start = today_dt.replace(day=1)
+
+    cu_mtd = 0
+    cu_today = 0
+    events_mtd = 0
+    last_event_ts: str | None = None
+    if cu_path.is_file():
+        try:
+            for line in cu_path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                try:
+                    dt = datetime.fromisoformat(
+                        str(rec.get("ts", "")).replace("Z", "+00:00")
+                    ).date()
+                except (ValueError, AttributeError, TypeError):
+                    continue
+                cu = int(rec.get("cu", 0) or 0)
+                ev = int(rec.get("events", 0) or 0)
+                if dt >= month_start:
+                    cu_mtd += cu
+                    events_mtd += ev
+                    last_event_ts = rec.get("ts") or last_event_ts
+                if dt == today_dt:
+                    cu_today += cu
+        except OSError:
+            pass
+
+    status = "unknown"
+    status_msg = ""
+    addresses = None
+    chain_ids: list[str] = []
+    last_poll_ts: str | None = None
+    last_poll_age_min: float | None = None
+    if status_path.is_file():
+        try:
+            lines = status_path.read_text(encoding="utf-8").splitlines()
+            for line in reversed(lines):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                status = rec.get("status", "unknown")
+                status_msg = rec.get("statusMessage", "")
+                addresses = rec.get("amountOfAddresses")
+                chain_ids = rec.get("chainIds", []) or []
+                last_poll_ts = rec.get("ts")
+                try:
+                    poll_dt = datetime.fromisoformat(
+                        str(last_poll_ts).replace("Z", "+00:00")
+                    )
+                    last_poll_age_min = round(
+                        (now - poll_dt).total_seconds() / 60, 1
+                    )
+                except (ValueError, AttributeError, TypeError):
+                    pass
+                break
+        except OSError:
+            pass
+
+    cap = MORALIS_MONTHLY_CAP_CU
+    pct_used = round((cu_mtd / cap) * 100, 1) if cap else 0.0
+    alert_70pct = pct_used >= MORALIS_ALERT_THRESHOLD_PCT
+
+    return {
+        "stream_status": status,
+        "status_message": status_msg,
+        "addresses": addresses,
+        "chain_ids": chain_ids,
+        "last_poll_ts": last_poll_ts,
+        "last_poll_age_min": last_poll_age_min,
+        "cu_mtd": cu_mtd,
+        "cu_today": cu_today,
+        "events_mtd": events_mtd,
+        "last_event_ts": last_event_ts,
+        "monthly_cap_cu": cap,
+        "pct_used": pct_used,
+        "alert_70pct": alert_70pct,
+        "alert_threshold_pct": MORALIS_ALERT_THRESHOLD_PCT,
+    }
+
+
 def collect_overnight_streak() -> list[dict]:
     """Compute 7-day overnight run streak from log files."""
     logs_dir = REPO_ROOT / "data" / "logs"
@@ -1223,6 +1336,12 @@ def main() -> None:
     if tavily_path.is_file():
         files_scanned.append(str(tavily_path))
 
+    moralis_vitals = collect_moralis_vitals()
+    if MORALIS_CU_LOG.is_file():
+        files_scanned.append(str(MORALIS_CU_LOG))
+    if MORALIS_STATUS_LOG.is_file():
+        files_scanned.append(str(MORALIS_STATUS_LOG))
+
     isc_producer = collect_isc_producer()
     if isc_producer.get("status") == "OK":
         files_scanned.append(str(ISC_PRODUCER_REPORT))
@@ -1264,6 +1383,7 @@ def main() -> None:
         "overnight_deep_dive": overnight_deep_dive,
         "morning_feed": morning_feed,
         "session_usage": session_usage,
+        "moralis_vitals": moralis_vitals,
         "overnight_streak": overnight_streak,
         "external_monitoring_structured": external_monitoring_structured,
         "contradictions_structured": contradictions_structured,
