@@ -37,6 +37,12 @@ false
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- If input contains an unrecognized flag (starts with `--`): print "Usage: /telos-report [period]  Examples: /telos-report 30 days | /telos-report "2026-03-01 to 2026-03-31"" and STOP
+- If no period argument provided: use default period "7 days"
+- Proceed with determined period
+
 - Determine the reporting period (default: last 7 days, or as specified)
 - Check git history for changes to `memory/work/telos/` files in the period using `git log`
 - Read current state of `memory/work/telos/LEARNED.md` for accumulated observations
