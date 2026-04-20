@@ -77,6 +77,8 @@ Output the full classification table before proceeding. Wait for user confirmati
 - Skills that invoke autonomous agents or background processes
 - Skills that depend on personal MCP servers (Google Drive, Notion, Slack, nanobanana) unless confirmed available in target
 - Skills that reference personal data paths or personal configuration
+- `/absorb` — personal knowledge intake pipeline; no enterprise equivalent (absorbing external content into a personal brain model is not a regulated-team workflow)
+- `/make-prediction` — personal forecasting and calibration; no enterprise analogue; creates compliance risk if prediction outputs are used in regulated decisions
 
 **Always keep:**
 - Pure analytical skills (first-principles, red-team, find-logical-fallacies)
