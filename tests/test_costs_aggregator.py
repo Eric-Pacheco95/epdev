@@ -7,7 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.scripts.costs_aggregator import compute_cost, extract_text
+from tools.scripts.costs_aggregator import compute_cost, extract_text, _empty_window, load_pricing
 
 
 class TestComputeCost:
@@ -56,3 +56,34 @@ class TestExtractText:
 
     def test_empty_list(self):
         assert extract_text([]) == ""
+
+
+class TestEmptyWindow:
+    def test_structure(self):
+        w = _empty_window(25.0)
+        assert w["spend_usd"] == 0.0
+        assert w["budget"]["monthly_usd"] == 25.0
+        assert w["budget"]["pct"] == 0
+        assert w["daily_spend_usd"] == []
+
+    def test_budget_propagates(self):
+        w = _empty_window(50.0)
+        assert w["budget"]["monthly_usd"] == 50.0
+
+
+class TestLoadPricing:
+    def test_reads_models_and_budget(self, tmp_path):
+        import json as _json
+        p = tmp_path / "pricing.json"
+        data = {"claude": {"models": {"sonnet": {"input_per_mtok": 3.0}}, "monthly_budget_usd": 30.0}}
+        p.write_text(_json.dumps(data))
+        models, budget = load_pricing(p)
+        assert "sonnet" in models
+        assert budget == 30.0
+
+    def test_default_budget_when_missing(self, tmp_path):
+        import json as _json
+        p = tmp_path / "pricing.json"
+        p.write_text(_json.dumps({"claude": {"models": {}}}))
+        _, budget = load_pricing(p)
+        assert budget == 25.0
