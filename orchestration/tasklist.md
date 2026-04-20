@@ -139,12 +139,48 @@ Any standalone AI product feature in the eventual DA scope is a dead-end. The DA
 
 ---
 
+## Phase 6A.1 Active — Pre-validation Instrumentation (2026-04-20 → 2026-05-20)
+
+> STATUS: BUILT 2026-04-20. Evaluation window open. No action needed until 2026-05-20.
+> Architecture-review verdict: 6A.1 ships standalone; 6A.2/6A.3/6A.4 PARKED until GO rule triggers.
+> Pre-registration source: `memory/work/jarvis/phase5-close-phase6-entry.md` (Architecture review verdict section)
+
+### Pre-registered STOP rule (any one → 12-month park of 6A.2–6A.4)
+
+- < 5 entries in `memory/learning/signals/retrieval-pain.jsonl` with `severity ≥ medium`
+- < 10 entries in `memory/learning/signals/vector-wins.jsonl` where `loaded_by_user = true`
+- grep p95 latency ≤ 1.5s across all `data/retrieval_latency.jsonl` entries
+
+### Pre-registered GO rule (ALL required to unpark 6A.2)
+
+- ≥ 10 retrieval-pain entries OR ≥ 3 distinct pain modes
+- ≥ 25 vector-win entries where `loaded_by_user = true`
+- At least one concrete articulated query pattern grep handles poorly
+
+### Signal checklist
+
+- [x] **Signal 1: retrieval-pain.jsonl** — Manual append by Eric. Schema + README at `memory/learning/signals/retrieval-pain.README.md`. BUILT 2026-04-20.
+- [x] **Signal 2: vector-wins.jsonl** — Auto-logged by `/research` Phase 0.5 when Eric confirms loading a semantic hit ≥ 0.80. Script: `tools/scripts/log_vector_win.py`. BUILT 2026-04-20.
+- [x] **Signal 3: data/memory_growth.jsonl** — Weekly cron via Task Scheduler. Script: `tools/scripts/log_memory_growth.py`. Registration: `tools/scripts/register_memory_growth_task.ps1` (run elevated). BUILT 2026-04-20. STATUS: BUILT-UNVALIDATED — awaiting `! powershell -ExecutionPolicy Bypass -File tools\scripts\register_memory_growth_task.ps1` (elevated).
+- [x] **Signal 4: data/retrieval_latency.jsonl** — Auto-logged by `embedding_service.py search()`. BUILT 2026-04-20.
+
+### Decision gate: 2026-05-20
+
+Evaluate STOP vs GO. Write result to `history/decisions/2026-05-20_6A1-evaluation.md`.
+If GO: open 6A.2 with pre-registered decision rules from `phase5-close-phase6-entry.md`.
+If STOP: park 6A.2–6A.4, close question for 12 months (re-open trigger: `history/decisions/2026-05-20_6A1-evaluation.md`).
+
+---
+
 ## Phase 6: Senses — Persistent ambient awareness (future)
 
 > Status: deferred — requires Phase 5 completion gate.
 > Concept: Miessler's Phase 6 (Senses) + Daemon behavioral change — persistent input streams + goal advocacy. Runs ON Phase 5 infrastructure.
 > Gate: Phase 5 completion gate (≥90% success rate over 14 days)
 
+- [ ] **[SECURITY Phase A] Audit injection_hits in last 30 Firecrawl scrapes** — BLOCKER for all Phase B wiring: confirm field is populated without an API flag. If always-empty, Phase B becomes a build problem (+2 weeks). ~1h. | Gate: Phase 6 entry (post postgres/embedding migration). Source: `data/predictions/2026-04-20-backcast-jarvis-security-hardening-6mo.md`
+- [ ] **[SECURITY Phase A] Reduce security-ai-threats interval 15→7 days + add 2 research topics** — `orchestration/research_topics.json`: ai-guardrails-classifiers + mcp-security-tools. ~30min. | Gate: injection_hits audit complete.
+- [ ] **[SECURITY Phase A] Create 3 security sub-domain files** — `attack-vectors.md`, `defensive-architectures.md`, `guardrails-classifiers.md` in `memory/knowledge/security/`. ~2h. | Gate: injection_hits audit complete.
 - [ ] **Health sensor integration (4B)** — Automated gym/sleep capture from wearable API (Garmin Connect, Apple Health export). Optional — manual log (4A) is defensible indefinitely for solo operator. Only pursue if 4A proves insufficient. | Gate: Phase 5 completion + 4A live 60+ days.
 - [ ] **Substack human-gated draft pipeline** — `/extract-wisdom` → draft → Slack DM with draft link → Eric reviews → Eric triggers publish. Autonomous publish is BLOCKED permanently under Tier 3 classification until Eric explicitly upgrades Substack to an approved external write surface (policy decision, not tech work). | Gate: explicit policy decision by Eric.
 - [ ] **Thin claude_runner.py wrapper** — Centralize `subprocess.run(["claude", "-p", ...])` call in `tools/scripts/lib/claude_runner.py`. All 47 skill call sites stay unchanged; only the internal implementation consolidates. This is cleanup, not full provider abstraction. Full abstraction only when a second provider is named. | Gate: none (low priority, any Phase 5 sprint).

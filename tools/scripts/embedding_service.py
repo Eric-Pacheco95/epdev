@@ -315,12 +315,21 @@ def index(scope: str = "auto", verbose: bool = True) -> dict:
     return summary
 
 
-def search(query: str, top_k: int = 5, scope: str = "full") -> list[dict]:
+def search(
+    query: str,
+    top_k: int = 5,
+    scope: str = "full",
+    source_tier: str = "eric",
+) -> list[dict]:
     """Semantic search across indexed files.
 
     Returns list of {file_path, file_name, score, snippet} sorted by score desc.
     Score is cosine similarity (0-1, higher = more similar).
+
+    source_tier: "eric" (interactive), "research_extraction", or "autonomous".
+    Logged to data/retrieval_latency.jsonl for Phase 6A.1 instrumentation.
     """
+    _t0 = time.time()
     _check_ollama()
     col = _get_collection()
 
@@ -351,7 +360,29 @@ def search(query: str, top_k: int = 5, scope: str = "full") -> list[dict]:
             "snippet": meta.get("snippet", ""),
         })
 
-    return sorted(hits, key=lambda x: x["score"], reverse=True)
+    sorted_hits = sorted(hits, key=lambda x: x["score"], reverse=True)
+
+    # --- Signal 4: retrieval_latency (Phase 6A.1) ---
+    try:
+        _elapsed_ms = round((time.time() - _t0) * 1000)
+        if str(REPO_ROOT) not in sys.path:
+            sys.path.insert(0, str(REPO_ROOT))
+        from tools.scripts.lib.signal_writer import append_signal as _append_signal
+        _append_signal(
+            REPO_ROOT / "data" / "retrieval_latency.jsonl",
+            {
+                "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "query_len": len(query),
+                "top_k": top_k,
+                "elapsed_ms": _elapsed_ms,
+                "num_results": len(sorted_hits),
+                "source_tier": source_tier,
+            },
+        )
+    except Exception:
+        pass  # logging must never break search
+
+    return sorted_hits
 
 
 def find_similar(threshold: float = 0.92) -> dict:
