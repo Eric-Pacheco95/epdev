@@ -37,6 +37,12 @@ true
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- `/vitals` takes no arguments
+- If any unrecognized argument is present: print "Usage: /vitals" and STOP
+- Proceed to Phase 1
+
 ## Phase 1: Collect Data
 
 1. Run `python tools/scripts/vitals_collector.py --file --pretty` to collect all vitals data
