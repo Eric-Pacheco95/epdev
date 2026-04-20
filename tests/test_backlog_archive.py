@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from tools.scripts.backlog_archive import (
     _read_jsonl,
     _write_jsonl_atomic,
+    _append_jsonl,
     archive_tasks,
     NEVER_ARCHIVE,
 )
@@ -118,3 +119,31 @@ def test_archive_failed_old():
 
         count = archive_tasks(days=7, backlog_path=bp, archive_path=ap)
         assert count == 1
+
+
+class TestAppendJsonl:
+    def test_creates_file_if_missing(self, tmp_path):
+        p = tmp_path / "sub" / "out.jsonl"
+        _append_jsonl(p, [{"id": "1"}])
+        assert p.exists()
+
+    def test_appends_correct_lines(self, tmp_path):
+        p = tmp_path / "out.jsonl"
+        _append_jsonl(p, [{"a": 1}, {"b": 2}])
+        lines = p.read_text().strip().splitlines()
+        assert len(lines) == 2
+        assert json.loads(lines[0]) == {"a": 1}
+        assert json.loads(lines[1]) == {"b": 2}
+
+    def test_appends_to_existing_file(self, tmp_path):
+        p = tmp_path / "out.jsonl"
+        p.write_text('{"x":0}\n')
+        _append_jsonl(p, [{"y": 1}])
+        lines = p.read_text().strip().splitlines()
+        assert len(lines) == 2
+
+    def test_empty_list_no_write(self, tmp_path):
+        p = tmp_path / "out.jsonl"
+        _append_jsonl(p, [])
+        assert p.exists()
+        assert p.read_text() == ""
