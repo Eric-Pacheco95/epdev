@@ -16,6 +16,7 @@
 |------|-------|-------------|------|
 | 2026-04-06 | AI-Specific Security Threats | Agentic AI expands attack surface: indirect injection via tool outputs, MCP tool poisoning (43% of servers vulnerable), multi-agent collusion; merge gate is last reliable defense for autonomous pipelines | `security/2026-04-06_security-ai-threats.md` |
 | 2026-04-06 | Prompt Injection and Agentic Attack Patterns | No complete technical solution exists for prompt injection in current transformers; MCP tool poisoning and memory poisoning are highest-leverage new vectors; defense must be layered and assume-breach | `security/2026-04-06_telos-gap-security-2026-04-06_prompt-injection-agentic-attacks.md` |
+| 2026-04-19 | Six LLM Attack Vectors + ModernBERT Guardrails | GCG attack breaks Claude alignment via gibberish suffix tokens (transferable); RAG poisoning needs only 5 chunks in 8M docs; MCP iceberg effect; agentic RCE documented; ModernBERT = $1 self-hosted 35ms classifier | `security/2026-04-19_carpentero-six-vectors-modernbert-guardrails.md` |
 
 ## ai-infra
 Sub-domains: `ai-infra/agent-orchestration.md`

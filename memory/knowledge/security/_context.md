@@ -15,6 +15,11 @@ Note: One article in this batch (2026-03-30_geo-strategy-iran-trap.md, domain: g
 - No transformer architecture today provides a complete prompt injection fix. Defense must be layered: input sanitization + tool output sandboxing + human merge gate + assume-breach incident response.
 - The merge gate -- human review before any agent-generated code or action is committed -- is the last reliable choke point in autonomous pipelines.
 
+### NEW (2026-04-19): Three Material Gaps from Carpentero Research
+- **GCG attack (Model Internals vector):** Gibberish suffix tokens exploit the geometry of refusal boundaries, which are geometrically similar across models trained with similar RLHF pipelines. Transferable to black-box models including Claude. No model-layer defense exists; requires a pre-inference classifier layer.
+- **RAG poisoning specificity:** Only 5 malicious chunks needed in an 8M-document knowledge base. Two easily-satisfied conditions: semantic similarity + convincing text. Jarvis `memory/knowledge/` + vector store is directly in scope.
+- **Guardrails option (ModernBERT):** Fine-tuned encoder as binary safety discriminator. $1, 35ms, self-hosted, retrain in hours. Deterministic classification layer that doesn't rely on probabilistic model alignment.
+
 ## Cross-Cutting Themes
 
 - **Assume-breach posture**: Both AI-security articles converge on assume-breach as the required default. Preventive controls alone are insufficient given the 73% prevalence and architectural inability to fully solve injection at the model layer.
@@ -24,7 +29,10 @@ Note: One article in this batch (2026-03-30_geo-strategy-iran-trap.md, domain: g
 
 ## Sub-Domains
 
-No sub-domain files created: only 2 of 3 articles are on-domain for security AI threats. The 3-article threshold for sub-domain creation was not met. Both on-domain articles are summarized directly in this context file.
+3 on-domain articles now exist — sub-domain threshold met. Recommend creating sub-domain files:
+- `attack-vectors.md` — full taxonomy (Vectors 1-6 + OWASP LLM01-LLM03 + ASI rankings)
+- `defensive-architectures.md` — all defense patterns, tier ranking, Jarvis-specific gap map
+- `guardrails-classifiers.md` — ModernBERT approach, LLM-as-judge tradeoffs, implementation options
 
 ## Routing Error
 
@@ -34,6 +42,7 @@ No sub-domain files created: only 2 of 3 articles are on-domain for security AI 
 
 - 2026-04-06_security-ai-threats.md (raw_article)
 - 2026-04-06_telos-gap-security-2026-04-06_prompt-injection-agentic-attacks.md (raw_article)
+- 2026-04-19_carpentero-six-vectors-modernbert-guardrails.md (raw_article)
 - 2026-03-30_geo-strategy-iran-trap.md (absorbed, OFF-DOMAIN)
 
-**Last updated:** 2026-04-15
+**Last updated:** 2026-04-19

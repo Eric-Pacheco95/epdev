@@ -110,6 +110,9 @@ def allow_sleep() -> None:
 
 # -- File gathering (read-only, time-bounded) --------------------------------
 
+TELOS_FILE_MAX_CHARS = 4000  # per-file cap; saves ~20K on LEARNED+STATUS+MUSIC
+
+
 def read_telos_files() -> dict[str, str]:
     """Read all TELOS identity files. Returns {filename: content}."""
     result = {}
@@ -117,7 +120,10 @@ def read_telos_files() -> dict[str, str]:
         return result
     for f in sorted(TELOS_DIR.glob("*.md")):
         try:
-            result[f.name] = f.read_text(encoding="utf-8")
+            content = f.read_text(encoding="utf-8")
+            if len(content) > TELOS_FILE_MAX_CHARS:
+                content = content[:TELOS_FILE_MAX_CHARS] + "\n[... truncated for prompt budget]"
+            result[f.name] = content
         except OSError:
             pass
     return result
@@ -281,17 +287,17 @@ def gather_inputs() -> dict:
     # Primary: read from SIGNALS_DIR (where signals actually land).
     # Fallback: also check PROCESSED_DIR if it exists, to avoid losing
     # signals if the processed/ subdir is ever created.
-    signals = read_recent_files(SIGNALS_DIR, days=14, max_files=20)
+    signals = read_recent_files(SIGNALS_DIR, days=7, max_files=10)
     if PROCESSED_DIR.is_dir():
-        processed = read_recent_files(PROCESSED_DIR, days=14, max_files=10)
-        # Merge, dedup by name, cap at 20
+        processed = read_recent_files(PROCESSED_DIR, days=7, max_files=5)
+        # Merge, dedup by name, cap at 10
         seen = {s["name"] for s in signals}
         for p in processed:
             if p["name"] not in seen:
                 signals.append(p)
                 seen.add(p["name"])
-        signals = signals[:20]
-    raw_signals = read_recent_files(SIGNALS_DIR, days=7, max_files=10)
+        signals = signals[:10]
+    raw_signals = read_recent_files(SIGNALS_DIR, days=3, max_files=5)
     failures = read_recent_files(FAILURES_DIR, days=14, max_files=10)
     sessions = read_recent_files(SESSION_DIR, days=7, max_files=5)
     prior_proposals = read_prior_proposals(days=14, max_runs=5)
@@ -508,8 +514,8 @@ Use ASCII only (no Unicode dashes, arrows, or box characters)."""
     scope = inputs["scope_summary"]
     parts.append("- TELOS files read: %d" % scope["telos_files"])
     parts.append("- Synthesis docs read: %d" % scope["synthesis_docs"])
-    parts.append("- Processed signals (14d): %d" % scope["signals_14d"])
-    parts.append("- Raw signals (7d): %d" % scope["raw_signals_7d"])
+    parts.append("- Processed signals (7d): %d" % scope["signals_14d"])
+    parts.append("- Raw signals (3d): %d" % scope["raw_signals_7d"])
     parts.append("- Failures (14d): %d" % scope["failures_14d"])
     parts.append("- Sessions (7d): %d" % scope["sessions_7d"])
     parts.append("- Prior proposals (14d): %d" % scope.get("prior_proposals", 0))
@@ -925,13 +931,22 @@ def _enforce_size_gate(inputs: dict) -> tuple[dict, list[str]]:
         elif current["raw_signals"]:
             entry = current["raw_signals"].pop()
             dropped.append(entry["name"])
+        elif current["synthesis"]:
+            entry = current["synthesis"].pop()  # oldest synthesis doc
+            dropped.append(entry["name"])
+        elif current.get("prior_proposals"):
+            entry = current["prior_proposals"].pop()
+            dropped.append(entry.get("run", "prior-proposal"))
+        elif current.get("external_evidence"):
+            entry = current["external_evidence"].pop()
+            dropped.append(entry.get("repo", "external-evidence"))
         else:
-            # Nothing left to drop — proceed and warn
+            # Only TELOS+system remain — proceed (TELOS cannot be dropped)
             sys_p, usr_p = build_analysis_prompt(current)
             total = len(sys_p) + len(usr_p)
             print(
-                "  WARNING: prompt still %d chars after exhausting all signals "
-                "(TELOS/synthesis files may be the source). Proceeding." % total,
+                "  WARNING: prompt still %d chars with only TELOS files remaining "
+                "— reduce TELOS_FILE_MAX_CHARS if this recurs." % total,
                 file=sys.stderr,
             )
             break
