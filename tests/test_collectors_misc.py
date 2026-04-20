@@ -1,11 +1,12 @@
 """Tests for collectors.core miscellaneous functions."""
 
+import json
 import os
 import tempfile
 from pathlib import Path
 from tools.scripts.collectors.core import (
     _dir_size_mb, reset_query_cache, _query_events_cache,
-    COLLECTOR_TYPES, collect_hook_output_size,
+    COLLECTOR_TYPES, collect_hook_output_size, collect_json_field,
 )
 
 
@@ -69,3 +70,53 @@ def test_hook_output_size_no_config():
     result = collect_hook_output_size(cfg, Path("/tmp"))
     assert result["value"] is None
     assert "no hook_script" in result["detail"]
+
+
+class TestCollectJsonField:
+    def test_basic_read(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "data.json"
+            p.write_text(json.dumps({"count": 42}))
+            result = collect_json_field({"name": "m", "path": str(p), "field": "count"}, Path(d))
+        assert result["value"] == 42
+
+    def test_nested_dotted_path(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "data.json"
+            p.write_text(json.dumps({"a": {"b": {"c": 3.14}}}))
+            result = collect_json_field({"name": "m", "path": str(p), "field": "a.b.c"}, Path(d))
+        assert result["value"] == 3.14
+
+    def test_missing_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            result = collect_json_field({"name": "m", "path": "missing.json", "field": "x"}, Path(d))
+        assert result["value"] is None
+        assert "not found" in result["detail"]
+
+    def test_missing_key(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "data.json"
+            p.write_text(json.dumps({"a": 1}))
+            result = collect_json_field({"name": "m", "path": str(p), "field": "b"}, Path(d))
+        assert result["value"] is None
+        assert "not found" in result["detail"]
+
+    def test_non_numeric_value(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "data.json"
+            p.write_text(json.dumps({"label": "hello"}))
+            result = collect_json_field({"name": "m", "path": str(p), "field": "label"}, Path(d))
+        assert result["value"] is None
+        assert "not numeric" in result["detail"]
+
+    def test_no_field_config(self):
+        result = collect_json_field({"name": "m", "path": "/some/file.json"}, Path("/tmp"))
+        assert result["value"] is None
+
+    def test_invalid_json(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "data.json"
+            p.write_text("not json {{")
+            result = collect_json_field({"name": "m", "path": str(p), "field": "x"}, Path(d))
+        assert result["value"] is None
+        assert "json parse error" in result["detail"]
