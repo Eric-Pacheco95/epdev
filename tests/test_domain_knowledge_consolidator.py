@@ -9,7 +9,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 import tools.scripts.domain_knowledge_consolidator as dkc
-from tools.scripts.domain_knowledge_consolidator import _enforce_cap, _detect_domains
+from tools.scripts.domain_knowledge_consolidator import (
+    _enforce_cap, _detect_domains, _write_context_md, _write_subdomain_file,
+)
 
 
 class TestEnforceCap:
@@ -62,3 +64,50 @@ class TestDetectDomains:
         monkeypatch.setattr(dkc, "KNOWLEDGE_DIR", tmp_path)
         result = _detect_domains({})
         assert "_context.md" not in result
+
+
+class TestWriteContextMd:
+    def test_dry_run_does_not_write(self, tmp_path):
+        domain_dir = tmp_path / "domain"
+        _write_context_md(domain_dir, "content", dry_run=True)
+        assert not (domain_dir / "_context.md").exists()
+
+    def test_writes_file_when_not_dry_run(self, tmp_path):
+        domain_dir = tmp_path / "domain"
+        _write_context_md(domain_dir, "hello", dry_run=False)
+        assert (domain_dir / "_context.md").read_text() == "hello"
+
+    def test_creates_parent_dirs(self, tmp_path):
+        domain_dir = tmp_path / "nested" / "domain"
+        _write_context_md(domain_dir, "x", dry_run=False)
+        assert domain_dir.is_dir()
+
+    def test_returns_byte_length(self, tmp_path):
+        domain_dir = tmp_path / "domain"
+        n = _write_context_md(domain_dir, "abc", dry_run=True)
+        assert n == 3
+
+
+class TestWriteSubdomainFile:
+    def test_dry_run_does_not_write(self, tmp_path):
+        _write_subdomain_file(tmp_path / "dom", "agents", "content", [], dry_run=True)
+        assert not (tmp_path / "dom" / "agents.md").exists()
+
+    def test_writes_file_with_correct_name(self, tmp_path):
+        domain_dir = tmp_path / "dom"
+        _write_subdomain_file(domain_dir, "agents", "body", [], dry_run=False)
+        assert (domain_dir / "agents.md").exists()
+
+    def test_injects_caveats_when_present(self, tmp_path):
+        domain_dir = tmp_path / "dom"
+        _write_subdomain_file(domain_dir, "agents", "body", ["check this"], dry_run=False)
+        text = (domain_dir / "agents.md").read_text()
+        assert "Caveats" in text
+        assert "check this" in text
+
+    def test_no_duplicate_caveats_if_already_present(self, tmp_path):
+        domain_dir = tmp_path / "dom"
+        content = "## body\n\n## Caveats\n- existing\n"
+        _write_subdomain_file(domain_dir, "agents", content, ["new"], dry_run=False)
+        text = (domain_dir / "agents.md").read_text()
+        assert text.count("## Caveats") == 1
