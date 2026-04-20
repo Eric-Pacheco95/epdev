@@ -10,6 +10,8 @@ import pytest
 from tools.scripts.prediction_calibration import (
     compute_adjustments,
     compute_domain_stats,
+    parse_frontmatter,
+    _extract_confidence,
     ADJUSTMENT_BOUNDS,
 )
 
@@ -162,3 +164,61 @@ def test_adjustments_zero_delta_no_adjustment():
     merged = compute_adjustments(forward_stats, {})
     assert merged["market"]["adjustment"] == 0.0
     assert merged["market"]["clamped"] is False
+
+
+# ---------------------------------------------------------------------------
+# parse_frontmatter
+# ---------------------------------------------------------------------------
+
+def test_parse_frontmatter_valid():
+    with tempfile.NamedTemporaryFile(suffix=".md", mode="w", delete=False, encoding="utf-8") as f:
+        f.write("---\ntitle: Test\ndomain: market\n---\nBody text\n")
+        path = Path(f.name)
+    result = parse_frontmatter(path)
+    assert result is not None
+    assert result["title"] == "Test"
+    assert result["domain"] == "market"
+    path.unlink()
+
+
+def test_parse_frontmatter_no_delimiter():
+    with tempfile.NamedTemporaryFile(suffix=".md", mode="w", delete=False, encoding="utf-8") as f:
+        f.write("No frontmatter here\n")
+        path = Path(f.name)
+    result = parse_frontmatter(path)
+    assert result is None
+    path.unlink()
+
+
+def test_parse_frontmatter_missing_file():
+    result = parse_frontmatter(Path("/no/such/file.md"))
+    assert result is None
+
+
+def test_parse_frontmatter_sets_path_key():
+    with tempfile.NamedTemporaryFile(suffix=".md", mode="w", delete=False, encoding="utf-8") as f:
+        f.write("---\nkey: val\n---\n")
+        path = Path(f.name)
+    result = parse_frontmatter(path)
+    assert result["_path"] == path
+    path.unlink()
+
+
+# ---------------------------------------------------------------------------
+# _extract_confidence
+# ---------------------------------------------------------------------------
+
+def test_extract_confidence_float():
+    assert _extract_confidence({"primary_confidence": 0.75}) == 0.75
+
+
+def test_extract_confidence_string_float():
+    assert _extract_confidence({"primary_confidence": "0.8"}) == 0.8
+
+
+def test_extract_confidence_missing_returns_none():
+    assert _extract_confidence({}) is None
+
+
+def test_extract_confidence_invalid_string_returns_none():
+    assert _extract_confidence({"primary_confidence": "high"}) is None
