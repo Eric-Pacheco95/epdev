@@ -297,6 +297,7 @@ def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
     # Add to worktree-local exclude so the symlink/junction is invisible to git add -A
     exclude_path = wt / ".git" / "info" / "exclude"
     try:
+        exclude_path.parent.mkdir(parents=True, exist_ok=True)
         existing = exclude_path.read_text(encoding="utf-8") if exclude_path.exists() else ""
         entry = f"/{rel_path}"
         if entry not in existing:

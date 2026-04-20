@@ -1,6 +1,11 @@
 # Overnight task reschedule — run elevated (Admin PowerShell)
 # Generated 2026-04-17 per session_checkpoint.md
 
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+    Write-Error "ERROR: Must run as Administrator. Right-click PowerShell -> Run as Administrator."
+    exit 1
+}
+
 $log = "C:\Users\ericp\Github\epdev\tools\scripts\reschedule_overnight.log"
 "Run: $(Get-Date)" | Out-File $log
 
@@ -11,8 +16,8 @@ $changes = @(
     @{ TN = "\Jarvis\Jarvis-HeartbeatRotation";        ST = "01:10" },
     @{ TN = "\Jarvis\Jarvis-SignalCompression";        ST = "01:15" },
     @{ TN = "\Jarvis\Jarvis-ParadigmHealth";           ST = "04:00" },
-    @{ TN = "\Jarvis\Jarvis-Autoresearch-CodeQuality"; ST = "04:45" },
-    @{ TN = "\Jarvis\Jarvis-TELOS-Introspection";      ST = "07:15" },
+    @{ TN = "\Jarvis\Jarvis-Autoresearch-CodeQuality"; ST = "04:00" },
+    @{ TN = "\Jarvis\Jarvis-TELOS-Introspection";      ST = "08:00" },
     @{ TN = "\Jarvis\Jarvis-Security-Audit";           ST = "08:00" }
 )
 
