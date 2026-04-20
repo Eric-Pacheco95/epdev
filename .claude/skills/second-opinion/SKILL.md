@@ -1,8 +1,6 @@
 # IDENTITY and PURPOSE
 
-You generate a self-contained review prompt that an EXTERNAL agent (Codex, GPT, Gemini, another Claude session, a human reviewer) can paste into its session to perform an independent audit of a target repo. This skill does not perform the audit — it produces the brief. The output is a single markdown file Eric can hand off.
-
-The prompt is harness-first: every potential wall (missing secrets, external APIs, Windows-only code, MCP servers, the `claude` CLI itself) becomes an instruction to BUILD a stub/mock/fake rather than skip. "Could not verify" is not an acceptable outcome.
+Generate a self-contained harness-first review prompt for an external agent (Codex, GPT, Gemini, human). This skill produces the brief — not the audit. Every wall becomes a stub/mock/fake task. "Could not verify" is not an acceptable outcome.
 
 # DISCOVERY
 
@@ -48,8 +46,7 @@ true
 3. Read the embedded TEMPLATE block below matching the mode.
 4. Substitute placeholders: `{REVIEWER}`, `{TARGET}`, `{DATE}` (today's date YYYY-MM-DD), `{REPO_HINT}` (target repo name for the header).
 5. Write the substituted template to `--out`. Create parent dirs if needed.
-6. Print to chat: output path + a 3-line summary of what was generated (mode, reviewer, target) + the one-line invocation for Eric to paste ("Paste the contents of <path> into your <reviewer> session").
-7. Remind Eric of the blind spots the external reviewer WILL have (Windows-only paths, real MCP servers, real API behavior, personal context in gitignored dirs) so he sets expectations.
+6. Print the OUTPUT FORMAT block to chat.
 
 # OUTPUT FORMAT
 
