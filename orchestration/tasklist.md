@@ -41,7 +41,7 @@
 > Gate condition: 5E-1 falsification passes (2026-04-21) + 15+ dispatcher task outcomes before building.
 > Architecture-review 2026-04-15: corrected 3 items; see `history/decisions/2026-04-15-arch-review-phase47-roadmap.md`
 
-- [ ] **Health schema + log command (4A)** — Define `data/health.jsonl` schema (date, gym_sessions, sleep_avg_hours, subjective_energy, notes) + one-command log entry skill. Zero dependencies. Ships now — not Phase 6. | Gate: none.
+- [x] **Health schema + log command (4A)** — Define `data/health.jsonl` schema (date, gym_sessions, sleep_avg_hours, subjective_energy, notes) + one-command log entry skill. Zero dependencies. Ships now — not Phase 6. | Gate: none.
 - [ ] **Financial feed snapshot (Phase 5 routine)** — Tier 0 read-only: aggregate crypto-bot P&L + Substack revenue into `data/financial/snapshot.jsonl` (gitignored, blocked from autonomous agent reads). Feeds morning briefing + TELOS G1 tracking. | Gate: crypto-bot paper trading stable.
 - [ ] **Goal-drift detection** — Slack alert when G1/G2 go N days without active capture. Scope: G1/G2 ONLY until G3/G4 have signal pipelines (Item 4A is G4's prerequisite). Per-goal threshold; alert names goal + last signal date. | Gate: 5E-1 passes.
 - [ ] **Morning briefing: proactive daily priority** — Cron-triggered Tier 0 task: reads TELOS goals + signal queue + backlog pending count → Slack DM before Eric's first session. Input must include `task_backlog.jsonl` pending count and any `manual_review` items. Can ship before 5E-1 falsification — zero risk. | Gate: none (accelerated).
