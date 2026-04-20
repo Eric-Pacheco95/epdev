@@ -39,6 +39,13 @@ true
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- If no repo path or GitHub URL provided (bare `/deep-audit` with no arguments): print "Usage: /deep-audit [--onboard|--evaluate|--cherry-pick] <repo-path or GitHub URL>" and STOP
+- If a flag is present and it is not one of `--onboard`, `--evaluate`, `--cherry-pick`: print "Unknown mode. Valid: --onboard, --evaluate, --cherry-pick" and STOP
+- Default mode if no flag: `--evaluate`
+- Proceed to Step 1
+
 1. Accept repo path or GitHub URL. Clone if URL.
 2. Determine mode from flags (default: --evaluate)
 3. Launch **5 parallel analysis passes** (spawn with `model="claude-sonnet-4-6"` on every Agent() call per `memory/knowledge/harness/subagent_model_routing.md` — adversarial review downgrade):
