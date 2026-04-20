@@ -225,6 +225,30 @@
       "ttl_days": 7,
       "thresholds": { "warn_above": 0, "crit_above": 3 },
       "isc_ref": "Phase5D: branch lifecycle tracker -- flag stale jarvis/* branches"
+    },
+    {
+      "name": "costs_mtd_spend_usd",
+      "type": "json_field",
+      "path": "data/costs_rollup.json",
+      "field": "windows.30d.budget.mtd_usd",
+      "thresholds": {},
+      "isc_ref": "PhaseC1: synthetic Claude usage intensity (list-price MTD spend)"
+    },
+    {
+      "name": "costs_budget_pct",
+      "type": "json_field",
+      "path": "data/costs_rollup.json",
+      "field": "windows.30d.budget.pct",
+      "thresholds": {},
+      "_note": "display metric only — monthly_budget_usd=$25 is subscription-cost reference, not an actionable cap; thresholds disabled"
+    },
+    {
+      "name": "costs_sessions_30d",
+      "type": "json_field",
+      "path": "data/costs_rollup.json",
+      "field": "windows.30d.session_rollups.session_count",
+      "thresholds": {},
+      "isc_ref": "PhaseC1: 30-day session count from costs aggregator"
     }
   ],
   "alert_routing": {

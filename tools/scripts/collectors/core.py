@@ -13,6 +13,7 @@ Collector types:
   disk_usage          — directory size in MB
   hook_output_size    — run a hook script and measure output chars
   stale_branches      — count stale Jarvis autonomous branches
+  json_field          — read a dotted-path numeric field from a JSON file
 """
 
 from __future__ import annotations
@@ -1073,6 +1074,48 @@ def collect_learning_retention(cfg: dict, root_dir: Path, _prev: dict = None) ->
         return _result(name, None, "count", f"retention check failed: {exc}")
 
 
+# ── json_field ──────────────────────────────────────────────────────
+
+def collect_json_field(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
+    """Read a single numeric field from a JSON file via a dotted key path.
+
+    Config keys:
+      path   — path to JSON file (relative to root_dir or absolute)
+      field  — dotted key path, e.g. "windows.30d.budget.pct"
+    """
+    name = cfg["name"]
+    field = cfg.get("field", "")
+    if not field:
+        return _result(name, None, "varies", "no 'field' configured")
+
+    try:
+        json_path = _resolve_path(cfg["path"], root_dir)
+    except (KeyError, ValueError) as exc:
+        return _result(name, None, "varies", str(exc))
+
+    if not json_path.is_file():
+        return _result(name, None, "varies", f"file not found: {cfg.get('path')}")
+
+    try:
+        data = json.loads(json_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        return _result(name, None, "varies", f"json parse error: {exc}")
+
+    # Traverse dotted path
+    node = data
+    for key in field.split("."):
+        if not isinstance(node, dict):
+            return _result(name, None, "varies", f"field '{field}': non-dict node at '{key}'")
+        if key not in node:
+            return _result(name, None, "varies", f"field '{field}': key '{key}' not found")
+        node = node[key]
+
+    if not isinstance(node, (int, float)):
+        return _result(name, None, "varies", f"field '{field}' is not numeric: {type(node).__name__}")
+
+    return _result(name, node, "varies")
+
+
 # ── Dispatcher ──────────────────────────────────────────────────────
 
 COLLECTOR_TYPES = {
@@ -1100,6 +1143,7 @@ COLLECTOR_TYPES = {
     "system_resources": collect_system_resources,
     "stale_branches": _collect_stale_branches,
     "learning_retention": collect_learning_retention,
+    "json_field": collect_json_field,
 }
 
 
