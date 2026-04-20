@@ -76,6 +76,13 @@ All IDs sourced from `memory/work/notion_brain.md`. Load that file first to conf
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- If mode argument is provided and not one of `inbox`, `journal`, `goals`, `push`: print "Usage: /notion-sync [inbox|journal|goals|push [report|telos]]" and STOP
+- If mode is `push` and a sub-argument is provided but it is not `report` or `telos`: print "Usage: /notion-sync push [report|telos]" and STOP
+- If no argument provided: default to `inbox` mode
+- Proceed to the STEPS section for the selected mode
+
 ## Mode: inbox
 
 Check for new Inbox entries — typed notes, links, quick thoughts, and voice transcripts in the Captures section. For URL analysis, use `/absorb`.
