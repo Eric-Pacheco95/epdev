@@ -1,6 +1,9 @@
 """Tests for morning_feed.py -- pure helper functions."""
 
-from tools.scripts.morning_feed import _clean_html, parse_discovered_sources
+import tempfile
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from tools.scripts.morning_feed import _clean_html, _text, parse_discovered_sources
 
 
 # --- _clean_html ---
@@ -78,3 +81,25 @@ def test_parse_skips_entry_without_url():
     )
     result = parse_discovered_sources(text)
     assert result == []
+
+
+# --- _text ---
+
+def test_text_extracts_element():
+    root = ET.fromstring("<item><title>Hello</title></item>")
+    assert _text(root, "title") == "Hello"
+
+
+def test_text_missing_element_returns_empty():
+    root = ET.fromstring("<item><title>Hello</title></item>")
+    assert _text(root, "description") == ""
+
+
+def test_text_empty_element_returns_empty():
+    root = ET.fromstring("<item><title></title></item>")
+    assert _text(root, "title") == ""
+
+
+def test_text_strips_whitespace():
+    root = ET.fromstring("<item><title>  padded  </title></item>")
+    assert _text(root, "title") == "padded"
