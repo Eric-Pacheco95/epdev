@@ -183,3 +183,12 @@ memory/work/td-innovation-keynote/
 memory/knowledge/*/
 # Consolidation reports and other aggregated outputs
 memory/knowledge/_consolidation_report.md
+
+# ------------------------------------------------------------------------------
+# Personal memory scratch, logs, and ephemeral work files
+# ------------------------------------------------------------------------------
+memory/reference_*.md
+memory/work/firecrawl_smoke_results.json
+memory/work/large-extract-pattern.md
+tools/scripts/*.log
+ccr
