@@ -36,6 +36,12 @@ false
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- If a flag is provided and it is not `--audit`: print "Usage: /update-steering-rules [--audit]" and STOP
+- If `--audit` flag present: proceed to Mode: --audit
+- If no flag: proceed to Mode: Default
+
 ## Mode: Default (no flag) — Propose new rules from evidence
 
 - Read the current AI Steering Rules section from `CLAUDE.md`
