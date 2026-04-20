@@ -33,7 +33,7 @@ Register-ScheduledTask `
     -Action $Action `
     -Trigger $Trigger `
     -Settings $Settings `
-    -Description "Phase 6A.1 Signal 3 — weekly Jarvis memory file count logger" `
+    -Description "Phase 6A.1 Signal 3 -- weekly Jarvis memory file count logger" `
     -RunLevel Highest `
     -Force
 
