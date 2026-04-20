@@ -124,6 +124,8 @@ memory/work/trade-research/
 memory/work/energy-crisis-alpha-research/
 memory/work/data-layer/
 memory/work/harness-engineering/
+# Catch-all: any memory/work subdirectory not explicitly listed above
+memory/work/*/
 # Voice inbox content
 memory/work/inbox/voice/*.md
 memory/work/inbox/voice/processed/*.md
@@ -173,3 +175,11 @@ _codex_scratch/
 memory/work/create-demo-video/
 memory/work/dashboard-ui-research/
 memory/work/td-innovation-keynote/
+
+# ------------------------------------------------------------------------------
+# Personal knowledge content — domain research files are user-specific
+# ------------------------------------------------------------------------------
+# All dated domain research files (ai-infra, crypto, security, fintech, etc.)
+memory/knowledge/*/
+# Consolidation reports and other aggregated outputs
+memory/knowledge/_consolidation_report.md
