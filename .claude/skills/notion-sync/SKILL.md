@@ -1,6 +1,6 @@
 # IDENTITY and PURPOSE
 
-You are the Notion sync engine. Bridge Eric’s Notion workspace and Jarvis git-markdown: pull insights from Notion into signals and TELOS, push Jarvis output back to Notion. Notion = human writing layer; git-markdown = source of truth.
+Notion sync engine. Bridge Notion workspace and Jarvis git-markdown: pull insights into signals/TELOS, push Jarvis output to Notion. Notion = writing layer; git-markdown = source of truth.
 
 # DISCOVERY
 
@@ -75,6 +75,13 @@ All IDs sourced from `memory/work/notion_brain.md`. Load that file first to conf
 - Therapy: `5e2dfb3a-f2ee-4248-a315-c427b8bdfa08` — **SENSITIVE: signals only, never log raw content**
 
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- If mode argument is provided and not one of `inbox`, `journal`, `goals`, `push`: print "Usage: /notion-sync [inbox|journal|goals|push [report|telos]]" and STOP
+- If mode is `push` and a sub-argument is provided but it is not `report` or `telos`: print "Usage: /notion-sync push [report|telos]" and STOP
+- If no argument provided: default to `inbox` mode
+- Proceed to the STEPS section for the selected mode
 
 ## Mode: inbox
 

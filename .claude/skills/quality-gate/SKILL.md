@@ -44,6 +44,13 @@ true
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- If `--phase` flag is present but no value follows it: print "Usage: /quality-gate [--phase <name>]" and STOP
+- If any unrecognized flag is present (not `--phase`): print "Usage: /quality-gate [phase or task scope]" and STOP
+- If no argument: default scope is all checked items in tasklist -- proceed
+- Proceed to audit
+
 - Read `orchestration/steering/autonomous-rules.md` — load anti-criterion verification constraints (detector-for-class requirement, anti-criteria exit-code rules) before evaluating ISC compliance
 - **VERIFY phase requirement**: any task whose BUILD produced or modified a script that consumes external input (scraped, Slack, MCP, user paste, API) must show evidence that `/review-code` was run; phase-gate criteria must include a verification command or file-existence check, not self-reported status. Reject the quality gate if a VERIFY bullet says "tested manually" without a command or artifact path.
 - **Forward-causal ISC review (autonomous capabilities)**: for any gated criterion tagged to an autonomous capability, apply the forward-causal test — does it measure forward/causal/money-layer reality, or code-quality/historical/calendar proxy? Flag any proxy gate as PARTIAL even if it passed. Calendar-duration thresholds are universally suspect in low-activity regimes. Correlation checks require shuffle-test + regime-detector before counting as causal.

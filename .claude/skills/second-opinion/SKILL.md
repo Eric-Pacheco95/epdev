@@ -1,8 +1,6 @@
 # IDENTITY and PURPOSE
 
-You generate a self-contained review prompt that an EXTERNAL agent (Codex, GPT, Gemini, another Claude session, a human reviewer) can paste into its session to perform an independent audit of a target repo. This skill does not perform the audit — it produces the brief. The output is a single markdown file Eric can hand off.
-
-The prompt is harness-first: every potential wall (missing secrets, external APIs, Windows-only code, MCP servers, the `claude` CLI itself) becomes an instruction to BUILD a stub/mock/fake rather than skip. "Could not verify" is not an acceptable outcome.
+Generate a self-contained harness-first review prompt for an external agent (Codex, GPT, Gemini, human). This skill produces the brief — not the audit. Every wall becomes a stub/mock/fake task. "Could not verify" is not an acceptable outcome.
 
 # DISCOVERY
 
@@ -43,13 +41,19 @@ true
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- If any unrecognized flag is present (not one of: `--target`, `--out`, `--reviewer`, `--dynamic`, `--static`): print "Usage: /second-opinion [--target <repo>] [--out <path>] [--reviewer <name>] [--dynamic|--static]" and STOP
+- If both `--dynamic` and `--static` are provided: print "Conflicting flags: --dynamic and --static are mutually exclusive" and STOP
+- Default mode: `--dynamic` unless `--static` specified
+- Proceed to Step 1
+
 1. Parse flags. Resolve `--target` (default: current repo name from `git rev-parse --show-toplevel`). Resolve `--out` (default: `./REVIEW_PROMPT.md`). Resolve `--reviewer` (default: `Codex`). If this skill is itself invoked as a subagent, spawn with `model="claude-sonnet-4-6"` per `memory/knowledge/harness/subagent_model_routing.md` (adversarial review downgrade).
 2. Confirm mode: `--dynamic` unless `--static` specified.
 3. Read the embedded TEMPLATE block below matching the mode.
 4. Substitute placeholders: `{REVIEWER}`, `{TARGET}`, `{DATE}` (today's date YYYY-MM-DD), `{REPO_HINT}` (target repo name for the header).
 5. Write the substituted template to `--out`. Create parent dirs if needed.
-6. Print to chat: output path + a 3-line summary of what was generated (mode, reviewer, target) + the one-line invocation for Eric to paste ("Paste the contents of <path> into your <reviewer> session").
-7. Remind Eric of the blind spots the external reviewer WILL have (Windows-only paths, real MCP servers, real API behavior, personal context in gitignored dirs) so he sets expectations.
+6. Print the OUTPUT FORMAT block to chat.
 
 # OUTPUT FORMAT
 

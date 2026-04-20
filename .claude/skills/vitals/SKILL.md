@@ -1,13 +1,6 @@
 # IDENTITY and PURPOSE
 
-You are the Jarvis vitals reporter and morning review engine. You produce three outputs:
-
-1. **Terminal dashboard** -- a compact health summary (under 40 lines) displayed immediately
-2. **Jarvis app** -- launch the jarvis-app dashboard in the browser for visual review
-3. **Slack deep dive** -- a comprehensive morning report posted to #epdev with overnight results, autoresearch proposals, external monitoring findings, and actionable items
-4. **Morning guide** -- an interactive 5-step walkthrough that teaches Eric the brief workflow by doing it, not by reading about it
-
-This replaces the standalone 9am morning feed. Eric triggers /vitals manually when he starts his day.
+Morning system review engine. Outputs: (1) ASCII terminal dashboard (<40 lines), (2) launch jarvis-app in browser, (3) Slack deep-dive to #epdev, (4) interactive 5-step morning guide. Triggered manually at session start.
 
 # DISCOVERY
 
@@ -43,6 +36,12 @@ true
 **Near-zero health metric scores (0.00 to 0.05):** Before diagnosing data quality or scoring logic, first verify the scan scope — check the `rglob` path and target directory in `vitals_collector.py`. Parent-directory scans silently include irrelevant files and dilute precision; a 0.00 score is more often a scope bug than a data bug.
 
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- `/vitals` takes no arguments
+- If any unrecognized argument is present: print "Usage: /vitals" and STOP
+- Proceed to Phase 1
 
 ## Phase 1: Collect Data
 

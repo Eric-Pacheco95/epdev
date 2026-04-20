@@ -14,6 +14,7 @@ from tools.scripts.migrate_lineage import (
     is_old_schema,
     is_new_schema,
     migrate,
+    validate_file,
 )
 
 
@@ -67,3 +68,42 @@ class TestMigrate:
 
     def test_empty_input_returns_empty(self):
         assert migrate([]) == []
+
+
+class TestValidateFile:
+    def _new_schema_line(self):
+        import json
+        return json.dumps({"synthesis_id": "s1", "signals": ["foo.md"]}) + "\n"
+
+    def test_missing_file_returns_error(self, tmp_path):
+        count, errors = validate_file(tmp_path / "missing.jsonl")
+        assert count == 0
+        assert any("not found" in e for e in errors)
+
+    def test_valid_new_schema_no_errors(self, tmp_path):
+        import json
+        p = tmp_path / "lineage.jsonl"
+        p.write_text(self._new_schema_line())
+        count, errors = validate_file(p)
+        assert count == 1
+        assert errors == []
+
+    def test_old_schema_flagged(self, tmp_path):
+        import json
+        p = tmp_path / "lineage.jsonl"
+        p.write_text(json.dumps({"synthesis_filename": "x.md", "signal_file": "a.md"}) + "\n")
+        count, errors = validate_file(p)
+        assert len(errors) > 0
+
+    def test_path_prefix_in_signals_flagged(self, tmp_path):
+        import json
+        p = tmp_path / "lineage.jsonl"
+        p.write_text(json.dumps({"synthesis_id": "s1", "signals": ["memory/learning/signals/foo.md"]}) + "\n")
+        count, errors = validate_file(p)
+        assert any("path prefix" in e for e in errors)
+
+    def test_blank_lines_skipped(self, tmp_path):
+        p = tmp_path / "lineage.jsonl"
+        p.write_text("\n\n" + self._new_schema_line() + "\n")
+        count, errors = validate_file(p)
+        assert count == 1

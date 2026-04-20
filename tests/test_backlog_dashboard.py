@@ -10,6 +10,7 @@ from tools.scripts.backlog_dashboard import (
     count_archive,
     parse_date,
     bucket_tasks,
+    compute_stats,
     ALL_STATUSES,
 )
 
@@ -109,3 +110,48 @@ def test_bucket_tasks_empty():
     buckets = bucket_tasks([])
     for status in ALL_STATUSES:
         assert buckets[status] == []
+
+
+class TestComputeStats:
+    def _recent_date(self):
+        from datetime import datetime, timedelta
+        return (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+
+    def test_empty_tasks(self):
+        stats = compute_stats([])
+        assert stats["success_rate_14d"] == 1.0
+        assert stats["tasks_completed_14d"] == 0
+        assert stats["tasks_failed_14d"] == 0
+        assert stats["pending_count"] == 0
+
+    def test_counts_done_tasks_within_14d(self):
+        tasks = [{"status": "done", "completed": self._recent_date()}]
+        stats = compute_stats(tasks)
+        assert stats["tasks_completed_14d"] == 1
+
+    def test_counts_failed_tasks_within_14d(self):
+        tasks = [{"status": "failed", "completed": self._recent_date()}]
+        stats = compute_stats(tasks)
+        assert stats["tasks_failed_14d"] == 1
+        assert stats["success_rate_14d"] == 0.0
+
+    def test_success_rate_mixed(self):
+        recent = self._recent_date()
+        tasks = [
+            {"status": "done", "completed": recent},
+            {"status": "done", "completed": recent},
+            {"status": "failed", "completed": recent},
+        ]
+        stats = compute_stats(tasks)
+        assert abs(stats["success_rate_14d"] - 2/3) < 0.01
+
+    def test_pending_count(self):
+        tasks = [{"status": "pending"}, {"status": "pending"}, {"status": "done"}]
+        stats = compute_stats(tasks)
+        assert stats["pending_count"] == 2
+
+    def test_old_done_not_counted(self):
+        old_date = "2020-01-01"
+        tasks = [{"status": "done", "completed": old_date}]
+        stats = compute_stats(tasks)
+        assert stats["tasks_completed_14d"] == 0

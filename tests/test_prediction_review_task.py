@@ -4,7 +4,9 @@ from datetime import date, timedelta
 
 from tools.scripts.prediction_review_task import (
     _extract_signpost_dates,
+    _extract_top_outcome,
     compose_slack_message,
+    is_due_for_review,
     parse_date_field,
 )
 
@@ -83,3 +85,51 @@ def test_compose_slack_message_with_backtest_pending():
     backtest = {"question": "Did Y happen?", "domain": "macro"}
     result = compose_slack_message([], [backtest])
     assert "Did Y happen?" in result or "backtest" in result.lower() or "pending" in result.lower()
+
+
+# ---------------------------------------------------------------------------
+# _extract_top_outcome
+# ---------------------------------------------------------------------------
+
+def test_extract_top_outcome_finds_highest():
+    content = "- BTC up 30%\n- BTC flat 50%\n- BTC down 20%"
+    result = _extract_top_outcome(content)
+    assert "flat" in result.lower() or "50" in result
+
+
+def test_extract_top_outcome_empty_content():
+    assert _extract_top_outcome("") == ""
+
+
+def test_extract_top_outcome_no_percentages():
+    assert _extract_top_outcome("no numbers here") == ""
+
+
+def test_extract_top_outcome_truncates_long_lines():
+    long_line = "A " * 50 + " 75%"
+    result = _extract_top_outcome(long_line)
+    assert result.endswith("...")
+
+
+# ---------------------------------------------------------------------------
+# is_due_for_review
+# ---------------------------------------------------------------------------
+
+def test_is_due_for_review_overdue():
+    from datetime import date, timedelta
+    past = date.today() - timedelta(days=5)
+    due, reason = is_due_for_review({"horizon": str(past)}, window_days=7)
+    assert due is True
+    assert "OVERDUE" in reason
+
+
+def test_is_due_for_review_far_future_not_due():
+    from datetime import date, timedelta
+    future = date.today() + timedelta(days=60)
+    due, _ = is_due_for_review({"horizon": str(future)}, window_days=7)
+    assert due is False
+
+
+def test_is_due_for_review_no_horizon_not_due():
+    due, _ = is_due_for_review({}, window_days=7)
+    assert due is False

@@ -1,6 +1,6 @@
 # IDENTITY and PURPOSE
 
-You are the guitar recording analysis skill for the Jarvis AI brain. You orchestrate the full pipeline: load musical context from MUSIC.md, invoke the Python CLI for Gemini-powered analysis, write output to the recordings archive, update practice log, and log token usage.
+Guitar recording analysis skill. Pipeline: load MUSIC.md context → Gemini analysis via Python CLI → write to recordings archive → update practice log → log token usage.
 
 # DISCOVERY
 

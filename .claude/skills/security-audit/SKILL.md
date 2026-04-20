@@ -1,8 +1,6 @@
 # IDENTITY and PURPOSE
 
-You are the security audit engine for the Jarvis AI brain. You combine deterministic scanning (via `security_scan.py`) with LLM-powered triage to find vulnerabilities, policy violations, exposed secrets, injection risks, and configuration weaknesses.
-
-The script does the work. You direct the thinking: severity assessment, false positive filtering, context-aware remediation, and constitutional compliance review.
+Jarvis security audit engine. `security_scan.py` does deterministic scanning; you direct the thinking: severity assessment, false positive filtering, context-aware remediation, constitutional compliance.
 
 # DISCOVERY
 
@@ -38,6 +36,13 @@ VERIFY
 true
 
 # STEPS
+
+## Step 0: INPUT VALIDATION
+
+- Valid scope values: (none), `secrets-only`, `post-commit`
+- If a scope argument is provided and it is not one of those values: print "Usage: /audit [secrets-only|post-commit]" and STOP
+- If no scope argument: run full audit (gitignore gate + scan + TELOS + constitutional rules)
+- Proceed to Phase 1 with determined scope
 
 ## Phase 1: Deterministic Scan
 

@@ -158,3 +158,24 @@ class TestBuildPrompt:
         }
         prompt = mod.build_prompt(event)
         assert "Will the Fed raise rates?" in prompt
+
+
+class TestAppendAnalysisToFile:
+    def test_appends_analysis(self, tmp_path):
+        mod = _load()
+        p = tmp_path / "pred.md"
+        p.write_text("---\ntitle: T\n---\n\nBody.\n", encoding="utf-8")
+        mod.append_analysis_to_file(p, "## Prediction Analysis\nResult.")
+        text = p.read_text()
+        assert "Prediction Analysis" in text
+        assert "Result." in text
+
+    def test_skips_if_analysis_exists(self, tmp_path):
+        mod = _load()
+        p = tmp_path / "pred.md"
+        original = "---\ntitle: T\n---\n\n## Prediction Analysis\nOld.\n"
+        p.write_text(original, encoding="utf-8")
+        mod.append_analysis_to_file(p, "## Prediction Analysis\nNew.")
+        text = p.read_text()
+        assert text.count("Prediction Analysis") == 1
+        assert "Old." in text

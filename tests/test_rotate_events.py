@@ -9,7 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.scripts.rotate_events import load_config, get_event_files, rollup_month
+from tools.scripts.rotate_events import load_config, get_event_files, rollup_month, resolve_root, REPO_ROOT
 
 
 class TestLoadConfig:
@@ -90,3 +90,20 @@ class TestRollupMonth:
         assert result == rollup_path
         # Original content unchanged
         assert json.loads(rollup_path.read_text())["existing"] is True
+
+
+class TestResolveRoot:
+    def test_absolute_path_returned_as_is(self, tmp_path):
+        cfg = {"root_dir": str(tmp_path)}
+        result = resolve_root(cfg)
+        assert result == tmp_path
+
+    def test_relative_path_resolved_under_repo_root(self):
+        cfg = {"root_dir": "data/events"}
+        result = resolve_root(cfg)
+        assert result == REPO_ROOT / "data" / "events"
+
+    def test_default_dot_resolves_to_repo_root(self):
+        cfg = {}
+        result = resolve_root(cfg)
+        assert result == REPO_ROOT

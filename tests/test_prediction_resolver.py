@@ -13,6 +13,7 @@ from tools.scripts.prediction_resolver import (
     parse_verdict,
     write_resolution,
     read_prediction,
+    append_analysis,
 )
 
 
@@ -185,3 +186,27 @@ def test_count_resolved_total_gte_forward():
     forward = count_resolved(forward_only=True)
     total = count_resolved(forward_only=False)
     assert total >= forward
+
+
+# ---------------------------------------------------------------------------
+# append_analysis
+# ---------------------------------------------------------------------------
+
+def test_append_analysis_adds_section(tmp_path):
+    f = tmp_path / "pred.md"
+    f.write_text("---\ntitle: Test\n---\n\nBody\n", encoding="utf-8")
+    append_analysis(f, "## Prediction Analysis\nGreat job.")
+    text = f.read_text(encoding="utf-8")
+    assert "Prediction Analysis" in text
+    assert "Great job." in text
+
+
+def test_append_analysis_skips_if_already_exists(tmp_path):
+    f = tmp_path / "pred.md"
+    original = "---\ntitle: T\n---\n\n## Prediction Analysis\nOld.\n"
+    f.write_text(original, encoding="utf-8")
+    append_analysis(f, "## Prediction Analysis\nNew.")
+    text = f.read_text(encoding="utf-8")
+    assert text.count("Prediction Analysis") == 1
+    assert "Old." in text
+    assert "New." not in text
