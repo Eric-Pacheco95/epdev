@@ -87,6 +87,50 @@ _MEMORY_SYMLINKS = [
 ]
 
 
+def backup_learning_signals(backup_root: Optional[Path] = None) -> Optional[Path]:
+    """Copy all .md files from memory/learning/ subdirs to a timestamped backup.
+
+    Keeps last 7 backups (prunes older ones automatically).
+    Called before worktree removal so signals survive any subsequent merge
+    that could replace the signal directories with git blobs.
+
+    Returns the backup path if files were copied, None if nothing to back up.
+    """
+    subdirs = ["signals", "failures", "synthesis", "absorbed", "wisdom"]
+    backup_root = backup_root or (REPO_ROOT / "data" / "backups" / "learning")
+    ts = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    dest = backup_root / ts
+
+    total = 0
+    for d in subdirs:
+        src_dir = REPO_ROOT / "memory" / "learning" / d
+        if not src_dir.is_dir():
+            continue
+        for f in src_dir.glob("*.md"):
+            dest_dir = dest / d
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, dest_dir / f.name)
+            total += 1
+
+    if total == 0:
+        return None
+
+    print(f"  Backed up {total} learning files -> {dest}")
+
+    # Prune: keep last 7 backups
+    try:
+        all_backups = sorted(
+            [p for p in backup_root.iterdir() if p.is_dir()],
+            key=lambda p: p.name,
+        )
+        for old in all_backups[:-7]:
+            shutil.rmtree(old, ignore_errors=True)
+    except OSError:
+        pass
+
+    return dest
+
+
 def worktree_setup(
     branch: str,
     worktree_dir: Optional[Path] = None,
@@ -107,6 +151,7 @@ def worktree_setup(
     # Clean up stale worktree if it exists (crash recovery)
     if wt.exists():
         print(f"  Cleaning up stale worktree at {wt}")
+        backup_learning_signals()  # protect signals before stale worktree removal
         if not _safe_worktree_remove(wt):
             print(
                 f"ERROR: stale worktree removal aborted — "
@@ -164,7 +209,14 @@ def worktree_setup(
     print(f"  Worktree created at {wt} (branch: {branch})")
 
     if symlink_memory:
-        _symlink_local_memory(wt)
+        if not _symlink_local_memory(wt):
+            print(
+                f"  ERROR: junction hide failed — removing worktree to prevent "
+                f"signal file deletion on next merge.",
+                file=sys.stderr,
+            )
+            _safe_worktree_remove(wt)
+            return None
 
     return wt
 
@@ -308,11 +360,15 @@ def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
               file=sys.stderr)
 
 
-def _symlink_local_memory(wt: Path) -> None:
+def _symlink_local_memory(wt: Path) -> bool:
     """Replace gitkeep-only dirs in worktree with symlinks to real local dirs.
 
     Lets workers read accumulated signals/synthesis/failures that are
     gitignored (personal content stays local).
+
+    Returns True if all junctions were successfully hidden from git.
+    Returns False if any junction leaked into the git index — caller must
+    abort the worktree to prevent the next merge from deleting signal files.
     """
     for rel_path, readonly in _MEMORY_SYMLINKS:
         src = REPO_ROOT / rel_path
@@ -367,10 +423,40 @@ def _symlink_local_memory(wt: Path) -> None:
                     file=sys.stderr,
                 )
 
+    # Verify: no junction leaked into the git index.
+    # If git status sees any change at a memory/learning path, the hide failed —
+    # merging this branch back to main would replace the real directory with a
+    # blob and destroy all untracked signal files.
+    leaked = []
+    for rel_path, _ in _MEMORY_SYMLINKS:
+        check = subprocess.run(
+            ["git", "status", "--porcelain", rel_path],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(wt),
+        )
+        if check.stdout.strip():
+            leaked.append((rel_path, check.stdout.strip()))
+
+    if leaked:
+        print(
+            f"  ERROR: {len(leaked)} junction(s) leaked into git index after hide:",
+            file=sys.stderr,
+        )
+        for path, status in leaked:
+            print(f"    {path}: {status}", file=sys.stderr)
+        print(
+            "  CRITICAL: merging this branch would delete all signal files. "
+            "Caller must remove this worktree.",
+            file=sys.stderr,
+        )
+        return False
+
+    return True
+
 
 def worktree_cleanup(worktree_dir: Optional[Path] = None) -> None:
     """Remove the worktree. Safe to call even if it doesn't exist."""
     wt = worktree_dir or (REPO_ROOT.parent / "epdev-worktree")
+    backup_learning_signals()  # snapshot before any removal that could follow junctions
     _safe_worktree_remove(wt)
 
 
