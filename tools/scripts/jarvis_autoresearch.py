@@ -354,7 +354,7 @@ def call_claude(prompt: str, system: str = "") -> str:
             capture_output=True,
             text=True,
             encoding="utf-8",
-            timeout=300,  # 5 min -- longer prompt needs more time
+            timeout=600,  # 10 min -- 80K+ prompts need more time
             cwd=str(REPO_ROOT),
             env=env,
         )

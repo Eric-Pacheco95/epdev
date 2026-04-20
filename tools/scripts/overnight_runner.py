@@ -56,8 +56,8 @@ DIMENSION_ORDER = [
 ]
 
 # Time budget for multi-dimension runs (seconds).
-# 100 min = 6000s, leaving ~20 min buffer for worktree setup, quality checks, cleanup.
-TIME_BUDGET_S = 6000
+# 120 min = 7200s, leaving ~20 min buffer for worktree setup, quality checks, cleanup.
+TIME_BUDGET_S = 7200
 
 # Pre-flight memory threshold (bytes). If available virtual memory (physical+pagefile)
 # is below this, the runner skips the night cleanly with a Slack alert instead of
