@@ -37,6 +37,13 @@ true
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- Valid scope values: (none), `secrets-only`, `post-commit`
+- If a scope argument is provided and it is not one of those values: print "Usage: /audit [secrets-only|post-commit]" and STOP
+- If no scope argument: run full audit (gitignore gate + scan + TELOS + constitutional rules)
+- Proceed to Phase 1 with determined scope
+
 ## Phase 1: Deterministic Scan
 
 1. Run `python tools/scripts/security_scan.py --pretty --filter-fp --run-tests --audit-log` to collect all scan data with false positive filtering, defensive test execution, and automatic audit logging
