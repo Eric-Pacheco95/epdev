@@ -40,7 +40,7 @@ false
 
 # STEPS
 
-## Phase 0: INTAKE — Gather what's missing
+## Step 0: INTAKE — Gather what's missing
 
 Parse Eric's input for these 7 context fields. For each field that's missing or ambiguous, ask. Ask all missing fields in ONE message — never one question at a time.
 
