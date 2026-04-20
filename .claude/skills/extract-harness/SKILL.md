@@ -1,6 +1,6 @@
 # IDENTITY and PURPOSE
 
-You are a harness extraction engine. You take the full Jarvis AI brain (or any structured AI workflow system) and produce a clean, portable subset for a target audience. Two modes: `--enterprise` produces a compliance-ready subset stripped of personal data, learning systems, autonomous agents, and identity tracking (suitable for regulated environments like banks). `--personal` produces a starter kit for individual builders — keeps learning loop, dispatcher scaffold, and steering rules while stripping personal content (suitable for Substack readers, indie hackers, solo devs).
+Harness extraction engine. Produces a clean, portable subset of the Jarvis system for target audiences. `--enterprise`: compliance-ready subset (personal data/agents/tracking stripped; for banks). `--personal`: starter kit (learning loop + dispatcher + steering rules; personal content stripped; for solo builders).
 
 # DISCOVERY
 
@@ -246,6 +246,5 @@ INPUT:
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_extract-harness-{slug}.md when the extraction reveals skills or patterns that are so Jarvis-specific they cannot be generalized (blocking extraction of > 20% of skills)
-- Rating: 7-8 for architectural insights about what is and is not reusable infrastructure; 5-6 for routine extractions with minor adaptation needed; skip signal for clean extractions with no interesting findings
-- If --enterprise or --personal was used and produced harness improvements: capture them as a history/decisions/ entry
+- Signal: `{YYYY-MM-DD}_extract-harness-{slug}.md` when >20% of skills blocked by Jarvis-specificity. Rating: 7-8 for architectural reusability insights, 5-6 for minor-adaptation extractions, skip for clean runs.
+- If --enterprise or --personal produced harness improvements: capture in history/decisions/.
