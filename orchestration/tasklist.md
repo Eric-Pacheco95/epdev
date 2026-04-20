@@ -34,6 +34,7 @@
 - [ ] **jarvis-app Sprint 5: Design system** — Install shadcn/ui (dark mode), establish v0.dev workflow, regenerate /dashboard tabs using v0.dev + Pulse screenshots. Root cause: Sprint 4 GUI is functionally correct but visually off — pure-Tailwind iteration without design tooling doesn't converge. PRD: `memory/work/jarvis-app/PRD.md` Sprint 5 section. | Gate: Sprint 4 COMPLETE ✓
 - [ ] **Wire Claude Code "defer" into dispatcher (code)** — validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface. Requires `claude -p --resume` e2e spike first. (split from doc task 2026-04-08)
 - [ ] **5C-5C: ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs). Current: ISC generated inline per-branch, functional but not templated.
+- [ ] **TheCodingGopher — bounded first slice** — Enumerate channel metadata (`yt-dlp --flat-playlist`), extract top 5 videos' transcripts, evaluate signal quality + cost + dedup vs `harness-tooling.md`/`ai-infra/*`, decide: stop / route to existing / new `dev-tooling` sub-domain / expand slice. Pattern: `memory/work/large-extract-pattern.md`. Hard cap 5 on first run. | Gate: none (exploratory).
 
 ### Phase 4→5 Capability Bridge (backcasted from Phase 7 DA ideal state)
 

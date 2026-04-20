@@ -69,6 +69,15 @@
   frequency: daily
   last_checked: "2026-04-17"
 
+- name: "The Coding Gopher YouTube"
+  url: "https://www.youtube.com/@TheCodingGopher"
+  feed_url: ""
+  type: dev_tools
+  tier: 1
+  frequency: daily
+  last_checked: "2026-04-19"
+  note: "Added 2026-04-19 — Developer tooling channel; explains nuance topics, exposes architecture frameworks and simple/elegant fixes from practicing developers. Full-channel retro extraction planned: iterate existing backlog, then daily-tier monitoring for new uploads. Candidate seed for potential `dev-tooling` knowledge sub-domain."
+
 - name: "The Pragmatic Engineer"
   url: "https://newsletter.pragmaticengineer.com"
   feed_url: "https://newsletter.pragmaticengineer.com/feed"
