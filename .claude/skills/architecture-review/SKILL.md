@@ -47,9 +47,9 @@ true
 Run before any hard-to-reverse decision: architecture choice, tool/dependency adoption, or any decision with 3+ viable paths. ADHD build velocity defaults to highest-energy option — this interrupts that default. If multiple ways to build something exist, run this first.
 
 **Mandatory triggers:**
-- **2+ prior failed fixes on the same system.** The next fix must run `/architecture-review` before coding — no exceptions. Reason: "correct-but-narrow" fixes survive single-angle review; adversarial agents surface the class of failure the author is blind to. Proven across dispatcher, ISC producer, and junction-fix sessions.
-- **Pairing two autonomous capabilities.** Any proposal enabling a second autonomous capability that shares data flow with an existing one must run this skill first — autonomous-backlog + autonomous-PRD together close a self-referential loop with no human ground-truth break.
-- **Parallel not sequential.** Always launch all three agents (first-principles, fallacy, red-team) in a single message; sequential review lets author bias leak between passes.
+- **2+ prior failed fixes on the same system.** Run before next coding attempt — no exceptions.
+- **Pairing two autonomous capabilities.** Any proposal sharing data flow between two autonomous capabilities runs first — self-referential loops require a human ground-truth break.
+- **Parallel not sequential.** Launch all three agents in a single message — sequential lets author bias leak between passes.
 
 # STEPS
 
