@@ -213,6 +213,7 @@ If creating new repo:
 2. Create initial commit with all extracted files
 3. Ask user: "Push to GitHub? If yes, provide repo name and visibility (public/private)."
 4. If pushing: create repo with `gh repo create`, push, report URL
+5. **Push-status check**: run `git log --oneline origin/main..HEAD` — if output is empty, push succeeded; if commits remain, surface them and block 'done' declaration until confirmed pushed. Why: 10 agile skills sat locally invisible to collaborators.
 
 If --update:
 1. **Skill diff**: Compare source `.claude/skills/` against target — report: new skills to add, existing skills with source changes, skills in target but not in source (manual additions — preserve)
@@ -222,6 +223,7 @@ If --update:
 5. Ask user to confirm changes
 6. Commit with message describing what was added/updated/removed
 7. Push if user confirms
+8. **Push-status check**: run `git log --oneline origin/main..HEAD` — if output is empty, push succeeded; if commits remain, surface them and block 'done' declaration until confirmed pushed.
 
 # OUTPUT INSTRUCTIONS
 

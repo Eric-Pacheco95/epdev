@@ -241,6 +241,21 @@ def inject_batch_summary(report: dict) -> int:
     return injected
 
 
+def is_already_checked(prd_path_str: str, criterion_text: str) -> bool:
+    """Return True if criterion_text appears on a [x] line in the PRD."""
+    needle = criterion_text.strip()
+    if not needle:
+        return False
+    try:
+        content = (REPO_ROOT / prd_path_str).read_text(encoding="utf-8")
+    except OSError:
+        return False
+    for line in content.splitlines():
+        if "[x]" in line and needle in line:
+            return True
+    return False
+
+
 def build_report(prd_results: list[dict], duration_s: float,
                  tasks_created: int, timeout_hit: bool = False,
                  run_date: str | None = None) -> dict:
@@ -279,11 +294,13 @@ def build_report(prd_results: list[dict], duration_s: float,
             prd_criteria.append(entry)
 
             if verdict == "pass":
-                ready_to_mark.append({
-                    "prd_path": prd_path,
-                    "criterion": c.get("criterion", ""),
-                    "evidence": c.get("evidence", ""),
-                })
+                criterion_text = c.get("criterion", "")
+                if not is_already_checked(prd_path, criterion_text):
+                    ready_to_mark.append({
+                        "prd_path": prd_path,
+                        "criterion": criterion_text,
+                        "evidence": c.get("evidence", ""),
+                    })
 
         by_prd.append({
             "path": prd_path,
