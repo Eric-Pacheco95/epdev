@@ -62,6 +62,9 @@ class TestHookEventsRecord:
         r = records[-1]
         assert r["success"] is False
         assert "command not found" in (r["error"] or "")
+        # Anti-criterion: no captured input keys on non-Read tools (even when error text mentions "command")
+        assert "file_path" not in r
+        assert "command" not in r
 
     def test_pre_tool_use_success_is_null(self, tmp_path):
         payload = {
@@ -152,7 +155,10 @@ class TestHookEventsRecord:
         # Whitelist guard: only file_path from tool_input, not offset/limit/etc.
         assert "offset" not in r
         assert "limit" not in r
+        assert "command" not in r
         assert "tool_input" not in r
+        allowed_extra = {"ts", "hook", "session_id", "tool", "success", "error", "input_len", "file_path"}
+        assert set(r.keys()) <= allowed_extra
 
     def test_bash_post_tool_use_no_input_capture(self, tmp_path):
         payload = {

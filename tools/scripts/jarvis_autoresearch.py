@@ -39,6 +39,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.scripts.lib.worktree import acquire_claude_lock, release_claude_lock  # noqa: E402
+from tools.scripts.lib.isc_templates import isc_autoresearch_proposals_review  # noqa: E402
 
 # Absolute path to claude CLI -- Task Scheduler doesn't have .local/bin on PATH
 _claude_candidate = Path(r"C:\Users\ericp\.local\bin\claude.exe")
@@ -885,11 +886,7 @@ def _inject_autoresearch_backlog(metrics: dict, run_dir: Path) -> None:
             "autonomous_safe": False,
             "status": "pending_review",
             "priority": 2,
-            "isc": [
-                "Each proposal is either accepted (action taken), deferred "
-                "with rationale, or rejected "
-                "| Verify: Review",
-            ],
+            "isc": isc_autoresearch_proposals_review(),
             "skills": [],
             "source": "autoresearch",
             "routine_id": "autoresearch:proposals:%s" % today,

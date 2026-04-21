@@ -34,6 +34,8 @@ OUTPUT_FILE = REPO_ROOT / "data" / "security_scan_latest.json"
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from tools.scripts.lib.isc_templates import isc_security_scan_review
+
 from security.validators.secret_scanner import (
     SECRET_PATTERNS,
     line_has_secret,
@@ -451,11 +453,7 @@ def emit_backlog_rows(real_findings: list[dict]) -> int:
             "autonomous_safe": False,
             "status": "pending_review",
             "priority": 1,
-            "isc": [
-                "Each finding is either remediated, accepted with a "
-                "documented exception, or flagged as a false positive "
-                "| Verify: Review",
-            ],
+            "isc": isc_security_scan_review(),
             "skills": [],
             "source": "security-scan",
             "routine_id": "security_scan:%s:%s" % (check, today),

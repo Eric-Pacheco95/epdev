@@ -20,11 +20,13 @@ Schema per event line:
     "success":     true | false | null,     # null = intent (PreToolUse), no outcome yet
     "error":       null | "...",            # truncated to 120 chars, PostToolUse only
     "input_len":   42,                      # char length of serialized input (not the input itself)
+    "file_path":   "...",                   # PostToolUse + tool Read only (FR-005 whitelist)
     "stop_reason": null | "end_turn"        # Stop hook only
   }
 
-Sensitive data (inputs, outputs) is intentionally excluded — length only.
-This keeps the log safe to commit and avoids secret leakage.
+Sensitive data (inputs, outputs) is intentionally excluded — ``input_len`` only — except
+FR-005: for ``tool == "Read"`` on PostToolUse, the ``file_path`` string from ``tool_input``
+is recorded so context-file aggregation can run. No other tool input fields are ever written.
 """
 
 from __future__ import annotations

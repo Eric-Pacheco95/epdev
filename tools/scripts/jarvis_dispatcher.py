@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -97,6 +98,7 @@ from tools.scripts.lib.isc_common import (
     ISC_ALLOWED_COMMANDS,
     MANUAL_REQUIRED,
     PRD_VERB,
+    SECRET_PATH_PATTERNS,
     classify_verify_method,
     sanitize_isc_command,
 )
@@ -430,21 +432,35 @@ def _scan_task_metadata_injection(t: dict) -> bool:
 
     Returns True if the task is clean, False if any injection pattern is found.
     Checked at selection time so poisoned tasks never enter the dispatch pipeline.
+
+    5E-3: Unicode NFKC normalization before substring checks; secret-path pattern
+    scan on free-text fields (same regex family as ISC context path guard).
     """
     fields_to_scan = [
         ("description", t.get("description", "")),
         ("id", t.get("id", "")),
         ("notes", t.get("notes", "")),
+        ("goal_context", t.get("goal_context", "")),
     ]
     for field_name, value in fields_to_scan:
         if not value:
             continue
-        lower = value.lower()
+        if not isinstance(value, str):
+            value = str(value)
+        normalized = unicodedata.normalize("NFKC", value)
+        lower = normalized.lower()
         for inj in _INJECTION_SUBSTRINGS:
             if inj in lower:
                 print(
                     f"  BLOCKED {t.get('id', '?')}: injection pattern {inj!r} "
                     f"detected in field '{field_name}' -- task skipped"
+                )
+                return False
+        if field_name in ("description", "notes", "goal_context"):
+            if SECRET_PATH_PATTERNS.search(normalized):
+                print(
+                    f"  BLOCKED {t.get('id', '?')}: secret-path pattern in "
+                    f"field '{field_name}' -- task skipped"
                 )
                 return False
     return True
@@ -1703,6 +1719,11 @@ Do NOT write TASK_FAILED.md for: routine errors you can fix, lint failures,
 test failures you can debug, or minor scope adjustments. Escalation is for
 JUDGMENT calls only -- not for friction.
 
+Optional follow-up (5E-3 staging): To propose a NEW task without writing the
+backlog yourself, print one line with JSON only (human promotes from queue):
+FOLLOW_UP: {{"description": "...", "isc": ["criterion | Verify: ..."]}}
+These lines are staged to data/followon_pending/ -- they do NOT auto-enter the backlog.
+
 After completion, print EXACTLY this line (machine-parsed):
 TASK_RESULT: id={task['id']} status=done|failed isc_passed=N/M branch={branch}
 """
@@ -1766,6 +1787,20 @@ def run_worker(task: dict, branch: str, wt_path: Path, dry_run: bool = False) ->
         report["exit_code"] = result.returncode
         report["stdout_tail"] = result.stdout[-2000:] if result.stdout else ""
         report["stderr_tail"] = result.stderr[-500:] if result.stderr else ""
+
+        try:
+            from tools.scripts.lib.followon_pending import capture_follow_up_from_stdout
+
+            n_staged = capture_follow_up_from_stdout(
+                result.stdout or "",
+                str(task.get("id", "unknown")),
+            )
+            report["follow_up_staged"] = n_staged
+            if n_staged:
+                print(f"  FOLLOW_UP: staged {n_staged} row(s) to followon_pending")
+        except Exception as exc:
+            report["follow_up_staged"] = 0
+            print(f"  WARNING: follow-up staging failed: {exc}", file=sys.stderr)
 
         # Detect rate limit before parsing results
         stdout_lower = (result.stdout or "").lower()

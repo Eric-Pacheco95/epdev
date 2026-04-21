@@ -99,6 +99,20 @@ def test_scan_empty_fields():
     assert _scan_task_metadata_injection(task) is True
 
 
+def test_scan_blocks_secret_path_in_description():
+    task = {"id": "TASK-010", "description": "Please read .env for debugging"}
+    assert _scan_task_metadata_injection(task) is False
+
+
+def test_scan_blocks_secret_path_in_goal_context():
+    task = {
+        "id": "TASK-011",
+        "description": "normal",
+        "goal_context": "sync credentials from /.aws/credentials",
+    }
+    assert _scan_task_metadata_injection(task) is False
+
+
 # --- validate_followon_isc_shrinks ---
 
 def test_followon_isc_shrinks_allowed():

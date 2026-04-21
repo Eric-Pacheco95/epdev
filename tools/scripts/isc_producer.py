@@ -177,6 +177,10 @@ def inject_batch_summary(report: dict) -> int:
     if str(REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(REPO_ROOT))
     from tools.scripts.lib.backlog import backlog_append
+    from tools.scripts.lib.isc_templates import (
+        isc_isc_producer_fail_batch,
+        isc_isc_producer_ready_to_mark,
+    )
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     summary = report.get("summary", {})
@@ -195,10 +199,7 @@ def inject_batch_summary(report: dict) -> int:
             "autonomous_safe": False,
             "status": "pending_review",
             "priority": 3,
-            "isc": [
-                "All ready_to_mark criteria are checked off in their PRDs "
-                "| Verify: Review",
-            ],
+            "isc": isc_isc_producer_ready_to_mark(),
             "skills": [],
             "source": "isc-producer",
             "routine_id": "isc_producer:ready_to_mark:%s" % today,
@@ -222,11 +223,7 @@ def inject_batch_summary(report: dict) -> int:
             "autonomous_safe": False,
             "status": "pending_review",
             "priority": 2,
-            "isc": [
-                "Each failing criterion is either fixed, marked deferred, "
-                "or has its verify method corrected "
-                "| Verify: Review",
-            ],
+            "isc": isc_isc_producer_fail_batch(),
             "skills": [],
             "source": "isc-producer",
             "routine_id": "isc_producer:fails:%s" % today,

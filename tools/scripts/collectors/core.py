@@ -732,6 +732,7 @@ def _propose_stale_producer_task(
         import sys as _sys
         _sys.path.insert(0, str(root_dir))
         from tools.scripts.lib.backlog import backlog_append
+        from tools.scripts.lib.isc_templates import isc_producer_recency
 
         priority = 1 if failure_kind == "hard_fail" else 2
         task = {
@@ -743,14 +744,7 @@ def _propose_stale_producer_task(
             "autonomous_safe": False,
             "status": "pending_review",
             "priority": priority,
-            "isc": [
-                "Root cause of %s staleness is identified "
-                "| Verify: Review"
-                % entry_name,
-                "Producer is either fixed, schedule is corrected, or the "
-                "producers.json entry is updated/removed "
-                "| Verify: Review",
-            ],
+            "isc": isc_producer_recency(entry_name),
             "skills": [],
             "routine_id": "producer_recency:%s:%s" % (entry_name, failure_kind),
             "notes": (

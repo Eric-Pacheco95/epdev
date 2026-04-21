@@ -38,6 +38,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+from tools.scripts.lib.isc_templates import isc_research_topic
+
 TOPICS_FILE   = REPO_ROOT / "orchestration" / "research_topics.json"
 STATE_FILE    = REPO_ROOT / "data" / "research_producer_state.json"
 KNOWLEDGE_DIR = REPO_ROOT / "memory" / "knowledge"
@@ -455,10 +457,7 @@ def inject_topic(topic: dict, dry_run: bool = False) -> dict | None:
             f"Source: {topic.get('_source','watchlist')}. "
             f"Output feeds knowledge index and generates learning signals."
         ),
-        "isc": [
-            f"Research brief exists | Verify: test -f memory/work/{slug}/research_brief.md",
-            f"Domain knowledge article filed | Verify: find memory/knowledge/{domain} -name '*{slug[:30]}*.md'",
-        ],
+        "isc": isc_research_topic(slug, domain),
         "expected_outputs": [
             f"memory/work/{slug}/",
             f"memory/knowledge/{domain}/",

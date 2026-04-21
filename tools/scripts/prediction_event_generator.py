@@ -43,6 +43,8 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+from tools.scripts.lib.isc_templates import isc_prediction_backtest_followup
+
 EVENTS_FILE      = REPO_ROOT / "data" / "backtest_events.yaml"
 CALIBRATION_FILE = REPO_ROOT / "data" / "calibration.json"
 STATE_FILE       = REPO_ROOT / "data" / "event_generator_state.json"
@@ -379,10 +381,7 @@ def inject_backtest_task(count: int, domains: list[str]) -> bool:
                 "Run prediction_backtest_producer.py to execute backtests. "
                 "Slack review summary will be posted for Eric to score."
             ),
-            "isc": [
-                "At least 1 new backtest prediction file written | Verify: find data/predictions/backtest -name '*.md' -newer data/backtest_state.json",
-                "backtest_state.json updated with new run entries | Verify: python -c \"import json; print(len(json.load(open('data/backtest_state.json')).get('completed',{})))\""
-            ],
+            "isc": isc_prediction_backtest_followup(),
             "context_files": ["data/backtest_events.yaml", "data/backtest_state.json"],
             "skills": [],
             "model": "sonnet",
