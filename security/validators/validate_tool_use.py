@@ -520,6 +520,14 @@ def _check_autonomous_git_push(cmd: str) -> bool:
     return bool(re.search(r"\bgit\s+push\b", cmd))
 
 
+def _is_autonomous_financial_snapshot_path(file_path: str) -> bool:
+    """Tier-0 financial snapshots are human-briefing only (Phase 4→5 bridge)."""
+    if not file_path:
+        return False
+    norm = file_path.replace("\\", "/").lower()
+    return "data/financial/" in norm
+
+
 def _check_autonomous_read_secrets(tool: str, inp: dict) -> dict[str, Any] | None:
     """Block Read tool on secret files in autonomous sessions.
 
@@ -537,6 +545,13 @@ def _check_autonomous_read_secrets(tool: str, inp: dict) -> dict[str, Any] | Non
         return _result(
             "block",
             f"Autonomous sessions MUST NOT read secret files. "
+            f"Blocked: Read {file_path}"
+        )
+
+    if _is_autonomous_financial_snapshot_path(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT read data/financial/ (human briefing + G1 only). "
             f"Blocked: Read {file_path}"
         )
 

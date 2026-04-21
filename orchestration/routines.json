@@ -410,6 +410,86 @@
         "inline": true,
         "notes": "Lightweight audit -- haiku can count and report; escalates stale items to Slack. inline=true: read-only audit, no source-of-truth writes."
       }
+    },
+    {
+      "routine_id": "phase45-daily-morning",
+      "enabled": true,
+      "schedule": {
+        "type": "daily",
+        "interval_days": 1
+      },
+      "task_template": {
+        "description": "Phase 4→5 bridge: financial_snapshot.py then morning_briefing.py (Slack DM if SLACK_DM_CHANNEL set)",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 2,
+        "goal_context": "G1 tracking + backlog visibility before first session",
+        "isc": [
+          "Financial snapshot row exists for UTC today | Verify: python tools/scripts/verify_financial_snapshot.py",
+          "Morning briefing log exists for UTC today | Verify: python tools/scripts/verify_morning_briefing.py"
+        ],
+        "context_files": [
+          "orchestration/task_backlog.jsonl",
+          "memory/work/telos/GOALS.md"
+        ],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "pipeline": {
+          "steps": [
+            {
+              "id": "financial_snapshot",
+              "run_python": "tools/scripts/financial_snapshot.py",
+              "args": [],
+              "timeout_s": 120
+            },
+            {
+              "id": "morning_briefing",
+              "run_python": "tools/scripts/morning_briefing.py",
+              "args": [],
+              "timeout_s": 120
+            }
+          ]
+        },
+        "notes": "Deterministic pipeline -- no claude -p. Set SLACK_DM_CHANNEL for DM; else #epdev. CRYPTO_BOT_ROOT / SUBSTACK_REVENUE_PATH optional."
+      }
+    },
+    {
+      "routine_id": "phase45-goal-drift",
+      "enabled": true,
+      "schedule": {
+        "type": "weekly",
+        "interval_days": 7
+      },
+      "task_template": {
+        "description": "Phase 4→5 bridge: goal_drift_check.py for G1/G2 signal capture age",
+        "project": "epdev",
+        "repo_path": "C:/Users/ericp/Github/epdev",
+        "tier": 0,
+        "priority": 3,
+        "goal_context": "TELOS alignment -- stale goals surface to Slack",
+        "isc": [
+          "Goal drift log exists for UTC today | Verify: python tools/scripts/verify_goal_drift.py"
+        ],
+        "context_files": [
+          "memory/learning/signals/"
+        ],
+        "skills": [],
+        "model": "haiku",
+        "autonomous_safe": true,
+        "pipeline": {
+          "steps": [
+            {
+              "id": "goal_drift",
+              "run_python": "tools/scripts/goal_drift_check.py",
+              "args": [],
+              "timeout_s": 120
+            }
+          ]
+        },
+        "notes": "After 5E-1 gate per tasklist; disable in routines.json if not ready. JARVIS_GOAL_DRIFT_DAYS default 14."
+      }
     }
   ]
 }
