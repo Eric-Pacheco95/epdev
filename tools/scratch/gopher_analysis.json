@@ -1,0 +1,497 @@
+[
+  {
+    "id": "D26sUZ6DHNQ",
+    "title": "99% of Developers Don't Get Sockets",
+    "views": 525704,
+    "words": 2045,
+    "keywords": {
+      "agent": 0,
+      "harness": 0,
+      "llm": 0,
+      "claude": 0,
+      "orchestration": 0,
+      "mcp": 0,
+      "rag": 0,
+      "embedding": 0,
+      "vector db": 0
+    },
+    "overlap_terms": [
+      [
+        "sockets",
+        37
+      ],
+      [
+        "socket",
+        30
+      ],
+      [
+        "file",
+        13
+      ],
+      [
+        "port",
+        12
+      ],
+      [
+        "network",
+        11
+      ],
+      [
+        "server",
+        11
+      ],
+      [
+        "client",
+        11
+      ],
+      [
+        "connection",
+        9
+      ],
+      [
+        "data",
+        9
+      ],
+      [
+        "layer",
+        8
+      ],
+      [
+        "systems",
+        8
+      ],
+      [
+        "number",
+        8
+      ],
+      [
+        "system",
+        7
+      ],
+      [
+        "open",
+        7
+      ],
+      [
+        "video",
+        6
+      ],
+      [
+        "model",
+        6
+      ],
+      [
+        "protocol",
+        5
+      ],
+      [
+        "address",
+        5
+      ],
+      [
+        "well",
+        5
+      ],
+      [
+        "specific",
+        5
+      ]
+    ]
+  },
+  {
+    "id": "oGPjzCBZGzg",
+    "title": "Docker vs. Kubernetes: The ONLY Video You Need to Finally Understand Containers!",
+    "views": 358179,
+    "words": 901,
+    "keywords": {
+      "agent": 0,
+      "harness": 0,
+      "llm": 0,
+      "claude": 0,
+      "orchestration": 3,
+      "mcp": 0,
+      "rag": 0,
+      "embedding": 0,
+      "vector db": 0
+    },
+    "overlap_terms": [
+      [
+        "docker",
+        28
+      ],
+      [
+        "state",
+        9
+      ],
+      [
+        "scale",
+        8
+      ],
+      [
+        "image",
+        7
+      ],
+      [
+        "running",
+        7
+      ],
+      [
+        "deployment",
+        6
+      ],
+      [
+        "together",
+        4
+      ],
+      [
+        "file",
+        4
+      ],
+      [
+        "scaling",
+        4
+      ],
+      [
+        "more",
+        4
+      ],
+      [
+        "number",
+        4
+      ],
+      [
+        "think",
+        3
+      ],
+      [
+        "single",
+        3
+      ],
+      [
+        "everything",
+        3
+      ],
+      [
+        "need",
+        3
+      ],
+      [
+        "code",
+        3
+      ],
+      [
+        "dependencies",
+        3
+      ],
+      [
+        "orchestration",
+        3
+      ],
+      [
+        "manages",
+        3
+      ],
+      [
+        "multiple",
+        3
+      ]
+    ]
+  },
+  {
+    "id": "TdondBmyNXc",
+    "title": "I replaced my entire stack with Postgres...",
+    "views": 322985,
+    "words": 2011,
+    "keywords": {
+      "agent": 0,
+      "harness": 0,
+      "llm": 0,
+      "claude": 1,
+      "orchestration": 0,
+      "mcp": 0,
+      "rag": 0,
+      "embedding": 0,
+      "vector db": 2
+    },
+    "overlap_terms": [
+      [
+        "database",
+        22
+      ],
+      [
+        "data",
+        18
+      ],
+      [
+        "search",
+        11
+      ],
+      [
+        "index",
+        9
+      ],
+      [
+        "vector",
+        8
+      ],
+      [
+        "user",
+        8
+      ],
+      [
+        "massive",
+        8
+      ],
+      [
+        "neon",
+        8
+      ],
+      [
+        "time",
+        7
+      ],
+      [
+        "query",
+        7
+      ],
+      [
+        "building",
+        7
+      ],
+      [
+        "entire",
+        6
+      ],
+      [
+        "standard",
+        6
+      ],
+      [
+        "json",
+        6
+      ],
+      [
+        "instead",
+        6
+      ],
+      [
+        "only",
+        6
+      ],
+      [
+        "even",
+        5
+      ],
+      [
+        "application",
+        5
+      ],
+      [
+        "need",
+        5
+      ],
+      [
+        "tools",
+        5
+      ]
+    ]
+  },
+  {
+    "id": "P8rrhZTPEAQ",
+    "title": "99% of Developers Don't Get PostgreSQL",
+    "views": 236749,
+    "words": 2145,
+    "keywords": {
+      "agent": 0,
+      "harness": 0,
+      "llm": 0,
+      "claude": 0,
+      "orchestration": 0,
+      "mcp": 0,
+      "rag": 0,
+      "embedding": 1,
+      "vector db": 0
+    },
+    "overlap_terms": [
+      [
+        "data",
+        35
+      ],
+      [
+        "postgresql",
+        20
+      ],
+      [
+        "ahead",
+        16
+      ],
+      [
+        "write",
+        16
+      ],
+      [
+        "transaction",
+        16
+      ],
+      [
+        "database",
+        15
+      ],
+      [
+        "disk",
+        11
+      ],
+      [
+        "pages",
+        10
+      ],
+      [
+        "rows",
+        9
+      ],
+      [
+        "version",
+        9
+      ],
+      [
+        "storage",
+        8
+      ],
+      [
+        "versions",
+        8
+      ],
+      [
+        "table",
+        7
+      ],
+      [
+        "multiple",
+        7
+      ],
+      [
+        "toast",
+        7
+      ],
+      [
+        "compression",
+        7
+      ],
+      [
+        "concurrency",
+        6
+      ],
+      [
+        "recovery",
+        6
+      ],
+      [
+        "large",
+        6
+      ],
+      [
+        "mvcc",
+        6
+      ]
+    ]
+  },
+  {
+    "id": "KLW9gDP6nN8",
+    "title": "How Dynamic Programming Broke Software Engineers",
+    "views": 103461,
+    "words": 1456,
+    "keywords": {
+      "agent": 0,
+      "harness": 0,
+      "llm": 0,
+      "claude": 0,
+      "orchestration": 0,
+      "mcp": 0,
+      "rag": 0,
+      "embedding": 0,
+      "vector db": 0
+    },
+    "overlap_terms": [
+      [
+        "problems",
+        14
+      ],
+      [
+        "problem",
+        11
+      ],
+      [
+        "optimal",
+        9
+      ],
+      [
+        "dynamic",
+        8
+      ],
+      [
+        "code",
+        5
+      ],
+      [
+        "doesn",
+        5
+      ],
+      [
+        "table",
+        5
+      ],
+      [
+        "start",
+        5
+      ],
+      [
+        "solving",
+        5
+      ],
+      [
+        "instead",
+        5
+      ],
+      [
+        "solution",
+        5
+      ],
+      [
+        "building",
+        5
+      ],
+      [
+        "find",
+        4
+      ],
+      [
+        "results",
+        4
+      ],
+      [
+        "approach",
+        4
+      ],
+      [
+        "values",
+        4
+      ],
+      [
+        "times",
+        4
+      ],
+      [
+        "solved",
+        4
+      ],
+      [
+        "space",
+        4
+      ],
+      [
+        "path",
+        4
+      ]
+    ]
+  }
+]

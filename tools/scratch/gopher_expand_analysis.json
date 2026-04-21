@@ -1,0 +1,318 @@
+[
+  {
+    "id": "Kq8Iz9tTcSo",
+    "title": "Large Language Models (LLMs) Explained",
+    "views": 9600,
+    "words": 2125,
+    "keywords": {
+      "agent": 2,
+      "harness": 0,
+      "llm": 13,
+      "claude": 2,
+      "orchestration": 0,
+      "mcp": 0,
+      "rag": 0,
+      "embedding": 1,
+      "vector db": 0
+    },
+    "overlap_terms": [
+      [
+        "model",
+        26
+      ],
+      [
+        "token",
+        14
+      ],
+      [
+        "code",
+        8
+      ],
+      [
+        "more",
+        8
+      ],
+      [
+        "llms",
+        7
+      ],
+      [
+        "next",
+        7
+      ],
+      [
+        "human",
+        7
+      ],
+      [
+        "training",
+        7
+      ],
+      [
+        "models",
+        7
+      ],
+      [
+        "build",
+        7
+      ],
+      [
+        "data",
+        6
+      ],
+      [
+        "language",
+        5
+      ],
+      [
+        "trained",
+        5
+      ],
+      [
+        "patterns",
+        5
+      ],
+      [
+        "layers",
+        5
+      ]
+    ]
+  },
+  {
+    "id": "j3RmMc9wkbM",
+    "title": "Meta now has the most insane AI agent",
+    "views": 4994,
+    "words": 1518,
+    "keywords": {
+      "agent": 2,
+      "harness": 0,
+      "llm": 1,
+      "claude": 0,
+      "orchestration": 2,
+      "mcp": 0,
+      "rag": 0,
+      "embedding": 2,
+      "vector db": 0
+    },
+    "overlap_terms": [
+      [
+        "action",
+        10
+      ],
+      [
+        "model",
+        7
+      ],
+      [
+        "state",
+        6
+      ],
+      [
+        "models",
+        6
+      ],
+      [
+        "code",
+        5
+      ],
+      [
+        "human",
+        5
+      ],
+      [
+        "visual",
+        5
+      ],
+      [
+        "system",
+        5
+      ],
+      [
+        "space",
+        4
+      ],
+      [
+        "understand",
+        4
+      ],
+      [
+        "input",
+        4
+      ],
+      [
+        "machine",
+        4
+      ],
+      [
+        "tokens",
+        4
+      ],
+      [
+        "apis",
+        4
+      ],
+      [
+        "world",
+        4
+      ]
+    ]
+  },
+  {
+    "id": "IieuQlnrgT8",
+    "title": "How RAG Changed The World (In 2025)",
+    "views": 1280,
+    "words": 705,
+    "keywords": {
+      "agent": 0,
+      "harness": 0,
+      "llm": 5,
+      "claude": 0,
+      "orchestration": 0,
+      "mcp": 0,
+      "rag": 15,
+      "embedding": 0,
+      "vector db": 2
+    },
+    "overlap_terms": [
+      [
+        "model",
+        17
+      ],
+      [
+        "data",
+        16
+      ],
+      [
+        "knowledge",
+        10
+      ],
+      [
+        "external",
+        10
+      ],
+      [
+        "fine-tuning",
+        7
+      ],
+      [
+        "need",
+        5
+      ],
+      [
+        "retrieval",
+        5
+      ],
+      [
+        "models",
+        5
+      ],
+      [
+        "training",
+        4
+      ],
+      [
+        "information",
+        4
+      ],
+      [
+        "performance",
+        4
+      ],
+      [
+        "sources",
+        4
+      ],
+      [
+        "relevant",
+        4
+      ],
+      [
+        "prompt",
+        4
+      ],
+      [
+        "base",
+        4
+      ]
+    ]
+  },
+  {
+    "id": "Ps913CUN1Tw",
+    "title": "Vector Databases: The Secret Weapon for AI Search",
+    "views": 883,
+    "words": 1142,
+    "keywords": {
+      "agent": 0,
+      "harness": 0,
+      "llm": 0,
+      "claude": 0,
+      "orchestration": 0,
+      "mcp": 0,
+      "rag": 0,
+      "embedding": 2,
+      "vector db": 10
+    },
+    "overlap_terms": [
+      [
+        "vector",
+        29
+      ],
+      [
+        "data",
+        25
+      ],
+      [
+        "vectors",
+        21
+      ],
+      [
+        "search",
+        12
+      ],
+      [
+        "database",
+        9
+      ],
+      [
+        "system",
+        9
+      ],
+      [
+        "space",
+        9
+      ],
+      [
+        "similarity",
+        8
+      ],
+      [
+        "databases",
+        8
+      ],
+      [
+        "indexing",
+        8
+      ],
+      [
+        "graph",
+        8
+      ],
+      [
+        "similar",
+        7
+      ],
+      [
+        "index",
+        7
+      ],
+      [
+        "points",
+        6
+      ],
+      [
+        "features",
+        5
+      ]
+    ]
+  }
+]
