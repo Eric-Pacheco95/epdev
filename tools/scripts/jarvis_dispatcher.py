@@ -2451,7 +2451,7 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
       'continue'     -- task finished (success or failure), keep going
       'stop_budget'  -- budget exhausted, stop loop
       'stop_rate'    -- rate limited, stop loop
-      'stop_lock'    -- claude -p mutex held, stop loop
+      'stop_lock'    -- claude -p mutex held, skip task and continue
       'stop_dry'     -- dry run, stop loop
       'stop_error'   -- unrecoverable error, stop loop
     """
@@ -3762,7 +3762,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.test:
-        sys.exit(0 if self_test() else 1)
+        raise SystemExit(0 if self_test() else 1)
 
     dispatch(dry_run=args.dry_run)
 
