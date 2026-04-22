@@ -76,17 +76,19 @@ class TestHideSymlinkFromGit:
 
         exclude = (wt / ".git" / "info" / "exclude").read_text(encoding="utf-8")
         assert f"/{rel}" in exclude
+        assert f"/{rel}/" in exclude
+        assert f"/{rel}/**" in exclude
 
     def test_idempotent_exclude(self, tmp_path):
-        """Calling twice must not duplicate the exclude entry."""
+        """Calling twice must not duplicate exclude patterns."""
         wt = _init_fake_worktree(tmp_path)
         rel = "memory/learning/failures"
 
         _hide_symlink_from_git(wt, rel)
+        exclude1 = (wt / ".git" / "info" / "exclude").read_text(encoding="utf-8")
         _hide_symlink_from_git(wt, rel)
-
-        exclude = (wt / ".git" / "info" / "exclude").read_text(encoding="utf-8")
-        assert exclude.count(f"/{rel}") == 1
+        exclude2 = (wt / ".git" / "info" / "exclude").read_text(encoding="utf-8")
+        assert exclude1 == exclude2
 
     def test_worktree_clean_after_hide(self, tmp_path):
         """After hiding all three paths, git status --porcelain must be empty."""
@@ -157,8 +159,8 @@ class TestSymlinkLocalMemory:
 
         exclude = (wt / ".git" / "info" / "exclude").read_text(encoding="utf-8")
         for rel_path, _ in wt_mod._MEMORY_SYMLINKS:
-            assert f"/{rel_path}" in exclude, (
-                f"/{rel_path} missing from .git/info/exclude"
+            assert f"/{rel_path}/**" in exclude, (
+                f"/{rel_path}/** missing from .git/info/exclude"
             )
 
     def test_skips_when_src_missing(self, tmp_path):

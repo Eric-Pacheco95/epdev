@@ -319,6 +319,17 @@ def _safe_worktree_remove(wt: Path) -> bool:
     return True
 
 
+def _exclude_file_has_line(existing: str, pattern: str) -> bool:
+    """True if exclude file text already contains this exact non-comment line."""
+    for raw in existing.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line == pattern:
+            return True
+    return False
+
+
 def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
     """Hide symlink/junction from git so it is never committed back to main.
 
@@ -327,8 +338,10 @@ def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
        those files are unchanged even though the dir is now a junction.
        Unlike 'git rm --cached', this leaves the index entry intact and
        stages no deletion — so git status / git add -A see nothing.
-    2. Add rel_path to .git/info/exclude so the junction/symlink entry
-       itself is invisible to git add -A (untracked file suppression).
+    2. Add anchored exclude patterns under .git/info/exclude so the junction
+       directory and everything under it stay off git status. Windows
+       junctions see huge untracked trees; `/path`, `/path/`, and `/path/**`
+       together fix the 2026-04-22 leak (`?? memory/learning/signals`).
 
     Called after a symlink/junction is created in the worktree so the
     replacement is never committed and never merged back into main.
@@ -363,10 +376,13 @@ def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
         exclude_path = gitdir / "info" / "exclude"
         exclude_path.parent.mkdir(parents=True, exist_ok=True)
         existing = exclude_path.read_text(encoding="utf-8") if exclude_path.exists() else ""
-        entry = f"/{rel_path}"
-        if entry not in existing:
+        patterns = (f"/{rel_path}", f"/{rel_path}/", f"/{rel_path}/**")
+        to_add = [p for p in patterns if not _exclude_file_has_line(existing, p)]
+        if to_add:
+            block = "\n# jarvis: hide memory junction from index (overnight worktree)\n"
+            block += "\n".join(to_add) + "\n"
             with open(exclude_path, "a", encoding="utf-8") as f:
-                f.write(f"\n{entry}\n")
+                f.write(block)
     except (OSError, subprocess.CalledProcessError) as exc:
         print(f"  WARNING: Could not update .git/info/exclude for {rel_path}: {exc}",
               file=sys.stderr)
