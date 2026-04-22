@@ -346,16 +346,28 @@ def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
                 capture_output=True, cwd=str(wt),
             )
 
-    # Add to worktree-local exclude so the symlink/junction is invisible to git add -A
-    exclude_path = wt / ".git" / "info" / "exclude"
+    # Add to worktree-local exclude so the symlink/junction is invisible to git add -A.
+    # In git worktrees, wt/.git is a FILE pointing to the real gitdir
+    # (main_repo/.git/worktrees/<name>) -- constructing wt/.git/info/exclude directly
+    # raises WinError 183 on Windows. Resolve the real gitdir via git rev-parse.
+    # See 2026-04-21_self-diagnose-overnight-runner.md (severity 6).
     try:
+        gitdir_proc = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(wt), check=True,
+        )
+        gitdir_raw = gitdir_proc.stdout.strip()
+        gitdir = Path(gitdir_raw)
+        if not gitdir.is_absolute():
+            gitdir = (wt / gitdir).resolve()
+        exclude_path = gitdir / "info" / "exclude"
         exclude_path.parent.mkdir(parents=True, exist_ok=True)
         existing = exclude_path.read_text(encoding="utf-8") if exclude_path.exists() else ""
         entry = f"/{rel_path}"
         if entry not in existing:
             with open(exclude_path, "a", encoding="utf-8") as f:
                 f.write(f"\n{entry}\n")
-    except OSError as exc:
+    except (OSError, subprocess.CalledProcessError) as exc:
         print(f"  WARNING: Could not update .git/info/exclude for {rel_path}: {exc}",
               file=sys.stderr)
 

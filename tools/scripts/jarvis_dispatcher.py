@@ -36,6 +36,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
+# Force UTF-8 on stdout/stderr so task descriptions containing non-cp1252
+# characters (arrows, em dashes, emoji) don't crash the dispatcher on
+# Windows consoles. See 2026-04-21_self-diagnose-jarvis-dispatcher.md.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
