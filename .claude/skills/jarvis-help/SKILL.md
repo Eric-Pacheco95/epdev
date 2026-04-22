@@ -66,6 +66,7 @@ true
 **OBSERVE** (gather context)
   /research           -- Research any topic | --type --outreach
   /extract-wisdom     -- Pull ideas, insights, quotes from content | --summary
+  /extract-corpus     -- Bounded channel/archive transcript extraction → memory/knowledge | --resume
   /extract-alpha      -- Extract actionable alpha from content | --market --security --count
   /deep-audit         -- Multi-axis codebase audit | --onboard --evaluate --cherry-pick
   /absorb             -- Absorb external content (URLs) | --quick --normal --deep

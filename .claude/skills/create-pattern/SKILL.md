@@ -37,6 +37,7 @@ false
 # DESIGN PRINCIPLES
 
 - **Script-vs-SKILL split**: for each step in the new skill, evaluate whether it requires intelligence (judgment, synthesis, NLG). If not, emit a deterministic Python script under `tools/scripts/` and have the SKILL.md call it. Only keep steps in SKILL.md that genuinely need the model.
+- **Corpus extraction is its own skill**: bounded channel/archive transcript workflows use `/extract-corpus` plus `tools/scripts/corpus_extractor.py` — not a `--corpus` flag on `/create-pattern` (different inputs, outputs, and promotion gates; see `history/decisions/2026-04-22-second-opinion-extract-corpus-vs-flag.md`).
 
 # STEPS
 
@@ -51,7 +52,7 @@ false
 
 Before creating any new skill, evaluate these 4 checks in order. If any check redirects, follow the redirect — do not proceed to Step 1.
 
-1. **Can this be a `--flag` on an existing skill?** Scan existing skills for overlapping domain or workflow. If the new behavior is a mode of an existing skill (e.g., outreach mode on /research), propose adding a `--flag` mode instead. Default posture: extend before create. Only create standalone when the workflow is genuinely independent of all existing skills.
+1. **Can this be a `--flag` on an existing skill?** Scan existing skills for overlapping domain or workflow. If the new behavior is a mode of an existing skill (e.g., outreach mode on /research), propose adding a `--flag` mode instead. Default posture: extend before create. Only create standalone when the workflow is genuinely independent of all existing skills. **Exception already decided:** large YouTube/channel corpus extraction is `/extract-corpus` (not a flag on this skill).
 
 2. **Has `/architecture-review` been run?** Required if the skill touches external data (WebSearch, APIs), sends output to real people (email, Slack, notifications), or has security implications. If not run, recommend it before proceeding: "This skill [reason]. Run `/architecture-review` first to validate the design."
 

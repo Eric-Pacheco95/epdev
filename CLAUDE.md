@@ -132,7 +132,7 @@ Jarvis should route work through skills whenever possible. This teaches Eric whi
 
 **Full build chain: `/research` -> `/create-prd` -> `/implement-prd` -> `/quality-gate` -> `/learning-capture`**
 
-**48 active skills available.** Skills are auto-discovered at session start. Run `/jarvis-help` for the full registry.
+**49 active skills available.** Skills are auto-discovered at session start. Run `/jarvis-help` for the full registry.
 
 ## TELOS
 

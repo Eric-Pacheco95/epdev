@@ -110,6 +110,11 @@ Project initialization (new project from scratch):
 [topic] → /research → /write-essay | /create-keynote | /visualize
 ```
 
+## Corpus Extraction Chain
+```
+[channel/archive corpus] → /extract-corpus → /learning-capture
+```
+
 ## Skill Creation Chain
 ```
 /create-pattern → (scan existing skills for chains to update) → update SKILL CHAIN in affected skills
@@ -146,6 +151,7 @@ Project initialization (new project from scratch):
 | Update self-knowledge | `/telos-update` | (leaf — no chain) |
 | Check learning progress | `/telos-report` | (leaf — no chain) |
 | Create new skill | `/create-pattern` | scan + update affected skill chains |
+| Large YouTube/channel corpus → knowledge dirs | `/extract-corpus` | `tools/scripts/corpus_extractor.py` for fetch/scan/queue; skill owns Phase 3–4 |
 | Chain skills together | `/workflow-engine` | `/learning-capture` |
 | Audit completed work | `/quality-gate` | `/update-steering-rules` (if systemic gaps) → `/learning-capture` |
 | Unknown / novel | Flag for Eric + suggest `/create-pattern` | — |
