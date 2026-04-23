@@ -55,7 +55,6 @@ false
 - If input looks like a feature request rather than a file path:
   - Print: "This looks like a feature request, not a PRD path. Run /create-prd first to define requirements, then come back to /implement-prd."
   - Offer to route via /delegation
-- Once input is validated, proceed to Step 1
 
 ## Step 0.5: OUTCOME-SHAPE CHECK (v2+ and stalled projects)
 
@@ -186,18 +185,18 @@ Present a scaffold sentence per ISC item (what was built and why, not what file 
 
 # VERIFY
 
-- COMPLETION STATUS is COMPLETE, PARTIAL, or BLOCKED -- never left blank | Verify: Read COMPLETION STATUS section
-- Every ISC item has a PASS, FAIL, or DEFERRED status with structured evidence (evidence type, source, content) | Verify: Read VERIFY RESULTS table
-- /review-code was run and its findings are in the output (REVIEW FINDINGS section) | Verify: Check REVIEW FINDINGS is not empty or '(skipped)'
-- /quality-gate was run after each phase | Verify: Check QUALITY GATE section
-- OWNERSHIP CHECK was completed -- Eric confirmed scaffold sentences before COMPLETION STATUS was written | Verify: Check OWNERSHIP CHECK table in output
-- Uncommitted changes were flagged to Eric (not auto-committed) | Verify: Check output for commit prompt
+- COMPLETION STATUS is COMPLETE, PARTIAL, or BLOCKED | Verify: Read COMPLETION STATUS section
+- Every ISC item has PASS/FAIL/DEFERRED with structured evidence | Verify: Read VERIFY RESULTS table
+- /review-code findings in REVIEW FINDINGS section | Verify: REVIEW FINDINGS not empty or "(skipped)"
+- /quality-gate ran after each phase | Verify: QUALITY GATE section present
+- OWNERSHIP CHECK completed before COMPLETION STATUS written | Verify: OWNERSHIP CHECK table in output
+- Uncommitted changes flagged (not auto-committed) | Verify: Commit prompt in output
 
 # LEARN
 
-- Track which ISC criterion types most often need fix cycles (0/1/2/3 cycles) -- high-cycle items reveal where implementation planning is weakest
-- If PARTIAL completion is the outcome on 2+ consecutive PRD phases, investigate whether the ISC items are too ambitious for single sessions (break down further)
-- The approach retrospective in VERIFY RESULTS captures whether the same approach would be chosen again -- surface recurring 'would not choose again' patterns in /learning-capture for methodology improvement
+- Track which ISC criterion types need fix cycles — high-cycle items reveal where planning is weakest
+- PARTIAL on 2+ consecutive phases: ISC items too ambitious for single sessions; break down further
+- Approach retrospective in VERIFY RESULTS: surface recurring "would not choose again" patterns in /learning-capture
 
 # INPUT
 
