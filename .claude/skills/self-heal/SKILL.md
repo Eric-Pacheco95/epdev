@@ -113,17 +113,17 @@ Write to `memory/learning/failures/{date}_{slug}.md`:
 
 # VERIFY
 
-- A failure log entry was written with all 6 required fields (Context, Error, Root Cause, Fix Applied, Verification, Prevention) | Verify: Read the failure log entry in `memory/learning/failures/`
-- The fix was verified to pass (test or manual check confirms the error is gone) | Verify: Confirmation output shows the fix works
-- No minimal fix ballooned into a refactor or scope expansion | Verify: Check that only the failing component was modified
-- If a steering rule was proposed: it was surfaced to Eric for approval before being added to CLAUDE.md | Verify: Check output for steering rule proposal with approval request
+- Failure log entry has all 6 fields (Context, Error, Root Cause, Fix Applied, Verification, Prevention) | Verify: Read entry in `memory/learning/failures/`
+- Fix verified to pass | Verify: confirmation output shows error gone
+- Fix did not expand into refactor/scope creep | Verify: only failing component modified
+- Steering rule proposed: surfaced to Eric for approval | Verify: approval request in output
 
 # LEARN
 
-- Track the most common failure types (import errors, path issues, encoding bugs, test isolation) -- after 5+ self-heals, the top failure type should become a pre-build check in the relevant skill
-- If the same component fails 3+ times, flag it as a structural debt signal -- the fix pattern is a symptom, not the cure; the component needs a /review-code + refactor
-- If root cause is consistently unclear (logged as anomaly), the diagnostic logic in self-heal needs improvement; log a signal suggesting a better diagnostic step
-- After successful self-heal, run the full defensive test suite to confirm no regression: `python tests/defensive/run_all.py`
+- Track most common failure types — after 5+ self-heals, top type becomes a pre-build check
+- Same component fails 3+: structural debt; needs /review-code + refactor
+- Root cause consistently unclear: self-heal diagnostic needs improvement; log signal
+- After successful self-heal: run full defensive test suitee to confirm no regression: `python tests/defensive/run_all.py`
 
 # INPUT
 
