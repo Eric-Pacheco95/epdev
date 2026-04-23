@@ -229,11 +229,11 @@ Maps: [link]
 
 # VERIFY
 
-- All missing intake fields were gathered before Phase 2 began | Verify: Review Phase 0 output
-- Plan type was locked and the correct output format was used | Verify: Check output section headers match type template
-- Every venue/location has a Google Maps link | Verify: Scan output for maps.google.com links
-- Items requiring booking are flagged [BOOK AHEAD] | Verify: Review output
-- No plans presented without vibe alignment check | Verify: Vibe label present in output header
+- Missing intake fields gathered before Phase 2 | Verify: Review Phase 0 output
+- Plan type locked, correct output format used | Verify: output section headers match type template
+- Every venue/location has Google Maps link | Verify: Scan for maps.google.com links
+- Booking-required items flagged [BOOK AHEAD] | Verify: Review output
+- Vibe label present in output header | Verify: output header
 
 # LEARN
 
