@@ -125,6 +125,106 @@ def collect_git_hash() -> str:
     return "unknown"
 
 
+FOUR_AXES = ("stakes", "ambiguity", "solvability", "verifiability")
+VALID_AXIS_VALUES = {"low", "medium", "high"}
+
+
+def parse_frontmatter(text: str) -> dict | None:
+    """Parse a leading YAML-style `---`-delimited frontmatter block.
+
+    Returns dict of key->value (scalars only), or None if no frontmatter.
+    Only scans the leading block; does not parse arbitrary YAML.
+    """
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+    fm: dict[str, str] = {}
+    for i, line in enumerate(lines[1:], start=1):
+        stripped = line.strip()
+        if stripped == "---":
+            return fm
+        if not stripped or stripped.startswith("#"):
+            continue
+        m = re.match(r"^([A-Za-z_][A-Za-z0-9_-]*)\s*:\s*(.*?)\s*$", stripped)
+        if m:
+            key, val = m.group(1), m.group(2)
+            # strip optional wrapping quotes
+            val = val.strip().strip('"').strip("'")
+            fm[key.lower()] = val.lower() if val else ""
+    # closing --- never found; treat as no frontmatter
+    return None
+
+
+def check_frontmatter_axes(prd_path: Path) -> dict:
+    """Check PRD frontmatter for the four Task Typing axes.
+
+    Returns: {
+        "has_frontmatter": bool,
+        "four_axis": {"present": bool, "missing": [...], "invalid": [...]},
+        "values": {axis: value or None},
+        "gate_passed": bool,   # False only if frontmatter present but incomplete/invalid
+        "grandfathered": bool, # True when no frontmatter block at all
+        "errors": [...],
+    }
+    """
+    errors: list[str] = []
+    if not prd_path.exists():
+        return {
+            "has_frontmatter": False,
+            "four_axis": {"present": False, "missing": list(FOUR_AXES), "invalid": []},
+            "values": {a: None for a in FOUR_AXES},
+            "gate_passed": False,
+            "grandfathered": False,
+            "errors": [f"File not found: {prd_path}"],
+        }
+    try:
+        text = prd_path.read_text(encoding="utf-8")
+    except Exception as exc:
+        return {
+            "has_frontmatter": False,
+            "four_axis": {"present": False, "missing": list(FOUR_AXES), "invalid": []},
+            "values": {a: None for a in FOUR_AXES},
+            "gate_passed": False,
+            "grandfathered": False,
+            "errors": [f"Cannot read file: {exc}"],
+        }
+
+    fm = parse_frontmatter(text)
+    if fm is None:
+        # Grandfather: PRDs without frontmatter pass through with a note
+        return {
+            "has_frontmatter": False,
+            "four_axis": {"present": False, "missing": list(FOUR_AXES), "invalid": []},
+            "values": {a: None for a in FOUR_AXES},
+            "gate_passed": True,
+            "grandfathered": True,
+            "errors": [],
+        }
+
+    values = {a: fm.get(a) for a in FOUR_AXES}
+    missing = [a for a in FOUR_AXES if not values[a]]
+    invalid = [
+        a for a in FOUR_AXES
+        if values[a] and values[a] not in VALID_AXIS_VALUES
+    ]
+    present = not missing and not invalid
+    if missing:
+        errors.append(f"Missing axes: {', '.join(missing)}")
+    if invalid:
+        errors.append(
+            f"Invalid axis values (must be low|medium|high): "
+            + ", ".join(f"{a}={values[a]}" for a in invalid)
+        )
+    return {
+        "has_frontmatter": True,
+        "four_axis": {"present": present, "missing": missing, "invalid": invalid},
+        "values": values,
+        "gate_passed": present,
+        "grandfathered": False,
+        "errors": errors,
+    }
+
+
 def parse_isc_items(text: str) -> list[dict]:
     """Extract ISC criteria from PRD text.
 
@@ -935,7 +1035,39 @@ def main():
         "--phase", type=str, default=None,
         help="Filter output to ISC items in the named phase section (e.g. --phase 1, --phase 2A)",
     )
+    parser.add_argument(
+        "--check-frontmatter", action="store_true",
+        help="Check PRD frontmatter for Task Typing four-axis labels (stakes, ambiguity, solvability, verifiability); prints result and exits",
+    )
     args = parser.parse_args()
+
+    # -- Frontmatter-only mode (lightweight, four-axis Task Typing check) --
+    if getattr(args, "check_frontmatter", False):
+        if not args.prd:
+            print("ERROR: --check-frontmatter requires --prd", file=sys.stderr)
+            sys.exit(2)
+        prd_path = Path(args.prd)
+        if not prd_path.is_absolute():
+            prd_path = REPO_ROOT / prd_path
+        fm_result = check_frontmatter_axes(prd_path)
+        if args.json or args.pretty:
+            indent = 2 if args.pretty else None
+            print(json.dumps(fm_result, indent=indent, default=str))
+        else:
+            if fm_result["grandfathered"]:
+                print(f"Frontmatter: ABSENT (grandfathered -- no four-axis labels required)")
+            elif fm_result["four_axis"]["present"]:
+                vals = fm_result["values"]
+                print(
+                    "Frontmatter: PRESENT -- "
+                    f"stakes={vals['stakes']} ambiguity={vals['ambiguity']} "
+                    f"solvability={vals['solvability']} verifiability={vals['verifiability']}"
+                )
+            else:
+                print("Frontmatter: INCOMPLETE")
+                for err in fm_result["errors"]:
+                    print(f"  - {err}")
+        sys.exit(0 if fm_result["gate_passed"] else 1)
 
     # -- Task mode (lightweight) --
     if args.task or args.task_inline:

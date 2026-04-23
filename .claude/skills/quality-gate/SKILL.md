@@ -51,7 +51,11 @@ true
 - If no argument: default scope is all checked items in tasklist -- proceed
 - Proceed to audit
 
-- Read `orchestration/steering/autonomous-rules.md` — load anti-criterion verification constraints (detector-for-class requirement, anti-criteria exit-code rules) before evaluating ISC compliance
+- Read `orchestration/steering/autonomous-rules.md` — load anti-criterion verification constraints (detector-for-class requirement, anti-criteria exit-code rules) AND the Task Typing (S×A + S×V) section before evaluating ISC compliance
+- **Task Typing frontmatter check** — if a PRD path is present (explicit `--prd` arg to the underlying script, or inferred from scope), run `python tools/scripts/isc_validator.py --prd <path> --check-frontmatter --json`:
+  - `grandfathered: true` (no frontmatter block) → pass through with a single-line "Task Typing: GRANDFATHERED (pre-cutoff PRD)" note in the findings table; do NOT reject on axis absence
+  - `four_axis.present: true` → note the four values in the findings table as informational
+  - `four_axis.present: false` (frontmatter exists but incomplete or invalid) → **REJECT** with message naming the missing/invalid axes; emit under Critical Gaps and include "four-axis labels present (for cutoff-new PRDs)" under Gate Verification Commands
 - **VERIFY phase requirement**: any task whose BUILD produced or modified a script that consumes external input (scraped, Slack, MCP, user paste, API) must show evidence that `/review-code` was run; phase-gate criteria must include a verification command or file-existence check, not self-reported status. Reject the quality gate if a VERIFY bullet says "tested manually" without a command or artifact path.
 - **Forward-causal ISC review (autonomous capabilities)**: for any gated criterion tagged to an autonomous capability, apply the forward-causal test — does it measure forward/causal/money-layer reality, or code-quality/historical/calendar proxy? Flag any proxy gate as PARTIAL even if it passed. Calendar-duration thresholds are universally suspect in low-activity regimes. Correlation checks require shuffle-test + regime-detector before counting as causal.
 - Run `python tools/scripts/quality_gate_check.py --check-files` to get the deterministic report: tasklist stats, open items, decision log coverage, and file reference validation. If a `--phase` argument was provided, pass it through: `python tools/scripts/quality_gate_check.py --check-files --phase <PHASE>`

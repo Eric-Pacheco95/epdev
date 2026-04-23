@@ -33,6 +33,46 @@
 - Never use the same model to both generate and evaluate its own output — route evaluation to a fresh Sonnet subagent (interactive) or Codex adversarial mode (overnight); track catch rate in `data/review_gate_log.jsonl` (one JSONL entry per eval run: `date`, `task_slug`, `findings_count`, `applied_fix`, `rate_limited`; summarize to `history/decisions/` at quarterly audit)
 - `[MODEL-DEP]` Capability-gap pairing (re-validate quarterly; last validated 2026-04-16): Opus judges Sonnet output, Sonnet judges Haiku output — evaluator must be strictly stronger than generator; if the gap closes (evaluator catch rate <10% over 20+ samples), disable the eval loop and alert rather than continuing to spend with zero quality delta. Current status: gap confirmed (Opus 4.7 > Sonnet 4.6 > Haiku 4.5); 1 positive catch-rate data point logged (2026-04-04, 3 High findings); systematic 20-sample tracking not yet established — log each eval outcome to `history/decisions/` with `catch_result:` field
 
+## Task Typing (S×A + S×V)
+
+PRD frontmatter must declare four axes — each `low | medium | high`:
+
+```yaml
+---
+stakes:        low | medium | high
+ambiguity:     low | medium | high
+solvability:   low | medium | high
+verifiability: low | medium | high
+---
+```
+
+**Stakes** is shared between S×A and S×V — declared once, consulted in both phases.
+
+**GENERATE-phase routing** (consumed by `/implement-prd` before BUILD):
+
+| Axis | Drives |
+|------|--------|
+| `stakes` | Generator tier (low=Haiku, medium=Sonnet, high=Opus) |
+| `ambiguity` | Pre-code effort — research / first-principles / spec clarification BEFORE writing code |
+| `solvability` | Attempt-vs-escalate and retry depth — `low` = escalate model tier or route to human; `medium` = chunk + budget 2-3 retries; `high` = attempt directly |
+
+**EVAL-phase routing** (consumed by `/implement-prd` REVIEW GATE Step 2):
+
+| Axis | Drives |
+|------|--------|
+| `verifiability` | Evaluator tier — `high` = script-oracle (skip Sonnet subagent); `medium` = Sonnet subagent + detector; `low` = Opus subagent OR `/second-opinion` OR Codex adversarial OR HITL |
+| `stakes` | Eval depth multiplier — `stakes: high` forces HITL regardless of V |
+| `solvability` | Danger-cell signal — `solvability: low` × `verifiability: low` forces HITL (fluent-bluff guard) |
+
+**Effort scaling is differentiated across the three effort axes, not duplicated:**
+- `ambiguity` scales effort **before** code (more research, spec clarification)
+- `solvability` scales effort **during** code (retries, model escalation, chunking)
+- `verifiability` scales effort **after** code (evaluator depth, HITL, adversarial)
+
+Definitions for `stakes` and `ambiguity` are authoritative in `memory/knowledge/harness/subagent_model_routing.md` (S×A rubric). Definitions for `solvability` and `verifiability` are authoritative in `orchestration/steering/solvability-spectrum.md` and `orchestration/steering/verifiability-spectrum.md`.
+
+**Terminology guard:** Use **"escalate"** (not `defer`) for the Solvability `low` action. `defer` is reserved for the PreToolUse permission state in `security/validators/validate_tool_use.py` (see Security Gates below).
+
 ## Security Gates
 
 - Any execution gate with both "safely skippable" and "dangerous/rejected" outcomes must use three explicit states — never collapse to binary pass/fail; use `executable` (run it), `deferred` (pause worker, queue for human review, resume via `claude -p --resume`), `blocked` (security rejection). The `deferred` state replaces the soft `manual_required` convention using Claude Code v2.1.89's native PreToolUse `{"decision": "defer"}` permission. PreToolUse hooks return `"defer"` for high-risk-but-reversible operations (TELOS writes, git push, sensitive path edits); `"block"` remains for irreversible/dangerous patterns (fork bombs, rm -rf, path traversal). Deferred tasks surface in morning briefing with approve/reject; approved tasks resume with full context via `--resume <session_id>`
@@ -67,5 +107,6 @@
 - `heartbeat_config.json` — context_files entry
 - `.claude/skills/synthesize-signals/SKILL.md` — Step 0.5 (producer behavior + synthesis thresholds)
 - `.claude/skills/learning-capture/SKILL.md` — Step 0.5 (producer behavior + signal constraints)
-- `.claude/skills/create-prd/SKILL.md` — Step 0.9 (anti-criterion verification constraints)
-- `.claude/skills/quality-gate/SKILL.md` — Step 0 (anti-criterion exit-code rules)
+- `.claude/skills/create-prd/SKILL.md` — Step 0.9 (anti-criterion verification constraints + Task Typing four-axis frontmatter)
+- `.claude/skills/implement-prd/SKILL.md` — Step 1 (Task Typing label extraction + REVIEW GATE evaluator routing by verifiability)
+- `.claude/skills/quality-gate/SKILL.md` — Step 0 (anti-criterion exit-code rules + Task Typing frontmatter check)

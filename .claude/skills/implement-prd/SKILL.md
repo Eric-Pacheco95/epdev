@@ -70,6 +70,13 @@ false
 - Read every context file, existing script, or related module referenced in the PRD before writing a single line of code
 - Adopt the Engineer persona (see `orchestration/agents/Engineer.md`): senior developer, defensive by default, security-first, minimal surface area — no gold-plating, no unnecessary abstractions
 
+### TASK TYPING FRONTMATTER EXTRACT
+
+- Run `python tools/scripts/isc_validator.py --prd <PRD-path> --check-frontmatter --json` and parse `four_axis.present`, `grandfathered`, and `values.{stakes,ambiguity,solvability,verifiability}` into runtime vars
+- If `grandfathered: true` (no frontmatter at all): note "Task Typing: GRANDFATHERED (no four-axis labels)" in IMPLEMENTATION LOG and proceed — REVIEW GATE falls back to the current Sonnet-subagent default
+- If `four_axis.present: false` (frontmatter exists but incomplete/invalid): STOP and print the missing/invalid axes; require `/create-prd` to add them before BUILD proceeds
+- If `four_axis.present: true`: hold `stakes`, `ambiguity`, `solvability`, `verifiability` for downstream routing — GENERATE-phase consumers below and REVIEW GATE Step 2
+
 ### MODEL ANNOTATION CHECK
 
 Check each ISC item for a `model:` annotation (`| model: sonnet |` or `| model: haiku |`):
@@ -124,15 +131,27 @@ Non-optional gate once all ISC items are built/blocked.
 - Ruff findings → RELIABILITY; security findings → SECURITY FINDINGS
 - Critical security findings: fix before Step 2
 
-**Step 2 — Cross-model review (Sonnet subagent):**
-- Spawn Sonnet (fresh-eyes); pass changed files, ISC context, build summary
+**Step 2 — Cross-model review (evaluator routed by `verifiability`):**
+
+Route evaluator tier per the Task Typing labels extracted in Step 1 — see `orchestration/steering/autonomous-rules.md` > Task Typing and `orchestration/steering/verifiability-spectrum.md`:
+
+- **`verifiability: high`** → **skip Sonnet subagent review.** The verify method (script / exit-code / test) is the oracle. Mark REVIEW GATE as satisfied by the script oracle; set `evaluator: "script-oracle"` and `findings_count: 0` in the log entry below. Still run the deterministic prescan (Step 1) — script-oracle does not substitute for ruff/security scan.
+- **`verifiability: medium`** → spawn Sonnet subagent (current default path). See subagent flow below.
+- **`verifiability: low`** → escalate: spawn Opus subagent OR invoke `/second-opinion` OR print "VERIFY REQUIRES HITL — pausing for Eric" and stop. Set `evaluator: "opus-subagent" | "second-opinion" | "hitl"` accordingly in the log.
+- **Stakes override**: if `stakes: high`, require HITL regardless of `verifiability` (the stakes eval-depth multiplier — see Task Typing).
+- **Fluent-bluff override**: if `solvability: low` AND `verifiability: low`, force HITL — do not rely on any subagent alone.
+- **Grandfathered PRDs** (no frontmatter): fall back to Sonnet subagent default.
+
+**Sonnet / Opus subagent flow (when routed here):**
+- Spawn a fresh-eyes evaluator at the routed tier; pass changed files, ISC context, build summary
 - Subagent prompt: "Review code you did not write. Be adversarial: incomplete implementations, edge cases, security gaps, production failures. Before reviewing correctness, scan the diff for any behavior not traceable to an ISC item and flag it as SCOPE CREEP."
 - **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: review incomplete", do NOT proceed to VERIFY
 - **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
 - Scope: only issues related to implemented ISC items
-- **Catch-rate log**: after review completes (regardless of outcome), append one entry to `data/review_gate_log.jsonl`:
-  `{"date": "YYYY-MM-DD", "task_slug": "<prd-slug>", "evaluator": "sonnet-subagent", "generator": "sonnet-main", "findings_count": N, "severity_max": "Critical|High|Med|Low|none", "applied_fix": true/false, "rate_limited": false, "skill": "implement-prd"}`
-  Set `applied_fix: true` only if a Critical/High finding required a code change. Set `rate_limited: true` and `findings_count: null` if rate-limit guard fired (don't count toward catch rate). This feeds the capability-gap kill switch in `orchestration/steering/autonomous-rules.md` — 20 non-rate-limited entries with `applied_fix: true` rate <10% disables the eval loop.
+
+- **Catch-rate log**: after REVIEW GATE completes (regardless of outcome), append one entry to `data/review_gate_log.jsonl` stamping all four Task Typing axes:
+  `{"date": "YYYY-MM-DD", "task_slug": "<prd-slug>", "evaluator": "script-oracle|sonnet-subagent|opus-subagent|second-opinion|hitl", "generator": "sonnet-main|opus-main|haiku-main", "findings_count": N, "severity_max": "Critical|High|Med|Low|none", "applied_fix": true/false, "rate_limited": false, "skill": "implement-prd", "stakes": "low|medium|high", "ambiguity": "low|medium|high", "solvability": "low|medium|high", "verifiability": "low|medium|high"}`
+  Set `applied_fix: true` only if a Critical/High finding required a code change. Set `rate_limited: true` and `findings_count: null` if rate-limit guard fired (don't count toward catch rate). For `verifiability: high` script-oracle paths set `findings_count: 0`. Omit the four axis fields for grandfathered PRDs (no frontmatter). This feeds the capability-gap kill switch in `orchestration/steering/autonomous-rules.md` — 20 non-rate-limited entries with `applied_fix: true` rate <10% disables the eval loop.
 
 **Trust-boundary guard**: Any future gate addition that introduces mutable state (fixes, rewrites) must be positioned *before* this step, not after. Downstream placement means new code bypasses fresh-eyes review — a silent coverage regression on every build where the gate fires.
 

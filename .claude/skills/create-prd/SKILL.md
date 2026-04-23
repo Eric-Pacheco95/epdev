@@ -85,7 +85,8 @@ WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPE
 
 ## Step 0.9: LOAD AUTONOMOUS STEERING RULES
 
-- Read `orchestration/steering/autonomous-rules.md` — load ISC anti-criterion verification constraints (detector-for-class requirement, vacuous-truth guards) before drafting acceptance criteria
+- Read `orchestration/steering/autonomous-rules.md` — load ISC anti-criterion verification constraints (detector-for-class requirement, vacuous-truth guards) before drafting acceptance criteria; also load the **Task Typing (S×A + S×V)** section for the four-axis frontmatter requirement below
+- Read `orchestration/steering/solvability-spectrum.md` and `orchestration/steering/verifiability-spectrum.md` for per-tier definitions used when labeling the PRD
 
 ## Step 0.95: BLOCKER-LIST EVIDENCE PRE-CHECK
 
@@ -97,6 +98,16 @@ If a blocker is evidence-resolvable from session state, resolve it silently and 
 
 ## Step 1: EXTRACT
 
+- **Task Typing frontmatter (required)** — every PRD must include a leading YAML frontmatter block as the first element of the output PRD, declaring the four Task Typing axes per `orchestration/steering/autonomous-rules.md` > Task Typing:
+  ```yaml
+  ---
+  stakes:        low | medium | high
+  ambiguity:     low | medium | high
+  solvability:   low | medium | high
+  verifiability: low | medium | high
+  ---
+  ```
+  Choose each axis from the input signal. Rubric: `stakes` = cost of getting it wrong; `ambiguity` = spec clarity; `solvability` = difficulty of producing a good candidate (see solvability-spectrum.md); `verifiability` = oracle strength (see verifiability-spectrum.md). If the input provides no signal for a given axis, default to `medium` and add a bullet to OPEN QUESTIONS naming the defaulted axis and asking Eric to confirm.
 - Extract the product or feature name, intended audience, and the problem being solved from the input
 - Separate stated goals from implied goals; list explicit non-goals when the input provides them or clearly implies boundaries
 - Identify primary users or personas only when the input supports them; otherwise use a short "Assumed users" note with gaps flagged
@@ -125,7 +136,8 @@ If a blocker is evidence-resolvable from session state, resolve it silently and 
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- Output exactly these sections in order (level-2 headings): OVERVIEW, PROBLEM AND GOALS, NON-GOALS, USERS AND PERSONAS, USER JOURNEYS OR SCENARIOS, FUNCTIONAL REQUIREMENTS, NON-FUNCTIONAL REQUIREMENTS, ACCEPTANCE CRITERIA, SUCCESS METRICS, OUT OF SCOPE, DEPENDENCIES AND INTEGRATIONS, RISKS AND ASSUMPTIONS, OPEN QUESTIONS
+- The first element of the output PRD must be a YAML frontmatter block bounded by `---` lines declaring the four Task Typing axes: `stakes`, `ambiguity`, `solvability`, `verifiability` (each `low | medium | high`). No exceptions.
+- Output exactly these sections in order (level-2 headings) after the frontmatter: OVERVIEW, PROBLEM AND GOALS, NON-GOALS, USERS AND PERSONAS, USER JOURNEYS OR SCENARIOS, FUNCTIONAL REQUIREMENTS, NON-FUNCTIONAL REQUIREMENTS, ACCEPTANCE CRITERIA, SUCCESS METRICS, OUT OF SCOPE, DEPENDENCIES AND INTEGRATIONS, RISKS AND ASSUMPTIONS, OPEN QUESTIONS
 - OVERVIEW: 1-para, no bullets
 - PROBLEM AND GOALS: bullets tied to user/business outcomes
 - NON-GOALS: bullets; if none: "(none stated—confirm with stakeholders)"
@@ -163,6 +175,7 @@ If a blocker is evidence-resolvable from session state, resolve it silently and 
 - At least one anti-criterion (what must NOT happen) is present | Verify: Grep PRD for 'must not' or 'never' in ISC section
 - PRD was collaboratively developed (Eric was asked questions, not just handed a doc) | Verify: Check output for question-and-answer exchanges before PRD was written
 - Sibling PRD declared → draft has `related-prds:` frontmatter, ASSUMPTIONS shipping-order entry, and anti-criterion enforcing sibling's rule | Verify: Grep PRD for `related-prds:`, sibling slug, and `Anti-criterion`
+- Task Typing frontmatter declares all four axes (stakes, ambiguity, solvability, verifiability), each `low | medium | high` | Verify: `python tools/scripts/isc_validator.py --prd <path> --check-frontmatter` exits 0 with `four_axis.present: true`
 
 # LEARN
 
