@@ -211,7 +211,7 @@ def worktree_setup(
     if symlink_memory:
         if not _symlink_local_memory(wt):
             print(
-                f"  ERROR: junction hide failed — removing worktree to prevent "
+                f"  ERROR: memory link hide failed — removing worktree to prevent "
                 f"signal file deletion on next merge.",
                 file=sys.stderr,
             )
@@ -388,14 +388,40 @@ def _hide_symlink_from_git(wt: Path, rel_path: str) -> None:
               file=sys.stderr)
 
 
+def _debug_worktree_exclude_tail(wt: Path, max_lines: int = 40) -> str:
+    """Last lines of this worktree's info/exclude (for diagnostics on hide failure)."""
+    try:
+        gitdir_proc = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(wt), check=True,
+        )
+        gitdir_raw = gitdir_proc.stdout.strip()
+        gitdir = Path(gitdir_raw)
+        if not gitdir.is_absolute():
+            gitdir = (wt / gitdir).resolve()
+        exclude_path = gitdir / "info" / "exclude"
+        if not exclude_path.is_file():
+            return f"(no exclude file at {exclude_path})"
+        lines = exclude_path.read_text(encoding="utf-8").splitlines()
+        tail = lines[-max_lines:] if len(lines) > max_lines else lines
+        return "\n".join(tail)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        return f"(could not read exclude: {exc})"
+
+
 def _symlink_local_memory(wt: Path) -> bool:
     """Replace gitkeep-only dirs in worktree with symlinks to real local dirs.
 
     Lets workers read accumulated signals/synthesis/failures that are
     gitignored (personal content stays local).
 
-    Returns True if all junctions were successfully hidden from git.
-    Returns False if any junction leaked into the git index — caller must
+    On Windows, directory junctions (``mklink /J``) are preferred over file
+    symlinks so behavior matches the common unprivileged path and the
+    triple-pattern ``info/exclude`` hide (see 4da029e; 2026-04-22 04:00 runs
+    predated that fix and still used the older single-line exclude).
+
+    Returns True if all memory links were successfully hidden from git.
+    Returns False if any link leaked into the git index — caller must
     abort the worktree to prevent the next merge from deleting signal files.
     """
     for rel_path, readonly in _MEMORY_SYMLINKS:
@@ -417,41 +443,50 @@ def _symlink_local_memory(wt: Path) -> bool:
             _hide_symlink_from_git(wt, rel_path)
             continue
 
-        try:
-            dst.symlink_to(src, target_is_directory=True)
-            mode = "read-only" if readonly else "read-write"
-            print(f"  Symlinked {rel_path} -> {src} ({mode})")
-            _hide_symlink_from_git(wt, rel_path)
-        except OSError:
-            # Symlinks require admin/Developer Mode on Windows.
-            # Fall back to junction points (mklink /J) which work unprivileged.
-            if os.name == "nt":
-                try:
-                    result = subprocess.run(
-                        ["cmd", "/c", "mklink", "/J", str(dst), str(src)],
-                        capture_output=True, text=True, encoding="utf-8", errors="replace",
-                    )
-                    if result.returncode == 0:
-                        mode = "read-only" if readonly else "read-write"
-                        print(f"  Junction {rel_path} -> {src} ({mode})")
-                        _hide_symlink_from_git(wt, rel_path)
-                    else:
-                        print(
-                            f"  WARNING: Junction failed for {rel_path}: {result.stderr.strip()}",
-                            file=sys.stderr,
-                        )
-                except OSError as exc2:
+        linked = False
+        mode = "read-only" if readonly else "read-write"
+        # Windows: prefer junction first (unprivileged, same as CI and most
+        # laptops). Symlink first caused "Symlinked" logs while exclude+status
+        # behavior was validated primarily on junctions.
+        if os.name == "nt":
+            try:
+                result = subprocess.run(
+                    ["cmd", "/c", "mklink", "/J", str(dst), str(src)],
+                    capture_output=True, text=True, encoding="utf-8", errors="replace",
+                )
+                if result.returncode == 0:
+                    print(f"  Junction {rel_path} -> {src} ({mode})")
+                    _hide_symlink_from_git(wt, rel_path)
+                    linked = True
+                else:
+                    err = (result.stderr or result.stdout or "").strip()
                     print(
-                        f"  WARNING: Could not link {rel_path}: {exc2}",
+                        f"  WARNING: Junction failed for {rel_path}: {err}",
                         file=sys.stderr,
                     )
-            else:
+            except OSError as exc2:
                 print(
-                    f"  WARNING: Could not symlink {rel_path}",
+                    f"  WARNING: Junction mklink failed for {rel_path}: {exc2}",
                     file=sys.stderr,
                 )
+        if not linked:
+            try:
+                dst.symlink_to(src, target_is_directory=True)
+                print(f"  Symlinked {rel_path} -> {src} ({mode})")
+                _hide_symlink_from_git(wt, rel_path)
+            except OSError as exc:
+                if os.name == "nt":
+                    print(
+                        f"  WARNING: Could not symlink {rel_path} after junction: {exc}",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(
+                        f"  WARNING: Could not symlink {rel_path}: {exc}",
+                        file=sys.stderr,
+                    )
 
-    # Verify: no junction leaked into the git index.
+    # Verify: no memory link leaked into the git index.
     # If git status sees any change at a memory/learning path, the hide failed —
     # merging this branch back to main would replace the real directory with a
     # blob and destroy all untracked signal files.
@@ -466,11 +501,17 @@ def _symlink_local_memory(wt: Path) -> bool:
 
     if leaked:
         print(
-            f"  ERROR: {len(leaked)} junction(s) leaked into git index after hide:",
+            f"  ERROR: {len(leaked)} memory link(s) leaked into git index after hide:",
             file=sys.stderr,
         )
         for path, status in leaked:
             print(f"    {path}: {status}", file=sys.stderr)
+        print(
+            "  DEBUG: tail of worktree info/exclude:",
+            file=sys.stderr,
+        )
+        for line in _debug_worktree_exclude_tail(wt).splitlines():
+            print(f"    | {line}", file=sys.stderr)
         print(
             "  CRITICAL: merging this branch would delete all signal files. "
             "Caller must remove this worktree.",

@@ -161,3 +161,46 @@ def test_query_producer_health_failed(tmp_path):
     with mock.patch.object(mdb, "_DB_PATH", db):
         result = mdb.query_producer_health(max_age_hours=99999)
     assert any(r["issue"] == "failed" for r in result)
+
+
+def test_query_producer_health_status_matches_latest_started_at(tmp_path):
+    """Status must come from the latest row per producer, not an arbitrary GROUP BY row."""
+    db = tmp_path / "jarvis_index.db"
+    _make_test_db(db)
+    conn = sqlite3.connect(str(db))
+    conn.execute(
+        "INSERT INTO producer_runs (producer, run_date, started_at, status) "
+        "VALUES (?, ?, ?, ?)",
+        ("p1", "2026-01-01", "2026-01-01T00:00:00Z", "failure"),
+    )
+    conn.execute(
+        "INSERT INTO producer_runs (producer, run_date, started_at, status) "
+        "VALUES (?, ?, ?, ?)",
+        ("p1", "2026-01-02", "2026-01-02T00:00:00Z", "success"),
+    )
+    conn.commit()
+    conn.close()
+    with mock.patch.object(mdb, "_DB_PATH", db):
+        result = mdb.query_producer_health(max_age_hours=99999)
+    assert result == [], "latest run is success and fresh -- expect no issues"
+
+    db2 = tmp_path / "jarvis_index2.db"
+    _make_test_db(db2)
+    conn2 = sqlite3.connect(str(db2))
+    conn2.execute(
+        "INSERT INTO producer_runs (producer, run_date, started_at, status) "
+        "VALUES (?, ?, ?, ?)",
+        ("p2", "2026-01-01", "2026-01-01T00:00:00Z", "success"),
+    )
+    conn2.execute(
+        "INSERT INTO producer_runs (producer, run_date, started_at, status) "
+        "VALUES (?, ?, ?, ?)",
+        ("p2", "2026-01-02", "2026-01-02T00:00:00Z", "failure"),
+    )
+    conn2.commit()
+    conn2.close()
+    with mock.patch.object(mdb, "_DB_PATH", db2):
+        result2 = mdb.query_producer_health(max_age_hours=99999)
+    assert len(result2) == 1
+    assert result2[0]["producer"] == "p2"
+    assert result2[0]["issue"] == "failed"

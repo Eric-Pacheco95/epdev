@@ -32,14 +32,14 @@ def test_summarize_overnight_log_success_exit_zero():
 
 def test_summarize_overnight_log_failed_exit_one():
     body = (
-        "ERROR: junction hide failed\n"
+        "ERROR: memory link hide failed\n"
         "self-diagnose: failure detected (exit code: 1)\n"
         "[2026-04-22] Overnight self-improvement complete (exit code: 1)\n"
     )
     status, code, hint = _summarize_overnight_log(body)
     assert status == "failed"
     assert code == 1
-    assert "junction" in hint.lower()
+    assert "memory link" in hint.lower() or "junction" in hint.lower()
 
 
 def test_compute_trend_averages_empty():
