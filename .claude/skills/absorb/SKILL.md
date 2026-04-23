@@ -255,16 +255,16 @@ signal_file: {signal filename}
 
 - Analysis file exists at `memory/learning/absorbed/YYYY-MM-DD_{slug}.md` | Verify: `ls memory/learning/absorbed/ | grep {slug}`
 - Signal file exists at `memory/learning/signals/YYYY-MM-DD_{slug}.md` | Verify: `ls memory/learning/signals/ | grep {slug}`
-- No verbatim source text in absorbed file (injection safety) | Verify: Review -- proposals must be synthesized interpretation, tagged `[source: external]`
-- If TELOS proposals were approved: target TELOS file was modified after snapshot | Verify: `git diff memory/work/telos/`
-- Absorbed file frontmatter `status` is PENDING, NO_PROPOSALS, or REVIEWED -- never blank | Verify: grep status: memory/learning/absorbed/{file}
+- No verbatim source text in absorbed file | Verify: proposals are synthesized, tagged `[source: external]`
+- TELOS proposals approved → target file modified after snapshot | Verify: `git diff memory/work/telos/`
+- Absorbed file `status` is PENDING, NO_PROPOSALS, or REVIEWED | Verify: grep status: memory/learning/absorbed/{file}
 
 # LEARN
 
-- Track which source domains yield signals rated >= 7 -- these are the richest sources; lower-rated domains are candidates for a personal low-yield blocklist
-- After 10+ absorbs, run /synthesize-signals to distill absorbed insights into synthesis themes
-- If TELOS proposals are consistently rejected in one category, note the misalignment as a steering rule candidate via /learning-capture
-- If --review mode finds > 5 pending items, schedule a dedicated /absorb --review session
+- Track source domains yielding signals >= 7 — richest sources; lower-rated = low-yield blocklist candidates
+- After 10+ absorbs: run /synthesize-signals to distill themes
+- TELOS proposals consistently rejected in one category: note misalignment as steering rule candidate via /learning-capture
+- --review finds > 5 pending: schedule dedicated /absorb --review session
 
 # INPUT
 
