@@ -145,3 +145,4 @@ Rules for subagents:
 # INPUT
 
 INPUT:
+- If final knowledge files show substantially different taxonomy than Phase 1 metadata suggested, note the corpus type — high metadata-transcript divergence corpora need explicit Phase 3 gates, not just Phase 1 estimates
