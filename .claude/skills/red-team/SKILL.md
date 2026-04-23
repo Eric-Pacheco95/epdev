@@ -122,6 +122,6 @@ INPUT:
 
 # LEARN
 
-- When >= 2 High-severity findings are identified, write a signal to memory/learning/signals/{YYYY-MM-DD}_red-team-{slug}.md
-- Rating: 8-9 for critical attack surfaces that were previously unknown; 5-7 for familiar risk classes with new context; only write signal when findings would meaningfully change design or implementation decisions
-- Promote the highest-severity finding pattern to the relevant agent or skill Critical Rules if it represents a recurring Jarvis-specific risk
+- >= 2 High-severity findings: signal at memory/learning/signals/{YYYY-MM-DD}_red-team-{slug}.md
+- Rating: 8-9 unknown critical surfaces; 5-7 familiar risk with new context; only when findings change design decisions
+- Highest-severity recurring pattern: promote to relevant agent/skill Critical Rules
