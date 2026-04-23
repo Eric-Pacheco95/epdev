@@ -155,11 +155,11 @@ false
 
 # LEARN
 
-- Track how many HIGH findings Eric marks "not an issue" after review — if false-positive rate exceeds 30%, tighten the HIGH confidence criteria
-- If LOW findings are never actioned across 3+ runs, auto-suppress them from the main report body and move to an appendix
-- If reference screenshots consistently go stale (>30 days), propose adding a reference refresh reminder to the relevant PRD maintenance checklist
-- If tokens file is never found automatically, propose adding `.design-verify-config.json` at the project root pointing to the tokens path
-- Retirement trigger: if unused for 6 months, archive — a skill with no reference screenshots in the repo provides no value
+- HIGH false-positive rate >30% -> tighten HIGH confidence criteria
+- LOW findings unactioned across 3+ runs -> move to appendix
+- Reference screenshots consistently stale -> add refresh reminder to PRD checklist
+- Tokens file never found automatically -> propose `.design-verify-config.json` at project root
+- Unused 6 months -> archive
 
 # INPUT
 

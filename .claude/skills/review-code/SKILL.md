@@ -94,17 +94,17 @@ true
 
 # VERIFY
 
-- All required output sections are present: CONTEXT, SUMMARY, SECURITY FINDINGS, RELIABILITY AND CORRECTNESS, MAINTAINABILITY AND OBSERVABILITY, TESTING GAPS, RECOMMENDATIONS, OPEN QUESTIONS | Verify: Check section headers in output
-- No weaponized payloads, exploit code, or step-by-step attack instructions appear in SECURITY FINDINGS | Verify: Review output
-- Severity levels are applied consistently (Critical > High > Medium > Low) -- no High-severity findings mislabeled as Low | Verify: Read findings table
-- If the file contained external input handling, at least one SECURITY FINDINGS entry exists (or an explicit '(none identified)' with reasoning) | Verify: Check SECURITY FINDINGS
+- All required output sections present (CONTEXT through OPEN QUESTIONS) | Verify: Check section headers
+- No weaponized payloads or exploit code in SECURITY FINDINGS | Verify: Review output
+- Severity levels consistent; no High findings mislabeled Low | Verify: Read findings table
+- External input handling -> at least one SECURITY entry or explicit '(none identified)' | Verify: Check SECURITY FINDINGS
 
 # LEARN
 
-- If security findings recur in the same codebase component across 3+ reviews (same file, same class, same pattern), log a signal flagging it as structural debt requiring refactor
-- Track the false-positive rate: if Eric consistently overrides a finding severity as lower, note the pattern -- the review heuristics may need recalibration
-- If Critical findings block a commit, log the file path and finding type in `memory/learning/failures/` so self-heal can learn from the pattern
-- If TESTING GAPS section consistently flags the same test type as missing, consider adding it as a required test scaffold in the project's test template
+- Recurring findings (3+ reviews, same component) -> log signal as structural debt
+- Eric consistently downgrades severity -> review heuristics may need recalibration
+- Critical findings blocking commit -> log path + type to `memory/learning/failures/`
+- Same test type missing across 3+ reviews -> add to project test template
 
 # INPUT
 

@@ -71,11 +71,11 @@ INPUT:
 
 # VERIFY
 
-- All five required sections present: TASK SUMMARY, SELECTED TRAITS, TRAIT RATIONALE, TENSIONS AND PRIORITIES, SPAWNED AGENT PROMPT | Verify: Read output, scan for each heading
-- SPAWNED AGENT PROMPT is a single fenced code block with no commentary inside the fence | Verify: Count ``` fences — must be exactly one pair; read inside fence for absence of meta-commentary
-- Generated prompt includes identity, mission, operating principles, output format, boundaries, and task input invitation | Verify: Read SPAWNED AGENT PROMPT — scan for each required element
-- No actual secrets or credentials in generated prompt (placeholders only) | Verify: Review prompt — no API keys, tokens, or passwords; only placeholder labels like {API_KEY}
-- No check failures remain in final output | Verify: Re-run all four checks after any fix
+- All five sections present (TASK SUMMARY through SPAWNED AGENT PROMPT) | Verify: Scan headings
+- SPAWNED AGENT PROMPT is a single fenced block, no commentary inside | Verify: Count fences
+- Prompt includes identity, mission, principles, format, boundaries, input invitation | Verify: Scan prompt
+- No actual secrets in prompt; placeholders only | Verify: Review prompt
+- No check failures remain | Verify: Re-run after fixes
 
 # LEARN
 
