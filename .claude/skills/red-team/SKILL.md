@@ -125,3 +125,4 @@ INPUT:
 - >= 2 High-severity findings: signal at memory/learning/signals/{YYYY-MM-DD}_red-team-{slug}.md
 - Rating: 8-9 unknown critical surfaces; 5-7 familiar risk with new context; only when findings change design decisions
 - Highest-severity recurring pattern: promote to relevant agent/skill Critical Rules
+- Track which target types (MCP tools, hooks, skill chains, data pipeline) produce the most High-severity findings -- concentrate future pre-build red-team gates on those types
