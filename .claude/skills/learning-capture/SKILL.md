@@ -132,18 +132,18 @@ Write failures to `memory/learning/failures/{date}_{slug}.md`:
 
 # VERIFY
 
-- At least one signal file was written to `memory/learning/signals/` from this session | Verify: `ls -t memory/learning/signals/ | head -3`
-- No D-tier signals were written (quality gate enforced) | Verify: Check each written signal for tier label >= C
-- `_signal_meta.json` was reconciled (file count matches actual .md files on disk) | Verify: Read `_signal_meta.json` and compare count to `ls memory/learning/signals/*.md | wc -l`
-- If signal count exceeded auto-synthesis threshold, /synthesize-signals was invoked | Verify: Check for synthesis run in output or `ls memory/learning/synthesis/`
-- Failure files (if any) were written to `memory/learning/failures/` with root cause | Verify: `ls -t memory/learning/failures/ | head -3` (only if failures were discussed)
+- At least one signal written to `memory/learning/signals/` | Verify: `ls -t memory/learning/signals/ | head -3`
+- No D-tier signals written | Verify: each signal has tier >= C
+- `_signal_meta.json` reconciled against filesystem | Verify: count in file matches `ls memory/learning/signals/*.md | wc -l`
+- Auto-synthesis threshold exceeded → /synthesize-signals invoked | Verify: synthesis in output or `ls memory/learning/synthesis/`
+- Failure files written with root cause (if failures discussed) | Verify: `ls -t memory/learning/failures/ | head -3`
 
 # LEARN
 
-- Track the signal:session ratio over time -- consistently < 1 signal/session suggests the quality gate thresholds are too strict; consistently > 5 suggests synthesis is overdue
-- If the same skill gap candidate appears in 3+ consecutive captures, it has crossed the threshold to become a real skill -- invoke /create-pattern
-- If sentiment was negative (frustrated, blocked) and signals are low-rated, note the session type; some sessions are legitimately unproductive and that is acceptable
-- If /synthesize-signals auto-invocation fails, log it as a failure rather than silently skipping -- synthesis failures compound into stale knowledge
+- Track signal:session ratio — < 1/session = quality gate too strict; > 5 = synthesis overdue
+- Same skill gap candidate 3+ consecutive captures → real skill; invoke /create-pattern
+- Negative sentiment + low-rated signals: note session type; unproductive sessions are acceptable
+- /synthesize-signals auto-invocation fails → log as failure; synthesis failures compound
 
 # INPUT
 
@@ -152,12 +152,9 @@ Analyze the current session and extract learnings. If invoked with specific cont
 # CONTRACT
 
 ## Errors
-- **trivial-session:** session had no meaningful work to capture
-  - recover: skill will say so and exit cleanly; no signals written; this is expected for quick Q&A sessions
-- **write-failure:** cannot write to memory/learning/ directory
-  - recover: check directory permissions and disk space; verify memory/learning/signals/ exists
-- **synthesis-failure:** auto-invoked /synthesize-signals fails
-  - recover: signals are already written safely; run /synthesize-signals manually in next session
+- **trivial-session:** no meaningful work → exit cleanly, no signals
+- **write-failure:** cannot write to memory/learning/ → check permissions; verify signals/ exists
+- **synthesis-failure:** auto-invoked /synthesize-signals fails → signals safe; run manually next session
 
 # SKILL CHAIN
 
