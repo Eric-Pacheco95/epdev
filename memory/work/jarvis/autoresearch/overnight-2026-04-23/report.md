@@ -1,57 +1,58 @@
-# Overnight Run Report -- prompt_quality
-**Date:** 2026-04-23
-**Branch:** jarvis/overnight-2026-04-23
-**Dimension:** prompt_quality
-**Goal:** Reduce token count in verbose skill files (.claude/skills/*/SKILL.md)
-**Baseline:** 63332 words
-**Final:** 61419 words
-**Total reduction:** -1913 words (-3.0%)
+# Overnight Run Report -- scaffolding dimension
+**Date**: 2026-04-23
+**Branch**: jarvis/overnight-2026-04-23
+**Dimension**: scaffolding
 
 ## Summary
 
-Applied systematic VERIFY/LEARN/CONTRACT compression across 21 skill files over 15 iterations.
-Primary pattern: verbose full-sentence verify methods ("All required sections are present: A, B, C, D... | Verify: Read output, scan for each heading") compressed to compact form ("All required sections present (A through D) | Verify: Scan headings"). LEARN bullets compressed from multi-clause sentences to action-trigger format ("If X happens -> do Y"). Navigation filler removed ("Once input validated, proceed to Step X").
+Phase 1 (DISCOVERY sections + Step 0) was already complete at session start (51/51 skills with ## One-liner). This session operated in Phase 2: enriching VERIFY and LEARN sections.
 
-No iterations were reverted. All 15 showed positive delta.
+- Primary metric baseline: 51 (at maximum -- Phase 1 complete)
+- Secondary metric baseline: 41/51 skills with LEARN >= 3 items
+- Secondary metric final: 51/51 skills with LEARN >= 3 items; VERIFY quality strengthened in 6 skills
+- Iterations: 20 (max)
+- Kept: 20 / Discarded: 0
+
+## Changes Made
+
+Phase 2A: LEARN enrichment (learn=2 to learn=3) -- 10 skills:
+analyze-claims, extract-corpus, extract-harness, find-logical-fallacies, first-principles,
+improve-prompt, second-opinion, spawn-agent, visualize, write-essay
+
+Phase 2B: Missing Step 0 -- extract-corpus (was using Phase 0 naming, skipped by grep check)
+
+Phase 2C: VERIFY quality strengthening -- 6 criteria in 4 skills:
+theme-shuffle (2), jarvis-help, extract-wisdom, create-keynote
+
+Phase 2D: LEARN enrichment (learn=3 to learn=4) -- 4 high-frequency skills:
+quality-gate, create-prd, red-team, architecture-review
+
+Placement fix: extract-corpus + second-opinion LEARN items were appended past # INPUT/templates; moved to correct positions
 
 ## TSV Run Log
+iter	commit_hash	metric_value	delta	status	description
+1	27340e8	51	0	KEPT	analyze-claims: LEARN +1 (INTERNAL_CONSISTENCY calibration)
+2	7566851	51	0	KEPT	extract-corpus: LEARN +1 (metadata-transcript divergence)
+3	e2b8c70	51	0	KEPT	extract-harness: LEARN +1 (clean-extraction reference)
+4	4b5ef4f	51	0	KEPT	find-logical-fallacies: LEARN +1 (fallacy-frequency heuristic)
+5	eca7d25	51	0	KEPT	first-principles: LEARN +1 (framing-bias detection)
+6	04a85a4	51	0	KEPT	improve-prompt: LEARN +1 (check-only calibration)
+7	efa2d5a	51	0	KEPT	second-opinion: LEARN +1 (reviewer blind-spot)
+8	00be588	51	0	KEPT	spawn-agent: LEARN +1 (trait-library gap detection)
+9	8bf53a5	51	0	KEPT	visualize: LEARN +1 (diagram-type syntax-error calibration)
+10	a37799c	51	0	KEPT	write-essay: LEARN +1 (voice-rewrite calibration)
+11	2e0a072	51	0	KEPT	extract-corpus: add Step 0 input validation
+12	5a2b17e	51	0	KEPT	theme-shuffle: VERIFY +2 strengthened (grep vs Read output)
+13	d96bd13	51	0	KEPT	jarvis-help: VERIFY +1 strengthened (spot-check vs Read format)
+14	96aaec7	51	0	KEPT	extract-wisdom: VERIFY +1 strengthened (count check for --summary)
+15	877d097	51	0	KEPT	create-keynote: VERIFY +1 strengthened (grep JARVIS INTEGRATION)
+16	5c82eb2	51	0	KEPT	ext-corpus+second-opinion: fix LEARN placement bug
+17	16a64b7	51	0	KEPT	quality-gate: LEARN +1 (shortcut pattern detection)
+18	6219a56	51	0	KEPT	create-prd: LEARN +1 (stale-PRD >7 day detection)
+19	fec8e59	51	0	KEPT	red-team: LEARN +1 (target-type severity tracking)
+20	0d2ac3a	51	0	KEPT	architecture-review: LEARN +1 (recurring-risk ISC promotion)
 
-iteration	commit	metric	delta	status	description
-0	baseline	63332	0	baseline	initial measurement
-1	785467e	63222	-110	kept	make-prediction: nav filler, VERIFY/LEARN
-2	0c86980	63148	-74	kept	implement-prd: nav filler, VERIFY/LEARN
-3	699bdd2	63033	-115	kept	architecture-review: WHEN-TO-INVOKE, VERIFY, LEARN
-4	1b1fdb6	62966	-67	kept	research: YouTube note, VERIFY/LEARN
-5	fbd79e2	62930	-36	kept	absorb: VERIFY/LEARN
-6	3cc045c	62816	-114	kept	learning-capture: VERIFY/LEARN/CONTRACT
-7	eb36edc	62737	-79	kept	synthesize-signals: VERIFY/LEARN/CONTRACT
-8	a18a886	62649	-88	kept	vitals: VERIFY/LEARN
-9	273602d	62535	-114	kept	create-prd: nav filler, VERIFY/LEARN/CONTRACT
-10	dd77800	62469	-66	kept	delegation: VERIFY/LEARN
-11	a519688	62344	-125	kept	create-keynote, notion-sync, plan-event: VERIFY/LEARN
-12	46513f5	62228	-116	kept	create-pattern, update-steering-rules: VERIFY/LEARN
-13	73c28cf	62062	-166	kept	quality-gate, red-team, validation: VERIFY/LEARN
-14	81efc01	61794	-268	kept	telos-update, security-audit, self-heal: VERIFY/LEARN
-15	02b4f66	61419	-375	kept	review-code, design-verify, telos-report, first-principles, find-logical-fallacies, spawn-agent: VERIFY/LEARN
-
-## Compression Patterns Applied
-
-1. **Section list in VERIFY** -- "All N required sections: A, B, C, D | Verify: Read output, scan for each heading" -> "All N sections present (A through D) | Verify: Scan headings" (~15-25w saved per item)
-2. **Verify method** -- "| Verify: Read output, scan for each heading" -> "| Verify: Scan headings" (~5w per item)
-3. **LEARN conditionals** -- "If X consistently occurs, consider doing Y" -> "X recurring -> Y" (~8-12w per item)
-4. **Navigation filler** -- "Once input is validated, proceed to Step X" -> removed (~7w each)
-5. **CONTRACT errors** -- "error-type: long description of what happens and what to do" -> "error-type: short label" (~10-15w per item)
-
-## Quality Preservation
-
-- STEPS and OUTPUT FORMAT sections were not touched -- operational instructions preserved
-- DISCOVERY sections unchanged -- context routing intact
-- No skill lost any functional capability
-- Removed only redundant meta-language ("verify by reading", "consider adding", "in this session")
-- Unicode issues discovered: several SKILL.md files use em-dashes (U+2014) and curly quotes -- match strings must account for this in future passes
-
-## Notes
-
-- 3 skills used em-dash (U+2014) instead of "--" in VERIFY items, causing initial match misses; resolved with explicit unicode character in search strings
-- Python via Bash tool was required for all file writes (Write tool blocked by path guard; Edit tool blocked by worktree validator for Read)
-- Remaining compression opportunity: STEPS section verbosity (not touched this run -- preserving operational content)
+## Residual Gaps (for next scaffolding run)
+- 20+ skills still have LEARN=3; autoresearch, backlog, deep-audit, dream, delegation next in priority
+- extract-alpha VERIFY: "Review bullet list" criterion still vague (iterations exhausted)
+- Some LEARN signals lack specific log file paths; generic patterns used
