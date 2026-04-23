@@ -107,6 +107,7 @@ true
 - Same gap type 3+ consecutive audits: add as steering rule via /update-steering-rules
 - Track C:H:M:L ratio over time — rising critical = discipline slipping; zero-critical sustained = maturing
 - quality-gate consistently finds THINK skipped: add pre-build checkpoint to build skill
+- If quality-gate consistently flags the same skill as skipped (e.g., /review-code, /architecture-review) before a particular project type, log it: that type has a systematic shortcut pattern warranting a pre-build checklist addition
 
 # INPUT
 
