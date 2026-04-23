@@ -196,3 +196,4 @@ INPUT:
 - Signal: memory/learning/signals/{YYYY-MM-DD}_arch-review-{slug}.md when >= 2 High-severity risks or strongly contested point
 - Rating: 8+ if review caught a production-failure flaw; 5-7 for meaningful corrections; only write when review changed the outcome
 - Note Corrected Assumptions in history/decisions/{YYYY-MM-DD}-arch-review-{slug}.md
+- If the same architectural risk appears in Corrected Assumptions across 3+ reviews for the same project type, promote it to a mandatory ISC criterion in the /create-prd template for that type
