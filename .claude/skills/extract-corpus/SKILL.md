@@ -150,8 +150,8 @@ Rules for subagents:
 
 - If this workflow surfaces a reusable meta-lesson, capture `memory/learning/signals/YYYY-MM-DD_<slug>.md` and link back to this skill.
 - After significant corpus completion, append one line to corpus `evaluation.md` (and the narrative index at `memory/work/large-extract-pattern.md` when it is the canonical pattern log).
+- If final knowledge files show substantially different taxonomy than Phase 1 metadata suggested, note the corpus type -- high metadata-transcript divergence corpora need explicit Phase 3 gates, not just Phase 1 estimates
 
 # INPUT
 
 INPUT:
-- If final knowledge files show substantially different taxonomy than Phase 1 metadata suggested, note the corpus type — high metadata-transcript divergence corpora need explicit Phase 3 gates, not just Phase 1 estimates

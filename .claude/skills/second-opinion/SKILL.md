@@ -87,6 +87,7 @@ INPUT:
 
 - Do not auto-write a signal for this skill — it is a prompt-generation utility, not an audit itself
 - If Eric returns with the external reviewer's findings, route to `/learning-capture` with rating based on finding severity
+- If the external reviewer consistently finds the same gap type (e.g., missing security checks, thin VERIFY criteria) that Jarvis missed, log it as a blind-spot signal for /learning-capture
 
 ---
 
@@ -366,4 +367,3 @@ Scope: <sha of HEAD>
 
 Begin with orientation, then scan, then report.
 ```
-- If the external reviewer consistently finds the same gap type (e.g., missing security checks, thin VERIFY criteria) that Jarvis missed, log it as a blind-spot signal for /learning-capture
