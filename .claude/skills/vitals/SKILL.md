@@ -321,15 +321,15 @@ Run vitals check now.
 
 # VERIFY
 
-- Terminal output is ASCII-only and under 40 lines (Windows cp1252 safety) | Verify: Read output — check for non-ASCII chars and line count
-- Terminal output was displayed before the Slack post | Verify: Check session output order — terminal block precedes Slack confirmation
-- Collector JSON was the sole data source (no additional file reads for metric values) | Verify: Review — all metric values traceable to collector JSON fields
-- Slack post was attempted; if failed, fallback to `data/logs/vitals_YYYY-MM-DD.md` was executed | Verify: Read session output for Slack confirmation or fallback file path
-- If `_schema_version` major != 1 in collector output, execution was stopped and mismatch was surfaced | Verify: Read session output for schema mismatch error if applicable
-- Raw collector JSON was not included in terminal output or Slack post (exposes internal state) | Verify: Read output -- must contain formatted metrics, not raw JSON blobs
+- Terminal output ASCII-only, under 40 lines | Verify: check for non-ASCII chars and line count
+- Terminal displayed before Slack post | Verify: terminal block precedes Slack confirmation in output
+- Collector JSON sole data source (no extra file reads) | Verify: metric values traceable to collector JSON
+- Slack attempted; fallback to `data/logs/vitals_YYYY-MM-DD.md` if failed | Verify: Slack confirmation or fallback path in output
+- Schema major != 1 → execution stopped with mismatch surfaced | Verify: session output for mismatch error
+- Raw JSON excluded from terminal/Slack | Verify: output has formatted metrics, not JSON blobs
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_vitals-alert.md when vitals shows a CRITICAL or DEGRADED health state for >= 2 consecutive days, or when a new category of collector failure appears
-- Rating: 8+ for unknown failure modes; 6-7 for recurring degradation patterns; skip signal for routine healthy runs or isolated one-day blips
-- If "Top 3 Today" items persist across 3+ consecutive vitals runs without progress: flag in signal as ADHD momentum blocker requiring explicit Eric attention
+- Signal: memory/learning/signals/{YYYY-MM-DD}_vitals-alert.md when CRITICAL/DEGRADED >= 2 consecutive days or new collector failure category
+- Rating: 8+ unknown failures; 6-7 recurring degradation; skip routine/isolated blips
+- "Top 3 Today" unchanged across 3+ vitals runs → flag as ADHD momentum blocker
