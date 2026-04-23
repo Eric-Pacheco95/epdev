@@ -140,18 +140,18 @@ Apply only approved changes. After edits, re-run the size and rule count checks 
 
 # VERIFY
 
-- All proposed steering rule changes were presented to Eric before being written | Verify: Output shows numbered list with evidence before any CLAUDE.md modification
-- If --audit mode ran: size and rule count thresholds were checked after edits | Verify: Output includes post-edit size and rule count
-- Audit was logged to `history/decisions/` | Verify: `ls -t history/decisions/ | head -3`
-- No rules were removed without explicit Eric approval | Verify: Read output for deletion confirmations
-- New rules follow the format: specific, actionable, testable -- no vague behavioral guidelines | Verify: Read each added rule
+- Proposed changes shown to Eric before any CLAUDE.md modification | Verify: numbered list + evidence in output before changes
+- --audit mode: size + rule count checked after edits | Verify: post-edit counts in output
+- Audit logged to `history/decisions/` | Verify: `ls -t history/decisions/ | head -3`
+- No rules removed without explicit approval | Verify: deletion confirmations in output
+- New rules specific, actionable, testable | Verify: Read each added rule
 
 # LEARN
 
-- Track the steering rule count over time -- if it consistently exceeds 45, the --audit mode needs to run automatically before any additions (the CLAUDE.md self-maintenance rule applies)
-- If the same type of rule (e.g., platform-specific encoding, hook path handling) is added repeatedly, it signals a systemic gap that should be fixed in the underlying tooling rather than papered over with rules
-- After --audit runs, note what categories of rules were merged or removed -- this reveals which rule categories have the worst maintenance overhead
-- Rules tagged [MODEL-DEP] should be re-evaluated after major model upgrades -- they may be stale
+- Track steering rule count — consistently > 45 → run --audit automatically before additions
+- Same rule type added repeatedly → systemic gap; fix in tooling rather than adding more rules
+- After --audit: note merged/removed categories — reveals worst-maintenance rule types
+- [MODEL-DEP] rules → re-evaluate after major model upgrades
 
 # INPUT
 

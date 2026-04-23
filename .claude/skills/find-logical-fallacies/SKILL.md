@@ -69,12 +69,13 @@ INPUT:
 
 # VERIFY
 
-- All four required sections present: OVERVIEW, FALLACY FINDINGS, NON-FALLACIOUS STRENGTHS, RECOMMENDED FIXES | Verify: Read output, scan for each heading
-- Every numbered item in FALLACY FINDINGS has a corresponding entry in RECOMMENDED FIXES | Verify: Cross-reference FALLACY FINDINGS numbers against RECOMMENDED FIXES
+- All four sections present (OVERVIEW through RECOMMENDED FIXES) | Verify: Scan headings
+- Every FALLACY FINDINGS item has matching RECOMMENDED FIX | Verify: Cross-reference numbers
 - FALLACY FINDINGS has at most 12 items | Verify: Count numbered items in FALLACY FINDINGS section
-- No missing sections or oversized FALLACY FINDINGS after any fix pass | Verify: Re-scan section headings and recount after any merge/fix
+- No missing sections or FALLACY FINDINGS >12 after fixes | Verify: Re-scan
 
 # LEARN
 
 - Write a signal to memory/learning/signals/{YYYY-MM-DD}_fallacies-{slug}.md when >= 3 distinct fallacy types are found or a high-stakes document (policy, research, investment thesis) contains >= 2 High-severity logical flaws
 - Rating: 7+ if the fallacies fundamentally undermine the argument; 4-6 for routine style/support issues; only write signal when the analysis changes how Eric should act on the source material
+- Track which fallacy types appear most frequently across documents Eric brings - if one type (e.g., appeal-to-authority) appears in >30% of analyses, add it as a pre-scan heuristic in STEPS

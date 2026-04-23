@@ -229,8 +229,8 @@ coverage_score: 55"""
     # -- 12. Write artifacts to temp dir --
     with tempfile.TemporaryDirectory() as tmpdir:
         run_dir = Path(tmpdir) / "test-run"
-        scope = {"telos_files": 19, "synthesis_docs": 5, "signals_14d": 20,
-                 "raw_signals_7d": 8, "failures_14d": 3, "sessions_7d": 0}
+        scope = {"telos_files": 19, "synthesis_docs": 5, "signals_7d": 20,
+                 "raw_signals_3d": 8, "failures_14d": 3, "sessions_7d": 0}
         write_run_artifacts(run_dir, good_response, metrics, scope)
 
         if (run_dir / "metrics.json").is_file():

@@ -171,9 +171,9 @@ Interpret the exit code and deliver the final verdict:
 
 # LEARN
 
-- Track which ISC criterion types fail most often (file existence, CLI output, grep match, test result) -- this reveals which verification method is least reliable and should be improved
-- If the same PRD item fails validation 2+ times across sessions, it signals the verify method is too brittle -- propose a more robust verify method via /learning-capture
-- After a full validation pass (all PASS), log a signal noting the phase and date -- this builds an audit trail of verified phase completions
+- Track which ISC criterion types fail most — reveals least reliable verify methods
+- Same PRD item fails 2+ sessions: verify method too brittle; propose stronger method via /learning-capture
+- All-PASS validation: log signal with phase and date (audit trail)
 
 # INPUT
 

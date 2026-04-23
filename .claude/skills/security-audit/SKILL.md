@@ -152,18 +152,18 @@ Write to `history/security/{date}_audit.md`:
 
 # VERIFY
 
-- Audit log was written to `history/security/YYYY-MM-DD_audit.md` | Verify: `ls history/security/ | tail -3`
-- Scanner output (security_scan.py JSON) was processed, not skipped | Verify: Confirm Phase 1 scanner results appear in report
-- No secret values are exposed in the report -- findings reference location only (e.g., `.env line 4`, not the key value) | Verify: Read report and confirm no literal key/token values
-- Defensive test suite results are included in the report | Verify: Check for test suite section in output
-- All Critical findings have an explicit remediation path or documented accepted-risk rationale | Verify: Read Critical section
+- Audit log at `history/security/YYYY-MM-DD_audit.md` | Verify: `ls history/security/ | tail -3`
+- Scanner output processed | Verify: Phase 1 results in report
+- No secret values in report (location only, not values) | Verify: scan report for literal key/token values
+- Defensive test results included | Verify: test suite section in output
+- Critical findings have remediation or accepted-risk rationale | Verify: Read Critical section
 
 # LEARN
 
-- If the same vulnerability category appears in 3+ consecutive audits, add a preventive rule to `security/constitutional-rules.md` and log a high-rated signal
-- Track the Critical finding count over time -- zero Critical for 30+ days is a maturity signal worth capturing in synthesis
-- After any audit with Critical findings, run /red-team to probe whether the finding is exploitable -- this turns audits into hardening cycles
-- If the scanner (security_scan.py) fails, log the failure type in a signal -- recurring scanner failures need a /self-heal fix
+- Same vulnerability 3+ consecutive audits: add rule to `security/constitutional-rules.md` + high-rated signal
+- Track Critical count — zero 30+ days = maturity signal
+- Audit with Critical findings: run /red-team to probe exploitability
+- Scanner fails: log failure type; recurring = /self-heal fix
 
 # INPUT
 

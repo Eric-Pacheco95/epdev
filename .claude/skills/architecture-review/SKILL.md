@@ -42,7 +42,7 @@ true
 
 # WHEN TO INVOKE
 
-Run before any hard-to-reverse decision: architecture choice, tool/dependency adoption, or any decision with 3+ viable paths. ADHD build velocity defaults to highest-energy option — this interrupts that default. If multiple ways to build something exist, run this first.
+Run before hard-to-reverse decisions: architecture, tool/dependency adoption, 3+ viable paths. ADHD velocity defaults to highest-energy option — this interrupts that default.
 
 **Mandatory triggers:**
 - **2+ prior failed fixes on the same system.** Run before next coding attempt — no exceptions.
@@ -185,15 +185,15 @@ INPUT:
 
 # VERIFY
 
-- Output contains all seven required sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION | Verify: Read output, scan for each heading
-- Temp directory `memory/work/_arch-review-{timestamp}/` was deleted after synthesis | Verify: `ls memory/work/` -- no _arch-review-* directory remains
-- RECOMMENDATION ends with a concrete next step (specific skill invocation or research action, not vague guidance) | Verify: Read RECOMMENDATION final sentence -- must name a specific action
-- Total output is under 1500 words | Verify: Word count output -- must be < 1500
-- No missing sections or leftover temp directories after any fix | Verify: Re-scan headings and re-check `ls memory/work/` after fix
-- All file dependencies and required infrastructure referenced in RECOMMENDATION already exist | Verify: Read RECOMMENDATION -- for each referenced path or tool, confirm it exists in the repo
+- Output has all seven sections: DECISION SUMMARY, CONVERGENT FINDINGS, CORRECTED ASSUMPTIONS, ARCHITECTURAL RISKS, CONTESTED POINTS, VALIDATED ELEMENTS, RECOMMENDATION | Verify: Scan headings
+- Temp directory `memory/work/_arch-review-{timestamp}/` deleted after synthesis | Verify: `ls memory/work/` — no _arch-review-* remains
+- RECOMMENDATION ends with concrete next step (specific skill or research action) | Verify: Read RECOMMENDATION final sentence
+- Total output under 1500 words | Verify: Word count < 1500
+- Referenced paths/tools in RECOMMENDATION exist in repo | Verify: Check each path
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_arch-review-{slug}.md when the review produces >= 2 High-severity risks or a contested point where agents strongly disagree
-- Rating: 8+ if review caught a critical flaw that would have caused a production failure; 5-7 for meaningful corrections; only write signal when the review changed the outcome (i.e., the proposal was modified or rejected based on findings)
-- Also note in history/decisions/{YYYY-MM-DD}-arch-review-{slug}.md any Corrected Assumptions for future reference on this domain
+- Signal: memory/learning/signals/{YYYY-MM-DD}_arch-review-{slug}.md when >= 2 High-severity risks or strongly contested point
+- Rating: 8+ if review caught a production-failure flaw; 5-7 for meaningful corrections; only write when review changed the outcome
+- Note Corrected Assumptions in history/decisions/{YYYY-MM-DD}-arch-review-{slug}.md
+- If the same architectural risk appears in Corrected Assumptions across 3+ reviews for the same project type, promote it to a mandatory ISC criterion in the /create-prd template for that type

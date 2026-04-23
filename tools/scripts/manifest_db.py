@@ -153,18 +153,32 @@ def write_lineage(
         conn.close()
 
 
-def query_producer_health(max_age_hours: int = 26) -> list[dict]:
+def query_producer_health(max_age_hours: float = 26) -> list[dict]:
     """Query producer_runs for stale or failed producers.
-    Returns list of {'producer', 'last_run', 'last_status', 'hours_ago', 'issue'}."""
+    Returns list of {'producer', 'last_run', 'last_status', 'hours_ago', 'issue'}.
+
+    Each producer is evaluated on the row with the latest ``started_at`` only.
+    (Older ``SELECT ... GROUP BY producer`` picked an arbitrary ``status`` for
+    that group in SQLite, so a newer ``success`` could still look ``failed``.)
+    """
     conn = _get_conn()
     if conn is None:
         return []
     try:
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         rows = conn.execute(
-            """SELECT producer, MAX(started_at) as last_run, status
-               FROM producer_runs
-               GROUP BY producer"""
+            """
+            SELECT producer, started_at AS last_run, status
+            FROM (
+                SELECT producer, started_at, status,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY producer
+                           ORDER BY started_at DESC, rowid DESC
+                       ) AS rn
+                FROM producer_runs
+            )
+            WHERE rn = 1
+            """
         ).fetchall()
         issues = []
         for producer, last_run, status in rows:

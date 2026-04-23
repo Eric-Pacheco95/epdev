@@ -110,6 +110,11 @@ Project initialization (new project from scratch):
 [topic] → /research → /write-essay | /create-keynote | /visualize
 ```
 
+## Corpus Extraction Chain
+```
+[channel/archive corpus] → /extract-corpus → /learning-capture
+```
+
 ## Skill Creation Chain
 ```
 /create-pattern → (scan existing skills for chains to update) → update SKILL CHAIN in affected skills
@@ -146,6 +151,7 @@ Project initialization (new project from scratch):
 | Update self-knowledge | `/telos-update` | (leaf — no chain) |
 | Check learning progress | `/telos-report` | (leaf — no chain) |
 | Create new skill | `/create-pattern` | scan + update affected skill chains |
+| Large YouTube/channel corpus → knowledge dirs | `/extract-corpus` | `tools/scripts/corpus_extractor.py` for fetch/scan/queue; skill owns Phase 3–4 |
 | Chain skills together | `/workflow-engine` | `/learning-capture` |
 | Audit completed work | `/quality-gate` | `/update-steering-rules` (if systemic gaps) → `/learning-capture` |
 | Unknown / novel | Flag for Eric + suggest `/create-pattern` | — |
@@ -169,16 +175,16 @@ Project initialization (new project from scratch):
 
 # VERIFY
 
-- Every task in the input was routed to a skill or pipeline -- nothing dropped | Verify: Count tasks in input vs routing entries in output
-- Routing rationale is present for each task (one sentence of reasoning, not just the skill name) | Verify: Read each routing decision
-- For pipeline chains, the chain diagram was shown and approval was obtained before invoking | Verify: Check output for approval request before chain execution
-- 'Next step' was surfaced after each completed skill handoff | Verify: Confirm next-step prompt appears for each completed step
+- Every input task routed to skill or pipeline | Verify: task count in input matches routing entries
+- Routing rationale present per task (one sentence, not just skill name) | Verify: Read each routing decision
+- Pipeline chains: diagram shown, approval obtained before invoking | Verify: approval request in output
+- 'Next step' surfaced after each completed handoff | Verify: next-step prompt present
 
 # LEARN
 
-- Track which skills are routed to most often -- high-frequency skills are the core workflow and should have the strongest DISCOVERY sections
-- If delegation is invoked as the first step repeatedly for the same task type, that task type may be ready for its own direct skill or chain entry in CLAUDE.md
-- If a routed skill is not found or errors, log the routing failure as a signal -- it reveals a skill gap or naming mismatch
+- Track most-routed skills — high-frequency = core workflow, needs strongest DISCOVERY sections
+- Delegation first-step for same task type repeatedly → candidate for direct skill or CLAUDE.md chain entry
+- Routed skill not found or errors → log routing failure as signal (skill gap or naming mismatch)
 
 # INPUT
 

@@ -114,7 +114,7 @@ true
 
 - All required output sections are present for the selected mode (TL;DR, KEY POINTS, WISDOM AND INSIGHTS, QUOTES, HABITS AND PRACTICES, MENTAL MODELS, RECOMMENDATIONS, CONCLUSIONS) | Verify: Check section headers in output
 - No facts or quotes were invented outside the input content | Verify: Spot-check 2-3 quotes against the input text
-- If --summary mode: output is condensed (3-5 bullets, 1-2 sentences each) not a full extraction | Verify: Read output length and structure
+- If --summary mode: output is condensed (3-5 bullets, 1-2 sentences each) not a full extraction | Verify: Count bullets (must be 3-5) and confirm each is 1-2 sentences -- fail if bullet count exceeds 5 or any bullet exceeds 2 sentences
 - Quotes section uses verbatim text from the input, clearly marked | Verify: Check quotes for quotation marks and attribution
 
 # LEARN

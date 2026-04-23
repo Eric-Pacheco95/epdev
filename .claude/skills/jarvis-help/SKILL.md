@@ -66,6 +66,7 @@ true
 **OBSERVE** (gather context)
   /research           -- Research any topic | --type --outreach
   /extract-wisdom     -- Pull ideas, insights, quotes from content | --summary
+  /extract-corpus     -- Bounded channel/archive transcript extraction → memory/knowledge | --resume
   /extract-alpha      -- Extract actionable alpha from content | --market --security --count
   /deep-audit         -- Multi-axis codebase audit | --onboard --evaluate --cherry-pick
   /absorb             -- Absorb external content (URLs) | --quick --normal --deep
@@ -228,7 +229,7 @@ Print suggestions under a `SUGGESTED FOR THIS SESSION:` header. Only print if at
 # VERIFY
 
 - Output is grouped by workflow stage (OBSERVE, THINK, PLAN, BUILD, VERIFY, LEARN, CREATE, ORCHESTRATE) when no filter used | Verify: Scan output for stage headers
-- Each skill entry shows name + one-liner (no verbose descriptions in quick help) | Verify: Read output format
+- Each skill entry shows name + one-liner (no verbose descriptions in quick help) | Verify: Spot-check 3 skill entries in output -- each must be name + one-line description, no multi-line expansion
 - Contextual suggestions section appears when session has open PRDs, pending signals, or uncommitted changes | Verify: Check session state and output
 - Stage filter or search produces only matching skills (no full dump for filtered queries) | Verify: Check output scope matches input filter
 - No file writes occurred (jarvis-help is read-only) | Verify: git status unchanged

@@ -24,7 +24,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.1"
 
 # --- Data source paths ---
 HEARTBEAT_LATEST = REPO_ROOT / "memory" / "work" / "isce" / "heartbeat_latest.json"
@@ -47,6 +47,11 @@ MORALIS_STATUS_LOG = CRYPTO_BOT_ROOT / "data" / "moralis_stream_status.jsonl"
 MORALIS_MONTHLY_CAP_CU = 2_000_000
 MORALIS_ALERT_THRESHOLD_PCT = 70
 AI_PRICING_STALE_DAYS = 90
+
+# Local clock hours [start, end) for "overnight while sleeping" reporting on scheduled tasks.
+# 1 <= hour < 10 == 1:00am through 9:59am local (Task Scheduler times converted from UTC).
+SLEEP_WINDOW_LOCAL_START_HOUR = 1
+SLEEP_WINDOW_LOCAL_END_HOUR_EXCL = 10
 
 # FR-006 thresholds — ratio of peak commit to pagefile-allocated
 MEMORY_WARN_RATIO = 0.70
@@ -855,32 +860,371 @@ def collect_moralis_vitals(
     }
 
 
+def _task_scheduler_result_label(last_result: int) -> str:
+    """Map Windows Task Scheduler LastTaskResult to a short ASCII label."""
+    code = last_result & 0xFFFFFFFF
+    # https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-error-and-success-constants
+    known = {
+        0: "SUCCESS",
+        0x00041300: "SCHED_S_TASK_READY",
+        0x00041301: "SCHED_S_TASK_RUNNING",
+        0x00041302: "SCHED_S_TASK_DISABLED",
+        0x00041303: "SCHED_S_TASK_HAS_NOT_RUN",
+        0x00041304: "SCHED_S_TASK_NO_MORE_RUNS",
+        0x00041305: "SCHED_S_TASK_NOT_SCHEDULED",
+        0x00041306: "SCHED_S_TASK_TERMINATED",
+    }
+    if code in known:
+        return known[code]
+    if code != 0:
+        return f"HRESULT_0x{code:08X}"
+    return "SUCCESS"
+
+
+def _summarize_overnight_log(content: str) -> tuple[str, int | None, str]:
+    """Return (status, exit_code_or_none, failure_hint_ascii).
+
+    status is 'ran' (completed success) or 'failed' (log present but unsuccessful)
+    or 'skipped' when called with empty content (unused here).
+    """
+    if not content.strip():
+        return "skipped", None, ""
+
+    tail = content[-16384:] if len(content) > 16384 else content
+    exit_code: int | None = None
+    for line in reversed(tail.splitlines()):
+        lower = line.lower()
+        if "complete (exit code:" in lower or "exit code:" in lower:
+            idx = lower.rfind("exit code:")
+            if idx >= 0:
+                rest = line[idx + len("exit code:") :].strip()
+                for token in rest.replace(")", " ").split():
+                    try:
+                        exit_code = int(token)
+                        break
+                    except ValueError:
+                        continue
+            break
+
+    fail_markers = (
+        "error:",
+        "critical:",
+        "traceback",
+        "exception:",
+        "failed to",
+        "aborting",
+        "winerror",
+    )
+    lower_tail = tail.lower()
+    has_fail_line = any(m in lower_tail for m in fail_markers)
+
+    if exit_code is not None:
+        status = "failed" if exit_code != 0 else "ran"
+    elif has_fail_line:
+        status = "failed"
+    else:
+        status = "ran"
+
+    hint = ""
+    if status == "failed":
+        for ln in reversed(tail.splitlines()):
+            raw = ln.strip()
+            low = raw.lower()
+            if any(low.startswith(m.rstrip(":")) or low.startswith(m) for m in ("error", "critical", "traceback")):
+                hint = raw[:240]
+                break
+            if "winerror" in low or "failed to" in low:
+                hint = raw[:240]
+                break
+        if not hint:
+            # last non-empty line
+            for ln in reversed(tail.splitlines()):
+                s = ln.strip()
+                if s:
+                    hint = s[:240]
+                    break
+
+    # ASCII-safe for terminal / Slack cp1252
+    hint = hint.encode("ascii", "replace").decode("ascii")
+
+    return status, exit_code, hint
+
+
 def collect_overnight_streak() -> list[dict]:
-    """Compute 7-day overnight run streak from log files."""
+    """Compute 7-day overnight run streak from log files with exit code and failure hint."""
     logs_dir = REPO_ROOT / "data" / "logs"
     today_dt = datetime.now(timezone.utc).date()
-    streak = []
+    streak: list[dict] = []
     for i in range(6, -1, -1):
         d = today_dt - timedelta(days=i)
         date_str = d.isoformat()
-        # Check for overnight log file for this date
         log_pattern = f"overnight_*{date_str}*"
-        found = list(logs_dir.glob(log_pattern)) if logs_dir.is_dir() else []
-        if found:
-            # Check if any log indicates failure
-            has_fail = False
-            for lf in found:
-                try:
-                    content = lf.read_text(encoding="utf-8", errors="replace")[:500]
-                    if "FAIL" in content or "ERROR" in content:
-                        has_fail = True
-                        break
-                except OSError:
-                    pass
-            streak.append({"date": date_str, "status": "failed" if has_fail else "ran"})
-        else:
+        def _mtime(p: Path) -> float:
+            try:
+                return p.stat().st_mtime if p.is_file() else 0.0
+            except OSError:
+                return 0.0
+
+        found = sorted(logs_dir.glob(log_pattern), key=_mtime, reverse=True) if logs_dir.is_dir() else []
+        if not found:
             streak.append({"date": date_str, "status": "skipped"})
+            continue
+
+        primary = found[0]
+        rel = str(primary.relative_to(REPO_ROOT)).replace("\\", "/")
+        try:
+            full = primary.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            streak.append({"date": date_str, "status": "skipped", "log_file": rel, "failure_hint": "could not read log"})
+            continue
+
+        status, exit_code, hint = _summarize_overnight_log(full)
+        entry: dict = {"date": date_str, "status": status, "log_file": rel}
+        if exit_code is not None:
+            entry["exit_code"] = exit_code
+        if hint:
+            entry["failure_hint"] = hint
+        streak.append(entry)
     return streak
+
+
+def _local_hour_from_utc_iso(iso_ts: str | None) -> int | None:
+    """Return local wall-clock hour (0-23) for a UTC ISO8601 string, or None."""
+    if not iso_ts or not isinstance(iso_ts, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(iso_ts.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return int(dt.astimezone().hour)
+    except (ValueError, TypeError, OSError):
+        return None
+
+
+def _scheduled_task_touches_sleep_window(last_run: str | None, next_run: str | None) -> bool:
+    """True if last or next run (converted to system local time) falls in sleep window."""
+    for ts in (last_run, next_run):
+        h = _local_hour_from_utc_iso(ts)
+        if h is None:
+            continue
+        if SLEEP_WINDOW_LOCAL_START_HOUR <= h < SLEEP_WINDOW_LOCAL_END_HOUR_EXCL:
+            return True
+    return False
+
+
+def _heartbeat_scheduled_task_folder() -> str:
+    cfg = _read_json(REPO_ROOT / "heartbeat_config.json")
+    if not isinstance(cfg, dict):
+        return "\\Jarvis\\"
+    for c in cfg.get("collectors") or []:
+        if not isinstance(c, dict):
+            continue
+        if c.get("name") == "scheduled_tasks_unhealthy" and c.get("type") == "scheduled_tasks":
+            return str(c.get("task_folder") or "\\Jarvis\\")
+    return "\\Jarvis\\"
+
+
+def collect_scheduled_tasks_detail() -> dict:
+    """Per-task Windows Task Scheduler snapshot for vitals dashboard.
+
+    Fields align with Get-ScheduledTaskInfo: last/next run, result code, missed runs.
+    """
+    import platform
+
+    sleep_meta = {
+        "local_start_hour_inclusive": SLEEP_WINDOW_LOCAL_START_HOUR,
+        "local_end_hour_exclusive": SLEEP_WINDOW_LOCAL_END_HOUR_EXCL,
+        "note": "last_run_time/next_run_time are UTC from Task Scheduler; hours use system local TZ",
+        "task_names": [],
+    }
+
+    if platform.system() != "Windows":
+        return {
+            "platform": "non-windows",
+            "task_folder": None,
+            "query_error": None,
+            "tasks": [],
+            "healthy_count": 0,
+            "unhealthy_count": 0,
+            "total_count": 0,
+            "sleep_window": sleep_meta,
+        }
+
+    task_folder = _heartbeat_scheduled_task_folder()
+    ps = (
+        "$tasks = @(); "
+        "Get-ScheduledTask -TaskPath $env:JARVIS_TASK_PATH -ErrorAction Stop | ForEach-Object { "
+        "$inf = $_ | Get-ScheduledTaskInfo; "
+        "$tasks += [pscustomobject]@{ "
+        "TaskName = $_.TaskName; "
+        "State = [string]$_.State; "
+        "LastTaskResult = [int]$inf.LastTaskResult; "
+        "LastRunTime = if ($null -ne $inf.LastRunTime -and $inf.LastRunTime.Year -ge 2000) "
+        "{ $inf.LastRunTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ') } else { $null }; "
+        "NextRunTime = if ($null -ne $inf.NextRunTime -and $inf.NextRunTime.Year -ge 2000) "
+        "{ $inf.NextRunTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ') } else { $null }; "
+        "MissedRuns = [int]$inf.NumberOfMissedRuns "
+        "} }; "
+        "$tasks | ConvertTo-Json -Depth 4 -Compress"
+    )
+    child_env = {**os.environ, "JARVIS_TASK_PATH": task_folder}
+
+    try:
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", ps],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=20,
+            env=child_env,
+        )
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        return {
+            "platform": "windows",
+            "task_folder": task_folder,
+            "query_error": str(exc)[:300],
+            "tasks": [],
+            "healthy_count": 0,
+            "unhealthy_count": 0,
+            "total_count": 0,
+            "sleep_window": sleep_meta,
+        }
+
+    if result.returncode != 0:
+        err = (result.stderr or result.stdout or "").strip()[:400]
+        return {
+            "platform": "windows",
+            "task_folder": task_folder,
+            "query_error": err or f"powershell exit {result.returncode}",
+            "tasks": [],
+            "healthy_count": 0,
+            "unhealthy_count": 0,
+            "total_count": 0,
+            "sleep_window": sleep_meta,
+        }
+
+    raw = (result.stdout or "").strip()
+    if not raw:
+        return {
+            "platform": "windows",
+            "task_folder": task_folder,
+            "query_error": None,
+            "tasks": [],
+            "healthy_count": 0,
+            "unhealthy_count": 0,
+            "total_count": 0,
+            "sleep_window": sleep_meta,
+        }
+
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return {
+            "platform": "windows",
+            "task_folder": task_folder,
+            "query_error": f"invalid json from powershell: {exc}",
+            "tasks": [],
+            "healthy_count": 0,
+            "unhealthy_count": 0,
+            "total_count": 0,
+            "sleep_window": sleep_meta,
+        }
+
+    rows = parsed if isinstance(parsed, list) else [parsed]
+    benign = {0, 0x00041303, 0x00041301}
+    tasks_out: list[dict] = []
+    healthy = 0
+    unhealthy = 0
+    now = datetime.now(timezone.utc)
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("TaskName") or "").strip()
+        state = str(row.get("State") or "").strip()
+        try:
+            last_result = int(row.get("LastTaskResult", -1))
+        except (TypeError, ValueError):
+            last_result = -1
+        last_run = row.get("LastRunTime")
+        next_run = row.get("NextRunTime")
+        try:
+            missed = int(row.get("MissedRuns", 0))
+        except (TypeError, ValueError):
+            missed = 0
+
+        is_healthy = (state in ("Ready", "Running")) and (last_result in benign)
+        if is_healthy:
+            healthy += 1
+        else:
+            unhealthy += 1
+
+        outcome = "unknown"
+        if state.lower() == "disabled":
+            outcome = "disabled"
+        elif last_result == 0x00041303 and missed == 0:
+            outcome = "never_ran_yet"
+        elif last_result == 0x00041301:
+            outcome = "running"
+        elif last_result == 0:
+            outcome = "completed_ok"
+        elif last_result in benign:
+            outcome = "benign_nonzero"
+        else:
+            outcome = "failed"
+
+        should_note: list[str] = []
+        if missed > 0:
+            should_note.append(f"missed_runs={missed}")
+        if next_run and isinstance(next_run, str):
+            try:
+                nxt = datetime.fromisoformat(next_run.replace("Z", "+00:00"))
+                if nxt < now and last_result not in (0, 0x00041301):
+                    should_note.append("next_run_in_past")
+            except (ValueError, TypeError):
+                pass
+
+        sleep_touch = _scheduled_task_touches_sleep_window(
+            last_run if isinstance(last_run, str) else None,
+            next_run if isinstance(next_run, str) else None,
+        )
+
+        tasks_out.append(
+            {
+                "task_name": name,
+                "state": state,
+                "last_task_result": last_result,
+                "last_result_label": _task_scheduler_result_label(last_result),
+                "last_run_time": last_run,
+                "next_run_time": next_run,
+                "missed_runs": missed,
+                "healthy": is_healthy,
+                "outcome": outcome,
+                "schedule_flags": should_note,
+                "sleep_window_touch": sleep_touch,
+            }
+        )
+
+    tasks_out.sort(key=lambda r: r.get("task_name") or "")
+
+    sleep_names = [t["task_name"] for t in tasks_out if t.get("sleep_window_touch")]
+
+    return {
+        "platform": "windows",
+        "task_folder": task_folder,
+        "query_error": None,
+        "tasks": tasks_out,
+        "healthy_count": healthy,
+        "unhealthy_count": unhealthy,
+        "total_count": len(tasks_out),
+        "sleep_window": {
+            "local_start_hour_inclusive": SLEEP_WINDOW_LOCAL_START_HOUR,
+            "local_end_hour_exclusive": SLEEP_WINDOW_LOCAL_END_HOUR_EXCL,
+            "note": "last_run_time/next_run_time are UTC from Task Scheduler; hours use system local TZ",
+            "task_names": sleep_names,
+        },
+    }
 
 
 def collect_external_monitoring_structured(overnight_deep_dive: dict | None) -> list[dict] | None:
@@ -1347,6 +1691,9 @@ def main() -> None:
         files_scanned.append(str(ISC_PRODUCER_REPORT))
 
     overnight_streak = collect_overnight_streak()
+    scheduled_tasks_detail = collect_scheduled_tasks_detail()
+    if scheduled_tasks_detail.get("platform") == "windows" and not scheduled_tasks_detail.get("query_error"):
+        files_scanned.append("scheduled_tasks (powershell)")
     external_monitoring_structured = collect_external_monitoring_structured(overnight_deep_dive)
     contradictions_structured = collect_contradictions_structured(overnight_deep_dive)
     proposals_structured = collect_proposals_structured(overnight_deep_dive)
@@ -1385,6 +1732,7 @@ def main() -> None:
         "session_usage": session_usage,
         "moralis_vitals": moralis_vitals,
         "overnight_streak": overnight_streak,
+        "scheduled_tasks_detail": scheduled_tasks_detail,
         "external_monitoring_structured": external_monitoring_structured,
         "contradictions_structured": contradictions_structured,
         "proposals_structured": proposals_structured,

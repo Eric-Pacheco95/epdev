@@ -108,6 +108,10 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "scheduled_tasks_detail": {
+      "type": "object",
+      "description": "Per-task Windows Task Scheduler snapshot (last/next run, result code, missed runs). Non-Windows: platform non-windows and empty tasks."
+    },
     "errors": {
       "type": "array",
       "items": { "type": "string" },

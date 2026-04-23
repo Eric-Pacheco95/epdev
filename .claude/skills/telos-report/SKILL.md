@@ -85,18 +85,18 @@ If the Notion write fails, log the error but do not fail the skill — the local
 
 # VERIFY
 
-- Report contains all required sections: IDENTITY STATE, GOAL PROGRESS, TOP LEARNINGS, SYSTEM HEALTH, RECOMMENDATIONS | Verify: Check section headers in output
-- GOAL PROGRESS section includes a percentage or measurable progress indicator for each active goal | Verify: Read GOAL PROGRESS entries for numeric or ratio data
-- SYSTEM HEALTH table includes all TELOS files (not just recently updated ones) | Verify: Count rows against files in `memory/work/telos/`
-- If Notion write was attempted: confirmation or failure message is present in output | Verify: Check output for 'Report pushed to Notion' or error message
-- Report is dated accurately (uses today's date, not a prior report's date) | Verify: Check report heading date
-- Report was not generated from a cached prior read -- TELOS files were freshly read in this session | Verify: Review session tool calls -- Read calls for TELOS files must precede report generation
+- All required sections present (IDENTITY STATE through RECOMMENDATIONS) | Verify: Check section headers
+- GOAL PROGRESS has measurable indicator for each active goal | Verify: Check for numeric/ratio data
+- SYSTEM HEALTH includes all TELOS files | Verify: Count rows vs `memory/work/telos/`
+- Notion write attempted -> confirmation or error in output | Verify: Check output
+- Report date is today's date | Verify: Check report heading
+- TELOS files freshly Read before report generation | Verify: Review session tool calls
 
 # LEARN
 
-- Track GOAL PROGRESS percentages over time -- flat or declining goals are candidates for Eric to re-evaluate (obstacle or changed priority)
-- If the same file consistently shows 'stale' in SYSTEM HEALTH, flag it as a maintenance item in /backlog
-- If Notion write fails repeatedly, log a signal and investigate the Notion MCP connection as a /self-heal task
+- Flat/declining goal progress -> candidate for re-evaluation
+- File consistently stale in SYSTEM HEALTH -> add to /backlog
+- Repeated Notion write failures -> signal + /self-heal investigation
 
 # INPUT
 

@@ -90,12 +90,13 @@ INPUT:
 
 # VERIFY
 
-- All seven required sections present: PROBLEM, KNOWN AND UNKNOWN, CONSTRAINTS VS CONVENTIONS, CORE ASSUMPTIONS, REASONING CHAIN, ALTERNATIVE FRAMINGS, NEXT TEST OR ACTION | Verify: Read output, scan for each heading
-- ALTERNATIVE FRAMINGS contains at least two distinct paths | Verify: Count distinct path entries in ALTERNATIVE FRAMINGS
-- NEXT TEST OR ACTION is concrete and actionable (not vague guidance like 'explore further') | Verify: Read NEXT TEST OR ACTION — must name a specific experiment, command, or decision
-- No unresolved check failures remain in the output | Verify: Re-run all three checks above after any fix
+- All seven sections present (PROBLEM through NEXT TEST OR ACTION) | Verify: Scan headings
+- ALTERNATIVE FRAMINGS has >=2 distinct paths | Verify: Count entries
+- NEXT TEST OR ACTION names a specific experiment, command, or decision | Verify: Read section
+- No check failures remain | Verify: Re-run checks after any fix
 
 # LEARN
 
 - Write a signal to memory/learning/signals/{YYYY-MM-DD}_first-principles-{slug}.md when the analysis reveals a core assumption that was previously treated as a hard constraint (constraint-vs-convention collapse)
 - Rating: 8+ if the assumption flip changes the entire solution direction; 5-7 for useful reframing; only write signal when CONSTRAINTS VS CONVENTIONS or CORE ASSUMPTIONS yields a genuinely surprising finding
+- If ALTERNATIVE FRAMINGS consistently cluster around the same axis (e.g., build vs. buy, short vs. long-term), note the pattern: signals a framing bias in how problems are initially posed, not just in the solutions considered

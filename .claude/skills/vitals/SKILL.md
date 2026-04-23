@@ -47,7 +47,7 @@ true
 
 1. Run `python tools/scripts/vitals_collector.py --file --pretty` to collect all vitals data
 2. Validate the output:
-   - Check `_schema_version` starts with `"1."` -- the 1.x line is additive-compatible (1.0.0 baseline + 1.1.0 added `memory`). If the major version is not 1, STOP and report: "Schema version mismatch -- expected 1.x, got {version}."
+   - Check `_schema_version` starts with `"1."` -- the 1.x line is additive-compatible (1.0.0 baseline + 1.1.0 added `memory` + `moralis_vitals`, 1.2.0 added `scheduled_tasks_detail` and richer `overnight_streak`). If the major version is not 1, STOP and report: "Schema version mismatch -- expected 1.x, got {version}."
    - Check `errors` array -- if non-empty, report each error inline with a [DEGRADED] marker
 
 ## Phase 1.5: Launch Jarvis App
@@ -176,8 +176,10 @@ Overnight ({date}): {n} dimensions, {total_kept} kept, {total_min}m
   {dim1}: {kept} kept | {dim2}: {kept} kept | ...
   Quality: {PASS|FAIL}  Security: {PASS|FAIL}
   Highlight: {one-line top finding}
+Overnight logs (7d): for each overnight_streak entry with status failed, one sub-line: {date} exit {exit_code} -- {failure_hint truncated 100c}
 Autoresearch: {contradictions}c / {coverage}% cov / {proposals}p
-Scheduled tasks: {healthy}/{total} healthy
+Scheduled tasks (summary): {heartbeat.scheduled_tasks_unhealthy.detail}
+Windows tasks (detail): from scheduled_tasks_detail -- list each task where healthy=false OR missed_runs>0: {task_name} state={state} last={last_run_time} next={next_run_time} result={last_task_result} ({last_result_label}) missed={missed_runs} flags={schedule_flags}; if none, say "All tasks nominal"
 
 MEMORY ({memory.status}): peak {memory.peak_commit_gb} GB ({memory.peak_ratio_pct}% of pagefile)
   Top-1 at peak: {memory.top1_consumer_at_peak} | Ticks: {memory.tick_count}/{memory.expected_ticks} ({completion_pct}%)
@@ -224,6 +226,16 @@ Quality gate: {PASS|FAIL}  Security: {PASS|FAIL}
 
 Recent commits:
 {bullet list of top 10 commits from branch_stats.recent_commits}
+
+---
+
+*Overnight log streak (7d)*
+For each overnight_streak entry: `{date}: {status}` plus if failed then `exit {exit_code}` and first line of `failure_hint`. Link log_file paths as monospace.
+
+---
+
+*Scheduled Tasks (Windows)*
+From `scheduled_tasks_detail`: task_folder, healthy_count/total_count. Markdown table: Task | State | Outcome | Last run UTC | Next run UTC | Result code | Label | Missed runs | schedule_flags. If query_error, quote it. If platform non-windows, say collector skipped Task Scheduler.
 
 ---
 
@@ -294,7 +306,7 @@ Proposals acted on: {n}/{total} ({rate}%)
 
 ## Errors
 - **collector-failure:** vitals_collector.py fails or returns invalid JSON -> offer LLM fallback
-- **schema-mismatch:** version != 1.0.0 -> STOP and report
+- **schema-mismatch:** `_schema_version` major != 1 -> STOP and report
 - **slack-failure:** post fails -> save to data/logs/ and notify user
 
 # SKILL CHAIN
@@ -309,15 +321,15 @@ Run vitals check now.
 
 # VERIFY
 
-- Terminal output is ASCII-only and under 40 lines (Windows cp1252 safety) | Verify: Read output — check for non-ASCII chars and line count
-- Terminal output was displayed before the Slack post | Verify: Check session output order — terminal block precedes Slack confirmation
-- Collector JSON was the sole data source (no additional file reads for metric values) | Verify: Review — all metric values traceable to collector JSON fields
-- Slack post was attempted; if failed, fallback to `data/logs/vitals_YYYY-MM-DD.md` was executed | Verify: Read session output for Slack confirmation or fallback file path
-- If schema_version != "1.0.0" in collector output, execution was stopped and mismatch was surfaced | Verify: Read session output for schema mismatch error if applicable
-- Raw collector JSON was not included in terminal output or Slack post (exposes internal state) | Verify: Read output -- must contain formatted metrics, not raw JSON blobs
+- Terminal output ASCII-only, under 40 lines | Verify: check for non-ASCII chars and line count
+- Terminal displayed before Slack post | Verify: terminal block precedes Slack confirmation in output
+- Collector JSON sole data source (no extra file reads) | Verify: metric values traceable to collector JSON
+- Slack attempted; fallback to `data/logs/vitals_YYYY-MM-DD.md` if failed | Verify: Slack confirmation or fallback path in output
+- Schema major != 1 → execution stopped with mismatch surfaced | Verify: session output for mismatch error
+- Raw JSON excluded from terminal/Slack | Verify: output has formatted metrics, not JSON blobs
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_vitals-alert.md when vitals shows a CRITICAL or DEGRADED health state for >= 2 consecutive days, or when a new category of collector failure appears
-- Rating: 8+ for unknown failure modes; 6-7 for recurring degradation patterns; skip signal for routine healthy runs or isolated one-day blips
-- If "Top 3 Today" items persist across 3+ consecutive vitals runs without progress: flag in signal as ADHD momentum blocker requiring explicit Eric attention
+- Signal: memory/learning/signals/{YYYY-MM-DD}_vitals-alert.md when CRITICAL/DEGRADED >= 2 consecutive days or new collector failure category
+- Rating: 8+ unknown failures; 6-7 recurring degradation; skip routine/isolated blips
+- "Top 3 Today" unchanged across 3+ vitals runs → flag as ADHD momentum blocker

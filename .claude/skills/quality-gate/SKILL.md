@@ -95,18 +95,19 @@ true
 
 # VERIFY
 
-- All N checklist items were audited (confirm phase count matches tasklist scope) | Verify: Count findings table rows vs phases in tasklist
-- Every gap finding includes downstream impact description -- not just 'gap exists' | Verify: Read each Critical/High row in findings table
-- No files were modified during the audit (OBSERVE-only skill) | Verify: `git diff --stat` shows no changes
-- Gate verification commands are present for each phase-gate criterion | Verify: Check ## Gate Verification Commands section exists and is non-empty
-- Critical gaps are flagged in the summary with explicit counts (C critical, H high) | Verify: Check output lead line
-- VERDICT field is present and correctly maps to gap severity (ACCEPT: zero critical/high; REJECT: any critical; PARTIAL: high-only, no critical) | Verify: Read VERDICT line in output
+- All N items audited (phase count matches tasklist scope) | Verify: findings rows vs phases in tasklist
+- Each gap finding includes downstream impact | Verify: Read each Critical/High row
+- No files modified (OBSERVE-only) | Verify: `git diff --stat` shows no changes
+- Gate Verification Commands section present and non-empty | Verify: check ## Gate Verification Commands
+- Critical gaps in summary with explicit counts | Verify: output lead line
+- VERDICT maps to severity (ACCEPT: zero C/H; REJECT: any critical; PARTIAL: H-only) | Verify: VERDICT line
 
 # LEARN
 
-- If the same gap type (e.g., missing ISC verify method, no decision log) recurs across 3+ consecutive audits, add it as a steering rule in CLAUDE.md via /update-steering-rules
-- Track the Critical:High:Medium:Low ratio over time -- a rising critical count signals phase discipline is slipping; a sustained zero-critical run signals the system is maturing
-- If quality-gate consistently finds THINK step was skipped, add a pre-build THINK checkpoint to the relevant build skill
+- Same gap type 3+ consecutive audits: add as steering rule via /update-steering-rules
+- Track C:H:M:L ratio over time — rising critical = discipline slipping; zero-critical sustained = maturing
+- quality-gate consistently finds THINK skipped: add pre-build checkpoint to build skill
+- If quality-gate consistently flags the same skill as skipped (e.g., /review-code, /architecture-review) before a particular project type, log it: that type has a systematic shortcut pattern warranting a pre-build checklist addition
 
 # INPUT
 

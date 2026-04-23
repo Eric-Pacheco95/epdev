@@ -37,6 +37,7 @@ false
 # DESIGN PRINCIPLES
 
 - **Script-vs-SKILL split**: for each step in the new skill, evaluate whether it requires intelligence (judgment, synthesis, NLG). If not, emit a deterministic Python script under `tools/scripts/` and have the SKILL.md call it. Only keep steps in SKILL.md that genuinely need the model.
+- **Corpus extraction is its own skill**: bounded channel/archive transcript workflows use `/extract-corpus` plus `tools/scripts/corpus_extractor.py` — not a `--corpus` flag on `/create-pattern` (different inputs, outputs, and promotion gates; see `history/decisions/2026-04-22-second-opinion-extract-corpus-vs-flag.md`).
 
 # STEPS
 
@@ -51,7 +52,7 @@ false
 
 Before creating any new skill, evaluate these 4 checks in order. If any check redirects, follow the redirect — do not proceed to Step 1.
 
-1. **Can this be a `--flag` on an existing skill?** Scan existing skills for overlapping domain or workflow. If the new behavior is a mode of an existing skill (e.g., outreach mode on /research), propose adding a `--flag` mode instead. Default posture: extend before create. Only create standalone when the workflow is genuinely independent of all existing skills.
+1. **Can this be a `--flag` on an existing skill?** Scan existing skills for overlapping domain or workflow. If the new behavior is a mode of an existing skill (e.g., outreach mode on /research), propose adding a `--flag` mode instead. Default posture: extend before create. Only create standalone when the workflow is genuinely independent of all existing skills. **Exception already decided:** large YouTube/channel corpus extraction is `/extract-corpus` (not a flag on this skill).
 
 2. **Has `/architecture-review` been run?** Required if the skill touches external data (WebSearch, APIs), sends output to real people (email, Slack, notifications), or has security implications. If not run, recommend it before proceeding: "This skill [reason]. Run `/architecture-review` first to validate the design."
 
@@ -100,10 +101,10 @@ INPUT:
 
 # VERIFY
 
-- Generated skill starts with exactly `# IDENTITY and PURPOSE` (no title above it) | Verify: Read first line of generated SKILL.md -- must be `# IDENTITY and PURPOSE`
-- Four required sections present in order: IDENTITY and PURPOSE, STEPS, OUTPUT INSTRUCTIONS, INPUT | Verify: Read generated SKILL.md, scan for each heading in order
-- Skill ends with `INPUT:` on its own line with no trailing text | Verify: Read last line of generated SKILL.md -- must be `INPUT:` only
-- Generated skill is not wrapped in fenced code blocks | Verify: Confirm file does not start or end with triple-backtick fences
+- Generated SKILL.md starts with `# IDENTITY and PURPOSE` as line 1 | Verify: first line of SKILL.md
+- Four sections in order: IDENTITY and PURPOSE, STEPS, OUTPUT INSTRUCTIONS, INPUT | Verify: scan headings in generated SKILL.md
+- Ends with `INPUT:` alone on last line | Verify: last line of SKILL.md
+- Not wrapped in fenced code blocks | Verify: file does not start/end with triple-backtick fences
 - OUTPUT INSTRUCTIONS section prescribes Markdown-only output | Verify: Read OUTPUT INSTRUCTIONS -- must contain 'Only use Markdown' or equivalent
 - No structural check failures remain in final generated skill | Verify: Re-run all five checks after any regeneration
 

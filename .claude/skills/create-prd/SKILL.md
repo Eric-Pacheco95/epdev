@@ -53,7 +53,6 @@ false
 - If no research context found and topic seems complex:
   - Print: "No research brief found for this topic. The PRD will be based solely on your description. For a stronger foundation, run `/project-init` (full pipeline: research + analysis + PRD) or `/research <topic>` (research only). Proceed with standalone PRD anyway?"
 - **External-source absorb-vs-adopt gate**: If input references an external source (URL, tweet, paper, "saw this thing called X") or clearly came from something Eric just read, STOP and prompt: "This came from an external source. Run `/architecture-review` first to filter absorb-vs-adopt?" If Eric skips, note bypass in PRD's CONTEXT section.
-- Once input is validated, proceed to Step 1
 
 ## Step 0.5: USER STORY CHECK (optional, auto-triggered)
 
@@ -147,12 +146,9 @@ If a blocker is evidence-resolvable from session state, resolve it silently and 
 # CONTRACT
 
 ## Errors
-- **scope-unclear:** input is too vague to derive requirements
-  - recover: provide more context about the problem, target users, and constraints; or run /research first to build a brief
-- **no-goals:** cannot identify measurable goals from input
-  - recover: explicitly state what success looks like; skill will flag "(to be defined)" metrics for stakeholder review
-- **duplicate-prd:** a PRD already exists at the target path
-  - recover: skill will ask whether to overwrite or create a versioned copy
+- **scope-unclear:** too vague → provide problem/users/constraints, or run /research first
+- **no-goals:** no measurable goals → state success criteria; "(to be defined)" flagged in PRD
+- **duplicate-prd:** PRD exists → ask to overwrite or version
 
 # SKILL CHAIN
 
@@ -166,13 +162,14 @@ If a blocker is evidence-resolvable from session state, resolve it silently and 
 - Every ISC criterion has a `| Verify:` suffix with a concrete test method | Verify: Read each ISC line for `| Verify:` tag
 - At least one anti-criterion (what must NOT happen) is present | Verify: Grep PRD for 'must not' or 'never' in ISC section
 - PRD was collaboratively developed (Eric was asked questions, not just handed a doc) | Verify: Check output for question-and-answer exchanges before PRD was written
-- If a sibling PRD was declared in Step 0.6, the draft contains `related-prds:` frontmatter naming the sibling AND an ASSUMPTIONS entry stating shipping order AND at least one anti-criterion enforcing the sibling's rule locally | Verify: Grep PRD for `related-prds:` and the sibling slug; Grep ACCEPTANCE CRITERIA for `Anti-criterion` referencing the sibling's rule
+- Sibling PRD declared → draft has `related-prds:` frontmatter, ASSUMPTIONS shipping-order entry, and anti-criterion enforcing sibling's rule | Verify: Grep PRD for `related-prds:`, sibling slug, and `Anti-criterion`
 
 # LEARN
 
-- If ISC criteria are consistently vague at first pass (lacking measurable thresholds), note the project type -- some domains need more concrete definition templates
-- If Eric rejects a PRD draft and requests major changes, log the type of change in a signal -- this reveals which aspects of requirement gathering most often miss the mark
-- After a PRD leads to a successful /implement-prd run with all ISC passing, log the PRD as a template candidate for that project type
+- ISC consistently vague at first pass: note project type — some domains need concrete definition templates
+- Eric rejects PRD draft with major changes: log change type as signal — reveals requirement-gathering gaps
+- PRD leads to successful /implement-prd with all ISC passing: log as template candidate for that project type
+- Track time between PRD creation and /implement-prd kickoff -- PRDs sitting >7 days without kickoff are likely stale; surface as a backlog signal since unstated blocking conditions typically emerged
 
 # INPUT
 

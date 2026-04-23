@@ -5,12 +5,42 @@ from tools.scripts.vitals_collector import (
     collect_external_monitoring_structured,
     collect_proposals_structured,
     compute_trend_averages,
+    _summarize_overnight_log,
+    _task_scheduler_result_label,
 )
 
 
 # ---------------------------------------------------------------------------
 # compute_trend_averages
 # ---------------------------------------------------------------------------
+
+def test_task_scheduler_result_label_zero():
+    assert _task_scheduler_result_label(0) == "SUCCESS"
+
+
+def test_task_scheduler_result_label_has_not_run():
+    assert _task_scheduler_result_label(0x00041303) == "SCHED_S_TASK_HAS_NOT_RUN"
+
+
+def test_summarize_overnight_log_success_exit_zero():
+    body = "line\n[2026-04-22] Overnight complete (exit code: 0)\n"
+    status, code, hint = _summarize_overnight_log(body)
+    assert status == "ran"
+    assert code == 0
+    assert hint == ""
+
+
+def test_summarize_overnight_log_failed_exit_one():
+    body = (
+        "ERROR: memory link hide failed\n"
+        "self-diagnose: failure detected (exit code: 1)\n"
+        "[2026-04-22] Overnight self-improvement complete (exit code: 1)\n"
+    )
+    status, code, hint = _summarize_overnight_log(body)
+    assert status == "failed"
+    assert code == 1
+    assert "memory link" in hint.lower() or "junction" in hint.lower()
+
 
 def test_compute_trend_averages_empty():
     assert compute_trend_averages([]) == {}
