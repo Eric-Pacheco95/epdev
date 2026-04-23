@@ -66,8 +66,6 @@ false
   If provisional/calibrated: apply in Step 2 (reduce probs by delta, renormalize). In Step 4 add: `Calibration: {domain} {adjustment:+.0%} [{maturity}] (n_fwd={n_forward}, n_bt={n_backtest})`. No file or no domain data: proceed normally.
   - **Prior scan**: 2+ resolved predictions in `data/predictions/` for this domain → load 2 most recent; extract reasoning errors and signposts. Note: "Loaded {n} prior predictions as priors."
 - **Domain knowledge scan**: Read `memory/knowledge/index.md`. Domain map: crypto/DeFi/BTC → `crypto`; security → `security`; AI/LLM → `ai-infra`. Load ≤3 relevant articles. Note: "Loaded N domain knowledge articles."
-- Once input validated, proceed to Step 0.5
-
 ## Step 0.5: CONVERSATIONAL PARAMETER CLARIFICATION
 
 Ask 1-3 questions: (1) Binary/range/directional? Restate in falsifiable form. (2) By when? (3) Multiple domains? Which is primary?
@@ -77,8 +75,6 @@ Ask 1-3 questions: (1) Binary/range/directional? Restate in falsifiable form. (2
 - Restate in falsifiable form before proceeding
 
 ## Step 1: ORIENT
-
-Apply domain lens (auto-detected or from flag), then anchor the prediction:
 
 1. **Restate the question** in one precise, falsifiable sentence with the confirmed time horizon
 2. **Auto-detect domain** (or use flag):
@@ -260,7 +256,7 @@ After producing output: write backcast record to `data/predictions/YYYY-MM-DD-ba
 
 ## Step 5: TRACK (default on, suppress with --no-track)
 
-After outputting the prediction, write a prediction record:
+Write prediction record:
 
 **File**: `data/predictions/YYYY-MM-DD-[slug].md`
 **Slug**: derived from the question, lowercase, hyphens, max 50 chars
@@ -324,15 +320,13 @@ INPUT:
 
 # VERIFY
 
-- Prediction file written to `data/predictions/YYYY-MM-DD-[slug].md` (unless --no-track) | Verify: `ls data/predictions/` and confirm file with today's date exists
-- Prediction contains a falsifiable statement with a resolution date or trigger | Verify: Read prediction file — must have concrete outcome condition and date
-- At least two distinct outcome scenarios are present with probabilities summing to 100% | Verify: Read scenarios and sum probabilities — must equal 100
-- Probabilities calibrated against a stated reference class (not intuition alone) | Verify: Read calibration section — must name a reference class or base rate
-- No missing --track file or uncorrected probability sum error in final output | Verify: Re-check file existence and probability sum after any fix
+- Prediction file at `data/predictions/YYYY-MM-DD-[slug].md` exists (unless --no-track) | Verify: `ls data/predictions/` — file with today's date
+- Prediction contains a falsifiable statement with resolution date or trigger | Verify: Read prediction file — concrete outcome condition and date present
+- At least two outcome scenarios with probabilities summing to 100% | Verify: Sum probabilities — must equal 100
+- Probabilities anchored to a reference class (not intuition) | Verify: Read calibration section — reference class or base rate named
 
 # LEARN
 
-- After the prediction is tracked, check data/predictions/ for any resolved predictions (status: resolved) that have not yet been analyzed
-- For each resolved prediction found: compare forecast to actual outcome, identify missed signals, and append a lessons-learned note to the resolution section of that file
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_prediction-resolved-{slug}.md only for resolved predictions with meaningful lessons (accuracy was wrong or partially wrong with a clear root cause)
-- Rating: 7-9 for systematic errors (e.g., consistently underestimating X); 4-6 for one-off misses; skip signal for correct predictions unless something unusual was learned
+- Check data/predictions/ for resolved predictions (status: resolved) not yet analyzed; compare forecast to actual, identify missed signals, append lessons-learned to resolution section
+- Signal: memory/learning/signals/{YYYY-MM-DD}_prediction-resolved-{slug}.md — only for wrong/partial outcomes with clear root cause
+- Rating: 7-9 systematic errors; 4-6 one-off misses; skip correct predictions unless unusual
