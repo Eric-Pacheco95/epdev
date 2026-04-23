@@ -48,6 +48,15 @@ false
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- No corpus_slug_or_goal provided and no --resume: print DISCOVERY section as usage block, STOP
+- --resume path provided but file does not exist: error "queue file not found at <path>", STOP
+- corpus_slug_or_goal contains path separators or unsafe characters: error and ask for a clean slug, STOP
+- corpus_extractor.py not found at tools/scripts/corpus_extractor.py: warn and STOP -- script is required for deterministic phases
+- Proceed to Phase 0
+
+
 ## Phase 0 — Workspace
 
 - Create `memory/work/<corpus>/` with agreed slug; you will write `metadata.jsonl`, `queue.json`, `evaluation.md` (or equivalent) there.
