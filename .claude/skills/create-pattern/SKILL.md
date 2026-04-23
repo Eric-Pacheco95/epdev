@@ -101,10 +101,10 @@ INPUT:
 
 # VERIFY
 
-- Generated skill starts with exactly `# IDENTITY and PURPOSE` (no title above it) | Verify: Read first line of generated SKILL.md -- must be `# IDENTITY and PURPOSE`
-- Four required sections present in order: IDENTITY and PURPOSE, STEPS, OUTPUT INSTRUCTIONS, INPUT | Verify: Read generated SKILL.md, scan for each heading in order
-- Skill ends with `INPUT:` on its own line with no trailing text | Verify: Read last line of generated SKILL.md -- must be `INPUT:` only
-- Generated skill is not wrapped in fenced code blocks | Verify: Confirm file does not start or end with triple-backtick fences
+- Generated SKILL.md starts with `# IDENTITY and PURPOSE` as line 1 | Verify: first line of SKILL.md
+- Four sections in order: IDENTITY and PURPOSE, STEPS, OUTPUT INSTRUCTIONS, INPUT | Verify: scan headings in generated SKILL.md
+- Ends with `INPUT:` alone on last line | Verify: last line of SKILL.md
+- Not wrapped in fenced code blocks | Verify: file does not start/end with triple-backtick fences
 - OUTPUT INSTRUCTIONS section prescribes Markdown-only output | Verify: Read OUTPUT INSTRUCTIONS -- must contain 'Only use Markdown' or equivalent
 - No structural check failures remain in final generated skill | Verify: Re-run all five checks after any regeneration
 
