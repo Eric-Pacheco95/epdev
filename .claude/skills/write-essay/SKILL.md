@@ -87,3 +87,4 @@ INPUT:
 
 - Write a signal to memory/learning/signals/{YYYY-MM-DD}_essay-{slug}.md only when the essay explores a topic with direct TELOS relevance (financial independence, AI infrastructure, music mastery, health, self-discovery) or captures a novel insight Eric has not written about before
 - Rating: 7-9 for essays that crystallize a previously unarticulatable idea; 5-6 for competent execution of a familiar theme; do not write signal for practice or one-off essays with no reuse value
+- Track which requested voices (e.g., Paul Graham, Hemingway) produce clean first drafts vs. consistent rewrites — high-rewrite voices need concrete stylistic examples added to STEPS
