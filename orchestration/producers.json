@@ -19,7 +19,7 @@
   },
   {
     "name": "jarvis_heartbeat",
-    "state_file": "data/vitals_latest.json",
+    "state_file": "memory/work/isce/heartbeat_latest.json",
     "state_key": null,
     "state_type": "file_mtime",
     "alert_threshold_hours": 2,

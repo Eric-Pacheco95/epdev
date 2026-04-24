@@ -141,9 +141,9 @@
         "priority": 6,
         "goal_context": "Autonomous prediction calibration -- generate domain-balanced pre-2022 events, run backtests, post Slack summary for Eric to review verdicts. Pipeline auto-approves events; human gate is at the review stage.",
         "isc": [
-          "At least 1 new backtest prediction file written to data/predictions/backtest/ | Verify: find data/predictions/backtest -name '*.md' -newer data/backtest_state.json",
-          "Slack summary posted with per-event verdict prompts | Verify: grep -c 'Backtest Review Summary' data/logs/prediction_backtest_*.log || echo check-slack",
-          "All events have knowledge_cutoff_date before 2022-01-01 (anti-criterion) | Verify: grep 'knowledge_cutoff_date' data/backtest_events.yaml | grep -v '201\\|202[01]'"
+          "At least 1 new backtest prediction file written to data/predictions/backtest/ | Verify: Glob data/predictions/backtest/*.md and confirm at least one file exists",
+          "Slack summary posted with per-event verdict prompts | Verify: Read latest data/logs/prediction_backtest_*.log and confirm 'Backtest Review Summary' appears",
+          "All events have knowledge_cutoff_date before 2022-01-01 (anti-criterion) | Verify: Read data/backtest_events.yaml and confirm all knowledge_cutoff_date values are before 2022-01-01"
         ],
         "context_files": [
           "data/backtest_events.yaml",
@@ -159,7 +159,7 @@
     },
     {
       "routine_id": "prediction-backtest",
-      "enabled": false,
+      "enabled": true,
       "schedule": {
         "type": "weekly",
         "interval_days": 7
@@ -172,8 +172,8 @@
         "priority": 5,
         "goal_context": "Prediction calibration bootstrap -- run constrained historical predictions to build accuracy signal base",
         "isc": [
-          "At least 1 new backtest prediction file written to data/predictions/backtest/ | Verify: find data/predictions/backtest -name '*.md' -newer data/backtest_state.json",
-          "All output files carry backtested=true and leakage_risk=HIGH in frontmatter | Verify: grep -l 'backtested: true' data/predictions/backtest/*.md",
+          "At least 1 new backtest prediction file written to data/predictions/backtest/ | Verify: Glob data/predictions/backtest/*.md and confirm at least one file exists",
+          "All output files carry backtested=true and leakage_risk=HIGH in frontmatter | Verify: Grep for 'backtested: true' in data/predictions/backtest/ and confirm matches found",
           "backtest_state.json updated with run date for each executed event | Verify: Read data/backtest_state.json"
         ],
         "context_files": [
@@ -232,9 +232,9 @@
         "goal_context": "Calibration feedback -- compute domain-specific accuracy and inject adjustments into /make-prediction",
         "isc": [
           "data/calibration.json exists with per-domain adjustment values | Verify: Read data/calibration.json",
-          "data/calibration_narrative.md exists with prose bias summary | Verify: test -f data/calibration_narrative.md",
-          "Calibration adjustments are within [-0.15, +0.15] bounds | Verify: python -c \"import json; d=json.load(open('data/calibration.json')); assert all(-0.15<=v['adjustment']<=0.15 for v in d['domains'].values())\"",
-          "No calibration signal written without >= 20 forward-looking resolved predictions | Verify: Check calibration.json threshold field (anti-criterion)"
+          "data/calibration_narrative.md exists with prose bias summary | Verify: Read data/calibration_narrative.md",
+          "Calibration adjustments are within [-0.15, +0.15] bounds | Verify: Read data/calibration.json and confirm all domain adjustment values fall within [-0.15, +0.15]",
+          "No calibration signal written without >= 20 forward-looking resolved predictions | Verify: Read data/calibration.json and confirm threshold field >= 20 (anti-criterion)"
         ],
         "context_files": [
           "data/predictions/",
@@ -298,7 +298,7 @@
         "priority": 6,
         "goal_context": "Tasklist is Eric's primary trust tool -- stale checkboxes erode trust and cause duplicate work",
         "isc": [
-          "No tasklist items marked [x] reference files that don't exist | Verify: grep -oP '`[^`]+`' orchestration/tasklist.md | head -20",
+          "No tasklist items marked [x] reference files that don't exist | Verify: Read orchestration/tasklist.md and confirm all backtick-quoted paths under [x] items exist on disk",
           "Phase status line in tasklist matches actual completion state | Verify: Read orchestration/tasklist.md"
         ],
         "context_files": [

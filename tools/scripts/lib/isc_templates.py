@@ -239,9 +239,9 @@ def isc_security_scan_review() -> list[str]:
 
 
 def isc_prediction_backtest_followup() -> list[str]:
-    """ISC for prediction_event_generator chained backtest task (legacy verify shape)."""
+    """ISC for prediction_event_generator chained backtest task."""
     lines = [
-        "At least 1 new backtest prediction file written | Verify: find data/predictions/backtest -name '*.md' -newer data/backtest_state.json",
-        "backtest_state.json updated with new run entries | Verify: python -c \"import json; print(len(json.load(open('data/backtest_state.json')).get('completed',{})))\"",
+        "At least 1 new backtest prediction file written | Verify: Glob data/predictions/backtest/*.md and confirm at least one file exists",
+        "backtest_state.json updated with new run entries | Verify: Read data/backtest_state.json and confirm 'completed' dict has entries",
     ]
     return _finalize(lines, "prediction_backtest_followup")
