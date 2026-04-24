@@ -107,6 +107,7 @@ true
 - Gate Verification Commands section present and non-empty | Verify: check ## Gate Verification Commands
 - Critical gaps in summary with explicit counts | Verify: output lead line
 - VERDICT maps to severity (ACCEPT: zero C/H; REJECT: any critical; PARTIAL: H-only) | Verify: VERDICT line
+- When --prd used: ISC item count and completion percentage in output | Verify: ISC RESULTS section present with count
 
 # LEARN
 

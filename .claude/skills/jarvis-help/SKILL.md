@@ -32,6 +32,7 @@ ORCHESTRATE
 ## Chains
 - Before: (entry point)
 - After: any skill (discovery leads to action)
+- Full: /jarvis-help > [invoked skill] > /learning-capture (at session end)
 
 ## Output Contract
 - Input: optional filter/search/skill name
