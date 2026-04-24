@@ -90,6 +90,7 @@ Load documentation on-demand, not upfront:
 
 ### Workflow Discipline
 
+- **PRD triage threshold:** before drafting a PRD, run Step -1 from `orchestration/steering/task-typing.md`; trivial reversible requests skip PRD entirely.
 - When uncertain, ask — don't guess. Prefer reversible actions over irreversible ones
 - **Don't reformat, refactor, or touch adjacent code even if it looks wrong — mention it in interactive sessions, or append to TASK_FAILED context in autonomous sessions. Exception: if the adjacent bug directly causes an ISC verify failure or security violation, fix it and document scope expansion. For changes you do make: remove imports/vars/functions your diff orphaned, but leave pre-existing dead code alone unless asked; grep the full repo before deleting — never rely on in-file analysis alone. Do not delete from `__init__.py`, `__all__`, or `tests/` without explicit instruction.**
 - Log significant decisions to `history/decisions/`; after every completed task, run the LEARN phase — diagnose and fix test failures before moving on

@@ -40,6 +40,24 @@ false
 
 # STEPS
 
+## Step -1: PRD TRIAGE GATE
+
+- Read `orchestration/steering/task-typing.md` → `## PRD Triage` section
+- If `--force-prd` is in args: skip gate; carry `[FORCE-PRD: triage gate skipped]` into PRD CONTEXT; proceed to Step 0
+- Classify the request on three axes using the keyword heuristic in `task-typing.md`:
+  - **S=low**: request contains any of: fix, typo, rename, remove, delete, reorder, update X to Y, add comment, small, tweak, correct, move (no scope-wideners like "all", "every", "across")
+  - **A=low**: request is ≤15 words OR names a single concrete deliverable with no open decision
+  - **Sol=high**: request contains NONE of: should, design, figure out, explore, options, decide, strategy, approach, consider, tradeoff
+- Emit 4-line axis guess (all four axes for the frontmatter draft):
+  ```
+  stakes: [low|medium|high]  ambiguity: [low|medium|high]
+  solvability: [low|medium|high]  verifiability: [low|medium|high]
+  ```
+- If ALL THREE of S=low ∧ A=low ∧ Sol=high: print the `PRD NOT WARRANTED` block (see task-typing.md > Output when gate fires) and STOP
+- Otherwise: carry the axis guess into Step 0 as the frontmatter seed; proceed normally
+
+**Kill trigger:** if Eric issues `--force-prd` on >5 of the first 10 triage verdicts, surface: "Gate may be miscalibrated — run `/update-steering-rules --audit` to revise keyword lists."
+
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)
 
 - If no input provided: print the DISCOVERY section as a usage block, then STOP

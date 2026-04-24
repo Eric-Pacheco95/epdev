@@ -103,6 +103,14 @@ Present the proposed file to Eric for approval before creating it. After approva
 
 ## Mode: --audit — Health check + prune + consolidate
 
+**Step A0: Calibration rollup (pre-audit)**
+
+Before the health check, run:
+```
+python tools/scripts/calibration_rollup.py
+```
+Read `data/calibration_weekly.md`. If any metric is RED, surface it in the health-check output as an additional finding. This step is non-blocking — a red metric triggers a recommendation, not a STOP.
+
 **Step A: Health Check (deterministic)**
 Run these checks and report results before proposing any changes:
 
