@@ -138,11 +138,11 @@ Route evaluator tier per the Task Typing labels extracted in Step 1 — see `orc
 - **Grandfathered PRDs** (no frontmatter): fall back to Sonnet subagent default.
 
 **Sonnet / Opus subagent flow (when routed here):**
-- Spawn a fresh-eyes evaluator at the routed tier; pass changed files, ISC context, build summary
-- Subagent prompt: "Review code you did not write. Be adversarial: incomplete implementations, edge cases, security gaps, production failures. Before reviewing correctness, scan the diff for any behavior not traceable to an ISC item and flag it as SCOPE CREEP."
-- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: review incomplete", do NOT proceed to VERIFY
-- **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
-- Scope: only issues related to implemented ISC items
+- Spawn fresh-eyes evaluator at routed tier; pass changed files, ISC context, build summary
+- Prompt: "Review code you did not write. Adversarial: incomplete implementations, edge cases, security gaps, production failures. Flag any behavior not traceable to an ISC item as SCOPE CREEP."
+- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: incomplete", do NOT proceed to VERIFY
+- **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; persist after cycle 2 → ACCEPTED-RISK. Medium/Low: report only.
+- Scope: implemented ISC items only
 
 - **Catch-rate log**: after REVIEW GATE completes (regardless of outcome), append one entry to `data/review_gate_log.jsonl` stamping all four Task Typing axes:
   `{"date": "YYYY-MM-DD", "task_slug": "<prd-slug>", "evaluator": "script-oracle|sonnet-subagent|opus-subagent|second-opinion|hitl", "generator": "sonnet-main|opus-main|haiku-main", "findings_count": N, "severity_max": "Critical|High|Med|Low|none", "applied_fix": true/false, "rate_limited": false, "skill": "implement-prd", "stakes": "low|medium|high", "ambiguity": "low|medium|high", "solvability": "low|medium|high", "verifiability": "low|medium|high"}`
