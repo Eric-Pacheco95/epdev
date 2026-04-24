@@ -108,11 +108,7 @@ WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPE
 
 ## Step 0.95: BLOCKER-LIST EVIDENCE PRE-CHECK
 
-Before surfacing any PRD blocker to Eric, grep current session context (tool results, file reads, screenshots, deferred-tool registries already loaded, URLs Eric pasted, earlier-turn responses) for evidence that resolves it. Surface to Eric ONLY if:
-- (a) it's a preference / option choice (option A vs B, naming, scope inclusion), or
-- (b) it requires live external verification (billing page, current network state, external system state Claude cannot observe).
-
-If a blocker is evidence-resolvable from session state, resolve it silently and note the resolution in the PRD's ASSUMPTIONS section rather than asking Eric.
+Before surfacing any blocker, check session context (tool results, file reads, URLs pasted, prior responses) for evidence that resolves it. Ask Eric only if: (a) it's a preference/option choice, or (b) requires live external verification. If evidence-resolvable: resolve silently, note in ASSUMPTIONS.
 
 ## Step 1: EXTRACT
 
