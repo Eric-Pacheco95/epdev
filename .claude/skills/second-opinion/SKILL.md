@@ -261,11 +261,11 @@ Harnesses built: <count>
 ## Ground rules
 
 - **Harnesses, not excuses.** Walls are tasks.
-- **Every finding needs file:line + runtime evidence** except rare STATIC-ONLY (with justification).
-- **Harsh, no sycophancy.** Call out over-abstraction, speculative helpers, defensive validation on internal boundaries, narrating comments. If something should be deleted, say delete.
-- **CLAUDE.md "AI Steering Rules" and "Core Principles" violations are the top-signal finding class.** Surface loudly.
-- **Concrete fixes only.** "Replace X on line 47 with Y because Z" — never "refactor this".
-- **4+ hours is expected.** If finishing early, go deeper on 4.2, 4.6, 4.7, 4.13.
+- **Every finding needs file:line + runtime evidence** (STATIC-ONLY only with justification).
+- **Harsh, no sycophancy.** Flag over-abstraction, speculative helpers, narrating comments; say delete if it should go.
+- **CLAUDE.md "AI Steering Rules" + "Core Principles" violations are top-signal.** Surface loudly.
+- **Concrete fixes.** "Replace X on line 47 with Y because Z" — never "refactor this".
+- **4+ hours expected.** Go deeper on 4.2, 4.6, 4.7, 4.13 if finishing early.
 
 Begin Phase 1 now. Work continuously through Phase 5. One report at the end.
 ```
@@ -358,12 +358,11 @@ Scope: <sha of HEAD>
 
 ## Ground rules
 
-- **Read-only.** Do not modify any file.
-- **Cite evidence.** Every finding needs `file:line` + quoted snippet. Uncited claims ignored.
+- **Read-only.** No file modifications.
+- **Cite evidence.** `file:line` + snippet required. Uncited = ignored.
 - **Concrete fixes.** "Refactor this" = useless.
 - **Depth > breadth.** 10 real bugs > 50 nits.
-- **Harsh, no sycophancy.** Call out over-abstraction, speculative helpers, narrating comments. If something should be deleted, say delete.
-- **Steering rule + Core Principle violations are highest-signal.** Surface loudly.
+- **Harsh, no sycophancy.** Flag over-abstraction and dead code; say delete if it should go. Steering rule + Core Principle violations are highest-signal.
 
 Begin with orientation, then scan, then report.
 ```
