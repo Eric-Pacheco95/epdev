@@ -15,6 +15,8 @@ OBSERVE
 
 ## Parameters
 - (no args): collect all metrics, display terminal report, post to Slack
+- --memory: show memory pressure deep dive (peak consumers, pagefile, context-file heatmap)
+- --context-files: show context-file size heatmap (largest files loaded into session context)
 
 ## Examples
 - /vitals
@@ -39,8 +41,9 @@ true
 
 ## Step 0: INPUT VALIDATION
 
-- `/vitals` takes no arguments
-- If any unrecognized argument is present: print "Usage: /vitals" and STOP
+- If `--memory` flag: run Phase 1 collector, display MEMORY section expanded with top-10 consumers and pagefile trend, skip Phases 2-4, STOP
+- If `--context-files` flag: run Phase 1 collector, display context-file heatmap (top 20 files by token estimate from `data/vitals_latest.json`), skip Phases 2-4, STOP
+- If any other unrecognized argument: print "Usage: /vitals [--memory | --context-files]" and STOP
 - Proceed to Phase 1
 
 ## Phase 1: Collect Data
