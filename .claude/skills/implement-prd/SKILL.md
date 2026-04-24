@@ -114,8 +114,8 @@ Subagent rules: pass ISC item text, verify method, context files; return file wr
   5. Re-run the same verify method
   6. If still failing after cycle 3: log the failure to `memory/learning/failures/`, mark ISC item as BLOCKED with diagnosis notes, and move to next item — do NOT silently skip
 - Track loop iterations: after BUILD completes, report in IMPLEMENTATION LOG how many items needed 0, 1, 2, or 3 fix cycles (this measures loop value)
-- **Mid-build commit checkpoint**: After every 3-4 completed ISC items, prompt: "Checkpoint: {N} ISC items verified. Run /commit?" Do not auto-commit. If Eric declines, continue.
-- **Verify script hygiene**: any verify script that reads a fixed file path must expose a `--log-file` (or `--input-file`) CLI override defaulting to the production path — tests point at `tmp_path`, not production data. Pure helper functions must accept primitive inputs only (pagefile_budget_bytes, ticks, timestamps) — never call `psutil`/WMI/CIM internally; only `main()` does I/O and passes concrete values to helpers.
+- **Mid-build checkpoint**: After every 3-4 ISC items, prompt: "Checkpoint: {N} verified. Run /commit?" Do not auto-commit.
+- **Verify script hygiene**: verify scripts must expose `--log-file`/`--input-file` CLI override (tests point at `tmp_path`). Pure helpers accept primitive inputs only — never call `psutil`/WMI/CIM internally; only `main()` does I/O.
 
 ### REVIEW GATE: Deterministic prescan + cross-model review
 
@@ -130,7 +130,7 @@ Non-optional gate once all ISC items are built/blocked.
 
 Route evaluator tier per the Task Typing labels extracted in Step 1 — see `orchestration/steering/autonomous-rules.md` > Task Typing and `orchestration/steering/verifiability-spectrum.md`:
 
-- **`verifiability: high`** → **skip Sonnet subagent review.** The verify method (script / exit-code / test) is the oracle. Mark REVIEW GATE as satisfied by the script oracle; set `evaluator: "script-oracle"` and `findings_count: 0` in the log entry below. Still run the deterministic prescan (Step 1) — script-oracle does not substitute for ruff/security scan.
+- **`verifiability: high`** → skip Sonnet subagent; script oracle satisfies REVIEW GATE; set `evaluator: "script-oracle"`, `findings_count: 0`. Still run deterministic prescan (Step 1) — script-oracle does not substitute for ruff/security scan.
 - **`verifiability: medium`** → spawn Sonnet subagent (current default path). See subagent flow below.
 - **`verifiability: low`** → escalate: spawn Opus subagent OR invoke `/second-opinion` OR print "VERIFY REQUIRES HITL — pausing for Eric" and stop. Set `evaluator: "opus-subagent" | "second-opinion" | "hitl"` accordingly in the log.
 - **Stakes override**: if `stakes: high`, require HITL regardless of `verifiability` (the stakes eval-depth multiplier — see Task Typing).
