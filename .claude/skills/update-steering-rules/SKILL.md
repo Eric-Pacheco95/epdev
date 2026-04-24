@@ -25,6 +25,7 @@ LEARN
 - Before: /self-heal (failures feed rule proposals), /synthesize-signals (synthesis themes feed rules), /learning-capture (feedback signals)
 - After: /security-audit (if security rule proposed, validate against constitutional-rules.md)
 - Related: /review-code (for code-level patterns that become rules)
+- Full: /synthesize-signals > /update-steering-rules > /security-audit (if security rule)
 
 ## Output Contract
 - Input: Optional --audit flag
