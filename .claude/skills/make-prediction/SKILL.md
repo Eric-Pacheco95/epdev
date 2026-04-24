@@ -37,6 +37,7 @@ THINK
 - After: /analyze-claims (verify surprising claims in the analysis)
 - After: /red-team (stress-test the prediction before acting on it)
 - After (--backcast only): /architecture-review on all ITEMS REQUIRING REVIEW before committing ROADMAP ITEMS to tasklist
+- Full: /research --live <topic> > /make-prediction [--market|--geopolitics] > /analyze-claims > /learning-capture
 - Full: /research > /make-prediction --deep > /red-team
 - Full (backcast): /research > /make-prediction --backcast > /architecture-review > /create-prd > tasklist commit
 
