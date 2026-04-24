@@ -7,11 +7,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import tempfile
 import pytest
 from tools.scripts.overnight_runner import (
     next_dimension,
     dimensions_to_run,
     validate_command,
+    parse_program,
     DIMENSION_ORDER,
     SAFE_COMMAND_PREFIXES,
 )
@@ -122,3 +124,90 @@ class TestValidateCommand:
         for prefix in SAFE_COMMAND_PREFIXES:
             cmd = f"{prefix} some-arg"
             assert validate_command(cmd, "test") is True, f"Prefix '{prefix}' should be allowed"
+
+
+class TestParseProgram:
+    def _write_program(self, content: str) -> Path:
+        f = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".md", delete=False, encoding="utf-8"
+        )
+        f.write(content)
+        f.close()
+        return Path(f.name)
+
+    def test_single_dimension_parsed(self):
+        p = self._write_program("### 1. scaffolding\n- **enabled:** true\n")
+        dims = parse_program(p)
+        assert "scaffolding" in dims
+
+    def test_enabled_true(self):
+        p = self._write_program("### 1. scaffolding\n- **enabled:** true\n")
+        assert parse_program(p)["scaffolding"]["enabled"] is True
+
+    def test_enabled_false(self):
+        p = self._write_program("### 1. scaffolding\n- **enabled:** false\n")
+        assert parse_program(p)["scaffolding"]["enabled"] is False
+
+    def test_iterations_parsed(self):
+        p = self._write_program("### 1. scaffolding\n- **iterations:** 10\n")
+        assert parse_program(p)["scaffolding"]["iterations"] == 10
+
+    def test_iterations_invalid_keeps_default(self):
+        p = self._write_program("### 1. scaffolding\n- **iterations:** not-a-number\n")
+        assert parse_program(p)["scaffolding"]["iterations"] == 20
+
+    def test_max_minutes_parsed(self):
+        p = self._write_program("### 1. scaffolding\n- **max_minutes:** 30\n")
+        assert parse_program(p)["scaffolding"]["max_minutes"] == 30
+
+    def test_max_minutes_invalid_keeps_none(self):
+        p = self._write_program("### 1. scaffolding\n- **max_minutes:** bad\n")
+        assert parse_program(p)["scaffolding"]["max_minutes"] is None
+
+    def test_scope_parsed(self):
+        p = self._write_program("### 1. scaffolding\n- **scope:** `tools/scripts/`\n")
+        assert parse_program(p)["scaffolding"]["scope"] == "tools/scripts/"
+
+    def test_backtick_stripped(self):
+        p = self._write_program("### 1. scaffolding\n- **metric:** `python -m pytest tests/`\n")
+        result = parse_program(p)["scaffolding"]["metric"]
+        assert result == "python -m pytest tests/"
+        assert "`" not in result
+
+    def test_none_value_becomes_empty_string(self):
+        p = self._write_program("### 1. scaffolding\n- **guard:** (none)\n")
+        assert parse_program(p)["scaffolding"]["guard"] == ""
+
+    def test_goal_parsed(self):
+        p = self._write_program("### 1. scaffolding\n- **goal:** improve coverage\n")
+        assert parse_program(p)["scaffolding"]["goal"] == "improve coverage"
+
+    def test_multiple_dimensions_parsed(self):
+        content = (
+            "### 1. scaffolding\n- **enabled:** true\n\n"
+            "### 2. codebase_health\n- **enabled:** false\n"
+        )
+        p = self._write_program(content)
+        dims = parse_program(p)
+        assert "scaffolding" in dims
+        assert "codebase_health" in dims
+        assert dims["codebase_health"]["enabled"] is False
+
+    def test_default_values_present(self):
+        p = self._write_program("### 1. scaffolding\n")
+        dim = parse_program(p)["scaffolding"]
+        assert "scope" in dim
+        assert "metric" in dim
+        assert "guard" in dim
+        assert "iterations" in dim
+        assert dim["iterations"] == 20
+
+    def test_non_header_lines_ignored(self):
+        content = "# Top-level heading\nSome prose text\n### 1. scaffolding\n- **enabled:** true\n"
+        p = self._write_program(content)
+        dims = parse_program(p)
+        assert list(dims.keys()) == ["scaffolding"]
+
+    def test_empty_file_returns_empty_dict(self):
+        p = self._write_program("")
+        assert parse_program(p) == {}
