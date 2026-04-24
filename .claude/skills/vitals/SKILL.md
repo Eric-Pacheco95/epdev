@@ -333,6 +333,8 @@ Run vitals check now.
 - Slack attempted; fallback to `data/logs/vitals_YYYY-MM-DD.md` if failed | Verify: Slack confirmation or fallback path in output
 - Schema major != 1 → execution stopped with mismatch surfaced | Verify: session output for mismatch error
 - Raw JSON excluded from terminal/Slack | Verify: output has formatted metrics, not JSON blobs
+- --memory flag: MEMORY section expanded with top-10 consumers; Phases 2-4 skipped | Verify: output has MEMORY section, no Slack post
+- --context-files flag: context-file heatmap present; Phases 2-4 skipped | Verify: output has heatmap table, no Slack post
 
 # LEARN
 

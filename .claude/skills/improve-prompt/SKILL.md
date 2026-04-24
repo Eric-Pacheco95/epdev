@@ -74,6 +74,7 @@ INPUT:
 - IMPROVED PROMPT contains exactly one fenced code block with the rewritten prompt | Verify: Count ``` fences in output — must be exactly one pair
 - DIAGNOSIS lists at least one concrete, specific issue (not 'could be clearer') | Verify: Read DIAGNOSIS — must name a specific structural or content problem
 - No empty DIAGNOSIS or unfenced IMPROVED PROMPT after any fix pass | Verify: Re-check DIAGNOSIS content and fence presence after any fix
+- --check-only mode: output has DIAGNOSIS only, no rewrite block present | Verify: scan output -- rewrite section absent
 
 # LEARN
 
