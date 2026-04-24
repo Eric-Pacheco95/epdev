@@ -89,14 +89,14 @@ false
 
 ## Step 0.7: SOCRATIC BRAINSTORM (before extracting requirements)
 
-Ask 3-5 targeted questions before generating any content — input usually under-specifies tradeoffs. Pick the most relevant:
-1. What's the underlying problem? Is there a simpler 80% version?
-2. What approaches were considered and discarded? Why?
-3. What does 'done' look like in one sentence? What would make you abandon this mid-build?
-4. What can this NOT touch or break? Any existing skills/files overlap?
-5. What's the smallest shippable version? What's explicitly out?
+Ask 3-5 targeted questions before generating content:
+1. Underlying problem? Simpler 80% version?
+2. Approaches considered and discarded? Why?
+3. What does "done" look like? What would make you abandon mid-build?
+4. What can this NOT touch or break?
+5. Smallest shippable version? What's explicitly out?
 
-WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPEN QUESTIONS that brainstorming was skipped.
+Wait for answers. If Eric says "skip": proceed but flag in OPEN QUESTIONS.
 
 ## Step 0.9: LOAD AUTONOMOUS STEERING RULES
 
@@ -118,7 +118,7 @@ Before surfacing any blocker, check session context (tool results, file reads, U
   verifiability: low | medium | high
   ---
   ```
-  Choose each axis from the input signal. Rubric: `stakes` = cost of getting it wrong; `ambiguity` = spec clarity; `solvability` = difficulty of producing a good candidate (see solvability-spectrum.md); `verifiability` = oracle strength (see verifiability-spectrum.md). If the input provides no signal for a given axis, default to `medium` and add a bullet to OPEN QUESTIONS naming the defaulted axis and asking Eric to confirm.
+  Choose from input signal. Rubric: `stakes`=cost of getting it wrong; `ambiguity`=spec clarity; `solvability`=difficulty (see solvability-spectrum.md); `verifiability`=oracle strength (see verifiability-spectrum.md). Default unspecified axes to `medium`; add to OPEN QUESTIONS.
 - Extract the product or feature name, intended audience, and the problem being solved from the input
 - Separate stated goals from implied goals; list explicit non-goals when the input provides them or clearly implies boundaries
 - Identify primary users or personas only when the input supports them; otherwise use a short "Assumed users" note with gaps flagged
