@@ -11,6 +11,8 @@ from tools.scripts.isc_validator import (
     detect_phases,
     _sanitize_ascii,
     _normalize_unicode,
+    parse_frontmatter,
+    _redact_secrets,
     ACTION_VERBS,
 )
 
@@ -197,3 +199,81 @@ def test_sanitize_ascii():
 def test_normalize_unicode_smart_quotes():
     assert "'" in _normalize_unicode("\u2018")
     assert '"' in _normalize_unicode("\u201c")
+
+
+# \u2500\u2500 parse_frontmatter \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+def test_parse_frontmatter_no_leading_dashes():
+    assert parse_frontmatter("title: test\ncontent") is None
+
+
+def test_parse_frontmatter_valid():
+    text = "---\ntitle: my doc\nauthor: eric\n---\nbody text"
+    result = parse_frontmatter(text)
+    assert result == {"title": "my doc", "author": "eric"}
+
+
+def test_parse_frontmatter_lowercases_keys_and_values():
+    text = "---\nTITLE: My Doc\n---"
+    result = parse_frontmatter(text)
+    assert result["title"] == "my doc"
+
+
+def test_parse_frontmatter_strips_quotes():
+    text = '---\ntitle: "quoted value"\n---'
+    result = parse_frontmatter(text)
+    assert result["title"] == "quoted value"
+
+
+def test_parse_frontmatter_missing_closing_dashes():
+    text = "---\ntitle: test\n"
+    assert parse_frontmatter(text) is None
+
+
+def test_parse_frontmatter_empty_block():
+    text = "---\n---\ncontent"
+    result = parse_frontmatter(text)
+    assert result == {}
+
+
+def test_parse_frontmatter_ignores_comments():
+    text = "---\n# this is a comment\ntitle: x\n---"
+    result = parse_frontmatter(text)
+    assert "title" in result
+    assert "#" not in str(result)
+
+
+def test_parse_frontmatter_ignores_blank_lines():
+    text = "---\n\ntitle: x\n\n---"
+    result = parse_frontmatter(text)
+    assert result == {"title": "x"}
+
+
+# \u2500\u2500 _redact_secrets \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+def test_redact_secrets_clean_line_unchanged():
+    assert _redact_secrets("All tests passed") == "All tests passed"
+
+
+def test_redact_secrets_env_var_pattern():
+    result = _redact_secrets("API_KEY=abc123xyz")
+    assert "REDACTED" in result
+    assert "abc123" not in result
+
+
+def test_redact_secrets_secret_path():
+    result = _redact_secrets("config loaded from /home/user/.ssh/id_rsa")
+    assert "REDACTED" in result
+
+
+def test_redact_secrets_multiline_preserves_clean():
+    text = "line one ok\nAPI_TOKEN=secret999\nline three ok"
+    result = _redact_secrets(text)
+    lines = result.splitlines()
+    assert lines[0] == "line one ok"
+    assert "REDACTED" in lines[1]
+    assert lines[2] == "line three ok"
+
+
+def test_redact_secrets_empty_string():
+    assert _redact_secrets("") == ""
