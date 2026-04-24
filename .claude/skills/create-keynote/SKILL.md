@@ -30,6 +30,7 @@ BUILD
 - Before: /research (for topic research), /create-prd (for product presentations)
 - After: /notion-sync push (share via Notion), Google Drive upload (auto)
 - Related: /create-image (used internally for slide images)
+- Full: /research > /create-keynote > /notion-sync push
 
 ## Output Contract
 - Input: Topic, brief, PRD, or free-form text + optional flags

@@ -27,6 +27,7 @@ LEARN
 - Before: /notion-sync journal (extracts signals that feed updates), /learning-capture (generates signals), /absorb (extracts TELOS-relevant content)
 - After: /telos-report (reports on changes), /notion-sync push telos (syncs TELOS Mirror to Notion)
 - Related: /red-team --thinking (suggested after monthly TELOS review)
+- Full: /learning-capture > /telos-update > /telos-report > /notion-sync push telos
 
 ## Output Contract
 - Input: Optional context string or file path
