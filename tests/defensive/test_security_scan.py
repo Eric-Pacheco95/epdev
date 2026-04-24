@@ -22,6 +22,9 @@ from security.validators.secret_scanner import line_has_secret, scan_text
 from tools.scripts.security_scan import (
     REQUIRED_FILES,
     REQUIRED_GITIGNORE_PATTERNS,
+    FALSE_POSITIVE_RULES,
+    PERSONAL_CONTENT_GLOBS,
+    apply_false_positive_filter,
     scan_gitignore_completeness,
     scan_required_files,
     scan_settings_permissions,
@@ -167,6 +170,83 @@ class TestCLIOutput:
                     # Only OK if it's in a "pattern" field value
                     if '"pattern"' not in line:
                         pytest.fail(f"Secret value leaked in output: pattern={name}")
+
+
+class TestApplyFalsePositiveFilter:
+    def _finding(self, check="secret_pattern", file="src/main.py", **kwargs):
+        f = {"check": check, "file": file}
+        f.update(kwargs)
+        return f
+
+    def test_clean_finding_stays_real(self):
+        finding = self._finding(file="src/app.py")
+        real, fps = apply_false_positive_filter([finding])
+        assert len(real) == 1
+        assert len(fps) == 0
+
+    def test_test_fixture_tagged_as_fp(self):
+        finding = self._finding(file="tests/fixtures/creds.py")
+        real, fps = apply_false_positive_filter([finding])
+        assert len(fps) == 1
+        assert fps[0]["fp_tag"] == "test_fixture"
+        assert fps[0].get("false_positive") is True
+
+    def test_example_file_tagged_as_fp(self):
+        finding = self._finding(file="docs/example_config.py")
+        real, fps = apply_false_positive_filter([finding])
+        assert len(fps) == 1
+        assert fps[0]["fp_tag"] == "example_file"
+
+    def test_template_file_tagged_as_fp(self):
+        finding = self._finding(file="tools/template_hook.py")
+        real, fps = apply_false_positive_filter([finding])
+        assert len(fps) == 1
+        assert fps[0]["fp_tag"] == "template_file"
+
+    def test_upstream_vendored_tagged_as_fp(self):
+        finding = self._finding(file="fabric-upstream/patterns/extract.py")
+        real, fps = apply_false_positive_filter([finding])
+        assert len(fps) == 1
+        assert fps[0]["fp_tag"] == "upstream_vendored"
+
+    def test_wrong_check_type_not_filtered(self):
+        finding = self._finding(check="tracked_personal", file="tests/something.py")
+        real, fps = apply_false_positive_filter([finding])
+        assert len(real) == 1
+        assert len(fps) == 0
+
+    def test_empty_input(self):
+        real, fps = apply_false_positive_filter([])
+        assert real == [] and fps == []
+
+    def test_mixed_findings(self):
+        findings = [
+            self._finding(file="src/main.py"),
+            self._finding(file="tests/test_foo.py"),
+            self._finding(file="fabric-upstream/x.py"),
+        ]
+        real, fps = apply_false_positive_filter(findings)
+        assert len(real) == 1
+        assert len(fps) == 2
+
+    def test_path_field_fallback(self):
+        finding = {"check": "secret_pattern", "path": "tests/helpers.py"}
+        real, fps = apply_false_positive_filter([finding])
+        assert len(fps) == 1
+        assert fps[0]["fp_tag"] == "test_fixture"
+
+    def test_false_positive_rules_nonempty(self):
+        assert len(FALSE_POSITIVE_RULES) > 0
+
+    def test_personal_content_globs_nonempty(self):
+        assert len(PERSONAL_CONTENT_GLOBS) > 0
+
+    def test_required_gitignore_covers_env_and_pem(self):
+        assert ".env" in REQUIRED_GITIGNORE_PATTERNS
+        assert "*.pem" in REQUIRED_GITIGNORE_PATTERNS
+
+    def test_constitutional_rules_in_required_files(self):
+        assert any("constitutional" in f for f in REQUIRED_FILES)
 
 
 if __name__ == "__main__":
