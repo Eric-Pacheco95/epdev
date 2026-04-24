@@ -347,6 +347,121 @@ with tempfile.TemporaryDirectory() as _wt_dir:
 
 
 # ---------------------------------------------------------------------------
+# validate_write_path (overnight_path_guard.py lines 147-184)
+# ---------------------------------------------------------------------------
+print("\n-- validate_write_path --")
+
+from tools.scripts.overnight_path_guard import (
+    REPO_ROOT as _GUARD_REPO_ROOT,
+    PathViolation,
+    validate_write_path,
+)
+
+
+def check_path_guard(name: str, path: str, dimension: str, expect_block: bool) -> None:
+    try:
+        validate_write_path(path, dimension=dimension)
+        if expect_block:
+            failures.append(f"  FAIL [{name}]: expected PathViolation, got ALLOW")
+            print(f"FAIL: {name}")
+        else:
+            print(f"PASS: {name}")
+    except PathViolation:
+        if expect_block:
+            print(f"PASS: {name}")
+        else:
+            failures.append(f"  FAIL [{name}]: expected ALLOW, got PathViolation")
+            print(f"FAIL: {name}")
+    except Exception as _e:
+        failures.append(f"  FAIL [{name}]: unexpected error: {_e}")
+        print(f"FAIL: {name} -- {_e}")
+
+
+# Lines 147-149: path outside repo AND _to_main_repo_path returns None -> PathViolation
+with tempfile.TemporaryDirectory() as _outside_dir:
+    _outside_path = str(Path(_outside_dir) / "evil.json")
+    check_path_guard(
+        "path outside repo + no git remap (block)",
+        _outside_path,
+        "scaffolding",
+        expect_block=True,
+    )
+
+# Lines 142-145: worktree path that _to_main_repo_path remaps to REPO_ROOT -> ALLOW
+with tempfile.TemporaryDirectory() as _wt_tmp:
+    _wt = Path(_wt_tmp)
+    (_wt / ".git").write_text(
+        f"gitdir: {str(_GUARD_REPO_ROOT / '.git' / 'worktrees' / '_test_wt')}"
+    )
+    (_wt / "data").mkdir()
+    _wt_target = _wt / "data" / "test_output.json"
+    _wt_target.touch()
+    check_path_guard(
+        "worktree path remaps to main repo data/ (allow)",
+        str(_wt_target),
+        "scaffolding",
+        expect_block=False,
+    )
+
+# Lines 151-158: blocked path (CLAUDE.md) -> PathViolation
+check_path_guard(
+    "write to CLAUDE.md (block)",
+    str(_GUARD_REPO_ROOT / "CLAUDE.md"),
+    "scaffolding",
+    expect_block=True,
+)
+
+# Lines 151-158: write under history/ -> PathViolation
+check_path_guard(
+    "write under history/ (block)",
+    str(_GUARD_REPO_ROOT / "history" / "decisions" / "test.md"),
+    "codebase_health",
+    expect_block=True,
+)
+
+# Lines 160-168: blocked pattern (*.pem) -> PathViolation
+check_path_guard(
+    "write *.pem into data/ (block)",
+    str(_GUARD_REPO_ROOT / "data" / "cert.pem"),
+    "codebase_health",
+    expect_block=True,
+)
+
+# Lines 160-168: blocked pattern (*secret*) -> PathViolation
+check_path_guard(
+    "write *secret* file into data/ (block)",
+    str(_GUARD_REPO_ROOT / "data" / "my_secret_keys.json"),
+    "codebase_health",
+    expect_block=True,
+)
+
+# Lines 170-184: path outside dimension scope -> PathViolation
+# (memory/work/jarvis/ is external_monitoring scope, not scaffolding)
+check_path_guard(
+    "write memory/work/jarvis/ in scaffolding dimension (block)",
+    str(_GUARD_REPO_ROOT / "memory" / "work" / "jarvis" / "test.md"),
+    "scaffolding",
+    expect_block=True,
+)
+
+# Lines 170-184: valid path in correct dimension scope -> ALLOW
+check_path_guard(
+    "write to .claude/skills/ in scaffolding dimension (allow)",
+    str(_GUARD_REPO_ROOT / ".claude" / "skills" / "test_skill" / "SKILL.md"),
+    "scaffolding",
+    expect_block=False,
+)
+
+# Lines 170-184: ALWAYS_ALLOWED path passes any dimension
+check_path_guard(
+    "write to data/ in knowledge_synthesis dimension (allow)",
+    str(_GUARD_REPO_ROOT / "data" / "test_output.json"),
+    "knowledge_synthesis",
+    expect_block=False,
+)
+
+
+# ---------------------------------------------------------------------------
 # Summary (standalone mode) + pytest-compatible test function
 # ---------------------------------------------------------------------------
 def test_trust_topology():
@@ -356,7 +471,7 @@ def test_trust_topology():
 
 if __name__ == "__main__":
     print(f"\n{'='*60}")
-    total = 60  # approximate -- counted from checks above
+    total = 69  # approximate -- counted from checks above
     if failures:
         print(f"FAILED {len(failures)} check(s):")
         for f in failures:
