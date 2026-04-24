@@ -139,15 +139,11 @@ If a blocker is evidence-resolvable from session state, resolve it silently and 
 
 - **Forward-causal ISC test (autonomous capabilities only)** — For any PRD enabling an autonomous capability, apply the forward-causal test to each gate: does it measure forward/causal/money-layer reality, or a code-quality/historical/calendar proxy? Calendar-duration thresholds are universally suspect in low-activity regimes — the system is least active exactly when verification matters most. Correlation checks require shuffle-test + regime-detector before they become causal claims. If a criterion fails the test, mark it with `[PROXY — needs causal replacement]` and require a replacement criterion before ISC Quality Gate passes.
 
-- **Model Annotation** — After the ISC Quality Gate passes, apply the keyword heuristic to each criterion and propose `| model: X |` annotations. Present them as a numbered review list and wait for Eric to confirm, edit, or reject before writing to the PRD file:
+- **Model Annotation** — After ISC Quality Gate passes, apply keyword heuristic to each criterion and propose `| model: X |` annotations. Present as numbered list; wait for Eric to confirm before writing.
 
-  Heuristic rules (apply in order — first match wins):
-  1. Criterion text contains any of: `security`, `auth`, `trust`, `injection`, `validate`, `policy`, `constitutional`, `architecture`, `design` → **no annotation** (Opus default)
-  2. Verify method is `Grep` or `Read` AND criterion text contains none of: `create`, `write`, `implement`, `refactor`, `generate`, `build` AND criterion uses only state verbs (`exists`, `present`, `count`, `contains`) → `| model: haiku |`
-  3. Criterion text contains any of: `create`, `write`, `implement`, `refactor`, `generate`, `build` AND no Opus-trigger keywords → `| model: sonnet |`
-  4. Anything ambiguous or mixed-concern → **no annotation** (Opus default — safe fallback)
+  Rules (first match wins): (1) security/auth/trust/injection/validate/policy/constitutional/architecture/design → no annotation (Opus); (2) Verify=Grep/Read + state verbs (exists/present/count/contains) + no build verbs → `| model: haiku |`; (3) create/write/implement/refactor/generate/build + no Opus triggers → `| model: sonnet |`; (4) ambiguous → no annotation (Opus).
 
-  Present proposed annotations to Eric and wait for confirmation. If response is ambiguous, ask once: "Confirming model routing list above?" If Eric approves without changes: write all proposed annotations. If Eric edits any: use their version.
+  If response ambiguous: ask once "Confirming model routing list above?" Use Eric's edits verbatim; write all proposed if approved unchanged.
 
 - After outputting the PRD, remind the user: "Next step: `/implement-prd` to execute this PRD through the full BUILD → VERIFY → LEARN loop"
 
