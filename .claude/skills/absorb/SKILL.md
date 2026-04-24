@@ -31,6 +31,7 @@ OBSERVE
 - Before: (standalone -- drop a URL and go)
 - After: /telos-update (if proposals approved), /learning-capture (session end)
 - Related: /extract-wisdom (standalone use), /find-logical-fallacies (standalone use)
+- Full: /absorb > /telos-update (if proposals) > /learning-capture
 
 ## Output Contract
 - Input: URL + depth flag (analysis mode) or --review flag (review mode)
