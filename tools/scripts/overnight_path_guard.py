@@ -144,9 +144,31 @@ def validate_write_path(filepath: str | Path, dimension: str = "unknown") -> Pat
             if main_p is not None:
                 p_check = main_p
             else:
-                raise PathViolation(
-                    f"BLOCKED: path outside repo root: {p}"
-                )
+                # Reverse-remap fallback: REPO_ROOT is a worktree and p is
+                # already in the main repo (e.g. pre-remapped by the hook
+                # layer). Map p back to its worktree equivalent so scope
+                # checks use REPO_ROOT-relative allowed dirs.
+                wt_git = REPO_ROOT / ".git"
+                if wt_git.is_file():
+                    try:
+                        text = wt_git.read_text().strip()
+                        if text.startswith("gitdir:"):
+                            gitdir = Path(text.split(":", 1)[1].strip()).resolve()
+                            main_repo = gitdir.parent.parent.parent
+                            rel = p.relative_to(main_repo)
+                            p_check = REPO_ROOT / rel
+                        else:
+                            raise PathViolation(
+                                f"BLOCKED: path outside repo root: {p}"
+                            )
+                    except (OSError, ValueError):
+                        raise PathViolation(
+                            f"BLOCKED: path outside repo root: {p}"
+                        )
+                else:
+                    raise PathViolation(
+                        f"BLOCKED: path outside repo root: {p}"
+                    )
 
     # 2. Check blocked paths (TELOS, constitutional rules, secrets)
     for blocked in BLOCKED_PATHS:
