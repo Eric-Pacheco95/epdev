@@ -11,7 +11,7 @@ Analyze inputs and propose updates to Eric's TELOS identity files -- Jarvis prop
 LEARN
 
 ## Syntax
-/telos-update
+/telos-update [--consolidate]
 /telos-update <input context>
 
 ## Parameters

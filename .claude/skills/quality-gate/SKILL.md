@@ -11,7 +11,7 @@ Audit completed work for THINK-before-BUILD compliance and deliverable gaps
 VERIFY
 
 ## Syntax
-/quality-gate [phase or task scope]
+/quality-gate [phase or task scope] [--phase <name>] [--prd <path>]
 
 ## Parameters
 - scope: optional phase name, date range, or "all" (default: all checked items)
