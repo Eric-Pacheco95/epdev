@@ -29,6 +29,7 @@ PLAN + OBSERVE
 ## Chains
 - Before: (entry point, or after /research for a specific destination)
 - After: /research (for deeper venue/destination intel), Slack (send itinerary to self)
+- Full: /plan-event > /research (venue/activity deep dive) > [Slack itinerary]
 
 ## Output Contract
 - Input: free-form planning intent (or nothing, triggers intake)

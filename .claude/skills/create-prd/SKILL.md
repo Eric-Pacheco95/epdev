@@ -11,12 +11,13 @@ Generate a product requirements document with ISC criteria
 PLAN
 
 ## Syntax
-/create-prd [--user-stories] [--design] <description or research-brief-path>
+/create-prd [--user-stories] [--design] [--force-prd] <description or research-brief-path>
 
 ## Parameters
 - description: free-text feature/product description (required for execution, omit for usage help)
 - research-brief-path: optional file path to a /research output for richer context
 - --user-stories: force user story generation even for single-actor tasks; useful for jarvis-app frontend features or crypto-bot multi-role flows
+- --force-prd: bypass the Step -1 triage gate (use when PRD is explicitly desired for a trivial task)
 - --design: enable reference-design intake mode — prompts for a reference screenshot path, embeds it as PRD metadata, adds `--design` flag to ISC verify step, and wires `/design-verify` into the post-build VERIFY chain
 
 ## Examples
@@ -83,23 +84,20 @@ false
 
 ## Step 0.6: PAIRED-PRD CHECK (auto-triggered)
 
-- Scan the input for sibling-PRD markers: keywords like "PRD-2", "parallel PRD", "paired", "same incident", "related PRD"; an explicit path to another PRD under `memory/work/*/PRD.md`; or framing that names a shared root cause with a companion doc.
-- If a marker is present OR Eric named one when asked in Step 0 validation: ask **"Is this PRD paired with or dependent on another in-flight PRD? If yes, name it (path or slug)."** If Eric confirms, the draft MUST include all three of:
-  1. `related-prds:` entry in the frontmatter naming the sibling PRD path
-  2. An ASSUMPTIONS entry stating the sibling's shipping order relative to this one (e.g., "PRD-1 ships before this begins BUILD so [rule] is already policy")
-  3. At least one anti-criterion in ACCEPTANCE CRITERIA that enforces the sibling's core rule LOCALLY in this PRD's surface (e.g., if sibling forbids `shell=True`, this PRD has an anti-criterion asserting no `shell=True` in its own new code)
-- If no marker is present and Eric has not named a sibling: skip silently.
+- Scan for sibling-PRD markers: "PRD-2", "parallel PRD", "paired", "same incident", "related PRD"; explicit `memory/work/*/PRD.md` path; or shared root cause framing.
+- If marker present OR Eric named a sibling: ask "Is this paired with another in-flight PRD? Name it." If confirmed, draft MUST include: (1) `related-prds:` frontmatter entry, (2) ASSUMPTIONS shipping-order entry (e.g., "PRD-1 ships before this begins BUILD so [rule] is policy"), (3) at least one anti-criterion enforcing the sibling's core rule locally.
+- No marker + no named sibling: skip silently.
 
 ## Step 0.7: SOCRATIC BRAINSTORM (before extracting requirements)
 
-Ask 3-5 targeted questions before generating any content — input usually under-specifies tradeoffs. Pick the most relevant:
-1. What's the underlying problem? Is there a simpler 80% version?
-2. What approaches were considered and discarded? Why?
-3. What does 'done' look like in one sentence? What would make you abandon this mid-build?
-4. What can this NOT touch or break? Any existing skills/files overlap?
-5. What's the smallest shippable version? What's explicitly out?
+Ask 3-5 targeted questions before generating content:
+1. Underlying problem? Simpler 80% version?
+2. Approaches considered and discarded? Why?
+3. What does "done" look like? What would make you abandon mid-build?
+4. What can this NOT touch or break?
+5. Smallest shippable version? What's explicitly out?
 
-WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPEN QUESTIONS that brainstorming was skipped.
+Wait for answers. If Eric says "skip": proceed but flag in OPEN QUESTIONS.
 
 ## Step 0.9: LOAD AUTONOMOUS STEERING RULES
 
@@ -108,11 +106,7 @@ WAIT for answers before proceeding. If Eric says "skip": proceed but flag in OPE
 
 ## Step 0.95: BLOCKER-LIST EVIDENCE PRE-CHECK
 
-Before surfacing any PRD blocker to Eric, grep current session context (tool results, file reads, screenshots, deferred-tool registries already loaded, URLs Eric pasted, earlier-turn responses) for evidence that resolves it. Surface to Eric ONLY if:
-- (a) it's a preference / option choice (option A vs B, naming, scope inclusion), or
-- (b) it requires live external verification (billing page, current network state, external system state Claude cannot observe).
-
-If a blocker is evidence-resolvable from session state, resolve it silently and note the resolution in the PRD's ASSUMPTIONS section rather than asking Eric.
+Before surfacing any blocker, check session context (tool results, file reads, URLs pasted, prior responses) for evidence that resolves it. Ask Eric only if: (a) it's a preference/option choice, or (b) requires live external verification. If evidence-resolvable: resolve silently, note in ASSUMPTIONS.
 
 ## Step 1: EXTRACT
 
@@ -125,7 +119,7 @@ If a blocker is evidence-resolvable from session state, resolve it silently and 
   verifiability: low | medium | high
   ---
   ```
-  Choose each axis from the input signal. Rubric: `stakes` = cost of getting it wrong; `ambiguity` = spec clarity; `solvability` = difficulty of producing a good candidate (see solvability-spectrum.md); `verifiability` = oracle strength (see verifiability-spectrum.md). If the input provides no signal for a given axis, default to `medium` and add a bullet to OPEN QUESTIONS naming the defaulted axis and asking Eric to confirm.
+  Choose from input signal. Rubric: `stakes`=cost of getting it wrong; `ambiguity`=spec clarity; `solvability`=difficulty (see solvability-spectrum.md); `verifiability`=oracle strength (see verifiability-spectrum.md). Default unspecified axes to `medium`; add to OPEN QUESTIONS.
 - Extract the product or feature name, intended audience, and the problem being solved from the input
 - Separate stated goals from implied goals; list explicit non-goals when the input provides them or clearly implies boundaries
 - Identify primary users or personas only when the input supports them; otherwise use a short "Assumed users" note with gaps flagged
@@ -135,19 +129,15 @@ If a blocker is evidence-resolvable from session state, resolve it silently and 
 - List dependencies, integrations, and external systems the input names or reasonably implies
 - Record risks, assumptions, and open questions separately so they are visible to decision-makers
 - Structure the output using the prescribed sections below
-- **ISC Quality Gate** — Before finalizing the PRD, validate every ISC criterion against the 6-check gate (see CLAUDE.md > ISC Quality Gate). For each criterion, confirm: (1) count is 3-8 per phase, (2) single sentence with no compound "and", (3) state-not-action phrasing, (4) binary pass/fail, (5) at least one anti-criterion exists, (6) `| Verify:` suffix present. If any check fails, fix the criterion inline before writing the PRD file. Append a one-line "ISC Quality Gate: PASS (6/6)" or "PARTIAL (N/6 — {which failed})" note at the end of the ACCEPTANCE CRITERIA section
+- **ISC Quality Gate** — Validate every ISC criterion against the 6-check gate (CLAUDE.md > ISC Quality Gate): count 3-8/phase, single sentence, state-not-action, binary pass/fail, at least one anti-criterion, `| Verify:` suffix. Fix fails inline before writing PRD. Append "ISC Quality Gate: PASS (6/6)" or "PARTIAL (N/6 — {which failed})" at end of ACCEPTANCE CRITERIA
 
 - **Forward-causal ISC test (autonomous capabilities only)** — For any PRD enabling an autonomous capability, apply the forward-causal test to each gate: does it measure forward/causal/money-layer reality, or a code-quality/historical/calendar proxy? Calendar-duration thresholds are universally suspect in low-activity regimes — the system is least active exactly when verification matters most. Correlation checks require shuffle-test + regime-detector before they become causal claims. If a criterion fails the test, mark it with `[PROXY — needs causal replacement]` and require a replacement criterion before ISC Quality Gate passes.
 
-- **Model Annotation** — After the ISC Quality Gate passes, apply the keyword heuristic to each criterion and propose `| model: X |` annotations. Present them as a numbered review list and wait for Eric to confirm, edit, or reject before writing to the PRD file:
+- **Model Annotation** — After ISC Quality Gate passes, apply keyword heuristic to each criterion and propose `| model: X |` annotations. Present as numbered list; wait for Eric to confirm before writing.
 
-  Heuristic rules (apply in order — first match wins):
-  1. Criterion text contains any of: `security`, `auth`, `trust`, `injection`, `validate`, `policy`, `constitutional`, `architecture`, `design` → **no annotation** (Opus default)
-  2. Verify method is `Grep` or `Read` AND criterion text contains none of: `create`, `write`, `implement`, `refactor`, `generate`, `build` AND criterion uses only state verbs (`exists`, `present`, `count`, `contains`) → `| model: haiku |`
-  3. Criterion text contains any of: `create`, `write`, `implement`, `refactor`, `generate`, `build` AND no Opus-trigger keywords → `| model: sonnet |`
-  4. Anything ambiguous or mixed-concern → **no annotation** (Opus default — safe fallback)
+  Rules (first match wins): (1) security/auth/trust/injection/validate/policy/constitutional/architecture/design → no annotation (Opus); (2) Verify=Grep/Read + state verbs (exists/present/count/contains) + no build verbs → `| model: haiku |`; (3) create/write/implement/refactor/generate/build + no Opus triggers → `| model: sonnet |`; (4) ambiguous → no annotation (Opus).
 
-  Present proposed annotations to Eric and wait for confirmation. If response is ambiguous, ask once: "Confirming model routing list above?" If Eric approves without changes: write all proposed annotations. If Eric edits any: use their version.
+  If response ambiguous: ask once "Confirming model routing list above?" Use Eric's edits verbatim; write all proposed if approved unchanged.
 
 - After outputting the PRD, remind the user: "Next step: `/implement-prd` to execute this PRD through the full BUILD → VERIFY → LEARN loop"
 

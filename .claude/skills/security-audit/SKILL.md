@@ -26,6 +26,7 @@ VERIFY
 ## Chains
 - Before: (standalone -- run anytime, especially before commits and PRs)
 - After: /self-heal (if critical findings need auto-fix), /review-code (if code-level fixes needed)
+- Full: /security-audit > /self-heal (Criticals) > /commit
 
 ## Output Contract
 - Input: optional scope (default: full audit)

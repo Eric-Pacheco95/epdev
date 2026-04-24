@@ -27,6 +27,7 @@ BUILD
 ## Chains
 - Before: (standalone)
 - After: /telos-update (if analysis reveals new development areas)
+- Full: /capture-recording > /telos-update (if music development areas identified) > /learning-capture
 
 ## Output Contract
 - Input: audio/video path + mode

@@ -26,6 +26,7 @@ VERIFY
 - Before: /telos-update (generates the changes this skill reports on), /learning-capture (generates signals)
 - After: /notion-sync push report (auto-pushes report to Notion Jarvis Reports page)
 - Related: /vitals (system health), /synthesize-signals (signal distillation)
+- Full: /telos-update > /telos-report > /notion-sync push report
 
 ## Output Contract
 - Input: Optional period string

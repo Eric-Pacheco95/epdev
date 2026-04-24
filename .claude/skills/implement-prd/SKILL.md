@@ -79,16 +79,11 @@ false
 
 ### MODEL ANNOTATION CHECK
 
-Check each ISC item for a `model:` annotation (`| model: sonnet |` or `| model: haiku |`):
-- `model: sonnet` → Agent subagent (sonnet) handles BUILD step
-- `model: haiku` → Agent subagent (haiku) handles BUILD step
-- No annotation or `model: opus` → main thread
+Check each ISC item for `model:` annotation (`| model: sonnet |` or `| model: haiku |`). Routing: `sonnet` → Agent subagent (sonnet); `haiku` → Agent subagent (haiku); no annotation or `opus` → main thread.
 
-**If any items lack annotation**, list them and ask:
-> "No model annotation on these items — they'll run on Opus. Annotate as `model: sonnet` (bulk code) or `model: haiku` (extraction/classification), or confirm Opus for all."
-Write annotations to PRD before proceeding if Eric annotates.
+**If any items lack annotation**, ask: "No model annotation — annotate as `sonnet` (bulk code), `haiku` (extraction/classification), or confirm Opus for all." Write confirmed annotations before proceeding.
 
-Subagent rules: pass ISC item text, verify method, and context files; subagents return file writes only (no commits); exit plan mode before dispatching.
+Subagent rules: pass ISC item text, verify method, context files; return file writes only (no commits); exit plan mode before dispatching.
 
 ### ISC QUALITY GATE (blocks BUILD)
 
@@ -98,7 +93,7 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
 - If `gate_passed: false`: review the hard fails and fix the criteria in the PRD file. Note fixes in IMPLEMENTATION LOG
 - If the PRD has 3+ hard fails across multiple criteria: STOP and print "ISC Quality Gate: FAIL -- this PRD needs /create-prd revision before implementation" with specifics
 - Fallback: if isc_validator.py is unavailable, manually validate against the 6-check gate (see CLAUDE.md > ISC Quality Gate): count (3-8 per phase), conciseness (no compound "and"), state-not-action, binary-testable, anti-criteria (at least one), verify method present
-- **Escalation check**: if PRD contains unannotated main-thread items with `[I]`/`[R]` confidence tags OR irreversible verify methods (production deploys, external API writes, credential changes), recommend `/architecture-review` (structural pre-BUILD analysis) or `advisor()` (plan sanity check) before BUILD. See `orchestration/steering/model-effort-routing.md` for the full boundary. If session has compacted since any prior advisor() call, treat that authorization as expired and re-read PRD from disk before proceeding.
+- **Escalation check**: if PRD has unannotated main-thread items with `[I]`/`[R]` tags OR irreversible verify methods (prod deploys, external API writes, credential changes), recommend `/architecture-review` or `advisor()` before BUILD. See `orchestration/steering/model-effort-routing.md`. If session compacted since any prior `advisor()` call, treat authorization as expired and re-read PRD.
 
 ### PHASE SCOPE FILTER (only if --phase N was provided)
 
@@ -119,8 +114,8 @@ Subagent rules: pass ISC item text, verify method, and context files; subagents 
   5. Re-run the same verify method
   6. If still failing after cycle 3: log the failure to `memory/learning/failures/`, mark ISC item as BLOCKED with diagnosis notes, and move to next item — do NOT silently skip
 - Track loop iterations: after BUILD completes, report in IMPLEMENTATION LOG how many items needed 0, 1, 2, or 3 fix cycles (this measures loop value)
-- **Mid-build commit checkpoint**: After every 3-4 completed ISC items, prompt: "Checkpoint: {N} ISC items verified. Run /commit?" Do not auto-commit. If Eric declines, continue.
-- **Verify script hygiene**: any verify script that reads a fixed file path must expose a `--log-file` (or `--input-file`) CLI override defaulting to the production path — tests point at `tmp_path`, not production data. Pure helper functions must accept primitive inputs only (pagefile_budget_bytes, ticks, timestamps) — never call `psutil`/WMI/CIM internally; only `main()` does I/O and passes concrete values to helpers.
+- **Mid-build checkpoint**: After every 3-4 ISC items, prompt: "Checkpoint: {N} verified. Run /commit?" Do not auto-commit.
+- **Verify script hygiene**: verify scripts must expose `--log-file`/`--input-file` CLI override (tests point at `tmp_path`). Pure helpers accept primitive inputs only — never call `psutil`/WMI/CIM internally; only `main()` does I/O.
 
 ### REVIEW GATE: Deterministic prescan + cross-model review
 
@@ -135,7 +130,7 @@ Non-optional gate once all ISC items are built/blocked.
 
 Route evaluator tier per the Task Typing labels extracted in Step 1 — see `orchestration/steering/autonomous-rules.md` > Task Typing and `orchestration/steering/verifiability-spectrum.md`:
 
-- **`verifiability: high`** → **skip Sonnet subagent review.** The verify method (script / exit-code / test) is the oracle. Mark REVIEW GATE as satisfied by the script oracle; set `evaluator: "script-oracle"` and `findings_count: 0` in the log entry below. Still run the deterministic prescan (Step 1) — script-oracle does not substitute for ruff/security scan.
+- **`verifiability: high`** → skip Sonnet subagent; script oracle satisfies REVIEW GATE; set `evaluator: "script-oracle"`, `findings_count: 0`. Still run deterministic prescan (Step 1) — script-oracle does not substitute for ruff/security scan.
 - **`verifiability: medium`** → spawn Sonnet subagent (current default path). See subagent flow below.
 - **`verifiability: low`** → escalate: spawn Opus subagent OR invoke `/second-opinion` OR print "VERIFY REQUIRES HITL — pausing for Eric" and stop. Set `evaluator: "opus-subagent" | "second-opinion" | "hitl"` accordingly in the log.
 - **Stakes override**: if `stakes: high`, require HITL regardless of `verifiability` (the stakes eval-depth multiplier — see Task Typing).
@@ -143,15 +138,15 @@ Route evaluator tier per the Task Typing labels extracted in Step 1 — see `orc
 - **Grandfathered PRDs** (no frontmatter): fall back to Sonnet subagent default.
 
 **Sonnet / Opus subagent flow (when routed here):**
-- Spawn a fresh-eyes evaluator at the routed tier; pass changed files, ISC context, build summary
-- Subagent prompt: "Review code you did not write. Be adversarial: incomplete implementations, edge cases, security gaps, production failures. Before reviewing correctness, scan the diff for any behavior not traceable to an ISC item and flag it as SCOPE CREEP."
-- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: review incomplete", do NOT proceed to VERIFY
-- **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; if persist after cycle 2 → ACCEPTED-RISK with reasoning. Medium/Low: report only.
-- Scope: only issues related to implemented ISC items
+- Spawn fresh-eyes evaluator at routed tier; pass changed files, ISC context, build summary
+- Prompt: "Review code you did not write. Adversarial: incomplete implementations, edge cases, security gaps, production failures. Flag any behavior not traceable to an ISC item as SCOPE CREEP."
+- **Rate-limit guard**: check stdout for "hit your limit"/"rate limit"/"try again"; empty stdout = incomplete → surface "REVIEW GATE: incomplete", do NOT proceed to VERIFY
+- **Review Fix Loop** (max 2 cycles): Critical/High → fix → re-run; persist after cycle 2 → ACCEPTED-RISK. Medium/Low: report only.
+- Scope: implemented ISC items only
 
 - **Catch-rate log**: after REVIEW GATE completes (regardless of outcome), append one entry to `data/review_gate_log.jsonl` stamping all four Task Typing axes:
   `{"date": "YYYY-MM-DD", "task_slug": "<prd-slug>", "evaluator": "script-oracle|sonnet-subagent|opus-subagent|second-opinion|hitl", "generator": "sonnet-main|opus-main|haiku-main", "findings_count": N, "severity_max": "Critical|High|Med|Low|none", "applied_fix": true/false, "rate_limited": false, "skill": "implement-prd", "stakes": "low|medium|high", "ambiguity": "low|medium|high", "solvability": "low|medium|high", "verifiability": "low|medium|high"}`
-  Set `applied_fix: true` only if a Critical/High finding required a code change. Set `rate_limited: true` and `findings_count: null` if rate-limit guard fired (don't count toward catch rate). For `verifiability: high` script-oracle paths set `findings_count: 0`. Omit the four axis fields for grandfathered PRDs (no frontmatter). This feeds the capability-gap kill switch in `orchestration/steering/autonomous-rules.md` — 20 non-rate-limited entries with `applied_fix: true` rate <10% disables the eval loop.
+  `applied_fix: true` only if Critical/High required code change; `rate_limited: true` + `findings_count: null` if rate-limit guard fired; `findings_count: 0` for script-oracle paths; omit axis fields for grandfathered PRDs. Feeds kill switch in `orchestration/steering/autonomous-rules.md` (rate <10% over 20 non-rate-limited entries disables eval loop).
 
 **Trust-boundary guard**: Any future gate addition that introduces mutable state (fixes, rewrites) must be positioned *before* this step, not after. Downstream placement means new code bypasses fresh-eyes review — a silent coverage regression on every build where the gate fires.
 

@@ -26,6 +26,7 @@ VERIFY
 - Before: Any failing test, hook, skill, or build step
 - After: /learning-capture (failure is automatically logged to memory/learning/failures/)
 - Related: /review-code (for code-level diagnosis), /update-steering-rules (if systemic issue found)
+- Full: /self-heal > /learning-capture > /update-steering-rules (if systemic fix)
 
 ## Output Contract
 - Input: Error description or empty (health check mode)

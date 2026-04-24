@@ -11,10 +11,12 @@ Audit completed work for THINK-before-BUILD compliance and deliverable gaps
 VERIFY
 
 ## Syntax
-/quality-gate [phase or task scope]
+/quality-gate [phase or task scope] [--phase <name>] [--prd <path>]
 
 ## Parameters
 - scope: optional phase name, date range, or "all" (default: all checked items)
+- --phase <name>: target a specific phase (e.g. --phase 3E); passed through to quality_gate_check.py
+- --prd <path>: validate ISC items for a specific PRD file
 
 ## Examples
 - /quality-gate
@@ -105,6 +107,7 @@ true
 - Gate Verification Commands section present and non-empty | Verify: check ## Gate Verification Commands
 - Critical gaps in summary with explicit counts | Verify: output lead line
 - VERDICT maps to severity (ACCEPT: zero C/H; REJECT: any critical; PARTIAL: H-only) | Verify: VERDICT line
+- When --prd used: ISC item count and completion percentage in output | Verify: ISC RESULTS section present with count
 
 # LEARN
 

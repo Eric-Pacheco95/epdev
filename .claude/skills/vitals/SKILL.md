@@ -11,17 +11,22 @@ Morning dashboard + Slack deep dive + interactive 5-step brief guide (30-60 min 
 OBSERVE
 
 ## Syntax
-/vitals
+/vitals [--memory | --context-files]
 
 ## Parameters
 - (no args): collect all metrics, display terminal report, post to Slack
+- --memory: show memory pressure deep dive (peak consumers, pagefile, context-file heatmap)
+- --context-files: show context-file size heatmap (largest files loaded into session context)
 
 ## Examples
 - /vitals
+- /vitals --memory -- drill into peak memory consumers and pagefile pressure
+- /vitals --context-files -- show largest files loaded into session context
 
 ## Chains
 - Before: (standalone -- run anytime, best at session start)
 - After: /synthesize-signals (if signals accumulated), /self-heal (if collectors failing)
+- Full (morning): /vitals > /synthesize-signals (if due) > /project-orchestrator
 
 ## Output Contract
 - Input: none (auto-collects)
@@ -39,8 +44,9 @@ true
 
 ## Step 0: INPUT VALIDATION
 
-- `/vitals` takes no arguments
-- If any unrecognized argument is present: print "Usage: /vitals" and STOP
+- If `--memory` flag: run Phase 1 collector, display MEMORY section expanded with top-10 consumers and pagefile trend, skip Phases 2-4, STOP
+- If `--context-files` flag: run Phase 1 collector, display context-file heatmap (top 20 files by token estimate from `data/vitals_latest.json`), skip Phases 2-4, STOP
+- If any other unrecognized argument: print "Usage: /vitals [--memory | --context-files]" and STOP
 - Proceed to Phase 1
 
 ## Phase 1: Collect Data
@@ -327,6 +333,8 @@ Run vitals check now.
 - Slack attempted; fallback to `data/logs/vitals_YYYY-MM-DD.md` if failed | Verify: Slack confirmation or fallback path in output
 - Schema major != 1 → execution stopped with mismatch surfaced | Verify: session output for mismatch error
 - Raw JSON excluded from terminal/Slack | Verify: output has formatted metrics, not JSON blobs
+- --memory flag: MEMORY section expanded with top-10 consumers; Phases 2-4 skipped | Verify: output has MEMORY section, no Slack post
+- --context-files flag: context-file heatmap present; Phases 2-4 skipped | Verify: output has heatmap table, no Slack post
 
 # LEARN
 

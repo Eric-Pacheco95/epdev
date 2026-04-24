@@ -1,5 +1,10 @@
 """Tests for vitals_collector.py pure helper functions."""
 
+import json
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
 from tools.scripts.vitals_collector import (
     collect_contradictions_structured,
     collect_external_monitoring_structured,
@@ -7,6 +12,10 @@ from tools.scripts.vitals_collector import (
     compute_trend_averages,
     _summarize_overnight_log,
     _task_scheduler_result_label,
+    load_ai_pricing,
+    check_ai_pricing_staleness,
+    apply_gemini_pricing,
+    collect_tavily_usage,
 )
 
 
@@ -183,3 +192,181 @@ def test_proposals_defaults_missing_fields():
     result = collect_proposals_structured({"autoresearch_proposals": md})
     assert result[0]["change"] == ""
     assert result[0]["evidence"] == ""
+
+
+# ---------------------------------------------------------------------------
+# load_ai_pricing
+# ---------------------------------------------------------------------------
+
+def test_load_ai_pricing_valid_file():
+    data = {"gemini": {"flash": {"output_per_1m_usd": 0.6}}, "verified_at": "2026-01-01T00:00:00"}
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
+        json.dump(data, f)
+        fpath = Path(f.name)
+    result = load_ai_pricing(fpath)
+    assert result is not None
+    assert "gemini" in result
+
+
+def test_load_ai_pricing_missing_file():
+    result = load_ai_pricing(Path("nonexistent_pricing_xyz.json"))
+    assert result is None
+
+
+def test_load_ai_pricing_invalid_json():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
+        f.write("{not valid json")
+        fpath = Path(f.name)
+    result = load_ai_pricing(fpath)
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# check_ai_pricing_staleness
+# ---------------------------------------------------------------------------
+
+def test_check_staleness_none_pricing():
+    assert check_ai_pricing_staleness(None) is None
+
+
+def test_check_staleness_missing_verified_at():
+    result = check_ai_pricing_staleness({"gemini": {}})
+    assert result == "ai_pricing_unparseable"
+
+
+def test_check_staleness_malformed_date():
+    result = check_ai_pricing_staleness({"verified_at": "not-a-date"})
+    assert result == "ai_pricing_unparseable"
+
+
+def test_check_staleness_fresh():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    pricing = {"verified_at": "2026-04-22T00:00:00+00:00"}
+    assert check_ai_pricing_staleness(pricing, now=now) is None
+
+
+def test_check_staleness_stale():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    pricing = {"verified_at": "2026-03-01T00:00:00+00:00"}
+    result = check_ai_pricing_staleness(pricing, now=now, stale_days=7)
+    assert result == "ai_pricing_stale"
+
+
+def test_check_staleness_naive_dt_treated_as_utc():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    pricing = {"verified_at": "2026-04-23T00:00:00"}  # no tz info
+    assert check_ai_pricing_staleness(pricing, now=now, stale_days=7) is None
+
+
+# ---------------------------------------------------------------------------
+# apply_gemini_pricing
+# ---------------------------------------------------------------------------
+
+def _pricing(output_rate=0.6, input_rate=0.075):
+    return {"gemini": {"flash": {"output_per_1m_usd": output_rate, "input_per_1m_usd": input_rate}}}
+
+
+def test_apply_gemini_pricing_computes_cost():
+    gemini = {"month": {"tokens": 1_000_000}, "week": {"tokens": 500_000}}
+    apply_gemini_pricing(gemini, _pricing(output_rate=1.0))
+    assert gemini["cost_usd_month"] == 1.0
+    assert gemini["cost_usd_week"] == 0.5
+
+
+def test_apply_gemini_pricing_none_gemini():
+    apply_gemini_pricing(None, _pricing())  # should not raise
+
+
+def test_apply_gemini_pricing_none_pricing():
+    gemini = {"month": {"tokens": 100}}
+    apply_gemini_pricing(gemini, None)
+    assert "cost_usd_month" not in gemini
+
+
+def test_apply_gemini_pricing_zero_rate_skipped():
+    gemini = {"month": {"tokens": 1_000_000}}
+    apply_gemini_pricing(gemini, _pricing(output_rate=0.0))
+    assert "cost_usd_month" not in gemini
+
+
+def test_apply_gemini_pricing_invalid_rate_skipped():
+    gemini = {"month": {"tokens": 1_000_000}}
+    apply_gemini_pricing(gemini, {"gemini": {"flash": {"output_per_1m_usd": "bad"}}})
+    assert "cost_usd_month" not in gemini
+
+
+def test_apply_gemini_pricing_adds_assumption_field():
+    gemini = {"month": {"tokens": 0}, "week": {"tokens": 0}}
+    apply_gemini_pricing(gemini, _pricing())
+    assert gemini["pricing_assumption"] == "output_rate_upper_bound"
+
+
+# ---------------------------------------------------------------------------
+# collect_tavily_usage
+# ---------------------------------------------------------------------------
+
+def _make_tavily_jsonl(*dates: str) -> str:
+    """Build JSONL lines with given ISO-date timestamps."""
+    lines = [json.dumps({"ts": f"{d}T12:00:00+00:00"}) for d in dates]
+    return "\n".join(lines)
+
+
+def test_tavily_missing_file():
+    result = collect_tavily_usage(Path("nonexistent_tavily_xyz.jsonl"))
+    assert result["calls_total"] == 0
+    assert result["calls_month"] == 0
+    assert result["calls_week"] == 0
+
+
+def test_tavily_counts_all_entries():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    content = _make_tavily_jsonl("2026-04-01", "2026-04-10", "2026-04-20")
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8") as f:
+        f.write(content)
+        fpath = Path(f.name)
+    result = collect_tavily_usage(fpath, now=now)
+    assert result["calls_total"] == 3
+    assert result["calls_month"] == 3
+
+
+def test_tavily_filters_old_entries():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    content = _make_tavily_jsonl("2026-03-01", "2026-04-20")
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8") as f:
+        f.write(content)
+        fpath = Path(f.name)
+    result = collect_tavily_usage(fpath, now=now)
+    assert result["calls_total"] == 2
+    assert result["calls_month"] == 1  # March entry excluded
+
+
+def test_tavily_week_window():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    content = _make_tavily_jsonl("2026-04-16", "2026-04-20", "2026-04-23")
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8") as f:
+        f.write(content)
+        fpath = Path(f.name)
+    result = collect_tavily_usage(fpath, now=now)
+    # April 16 = cutoff boundary (7 days before Apr 24), Apr 20 and Apr 23 within week
+    assert result["calls_week"] >= 2
+
+
+def test_tavily_skips_invalid_json_lines():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    content = 'not json\n{"ts": "2026-04-20T00:00:00+00:00"}\n'
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8") as f:
+        f.write(content)
+        fpath = Path(f.name)
+    result = collect_tavily_usage(fpath, now=now)
+    assert result["calls_total"] == 1  # only valid line counted
+
+
+def test_tavily_free_tier_from_pricing():
+    pricing = {"tavily": {"researcher_tier": {"monthly_credits": 1000}}}
+    result = collect_tavily_usage(Path("nonexistent.jsonl"), pricing=pricing)
+    assert result["free_tier_limit"] == 1000
+
+
+def test_tavily_no_pricing_free_tier_none():
+    result = collect_tavily_usage(Path("nonexistent.jsonl"))
+    assert result["free_tier_limit"] is None

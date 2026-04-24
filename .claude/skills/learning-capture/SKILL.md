@@ -68,12 +68,9 @@ false
   - **Observation**: What specifically was observed (factual, not interpretive)
   - **Implication**: What should change or be remembered as a result
 - **Quality gate** (replaces standalone /rate-content): Before writing each signal, apply this tier check:
-  - Count distinct, actionable ideas in the signal (not restatements)
-  - Evaluate relevance to Eric's core themes: AI/orchestration | security | crypto/finance | business | music | personal growth | systems thinking
-  - Assign a tier:
-    - **S** (18+ ideas / strong multi-theme): must capture | **A** (15+ / good match): write | **B** (12+ / decent): write concise | **C** (10+ / some match): skip unless asked | **D**: noise, skip
-  - Only write signals rated B tier or above. For C/D tier learnings, note them in the output summary as "filtered out" with the tier so Eric can override
-  - Add the tier to the signal file header (see updated SIGNAL FORMAT)
+  - Count distinct actionable ideas; evaluate relevance to: AI/orchestration | security | crypto/finance | business | music | personal growth | systems thinking
+  - Tier: **S** (18+/multi-theme: capture) | **A** (15+/good: write) | **B** (12+/decent: write concise) | **C** (10+/some: skip) | **D** (noise: skip)
+  - Write B+ only; note filtered C/D in summary with tier so Eric can override. Add tier to signal header.
 - Assess session sentiment (positive/negative/neutral). Signals: explicit feedback, repeated corrections (frustration), quick approvals (satisfaction), session length (energy). Log as pattern signal tagged `sentiment:{positive|negative|neutral}`.
 - Check if any learnings qualify as **failures** (something went wrong, broke, or produced bad output). Failures get extra fields: root cause, fix applied, prevention
 - **Worktree-safe path resolution**: Signal and failure files MUST be written to the main working tree, not the current working directory. Use the absolute path `C:/Users/ericp/Github/epdev/memory/learning/signals/` (and `.../failures/`) regardless of whether the session is running in a worktree context. Worktree-relative writes vanish when the worktree is pruned.
@@ -85,7 +82,7 @@ false
 - After writing signals, count unprocessed signals (signals/ + failures/ + absorbed/, where unprocessed = not referenced in `data/signal_lineage.jsonl`). Auto-invoke `/synthesize-signals` immediately if: combined unprocessed count >= 35 OR last synthesis >72h ago with any unprocessed signals. Present proposed steering rules to Eric for approval but do not auto-invoke `/update-steering-rules`
 - **Skill friction check**: If any skill was used this session, review each invocation for friction: missing steps, confusing parameters, unnecessary confirmations, or unclear output. For each friction point, write a signal tagged `skill-improvement` with the skill name, what went wrong, and a proposed fix. This feeds the skill self-improvement loop.
 - **Skill gap check**: Scan session for ad-hoc tasks that could be reusable skills. Score each on: Recurrence (weekly+?), Repeatability (scriptable structure?), Value (saves time/errors?). Surface only candidates scoring High on 2+ of 3 as `## Skill Gap Candidates` (name, description, recurrence signal). Do NOT auto-invoke `/create-pattern`.
-- **Source engagement check**: Read `data/source_candidates.jsonl` (if exists). If any candidate URL/domain was referenced this session, increment its `engagement_count`. If count reaches 3: prompt "Source '{name}' came up 3 times. Add to sources.yaml? (tier: {suggestion})". If approved: append to `memory/work/jarvis/sources.yaml` and clear from JSONL. If declined: set count to -1 (skip forever). Also check if any session URL matches an *existing* source in sources.yaml — note as "Source hit: {name}" if found.
+- **Source engagement check**: Read `data/source_candidates.jsonl`. Increment `engagement_count` for any candidate URL referenced this session; at 3: prompt to add to sources.yaml (clear JSONL if approved, set -1 if declined). Note any session URL matching existing sources.yaml entries as "Source hit: {name}".
 - Skip writing if the session was trivial (quick question, no meaningful work done) — say so and exit
 
 # SIGNAL FORMAT

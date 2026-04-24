@@ -37,6 +37,7 @@ THINK
 - After: /analyze-claims (verify surprising claims in the analysis)
 - After: /red-team (stress-test the prediction before acting on it)
 - After (--backcast only): /architecture-review on all ITEMS REQUIRING REVIEW before committing ROADMAP ITEMS to tasklist
+- Full: /research --live <topic> > /make-prediction [--market|--geopolitics] > /analyze-claims > /learning-capture
 - Full: /research > /make-prediction --deep > /red-team
 - Full (backcast): /research > /make-prediction --backcast > /architecture-review > /create-prd > tasklist commit
 
@@ -89,15 +90,9 @@ Ask 1-3 questions: (1) Binary/range/directional? Restate in falsifiable form. (2
 
 ### Domain-Specific ORIENT
 
-**--geopolitics lens:**
-- Identify the civilizational cycle phase (rising, peak, declining) for each major power involved
-- Frame through game theory: who are the actors, what does each want (focus on self-interest, not ideology), what leverage does each have
-- Identify relevant historical pattern (power transition, imperial overstretch, resource competition, etc.)
+**--geopolitics:** Identify civilizational cycle phase (rising/peak/declining) per major power; frame via game theory (actors, wants, leverage); identify historical pattern (power transition, overstretch, resource competition).
 
-**--market lens:**
-- Identify position in Dalio's debt cycles: short-term cycle phase (early/mid/late/crisis) + long-term cycle position
-- Assess current sentiment regime (euphoria, optimism, uncertainty, fear, panic)
-- Note macro regime signals (rate trajectory, dollar strength, liquidity conditions, fiscal position)
+**--market:** Identify Dalio debt cycle position (short-term early/mid/late/crisis + long-term); assess sentiment regime (euphoria/optimism/uncertainty/fear/panic); note macro signals (rates, dollar, liquidity, fiscal).
 
 ## Step 2: STRUCTURE
 

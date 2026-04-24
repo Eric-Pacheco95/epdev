@@ -11,14 +11,16 @@ Rewrite a prompt for clarity, scope, and reliable first-try execution
 BUILD
 
 ## Syntax
-/improve-prompt <prompt text or file path>
+/improve-prompt <prompt text or file path> [--check-only]
 
 ## Parameters
 - prompt: the prompt to improve -- raw text or file path (required)
+- --check-only: diagnose issues without rewriting; outputs DIAGNOSIS section only
 
 ## Examples
 - /improve-prompt "Summarize this article and give me the key points"
 - /improve-prompt .claude/skills/research/SKILL.md
+- /improve-prompt --check-only .claude/skills/create-prd/SKILL.md -- audit only, no rewrite
 
 ## Chains
 - Before: (entry point)
@@ -38,6 +40,7 @@ true
 ## Step 0: INPUT VALIDATION
 
 - No input: print DISCOVERY as usage block, STOP
+- `--check-only` present: complete DIAGNOSIS phase only; omit IMPROVED PROMPT and OPTIONAL ADDITIONS sections
 - Input is already a well-structured system prompt (has role, steps, output format): note what is already strong, suggest refinements only
 - File path: read file, use content as input
 
@@ -71,6 +74,7 @@ INPUT:
 - IMPROVED PROMPT contains exactly one fenced code block with the rewritten prompt | Verify: Count ``` fences in output — must be exactly one pair
 - DIAGNOSIS lists at least one concrete, specific issue (not 'could be clearer') | Verify: Read DIAGNOSIS — must name a specific structural or content problem
 - No empty DIAGNOSIS or unfenced IMPROVED PROMPT after any fix pass | Verify: Re-check DIAGNOSIS content and fence presence after any fix
+- --check-only mode: output has DIAGNOSIS only, no rewrite block present | Verify: scan output -- rewrite section absent
 
 # LEARN
 

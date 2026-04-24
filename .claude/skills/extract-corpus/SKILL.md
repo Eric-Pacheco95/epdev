@@ -26,6 +26,7 @@ OBSERVE → THINK (phases 3–4)
 ## Chains
 - Before: /research (domain framing) or user-provided channel URL
 - After: /learning-capture (signals), optional /telos-update when identity-relevant
+- Full: /research (domain framing) > /extract-corpus > /learning-capture > /telos-update (if identity-relevant)
 - Composes: deterministic steps call `corpus_extractor.py`; judgment steps stay in this skill
 - Related: `/create-pattern` authors new skills; **do not** fold this workflow into `/create-pattern` as a flag — different contract, different artifacts (see promotion record `history/decisions/2026-04-22-second-opinion-extract-corpus-vs-flag.md`)
 
@@ -141,10 +142,10 @@ Rules for subagents:
 
 # VERIFY
 
-- Phase 2 never exceeds the agreed cap without explicit user approval | Re-read `evaluation.md` or session notes for N items.
-- `corpus_extractor.py` stderr checked after yt-dlp; non-zero exit means incomplete slice | Re-run or fix ids before Phase 3.
-- Dedup scan performed before any **new** `memory/knowledge/<domain>/` directory is minted | Confirm `foundation-ml`-style splits meet the unanimous / dedup / dependency-chain rule.
-- If a structured gate was written, the next session executes **only** the gate trigger logic before re-deriving taxonomy | Diff `queue.json` gate fields vs `evaluation.md`.
+- Phase 2 never exceeds the agreed cap without explicit user approval | Verify: Re-read `evaluation.md` or session notes for N items
+- `corpus_extractor.py` stderr checked after yt-dlp; non-zero exit means incomplete slice | Verify: Check stderr output and exit code
+- Dedup scan performed before any **new** `memory/knowledge/<domain>/` directory is minted | Verify: Confirm `foundation-ml`-style splits meet the unanimous / dedup / dependency-chain rule
+- If a structured gate was written, the next session executes **only** the gate trigger logic before re-deriving taxonomy | Verify: Diff `queue.json` gate fields vs `evaluation.md`
 
 # LEARN
 

@@ -31,6 +31,7 @@ BUILD
 - Before: /project-init (for project diagrams), /research (for investigation visualizations), /deep-audit (for system architecture)
 - After: Save to memory/work/{project}/ or orchestration/workflows/ (after approval)
 - Related: /create-keynote (diagrams can feed presentations)
+- Full: /deep-audit > /visualize system > /create-keynote (if presenting findings)
 
 ## Output Contract
 - Input: Content or topic + optional type flag

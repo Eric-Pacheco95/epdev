@@ -11,11 +11,12 @@ Analyze inputs and propose updates to Eric's TELOS identity files -- Jarvis prop
 LEARN
 
 ## Syntax
-/telos-update
+/telos-update [--consolidate]
 /telos-update <input context>
 
 ## Parameters
 - input (optional): Session transcript, voice recording, manual notes, or learning signals to analyze for TELOS-relevant content. If omitted, analyzes the current session.
+- --consolidate: scan all TELOS files for duplicate entries, redundant goals, and cross-file inconsistencies; propose merges and cleanups without auto-writing
 
 ## Examples
 - /telos-update -- analyze current session for TELOS-relevant signals
@@ -26,6 +27,7 @@ LEARN
 - Before: /notion-sync journal (extracts signals that feed updates), /learning-capture (generates signals), /absorb (extracts TELOS-relevant content)
 - After: /telos-report (reports on changes), /notion-sync push telos (syncs TELOS Mirror to Notion)
 - Related: /red-team --thinking (suggested after monthly TELOS review)
+- Full: /learning-capture > /telos-update > /telos-report > /notion-sync push telos
 
 ## Output Contract
 - Input: Optional context string or file path
@@ -39,6 +41,7 @@ false
 
 ## Step 0: INPUT CHECK
 
+- `--consolidate` flag: read all TELOS files, identify duplicates and cross-file overlaps, propose merge candidates; no writes until Eric confirms
 - If no input is provided (empty invocation with no context after `/telos-update`): print usage hint `'Usage: /telos-update <session notes, observations, or updates to record>'` and STOP
 - If input is < 10 words: ask Eric for more context before proceeding
 
