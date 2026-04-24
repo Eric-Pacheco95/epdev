@@ -15,6 +15,8 @@ VERIFY
 
 ## Parameters
 - scope: optional phase name, date range, or "all" (default: all checked items)
+- --phase <name>: target a specific phase (e.g. --phase 3E); passed through to quality_gate_check.py
+- --prd <path>: validate ISC items for a specific PRD file
 
 ## Examples
 - /quality-gate
