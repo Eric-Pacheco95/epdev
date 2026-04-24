@@ -20,6 +20,7 @@ BUILD
 ## Examples
 - /improve-prompt "Summarize this article and give me the key points"
 - /improve-prompt .claude/skills/research/SKILL.md
+- /improve-prompt --check-only .claude/skills/create-prd/SKILL.md -- audit only, no rewrite
 
 ## Chains
 - Before: (entry point)

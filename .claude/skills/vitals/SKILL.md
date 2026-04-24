@@ -20,6 +20,8 @@ OBSERVE
 
 ## Examples
 - /vitals
+- /vitals --memory -- drill into peak memory consumers and pagefile pressure
+- /vitals --context-files -- show largest files loaded into session context
 
 ## Chains
 - Before: (standalone -- run anytime, best at session start)
