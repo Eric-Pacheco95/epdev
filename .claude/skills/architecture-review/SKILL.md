@@ -75,13 +75,11 @@ Run before hard-to-reverse decisions: architecture, tool/dependency adoption, 3+
 
 ## Step 1.5: EVIDENCE GATHERING [--incident only]
 
-Before launching the 3 review agents, collect live-system evidence so review agents reason against primary data rather than narrative.
+Collect live-system evidence before review agents run so they reason against primary data.
 
-- **Identify evidence dimensions** — ask: "What evidence dimensions need parallel collection for this incident?" Common dimensions: process/resource state (ps, CIM — prefer `Get-Process` under memory pressure, R3), log grep (error/timeout/OOM patterns over the incident window), file audit (recent writes, orphan files, stale locks), config audit (spawn patterns, shell=True, .bat wrappers), correlation (timeline overlay of events vs symptoms).
-- **Spawn N triage agents in parallel** — one Agent tool call per dimension, all in a single message. Each gets a self-contained prompt naming: the specific files/commands to read, the incident window, the output schema. Each writes findings to `memory/work/_arch-review-{timestamp}/evidence/agent-{dimension}.md` as LAST action.
-- **Evidence-agent prompt skeleton:** "You are a triage agent collecting evidence for an incident review. Incident: {1-sentence}. Your dimension: {name}. Read: {files/commands}. Window: {timeframe}. Output schema: {Observation | Evidence-citation | Confidence}. Write to {path} as your LAST action. Do not propose fixes — evidence only."
-- **Rule: evidence-only, no fix proposals** — triage agents collect; review agents in Step 2 interpret. Keeps epistemic layers separate.
-- After all evidence agents return (check `memory/work/_arch-review-{timestamp}/evidence/` exists with one file per dimension), proceed to Step 2. Review agent prompts in Step 2 must include: "Before analyzing, read all files in `memory/work/_arch-review-{timestamp}/evidence/` — these are the primary findings; the proposal is a hypothesis to test against them."
+- **Identify dimensions**: process/resource state (Get-Process under memory pressure), log grep (error/timeout/OOM), file audit (recent writes, stale locks), config audit (spawn patterns, shell=True), correlation (timeline overlay).
+- **Spawn N parallel triage agents** (one per dimension, single message). Prompt skeleton: "Triage agent for {dimension}. Read: {files/commands}. Window: {timeframe}. Schema: Observation | Evidence-citation | Confidence. Write to `memory/work/_arch-review-{timestamp}/evidence/agent-{dimension}.md` as LAST action. Evidence only — no fix proposals."
+- After all agents return (verify one file per dimension in evidence dir), proceed to Step 2. Include in each review agent prompt: "Read all evidence files first — they are primary; proposal is a hypothesis to test against them."
 
 ## Step 2: LAUNCH PARALLEL AGENTS
 
