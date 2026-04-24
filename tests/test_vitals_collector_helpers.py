@@ -1,5 +1,10 @@
 """Tests for vitals_collector.py pure helper functions."""
 
+import json
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
 from tools.scripts.vitals_collector import (
     collect_contradictions_structured,
     collect_external_monitoring_structured,
@@ -7,6 +12,9 @@ from tools.scripts.vitals_collector import (
     compute_trend_averages,
     _summarize_overnight_log,
     _task_scheduler_result_label,
+    load_ai_pricing,
+    check_ai_pricing_staleness,
+    apply_gemini_pricing,
 )
 
 
@@ -183,3 +191,110 @@ def test_proposals_defaults_missing_fields():
     result = collect_proposals_structured({"autoresearch_proposals": md})
     assert result[0]["change"] == ""
     assert result[0]["evidence"] == ""
+
+
+# ---------------------------------------------------------------------------
+# load_ai_pricing
+# ---------------------------------------------------------------------------
+
+def test_load_ai_pricing_valid_file():
+    data = {"gemini": {"flash": {"output_per_1m_usd": 0.6}}, "verified_at": "2026-01-01T00:00:00"}
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
+        json.dump(data, f)
+        fpath = Path(f.name)
+    result = load_ai_pricing(fpath)
+    assert result is not None
+    assert "gemini" in result
+
+
+def test_load_ai_pricing_missing_file():
+    result = load_ai_pricing(Path("nonexistent_pricing_xyz.json"))
+    assert result is None
+
+
+def test_load_ai_pricing_invalid_json():
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
+        f.write("{not valid json")
+        fpath = Path(f.name)
+    result = load_ai_pricing(fpath)
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# check_ai_pricing_staleness
+# ---------------------------------------------------------------------------
+
+def test_check_staleness_none_pricing():
+    assert check_ai_pricing_staleness(None) is None
+
+
+def test_check_staleness_missing_verified_at():
+    result = check_ai_pricing_staleness({"gemini": {}})
+    assert result == "ai_pricing_unparseable"
+
+
+def test_check_staleness_malformed_date():
+    result = check_ai_pricing_staleness({"verified_at": "not-a-date"})
+    assert result == "ai_pricing_unparseable"
+
+
+def test_check_staleness_fresh():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    pricing = {"verified_at": "2026-04-22T00:00:00+00:00"}
+    assert check_ai_pricing_staleness(pricing, now=now) is None
+
+
+def test_check_staleness_stale():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    pricing = {"verified_at": "2026-03-01T00:00:00+00:00"}
+    result = check_ai_pricing_staleness(pricing, now=now, stale_days=7)
+    assert result == "ai_pricing_stale"
+
+
+def test_check_staleness_naive_dt_treated_as_utc():
+    now = datetime(2026, 4, 24, tzinfo=timezone.utc)
+    pricing = {"verified_at": "2026-04-23T00:00:00"}  # no tz info
+    assert check_ai_pricing_staleness(pricing, now=now, stale_days=7) is None
+
+
+# ---------------------------------------------------------------------------
+# apply_gemini_pricing
+# ---------------------------------------------------------------------------
+
+def _pricing(output_rate=0.6, input_rate=0.075):
+    return {"gemini": {"flash": {"output_per_1m_usd": output_rate, "input_per_1m_usd": input_rate}}}
+
+
+def test_apply_gemini_pricing_computes_cost():
+    gemini = {"month": {"tokens": 1_000_000}, "week": {"tokens": 500_000}}
+    apply_gemini_pricing(gemini, _pricing(output_rate=1.0))
+    assert gemini["cost_usd_month"] == 1.0
+    assert gemini["cost_usd_week"] == 0.5
+
+
+def test_apply_gemini_pricing_none_gemini():
+    apply_gemini_pricing(None, _pricing())  # should not raise
+
+
+def test_apply_gemini_pricing_none_pricing():
+    gemini = {"month": {"tokens": 100}}
+    apply_gemini_pricing(gemini, None)
+    assert "cost_usd_month" not in gemini
+
+
+def test_apply_gemini_pricing_zero_rate_skipped():
+    gemini = {"month": {"tokens": 1_000_000}}
+    apply_gemini_pricing(gemini, _pricing(output_rate=0.0))
+    assert "cost_usd_month" not in gemini
+
+
+def test_apply_gemini_pricing_invalid_rate_skipped():
+    gemini = {"month": {"tokens": 1_000_000}}
+    apply_gemini_pricing(gemini, {"gemini": {"flash": {"output_per_1m_usd": "bad"}}})
+    assert "cost_usd_month" not in gemini
+
+
+def test_apply_gemini_pricing_adds_assumption_field():
+    gemini = {"month": {"tokens": 0}, "week": {"tokens": 0}}
+    apply_gemini_pricing(gemini, _pricing())
+    assert gemini["pricing_assumption"] == "output_rate_upper_bound"
