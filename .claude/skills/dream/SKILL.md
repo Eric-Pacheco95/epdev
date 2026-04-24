@@ -24,6 +24,7 @@ EXECUTE
 - Before: (standalone, or overnight runner)
 - After: /learning-capture (if significant consolidation occurred)
 - Related: /update-steering-rules (CLAUDE.md rules -- separate skill, not /dream scope)
+- Full: /dream > /learning-capture (if merges occurred)
 
 ## Output Contract
 - Input: none

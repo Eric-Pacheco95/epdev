@@ -38,6 +38,7 @@ BUILD
 ## Chains
 - Before: /architecture-review (validate stack before new demo type), /research (for unfamiliar project domains)
 - After: /commit (commit composition file + render script), /learning-capture
+- Full: /create-pai-cli-demo > /commit > /learning-capture
 
 ## Output Contract
 - Input: project name + optional demo type
