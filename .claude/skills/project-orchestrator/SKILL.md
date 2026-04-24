@@ -33,6 +33,7 @@ PLAN
 - Before: /project-init (for new projects), /deep-audit (for health assessment)
 - After: /implement-prd (for BUILD-phase projects), /delegation (for unclear scope)
 - Related: /vitals (system health), /telos-report (TELOS-level view)
+- Full: /vitals > /project-orchestrator > /implement-prd (active BUILD) > /quality-gate > /learning-capture
 
 ## Output Contract
 - Input: Operation type + optional project name

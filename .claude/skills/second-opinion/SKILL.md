@@ -30,6 +30,7 @@ PLAN
 - Before: Eric wants independent perspective on a codebase
 - After: Eric pastes the file into the external agent; on return, optionally `/learning-capture` the findings
 - Composes: pairs with `/deep-audit` (internal Jarvis audit) as the external counterpart
+- Full: /second-opinion > [human: paste output into external model] > /learning-capture
 
 ## Output Contract
 - Input: flags + target
