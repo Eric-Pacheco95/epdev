@@ -28,6 +28,8 @@ OBSERVE
 - Before: Eric's request or /project-orchestrator
 - After: /create-prd (onboard), /implement-prd (fixes), /learning-capture
 - Composes: /security-audit (shares security axis), /review-code (shares quality concerns)
+- Full (onboard): /deep-audit --onboard > /create-prd > /implement-prd > /quality-gate > /learning-capture
+- Full (fix): /deep-audit > /implement-prd (Tier 1 fixes) > /security-audit > /learning-capture
 
 ## Output Contract
 - Input: repo path/URL + mode flag
