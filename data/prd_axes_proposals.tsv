@@ -1,0 +1,35 @@
+path	stakes	ambiguity	solvability	verifiability	confidence	rationale
+memory/work/absorb/PRD.md	low	low	medium	medium	medium	stakes:2sig/low ambiguity:1sig/low solvability:0sig/medium verifiability:0sig/medium
+memory/work/capture-recording/PRD.md	low	low	high	high	high	stakes:3sig/low ambiguity:4sig/low solvability:5sig/high verifiability:3sig/high
+memory/work/create-demo-video/PRD.md	low	low	high	low	high	stakes:2sig/low ambiguity:2sig/low solvability:2sig/high verifiability:2sig/low
+memory/work/crypto-bot/PRD.md	medium	low	low	medium	medium	stakes:0sig/medium ambiguity:3sig/low solvability:4sig/low verifiability:0sig/medium
+memory/work/crypto-bot/PRD_jarvis_crypto_manager.md	medium	low	high	high	high	stakes:0sig/medium ambiguity:5sig/low solvability:5sig/high verifiability:3sig/high
+memory/work/crypto-bot/PRD_v4.md	medium	low	high	low	high	stakes:0sig/medium ambiguity:5sig/low solvability:5sig/high verifiability:2sig/low
+memory/work/data-layer/PRD.md	high	low	high	medium	low	human-reviewed: core-infra/everything-queries-it/architecture-locked/no-test-per-isc
+memory/work/domain-knowledge-consolidator/PRD.md	high	low	high	high	high	stakes:3sig/high ambiguity:8sig/low solvability:11sig/high verifiability:5sig/high
+memory/work/dream/PRD.md	low	low	high	low	medium	stakes:1sig/low ambiguity:1sig/low solvability:2sig/high verifiability:2sig/low
+memory/work/harness-engineering/PRD.md	high	low	high	medium	high	stakes:1sig/high ambiguity:4sig/low solvability:3sig/high verifiability:0sig/medium
+memory/work/harness-foundation/PRD.md	high	low	high	high	high	stakes:4sig/high ambiguity:6sig/low solvability:7sig/high verifiability:4sig/high
+memory/work/isc-executor/PRD.md	high	low	high	high	high	stakes:3sig/high ambiguity:5sig/low solvability:6sig/high verifiability:3sig/high
+memory/work/isc-producer/PRD.md	low	low	high	high	high	stakes:2sig/low ambiguity:6sig/low solvability:6sig/high verifiability:4sig/high
+memory/work/isc-validation/PRD.md	medium	low	high	high	high	stakes:0sig/medium ambiguity:3sig/low solvability:6sig/high verifiability:5sig/high
+memory/work/isce/PRD.md	low	low	high	high	high	stakes:2sig/low ambiguity:2sig/low solvability:3sig/high verifiability:2sig/high
+memory/work/jarvis/PRD_autonomous_learning.md	low	low	high	low	high	stakes:1sig/low ambiguity:5sig/low solvability:4sig/high verifiability:3sig/low
+memory/work/jarvis/PRD_claude_context_split.md	low	low	high	high	high	stakes:3sig/low ambiguity:3sig/low solvability:6sig/high verifiability:5sig/high
+memory/work/jarvis/PRD_learning_pipeline_retention.md	low	low	high	high	high	stakes:2sig/low ambiguity:3sig/low solvability:3sig/high verifiability:2sig/high
+memory/work/jarvis/PRD_phase5.md	high	medium	high	medium	low	human-reviewed: autonomous-commits/multi-project-scope/proven-infra
+memory/work/jarvis/PRD_phase5_sprint2.md	low	low	high	medium	high	stakes:1sig/low ambiguity:4sig/low solvability:4sig/high verifiability:0sig/medium
+memory/work/jarvis/PRD_phase5e1.md	medium	low	high	high	low	human-reviewed: q1-q9-locked/test-per-isc/follow-on-failure-graceful
+memory/work/jarvis/PRD_phase5e2.md	medium	low	high	high	low	human-reviewed: lifecycle-guardrails/test-per-isc/prereq-for-5e1
+memory/work/jarvis/PRD_voice_mobile.md	medium	high	medium	low	low	human-reviewed: layer1-done/layers2-3-open-unknowns/voice-quality-hard-to-verify
+memory/work/jarvis-app/PRD.md	low	low	high	high	medium	stakes:1sig/low ambiguity:2sig/low solvability:3sig/high verifiability:1sig/high
+memory/work/jarvis_brain_map/PRD.md	low	medium	medium	low	low	human-reviewed: separate-repo/viz-only/ui-verification-weak
+memory/work/learning-pipeline/PRD.md	medium	low	high	high	medium	stakes:0sig/medium ambiguity:3sig/low solvability:2sig/high verifiability:1sig/high
+memory/work/local-model/PRD.md	low	low	high	high	high	stakes:4sig/low ambiguity:5sig/low solvability:7sig/high verifiability:7sig/high
+memory/work/make-prediction/PRD.md	low	low	high	high	high	stakes:1sig/low ambiguity:3sig/low solvability:4sig/high verifiability:3sig/high
+memory/work/phase-5a-verification-gates/PRD.md	high	low	high	high	high	stakes:2sig/high ambiguity:3sig/low solvability:4sig/high verifiability:5sig/high
+memory/work/poc-agent-loop/PRD.md	low	low	high	high	low	human-reviewed: poc-script/all-isc-checked/explicit-verify-per-criterion
+memory/work/prd-b/PRD.md	low	low	high	high	high	stakes:4sig/low ambiguity:3sig/low solvability:6sig/high verifiability:6sig/high
+memory/work/producer-watchdog/PRD.md	high	low	high	low	high	stakes:2sig/high ambiguity:2sig/low solvability:3sig/high verifiability:1sig/low
+memory/work/research-brief-promotion/PRD.md	low	low	high	high	high	stakes:3sig/low ambiguity:3sig/low solvability:5sig/high verifiability:3sig/high
+memory/work/skill-chain-improvements/PRD.md	medium	low	high	low	high	stakes:0sig/medium ambiguity:6sig/low solvability:3sig/high verifiability:2sig/low
