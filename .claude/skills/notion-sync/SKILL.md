@@ -32,6 +32,8 @@ OBSERVE (inbox/journal/goals modes), BUILD (push mode)
 - Before: /telos-report or /telos-update (for push mode)
 - After: /telos-update (if TELOS-relevant content found), /synthesize-signals (if signal count > 10)
 - Related: /absorb (for URL analysis), /extract-wisdom (used internally for journal analysis)
+- Full (journal): /notion-sync journal > /telos-update
+- Full (push): /telos-report > /notion-sync push report
 
 ## Output Contract
 - Input: Mode selection + optional sub-arguments
