@@ -83,12 +83,9 @@ false
 
 ## Step 0.6: PAIRED-PRD CHECK (auto-triggered)
 
-- Scan the input for sibling-PRD markers: keywords like "PRD-2", "parallel PRD", "paired", "same incident", "related PRD"; an explicit path to another PRD under `memory/work/*/PRD.md`; or framing that names a shared root cause with a companion doc.
-- If a marker is present OR Eric named one when asked in Step 0 validation: ask **"Is this PRD paired with or dependent on another in-flight PRD? If yes, name it (path or slug)."** If Eric confirms, the draft MUST include all three of:
-  1. `related-prds:` entry in the frontmatter naming the sibling PRD path
-  2. An ASSUMPTIONS entry stating the sibling's shipping order relative to this one (e.g., "PRD-1 ships before this begins BUILD so [rule] is already policy")
-  3. At least one anti-criterion in ACCEPTANCE CRITERIA that enforces the sibling's core rule LOCALLY in this PRD's surface (e.g., if sibling forbids `shell=True`, this PRD has an anti-criterion asserting no `shell=True` in its own new code)
-- If no marker is present and Eric has not named a sibling: skip silently.
+- Scan for sibling-PRD markers: "PRD-2", "parallel PRD", "paired", "same incident", "related PRD"; explicit `memory/work/*/PRD.md` path; or shared root cause framing.
+- If marker present OR Eric named a sibling: ask "Is this paired with another in-flight PRD? Name it." If confirmed, draft MUST include: (1) `related-prds:` frontmatter entry, (2) ASSUMPTIONS shipping-order entry (e.g., "PRD-1 ships before this begins BUILD so [rule] is policy"), (3) at least one anti-criterion enforcing the sibling's core rule locally.
+- No marker + no named sibling: skip silently.
 
 ## Step 0.7: SOCRATIC BRAINSTORM (before extracting requirements)
 
