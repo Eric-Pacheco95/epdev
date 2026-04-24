@@ -79,16 +79,11 @@ false
 
 ### MODEL ANNOTATION CHECK
 
-Check each ISC item for a `model:` annotation (`| model: sonnet |` or `| model: haiku |`):
-- `model: sonnet` → Agent subagent (sonnet) handles BUILD step
-- `model: haiku` → Agent subagent (haiku) handles BUILD step
-- No annotation or `model: opus` → main thread
+Check each ISC item for `model:` annotation (`| model: sonnet |` or `| model: haiku |`). Routing: `sonnet` → Agent subagent (sonnet); `haiku` → Agent subagent (haiku); no annotation or `opus` → main thread.
 
-**If any items lack annotation**, list them and ask:
-> "No model annotation on these items — they'll run on Opus. Annotate as `model: sonnet` (bulk code) or `model: haiku` (extraction/classification), or confirm Opus for all."
-Write annotations to PRD before proceeding if Eric annotates.
+**If any items lack annotation**, ask: "No model annotation — annotate as `sonnet` (bulk code), `haiku` (extraction/classification), or confirm Opus for all." Write confirmed annotations before proceeding.
 
-Subagent rules: pass ISC item text, verify method, and context files; subagents return file writes only (no commits); exit plan mode before dispatching.
+Subagent rules: pass ISC item text, verify method, context files; return file writes only (no commits); exit plan mode before dispatching.
 
 ### ISC QUALITY GATE (blocks BUILD)
 
