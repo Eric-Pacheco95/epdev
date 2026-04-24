@@ -26,6 +26,7 @@ OBSERVE → THINK (phases 3–4)
 ## Chains
 - Before: /research (domain framing) or user-provided channel URL
 - After: /learning-capture (signals), optional /telos-update when identity-relevant
+- Full: /research (domain framing) > /extract-corpus > /learning-capture > /telos-update (if identity-relevant)
 - Composes: deterministic steps call `corpus_extractor.py`; judgment steps stay in this skill
 - Related: `/create-pattern` authors new skills; **do not** fold this workflow into `/create-pattern` as a flag — different contract, different artifacts (see promotion record `history/decisions/2026-04-22-second-opinion-extract-corpus-vs-flag.md`)
 

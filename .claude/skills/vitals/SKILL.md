@@ -26,6 +26,7 @@ OBSERVE
 ## Chains
 - Before: (standalone -- run anytime, best at session start)
 - After: /synthesize-signals (if signals accumulated), /self-heal (if collectors failing)
+- Full (morning): /vitals > /synthesize-signals (if due) > /project-orchestrator
 
 ## Output Contract
 - Input: none (auto-collects)
