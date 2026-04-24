@@ -15,6 +15,7 @@ BUILD
 
 ## Parameters
 - prompt: the prompt to improve -- raw text or file path (required)
+- --check-only: diagnose issues without rewriting; outputs DIAGNOSIS section only
 
 ## Examples
 - /improve-prompt "Summarize this article and give me the key points"
@@ -38,6 +39,7 @@ true
 ## Step 0: INPUT VALIDATION
 
 - No input: print DISCOVERY as usage block, STOP
+- `--check-only` present: complete DIAGNOSIS phase only; omit IMPROVED PROMPT and OPTIONAL ADDITIONS sections
 - Input is already a well-structured system prompt (has role, steps, output format): note what is already strong, suggest refinements only
 - File path: read file, use content as input
 
