@@ -11,7 +11,7 @@ Rewrite a prompt for clarity, scope, and reliable first-try execution
 BUILD
 
 ## Syntax
-/improve-prompt <prompt text or file path>
+/improve-prompt <prompt text or file path> [--check-only]
 
 ## Parameters
 - prompt: the prompt to improve -- raw text or file path (required)

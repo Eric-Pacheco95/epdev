@@ -11,7 +11,7 @@ Morning dashboard + Slack deep dive + interactive 5-step brief guide (30-60 min 
 OBSERVE
 
 ## Syntax
-/vitals
+/vitals [--memory | --context-files]
 
 ## Parameters
 - (no args): collect all metrics, display terminal report, post to Slack
