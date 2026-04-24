@@ -104,21 +104,11 @@ Before launching the 3 review agents, collect live-system evidence so review age
 - All agents run in background simultaneously. Do NOT duplicate their work in the main thread while waiting
 - Each agent writes to disk as its LAST action — this ensures findings survive context compaction even if the synthesis happens in a later session or after compaction
 
-## Step 2.5: CANARY CROSS-READ [always runs, passive data collection only]
+## Step 2.5: CANARY CROSS-READ [passive only — never feeds synthesis]
 
-After all 3 agent outputs exist on disk, run one lightweight agent to do a cross-read pass. This agent does NOT feed into synthesis — it feeds a failure-mode ledger that gates future Agent Teams adoption.
+After all 3 outputs exist, spawn a background cross-read agent: "Read all three outputs from `memory/work/_arch-review-{timestamp}/`. For each agent, answer: given the OTHER two agents' findings, would this agent's conclusion change? Append one JSONL per agent to `data/arch_review_canary.jsonl`: `{"date": "YYYY-MM-DD", "review_slug": "{slug}", "topic": "...", "canary_agent": "...", "original_stance": "...", "cross_read_delta": "...", "would_change_conclusion": true/false}`. Set `would_change_conclusion: true` only for material recommendation changes — not nuance."
 
-**Cross-read agent prompt:**
-> Read all three agent outputs from `memory/work/_arch-review-{timestamp}/`. For each agent (first-principles, fallacy-detection, red-team), answer: given the OTHER two agents' findings, would this agent's conclusion change? If yes: describe the delta in 1-2 sentences. If no: say "no delta."
-> Then append one JSONL entry per agent to `data/arch_review_canary.jsonl`:
-> `{"date": "YYYY-MM-DD", "review_slug": "{slug}", "topic": "{1-sentence topic}", "canary_agent": "{agent-name}", "original_stance": "{1 sentence}", "cross_read_delta": "{delta or 'none'}", "would_change_conclusion": true/false}`
-> Only set `would_change_conclusion: true` if the delta would have materially changed the recommendation — not just added nuance.
-
-**Canary rules:**
-- Synthesis in Step 3 uses ORIGINAL outputs ONLY — canary never feeds back
-- Data purpose: failure-mode ledger for Agent Teams adoption. 3+ `would_change_conclusion: true` = revisit; 0-1 after 10 reviews = validated.
-- `data/arch_review_canary.jsonl`: one JSON object per line, no header
-- Run in background — do not wait before Step 3
+Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 after 10 = validated; one JSON per line, no header.
 
 ## Step 3: SYNTHESIZE FINDINGS
 
