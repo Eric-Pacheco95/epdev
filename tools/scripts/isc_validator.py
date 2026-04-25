@@ -1039,6 +1039,10 @@ def main():
         "--check-frontmatter", action="store_true",
         help="Check PRD frontmatter for Task Typing four-axis labels (stakes, ambiguity, solvability, verifiability); prints result and exits",
     )
+    parser.add_argument(
+        "--print-tier", action="store_true",
+        help="With --check-frontmatter: also derive and print the composite ceremony tier (0-4) and band (T0/T1-2/T3-4) from the 4 axes",
+    )
     args = parser.parse_args()
 
     # -- Frontmatter-only mode (lightweight, four-axis Task Typing check) --
@@ -1050,6 +1054,34 @@ def main():
         if not prd_path.is_absolute():
             prd_path = REPO_ROOT / prd_path
         fm_result = check_frontmatter_axes(prd_path)
+
+        # Optional ceremony-tier derivation (Layer 1 of ceremony-tier.md routing).
+        if getattr(args, "print_tier", False):
+            from tools.scripts.ceremony_tier import (  # noqa: E402
+                InvalidAxisValueError,
+                MissingFrontmatterError,
+                band_for_tier,
+                compute_tier,
+            )
+            try:
+                if fm_result["grandfathered"] or not fm_result["has_frontmatter"]:
+                    raise MissingFrontmatterError("no frontmatter block")
+                axes_dict = {
+                    a: v for a, v in fm_result["values"].items() if v
+                }
+                tier_val, defaults_used = compute_tier(axes_dict)
+                fm_result["ceremony_tier"] = tier_val
+                fm_result["ceremony_band"] = band_for_tier(tier_val)
+                fm_result["axis_default_used"] = defaults_used
+            except MissingFrontmatterError as exc:
+                fm_result["ceremony_tier"] = None
+                fm_result["ceremony_band"] = None
+                fm_result["tier_error"] = str(exc)
+            except InvalidAxisValueError as exc:
+                fm_result["ceremony_tier"] = None
+                fm_result["ceremony_band"] = None
+                fm_result["tier_error"] = str(exc)
+
         if args.json or args.pretty:
             indent = 2 if args.pretty else None
             print(json.dumps(fm_result, indent=indent, default=str))
@@ -1067,6 +1099,13 @@ def main():
                 print("Frontmatter: INCOMPLETE")
                 for err in fm_result["errors"]:
                     print(f"  - {err}")
+            if getattr(args, "print_tier", False) and fm_result.get("ceremony_tier") is not None:
+                print(
+                    f"Ceremony tier: {fm_result['ceremony_tier']} "
+                    f"(band={fm_result['ceremony_band']})"
+                )
+            elif getattr(args, "print_tier", False) and fm_result.get("tier_error"):
+                print(f"Ceremony tier: UNDERIVABLE -- {fm_result['tier_error']}")
         sys.exit(0 if fm_result["gate_passed"] else 1)
 
     # -- Task mode (lightweight) --
