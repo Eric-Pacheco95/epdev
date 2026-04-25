@@ -1,12 +1,8 @@
 """Tests for validate_agents.check_agent() with actual file I/O."""
 
-import sys
 import tempfile
 import os
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from tools.scripts.validate_agents import check_agent, REQUIRED_SECTIONS
+from validate_agents import check_agent, REQUIRED_SECTIONS
 
 
 def test_check_agent_all_sections():
