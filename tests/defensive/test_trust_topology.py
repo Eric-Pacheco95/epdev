@@ -516,6 +516,18 @@ check_result(
     expect_block=False,
 )
 
+# Command-boundary guard: gh pattern inside a quoted argument to another program
+check_result(
+    "git commit -m with gh pr create in body (allow — not leading gh)",
+    _check_gh_allowlist("git commit -m \"feat: add gh pr create --repo owner/repo enforcement\""),
+    expect_block=False,
+)
+check_result(
+    "echo with gh pr create body (allow — not leading gh)",
+    _check_gh_allowlist("echo \"gh pr create --repo epdev/crypto-bot\""),
+    expect_block=False,
+)
+
 
 # Named pytest functions (ISC verify methods reference these by name)
 
@@ -555,6 +567,70 @@ def test_gh_allowed_call_passes() -> None:
     """ISC-7: gh pr create --repo epdev/epdev is NOT blocked."""
     result = _check_gh_allowlist("gh pr create --repo epdev/epdev --title 'T' --body 'B'")
     assert result is None, f"Expected allow (None), got {result}"
+
+
+# ---------------------------------------------------------------------------
+# skill_launcher: autonomous_safe check + hash-pin (ISC-1, ISC-2)
+# ---------------------------------------------------------------------------
+print("\n-- skill_launcher: check_skill_safety / hash_skill --")
+
+import tempfile as _tempfile
+
+from tools.scripts.skill_launcher import check_skill_safety, hash_skill
+
+
+def test_launcher_rejects_non_autonomous_safe_skill() -> None:
+    """ISC-1: Launcher aborts when SKILL.md has autonomous_safe: false or absent."""
+    with _tempfile.NamedTemporaryFile(suffix=".md", mode="w", delete=False, encoding="utf-8") as f:
+        f.write("# Fake Skill\n\n## autonomous_safe\nfalse\n")
+        p = Path(f.name)
+    try:
+        is_safe, _ = check_skill_safety(p)
+        assert not is_safe, "Expected False for autonomous_safe: false"
+    finally:
+        p.unlink(missing_ok=True)
+
+    with _tempfile.NamedTemporaryFile(suffix=".md", mode="w", delete=False, encoding="utf-8") as f:
+        f.write("# No field\n")
+        p2 = Path(f.name)
+    try:
+        is_safe2, _ = check_skill_safety(p2)
+        assert not is_safe2, "Expected False for missing autonomous_safe field"
+    finally:
+        p2.unlink(missing_ok=True)
+
+
+def test_launcher_hash_pin_detects_skillmd_mutation() -> None:
+    """ISC-2: Hash-pin detects SKILL.md mutation (different hash after modification)."""
+    with _tempfile.NamedTemporaryFile(suffix=".md", mode="w", delete=False, encoding="utf-8") as f:
+        f.write("## autonomous_safe\ntrue\n")
+        p = Path(f.name)
+    try:
+        _, content_before = check_skill_safety(p)
+        original_hash = hash_skill(content_before)
+        p.write_text("## autonomous_safe\ntrue\n# TAMPERED EXTRA LINE\n", encoding="utf-8")
+        _, content_after = check_skill_safety(p)
+        new_hash = hash_skill(content_after)
+        assert original_hash != new_hash, "Hash did not change after SKILL.md mutation"
+    finally:
+        p.unlink(missing_ok=True)
+
+
+# Run named tests now (standalone mode)
+_launcher_tests = [
+    test_launcher_rejects_non_autonomous_safe_skill,
+    test_launcher_hash_pin_detects_skillmd_mutation,
+]
+for _t in _launcher_tests:
+    try:
+        _t()
+        print(f"PASS: {_t.__name__}")
+    except AssertionError as _ae:
+        failures.append(f"  FAIL [{_t.__name__}]: {_ae}")
+        print(f"FAIL: {_t.__name__} -- {_ae}")
+    except Exception as _exc:
+        failures.append(f"  FAIL [{_t.__name__}]: unexpected error: {_exc}")
+        print(f"FAIL: {_t.__name__} -- {_exc}")
 
 
 # ---------------------------------------------------------------------------

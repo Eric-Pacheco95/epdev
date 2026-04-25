@@ -305,6 +305,11 @@ def _check_gh_allowlist(cmd: str) -> dict[str, Any] | None:
     """
     if "gh" not in cmd:
         return None
+    # Only fire when gh is the actual leading command token (after optional
+    # KEY=val env assignments). Prevents false positives on git commit -m bodies,
+    # echo literals, or python -c inline code that mention gh syntax as text.
+    if not re.match(r"^(?:\w+=\S+\s+)*gh\b", cmd.lstrip()):
+        return None
     if not _GH_WRITE_RE.search(cmd):
         return None
 
