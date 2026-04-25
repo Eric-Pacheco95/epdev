@@ -96,12 +96,12 @@ Wait for answers. If Eric says "skip": proceed but flag in OPEN QUESTIONS.
 
 ## Step 0.9: LOAD AUTONOMOUS STEERING RULES
 
-- Read `orchestration/steering/autonomous-rules.md` — load ISC anti-criterion verification constraints (detector-for-class requirement, vacuous-truth guards) before drafting acceptance criteria; also load the **Task Typing (S×A + S×V)** section for the four-axis frontmatter requirement below
-- Read `orchestration/steering/solvability-spectrum.md` and `orchestration/steering/verifiability-spectrum.md` for per-tier definitions used when labeling the PRD
+- Read `orchestration/steering/autonomous-rules.md` (ISC anti-criterion constraints + Task Typing for frontmatter)
+- Read `orchestration/steering/solvability-spectrum.md` + `orchestration/steering/verifiability-spectrum.md` (per-tier defs)
 
 ## Step 0.95: BLOCKER-LIST EVIDENCE PRE-CHECK
 
-Before surfacing any blocker, check session context (tool results, file reads, URLs pasted, prior responses) for evidence that resolves it. Ask Eric only if: (a) it's a preference/option choice, or (b) requires live external verification. If evidence-resolvable: resolve silently, note in ASSUMPTIONS.
+Check session context for evidence resolving each blocker before asking Eric. Ask only for: (a) preference/option choice, or (b) live external verification needed. Resolve silently; note in ASSUMPTIONS.
 
 ## Step 1: EXTRACT
 
