@@ -41,17 +41,13 @@ true
 
 # STEPS
 
-## Step 0: INPUT VALIDATION (Level 2 Discovery)
+## Step 0: INPUT VALIDATION
 
-- If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If input is too short to meaningfully red-team (fewer than 10 words, no plan or system described):
-  - Print: "I need a plan, product, or system to stress-test. Provide a description or file path. Example: /red-team memory/work/jarvis/PRD.md"
-  - STOP
-- If input looks like a content analysis request (article, essay, claims):
-  - Print: "This looks like content analysis. Did you mean /analyze-claims (fact-check) or /find-logical-fallacies (reasoning errors)? /red-team is for plans and systems."
-- If input looks like a code review:
-  - Print: "For code-level security review, use /review-code. /red-team is for architectural and strategic analysis. Need both? Run /review-code first, then /red-team on the design."
-- Once input is validated, proceed to Step 1
+- No input: print DISCOVERY block, STOP
+- <10 words / no plan: "Provide a plan, product, or system. E.g.: /red-team memory/work/jarvis/PRD.md" STOP
+- Content analysis (article/essay/claims): "Try /analyze-claims (fact-check) or /find-logical-fallacies. /red-team is for plans/systems."
+- Code review: "/review-code for code security; /red-team for architecture. Need both? /review-code first."
+- Once validated, proceed to Step 1
 
 ## Step 0.5a: THINKING MODE CHECK
 

@@ -36,17 +36,13 @@ true
 
 # STEPS
 
-## Step 0: INPUT VALIDATION (Level 2 Discovery)
+## Step 0: INPUT VALIDATION
 
-- If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If input is a single word or too vague to decompose:
-  - Print: "I need a specific problem, decision, or question to break down. Examples: 'Should I build X or buy Y?', 'Why does Z keep failing?', 'Is approach A better than B for this use case?'"
-  - STOP
-- If input looks like a code review or bug report:
-  - Print: "This looks like a code issue, not a first-principles question. Did you mean /review-code or /self-heal?"
-- If input looks like a research request:
-  - Print: "This looks like a research topic. Did you mean /research? First-principles works best when you already have context to decompose."
-- Once input is validated, proceed to Step 1
+- No input: print DISCOVERY block, STOP
+- Single word / too vague: "Need a specific problem/decision/question. E.g.: 'Build X or buy Y?', 'Why does Z fail?'" STOP
+- Looks like code/bug: "Code issue? Try /review-code or /self-heal."
+- Looks like research: "Research topic? Try /research. First-principles needs context to decompose."
+- Once validated, proceed to Step 1
 
 ## Step 1: RESTATE
 
