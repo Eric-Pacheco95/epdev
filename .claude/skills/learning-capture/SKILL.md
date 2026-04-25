@@ -37,18 +37,10 @@ false
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)
 
-- If invoked in a fresh session with no prior work and no explicit content provided:
-  - Print: "I don't have enough session context to extract learnings. Either provide a specific topic/transcript, or this may be a fresh session with no prior work."
-  - STOP
-- If session was trivial (quick question, config tweak, no meaningful work):
-  - Print: "This session was too brief for meaningful signals. No signals written. (Quick questions and config tweaks don't need capture.)"
-  - STOP
-- If _signal_meta.json is missing or corrupt:
-  - Print: "_signal_meta.json not found or corrupt. Creating fresh metadata. Run /vitals to verify signal counts match actual files."
-  - Create fresh metadata and continue
-- If memory/learning/signals/ directory doesn't exist:
-  - Print: "Signals directory missing. Creating it now."
-  - Create directory and continue
+- Fresh session, no prior work: "Not enough context. Provide topic/transcript or skip." STOP
+- Trivial session (quick Q, config tweak): "Too brief for signals. None written." STOP
+- _signal_meta.json missing/corrupt: "Creating fresh metadata. Run /vitals to verify counts." Create and continue
+- signals/ dir missing: "Signals directory missing. Creating it now." Create and continue
 - Once validated, proceed to Step 1
 
 ## Step 0.5: LOAD AUTONOMOUS STEERING RULES

@@ -54,10 +54,10 @@ false
 
 ## Step 0: INPUT VALIDATION + CALIBRATION
 
-- If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If input is fewer than 5 words: enter Step 0.5 (conversational clarification) to understand what Eric wants to predict
-- If --research flag is set: invoke /research on the topic first, then proceed with the research output as additional context
-- If the question clearly requires post-training-cutoff data and --research is not set: suggest "This prediction would benefit from current data. Run with --research flag, or run /research first?"
+- No input: print DISCOVERY block, STOP
+- <5 words: enter Step 0.5 clarification
+- `--research` flag: invoke /research first; use output as context
+- Post-cutoff question without `--research`: "Run with --research or /research first?"
 - **Calibration injection**: If `data/calibration.json` exists, identify domain + maturity (`immature`=n_fwd<10 display only; `provisional`=10-19 apply with warning; `calibrated`=20+ apply fully). Display before proceeding:
   ```
   Calibration for {domain}: [{maturity}]

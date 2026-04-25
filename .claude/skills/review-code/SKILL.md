@@ -36,18 +36,13 @@ true
 
 # STEPS
 
-## Step 0: INPUT VALIDATION (Level 2 Discovery)
+## Step 0: INPUT VALIDATION
 
-- If no input provided:
-  - Print: "No code was supplied for review. Provide file paths, a git diff, or paste code directly. If reviewing a recent build, try: /review-code git diff HEAD~1"
-  - STOP
-- If input points to a binary or non-code file:
-  - Print: "The file at {path} appears to be binary. /review-code only reviews source code. Use /security-audit for broader file scanning."
-- If input is extremely large (>2000 lines across many files):
-  - Print: "The provided code is {N} lines across {M} files. I'll prioritize: (1) security-critical paths, (2) new/changed code, (3) everything else. Proceed with this priority order?"
-- If input looks like a plan or PRD rather than code:
-  - Print: "This looks like a plan or design document, not code. Did you mean /red-team (stress-test the design) or /threat-model (STRIDE analysis)?"
-- Once input is validated, proceed to Step 1
+- No input: "Provide file paths, git diff, or code. Try: /review-code git diff HEAD~1" STOP
+- Binary/non-code: "Binary — /review-code reviews source only. Use /security-audit for broader scan."
+- >2000 lines: "Will prioritize: (1) security-critical, (2) new/changed, (3) rest. Proceed?"
+- Looks like plan/PRD: "Try /red-team (stress-test) or /threat-model (STRIDE)."
+- Once validated, proceed to Step 1
 
 ## Step 1: DETERMINISTIC PRESCAN
 

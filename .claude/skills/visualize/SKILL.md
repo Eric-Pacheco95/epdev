@@ -45,8 +45,8 @@ false
 
 ## Step 0: INPUT CHECK
 
-- If no input is provided (empty invocation with no `<input>` text): print the DISCOVERY section as a usage block, then STOP
-- If `<type>` is specified but not one of: brain, workflow, project, investigate, system, auto: print valid types and STOP
+- No input: print DISCOVERY block, STOP
+- Invalid `<type>` (not brain/workflow/project/investigate/system/auto): print valid types, STOP
 
 ## Step 1: UNDERSTAND INPUT
 
