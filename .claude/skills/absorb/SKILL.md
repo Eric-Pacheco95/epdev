@@ -47,12 +47,8 @@ false
 
 - If `--review` flag is present: go to REVIEW MODE (Step 10)
 - If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If input has no URL (no `http://`, `https://`, or domain pattern like `.com`, `.ca`, `.org`, `.io`, `.net`, `.dev`, `.ai`):
-  - Print: "/absorb is for URLs only. For voice dumps or raw text, use #jarvis-voice. Usage: `/absorb <url> --quick|--normal|--deep`"
-  - STOP
-- If input has a URL but no depth flag (`--quick`, `--normal`, or `--deep`):
-  - Print: "Missing depth flag. Which analysis depth?\n- `--quick` -- summary extraction only\n- `--normal` -- full wisdom + fallacy analysis\n- `--deep` -- full analysis + extended TELOS mapping\n\nResend as: `/absorb <url> --quick|--normal|--deep`"
-  - STOP
+- No URL (no `http://`, `https://`, or `.com/.ca/.org/.io/.net/.dev/.ai`): "URLs only. Voice dumps → #jarvis-voice. `/absorb <url> --quick|--normal|--deep`" STOP
+- URL but no depth flag: "Which depth? `--quick` (summary) | `--normal` (wisdom+fallacy) | `--deep` (full+TELOS). Resend with flag." STOP
 - Extract the URL and depth flag from input
 - Proceed to Step 1
 
