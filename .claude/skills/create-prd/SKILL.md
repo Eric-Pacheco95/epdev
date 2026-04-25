@@ -54,6 +54,11 @@ false
   stakes: [low|medium|high]  ambiguity: [low|medium|high]
   solvability: [low|medium|high]  verifiability: [low|medium|high]
   ```
+- Compute and surface the derived ceremony tier alongside the axis guess (count of unfavorable values: stakes=high, ambiguity=high, solvability=low, verifiability=low):
+  ```
+  ceremony_tier: [0..4]   band: [T0 | T1-2 | T3-4]
+  ```
+  Tier ≥3 means the upcoming PLAN/BUILD will route through `P-MIN-VIABLE` / `P-HITL` profiles per `orchestration/steering/ceremony-tier.md` Layer 2 (HARD HALT at PLAN→BUILD boundary). Surface this to Eric upfront so the ceremony cost is visible before drafting.
 - If ALL THREE of S=low ∧ A=low ∧ Sol=high: print the `PRD NOT WARRANTED` block (see task-typing.md > Output when gate fires) and STOP
 - Otherwise: carry the axis guess into Step 0 as the frontmatter seed; proceed normally
 

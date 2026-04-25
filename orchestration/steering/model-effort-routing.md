@@ -3,6 +3,7 @@
 > Behavioral constraints for model selection, advisor() use, and escalation routing in interactive sessions.
 > Load when scoping a build, deciding whether to call advisor(), or choosing between advisor() and /architecture-review.
 > Autonomous routing is in `orchestration/steering/autonomous-rules.md` — this file covers interactive sessions only.
+> **Ceremony intensity (per-phase action profiles + HARD HALT points) is routed via `orchestration/steering/ceremony-tier.md`.** This file specifies *which* model/depth to invoke; ceremony-tier.md specifies *when* to invoke it across the 7 ALGORITHM phases. The advisor() and /architecture-review trigger sections below define WHEN-by-content; ceremony-tier.md defines WHEN-by-tier.
 
 ## Default
 
