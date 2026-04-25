@@ -52,7 +52,7 @@ Input errors -> STOP with guidance:
 
 - If the PRD filename or directory signals a revision (v2, v3, v4, etc.) OR the project directory has git history older than 7 days: apply the outcome-shape test before reading ISC items.
 - Scan ISC items: does at least one criterion directly measure a forward, observable outcome (revenue, error rate, trade count, user behavior) rather than code completion (file exists, function returns, test passes)?
-- If all ISC items describe implementation actions with no output-state outcome criterion, print: "OUTCOME-SHAPE WARNING: All ISC items appear to be implementation tasks. Could all of these complete without the primary outcome occurring? If yes, this PRD is activity-shaped — recommend /create-prd --reshape to add an outcome gate before implementing." Wait for confirmation before proceeding.
+- All ISC items are impl actions (no output-state outcome criterion): "OUTCOME-SHAPE WARNING: Activity-shaped PRD — run /create-prd --reshape to add outcome gate." Wait for confirmation.
 - Do NOT block if even one ISC item measures a primary behavioral/financial outcome.
 
 ## Step 1: READ PRD
@@ -73,7 +73,7 @@ Input errors -> STOP with guidance:
 
 Check each ISC item for `model:` annotation (`| model: sonnet |` or `| model: haiku |`). Routing: `sonnet` → Agent subagent (sonnet); `haiku` → Agent subagent (haiku); no annotation or `opus` → main thread.
 
-**If any items lack annotation**, ask: "No model annotation — annotate as `sonnet` (bulk code), `haiku` (extraction/classification), or confirm Opus for all." Write confirmed annotations before proceeding.
+**If any items lack annotation**: "Annotate as `sonnet` (bulk code), `haiku` (extraction/classification), or confirm Opus?" Write annotations before proceeding.
 
 Subagent rules: pass ISC item text, verify method, context files; return file writes only (no commits); exit plan mode before dispatching.
 
