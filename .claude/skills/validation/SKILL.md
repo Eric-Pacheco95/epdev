@@ -56,18 +56,10 @@ true
 
 ## Step 0: INPUT VALIDATION
 
-- If neither --prd, --task, nor --task-inline is provided:
-  - Print: "Usage: /validation --prd <path> | --task <path> | --task-inline '<json>'"
-  - STOP
-- If --prd and the PRD file does not exist:
-  - Print: "ERROR: PRD file not found: <path>"
-  - STOP
-- If --task and the task file does not exist:
-  - Print: "ERROR: Task file not found: <path>"
-  - STOP
-- If --normal is provided without --prd:
-  - Print: "ERROR: --normal requires --prd mode"
-  - STOP
+- No flag: "Usage: /validation --prd <path> | --task <path> | --task-inline '<json>'" STOP
+- --prd + file missing: "ERROR: PRD file not found: <path>" STOP
+- --task + file missing: "ERROR: Task file not found: <path>" STOP
+- --normal without --prd: "ERROR: --normal requires --prd mode" STOP
 
 ## Step 1A: RUN PRD VALIDATION PIPELINE (--prd mode)
 

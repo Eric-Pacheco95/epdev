@@ -48,19 +48,12 @@ Spawn a Sonnet sub-agent immediately using the Agent tool with model="sonnet" an
 
 After the sub-agent completes, relay its result to Eric verbatim.
 
-## Step 1: INPUT VALIDATION (Level 2 Discovery)
+## Step 1: INPUT VALIDATION
 
-- If no changes exist (nothing staged, nothing modified):
-  - Print: "Nothing to commit -- working tree is clean. Make some changes first."
-  - STOP
-- If only untracked files exist and none are staged:
-  - Print: "Only untracked files found. Review these before committing:" followed by the list
-  - Print: "Stage specific files with git add, or confirm which ones to include."
-  - STOP
-- If .env, *.key, or credential files appear in staged or modified files:
-  - Print: "WARNING: Potential secrets detected in staged files: {list}. These should NOT be committed. Remove them from staging with git reset HEAD {file}."
-  - STOP and wait for user confirmation
-- Once input is validated, proceed to Step 2
+- No changes: "Nothing to commit -- working tree is clean." STOP
+- Only untracked, none staged: "Only untracked files. Stage with git add, or confirm which to include." list files STOP
+- .env/*.key/creds in staged: "WARNING: Potential secrets in staged files: {list}. Remove with git reset HEAD {file}." STOP for confirmation
+- Once validated, proceed to Step 2
 
 ## Step 2: STATUS
 
