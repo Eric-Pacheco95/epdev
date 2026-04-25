@@ -37,18 +37,13 @@ false
 
 # STEPS
 
-## Step 0: INPUT VALIDATION (Level 2 Discovery)
+## Step 0: INPUT VALIDATION
 
-- If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If input is too vague to classify (e.g. "help", "do something", single ambiguous word):
-  - Print: "I need more context to route this. What are you trying to accomplish? Examples: 'build X', 'research Y', 'review this code', 'end my session'"
-  - STOP
-- If multiple skills match equally:
-  - Print: "This could be routed to /skill-a (for X) or /skill-b (for Y). Which fits better? Or should I run both as a pipeline?"
-  - STOP and wait for user decision
-- If a routed skill fails during execution:
-  - Print: "The skill I routed to (/skill-name) failed: {error}. Running /self-heal to diagnose. If this recurs, the skill definition may need updating."
-- Once input is validated, proceed to Step 1
+- No input: print DISCOVERY block, STOP
+- Too vague ("help", "do X", single ambiguous word): "What are you trying to accomplish? Examples: 'build X', 'research Y', 'review code'" STOP
+- Multiple equal matches: "Could route to /skill-a (for X) or /skill-b (for Y). Which? Or run both as pipeline?" STOP
+- Routed skill fails: "(/skill-name) failed: {error}. Running /self-heal. If recurs, skill definition needs update."
+- Once validated, proceed to Step 1
 
 ## Step 1: RECEIVE
 
