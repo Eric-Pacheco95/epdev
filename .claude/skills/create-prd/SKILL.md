@@ -59,19 +59,14 @@ false
 
 **Kill trigger:** if Eric issues `--force-prd` on >5 of the first 10 triage verdicts, surface: "Gate may be miscalibrated — run `/update-steering-rules --audit` to revise keyword lists."
 
-## Step 0: INPUT VALIDATION (Level 2 Discovery)
+## Step 0: INPUT VALIDATION
 
-- If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If input is too vague (fewer than 5 words, no problem statement):
-  - Print: "The description '{input}' is too high-level for actionable requirements. I need at least: (1) what problem it solves, (2) who uses it, (3) one concrete example of desired behavior. Or run /research first."
-- If input looks like an implementation request (contains code, file paths, or "fix this"):
-  - Print: "This looks like an implementation request, not a requirements definition. If you have a PRD already, run /implement-prd <path>. If you need to build without a PRD, consider whether the scope warrants one."
-- If a PRD already exists at the target path:
-  - Print: "A PRD already exists at {path}. Overwrite it, or create a versioned copy?"
-  - STOP and wait for user decision
-- If no research context found and topic seems complex:
-  - Print: "No research brief found for this topic. The PRD will be based solely on your description. For a stronger foundation, run `/project-init` (full pipeline: research + analysis + PRD) or `/research <topic>` (research only). Proceed with standalone PRD anyway?"
-- **External-source absorb-vs-adopt gate**: If input references an external source (URL, tweet, paper, "saw this thing called X") or clearly came from something Eric just read, STOP and prompt: "This came from an external source. Run `/architecture-review` first to filter absorb-vs-adopt?" If Eric skips, note bypass in PRD's CONTEXT section.
+- No input: print DISCOVERY block, STOP
+- <5 words / no problem statement: "Need: (1) problem, (2) who uses it, (3) concrete example. Or run /research first."
+- Looks like impl request (code/paths/"fix this"): suggest /implement-prd or assess scope
+- PRD exists at target path: "Overwrite or versioned copy?" — STOP for decision
+- Complex topic, no research brief: "Run /project-init or /research first? Proceed standalone?"
+- **External-source gate**: input references URL/tweet/paper/"saw X" → "Run /architecture-review (absorb-vs-adopt)?" If skipped: note bypass in PRD CONTEXT.
 
 ## Step 0.5: USER STORY CHECK (optional, auto-triggered)
 
