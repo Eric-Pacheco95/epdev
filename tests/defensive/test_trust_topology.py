@@ -29,6 +29,7 @@ from security.validators.validate_tool_use import (
     _check_autonomous_git_push,
     _check_autonomous_read_secrets,
     _check_autonomous_telos_write,
+    _check_gh_allowlist,
     _inline_script_destructive,
     _protected_path,
     _remote_pipe_shell,
@@ -459,6 +460,101 @@ check_path_guard(
     "knowledge_synthesis",
     expect_block=False,
 )
+
+
+# ---------------------------------------------------------------------------
+# _check_gh_allowlist (ISC-1 through ISC-4, ISC-7)
+# ---------------------------------------------------------------------------
+print("\n-- _check_gh_allowlist --")
+
+# ISC-7: allowed repo passes
+check_result(
+    "gh pr create --repo epdev/epdev (allow)",
+    _check_gh_allowlist("gh pr create --repo epdev/epdev --title 'T' --body 'B'"),
+    expect_block=False,
+)
+
+# ISC-1: missing --repo is blocked
+check_result(
+    "gh pr create missing --repo (block)",
+    _check_gh_allowlist("gh pr create --title 'T'"),
+    expect_block=True,
+)
+
+# ISC-2: disallowed repo is blocked
+check_result(
+    "gh pr create --repo epdev/crypto-bot (block)",
+    _check_gh_allowlist("gh pr create --repo epdev/crypto-bot --title 'T'"),
+    expect_block=True,
+)
+
+# ISC-3: env-var bypass attempt — GH_REPO set but no explicit --repo in command
+check_result(
+    "GH_REPO=epdev/other gh pr create no --repo flag (block)",
+    _check_gh_allowlist("GH_REPO=epdev/other gh pr create --title 'T'"),
+    expect_block=True,
+)
+
+# ISC-4: config bypass — explicit wrong repo (gh config default irrelevant)
+check_result(
+    "gh pr create --repo epdev/other config bypass (block)",
+    _check_gh_allowlist("gh pr create --repo epdev/other"),
+    expect_block=True,
+)
+
+# Non-write gh commands pass through (read-only not intercepted)
+check_result(
+    "gh pr list (allow — not a write pattern)",
+    _check_gh_allowlist("gh pr list --repo epdev/epdev"),
+    expect_block=False,
+)
+
+# Non-gh commands return None (fast-path)
+check_result(
+    "git status (allow — not gh)",
+    _check_gh_allowlist("git status"),
+    expect_block=False,
+)
+
+
+# Named pytest functions (ISC verify methods reference these by name)
+
+def test_gh_missing_repo_blocked() -> None:
+    """ISC-1: gh write command with no --repo flag is blocked."""
+    result = _check_gh_allowlist("gh pr create --title 'Test PR'")
+    assert result is not None and result.get("decision") == "block", (
+        f"Expected block, got {result}"
+    )
+
+
+def test_gh_disallowed_repo_blocked() -> None:
+    """ISC-2: gh write command with non-allowlisted --repo is blocked."""
+    result = _check_gh_allowlist("gh pr create --repo epdev/crypto-bot --title 'T'")
+    assert result is not None and result.get("decision") == "block", (
+        f"Expected block, got {result}"
+    )
+
+
+def test_gh_env_var_bypass_blocked() -> None:
+    """ISC-3: GH_REPO env-var bypass blocked — no explicit --repo in command."""
+    result = _check_gh_allowlist("GH_REPO=epdev/other gh pr create --title 'T'")
+    assert result is not None and result.get("decision") == "block", (
+        f"Expected block, got {result}"
+    )
+
+
+def test_gh_config_bypass_blocked() -> None:
+    """ISC-4: Explicit --repo outside allowlist blocked regardless of gh config default."""
+    result = _check_gh_allowlist("gh pr create --repo epdev/other")
+    assert result is not None and result.get("decision") == "block", (
+        f"Expected block, got {result}"
+    )
+
+
+def test_gh_allowed_call_passes() -> None:
+    """ISC-7: gh pr create --repo epdev/epdev is NOT blocked."""
+    result = _check_gh_allowlist("gh pr create --repo epdev/epdev --title 'T' --body 'B'")
+    assert result is None, f"Expected allow (None), got {result}"
 
 
 # ---------------------------------------------------------------------------

@@ -42,6 +42,16 @@ def _result(decision: str, reason: str | None = None) -> dict[str, Any]:
 
 FORK_BOMB_RE = re.compile(r":\s*\(\s*\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;")
 
+_GH_ALLOWLIST_PATH = Path(__file__).resolve().parent / "gh-allowlist.json"
+
+# Write patterns for gh CLI — only operations that mutate state on GitHub.
+# gh api is excluded: repo is embedded in the URL path, not --repo flag.
+_GH_WRITE_RE = re.compile(
+    r"\bgh\s+pr\s+create\b"
+    r"|\bgh\s+repo\s+(?:create|delete|rename|fork|transfer|archive)\b"
+)
+_GH_REPO_FLAG_RE = re.compile(r"--repo[= ](\S+)")
+
 INJECTION_SUBSTRINGS = (
     "ignore previous",
     "ignore all previous",
@@ -286,6 +296,42 @@ def _bash_writes_telos(cmd: str) -> bool:
     return False
 
 
+def _check_gh_allowlist(cmd: str) -> dict[str, Any] | None:
+    """Block gh write calls whose --repo is absent or outside the allowlist.
+
+    Intercepts gh pr create and gh repo write subcommands.  Fail-closed:
+    any exception (missing allowlist file, malformed JSON) blocks the call.
+    Fast-path: returns None immediately if 'gh' is not in the command string.
+    """
+    if "gh" not in cmd:
+        return None
+    if not _GH_WRITE_RE.search(cmd):
+        return None
+
+    try:
+        data = json.loads(_GH_ALLOWLIST_PATH.read_text())
+        allowed: set[str] = set(data.get("allowlist", []))
+    except Exception as exc:
+        return _result("block", f"gh-allowlist.json unavailable — failing closed: {exc}")
+
+    m = _GH_REPO_FLAG_RE.search(cmd)
+    if not m:
+        return _result(
+            "block",
+            "gh write command requires explicit --repo <owner/repo>; "
+            "env-var (GH_REPO=) and gh-config defaults are not accepted"
+        )
+
+    repo = m.group(1).strip("\"'")
+    if repo not in allowed:
+        return _result(
+            "block",
+            f"gh --repo '{repo}' is not in the allowlist {sorted(allowed)}"
+        )
+
+    return None
+
+
 def validate_bash_command(command: str) -> dict[str, Any]:
     if not command or not command.strip():
         return _result("allow")
@@ -294,6 +340,10 @@ def validate_bash_command(command: str) -> dict[str, Any]:
 
     if _bash_writes_telos(cmd):
         return _result("block", "Autonomous sessions MUST NOT write to memory/work/telos/ via Bash")
+
+    gh_block = _check_gh_allowlist(cmd)
+    if gh_block:
+        return gh_block
 
     if FORK_BOMB_RE.search(cmd):
         return _result("block", "Fork bomb pattern blocked")
