@@ -46,9 +46,9 @@ false
 
 ## Step 0: INPUT VALIDATION
 
-- If no input provided: print the DISCOVERY section, then STOP
-- If target environment is too vague: ask for specifics — "What compliance frameworks? What's restricted? What tools are available on target machines?"
-- If --update flag but target repo doesn't exist: error — "Target repo not found. Run without --update to create initial extraction."
+- No input: print DISCOVERY block, STOP
+- Too vague: "What compliance frameworks? What's restricted? What tools available?"
+- --update but repo missing: "Target repo not found. Run without --update to create initial extraction."
 
 ## Step 0.5: LOAD PLATFORM STEERING RULES
 
