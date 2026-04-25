@@ -43,10 +43,10 @@ false
 
 ## Step 0: INPUT VALIDATION (Level 2 Discovery)
 
-- If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If description is too vague (under 10 words): print "Need more detail. Describe: who is the skill for, what does it do, what does it output? Example: /create-pattern a skill that generates changelog entries from git diff"
-- If a skill with similar name already exists: print "A similar skill already exists: /{existing}. Did you mean to update it, or is this genuinely different?"
-- If the task is a narrow sub-step of an existing skill: print "This sounds like a sub-step of /{parent}. Consider adding it there instead of creating a standalone skill."
+- No input: print DISCOVERY block, STOP
+- <10 words: "Need: who it's for, what it does, what it outputs. E.g.: /create-pattern skill generating changelog from git diff" STOP
+- Similar name exists: "/{existing} already exists. Update it, or genuinely different?"
+- Narrow sub-step of /{parent}: "Add there instead?"
 
 ### Skill Lifecycle Gate (must pass before proceeding)
 

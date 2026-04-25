@@ -48,10 +48,9 @@ true
 
 ## Step 0: INPUT VALIDATION
 
-- If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If input is fewer than 50 words: print "Content is too short to extract meaningful alpha. Provide a full article, report, or transcript." then STOP
-- If input is a file path: read the file first, then proceed
-- Once input is validated, proceed to Step 1
+- No input: print DISCOVERY block, STOP
+- <50 words: "Content too short. Provide full article, report, or transcript." STOP
+- File path: read file first, then proceed
 
 ## Step 1: SCAN FOR SIGNAL VS NOISE
 
