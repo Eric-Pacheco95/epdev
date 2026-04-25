@@ -39,13 +39,8 @@ false
 
 ## Step 0: INPUT VALIDATION
 
-- If no description provided or description is empty:
-  - Print: "Usage: /backlog <description>"
-  - Print: "Example: /backlog add rate limiting to the Slack poller"
-  - STOP
-- If description is fewer than 5 characters:
-  - Print: "Description too short -- give enough context that future-you can act on it."
-  - STOP
+- No description: "Usage: /backlog <description>. Example: /backlog add rate limiting to the Slack poller" STOP
+- <5 chars: "Too short -- give enough context that future-you can act on it." STOP
 - Once validated, proceed to Step 1
 
 ## Step 1: BUILD AND APPEND
