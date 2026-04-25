@@ -53,15 +53,10 @@ Run before hard-to-reverse decisions: architecture, tool/dependency adoption, 3+
 
 ## Step 0: INPUT VALIDATION
 
-- If no input provided: print the DISCOVERY section as a usage block, then STOP
-- If input is too vague (fewer than 10 words, no specific architecture or decision):
-  - Print: "Need a specific architecture proposal or design decision. Describe: what's being proposed, what alternatives exist, what constraints apply. Example: /architecture-review Should we use WebSockets or polling for the dashboard refresh?"
-  - STOP
-- If input is a file path: read the file and use its content as the proposal
-- If the proposal is trivially simple (no trade-offs, single obvious answer):
-  - Print: "This doesn't warrant a full architecture review — the answer is straightforward. Only use /architecture-review for decisions with real trade-offs, multiple viable paths, or hard-to-reverse consequences."
-  - STOP
-- Once validated, proceed to Step 1
+- No input: print DISCOVERY block, STOP
+- <10 words / no specific architecture: "Need: what's proposed, alternatives, constraints. Example: /architecture-review WebSockets vs polling?" STOP
+- File path: read file, use as proposal
+- Trivially simple (no trade-offs, one obvious answer): "Doesn't warrant full review — use for real trade-offs or hard-to-reverse decisions." STOP
 
 ## Step 1: FRAME THE DECISION
 
