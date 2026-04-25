@@ -63,21 +63,91 @@ The exact tier (0-4) is logged in `data/review_gate_log.jsonl` for calibration; 
 
 ## Layer 2 — Per-Phase × Tier Action Table
 
-**To be added in Step 3.** The 21 cells (7 phases × 3 bands) compress to the 7 action profiles below; each phase × band cell references one profile.
+The 21 cells (7 phases × 3 bands) compress to 7 action profiles. Each phase × band cell references a profile; profile checklists are the enforcement contract.
+
+### Phase × Tier map
+
+| Phase    | T0          | T1-2          | T3-4            |
+|----------|-------------|---------------|-----------------|
+| OBSERVE  | `P-EXEC`    | `P-CHECKPOINT`| `P-CHECKPOINT`  |
+| THINK    | `P-EXEC`    | `P-ADVISOR`   | `P-ARCH-REVIEW` |
+| PLAN     | `P-EXEC`    | `P-CONFIRM`   | `P-MIN-VIABLE`  |
+| BUILD    | `P-EXEC`    | `P-CHECKPOINT`| `P-CHECKPOINT`  |
+| EXECUTE  | `P-EXEC`    | `P-CHECKPOINT`| `P-HITL`        |
+| VERIFY   | `P-EXEC`    | `P-CHECKPOINT`| `P-HITL`        |
+| LEARN    | `P-EXEC`    | `P-CHECKPOINT`| `P-CHECKPOINT`  |
+
+OBSERVE, BUILD, and LEARN never carry hard halts — exploration and post-action capture are cheap. The **boundary halts** (after PLAN, before EXECUTE on irreversible, after VERIFY on criticals) live inside their respective profiles (`P-MIN-VIABLE` and `P-HITL`).
 
 ### Action profile catalogue
 
-Profiles are defined here once, referenced by name in the phase × tier map.
+Each profile below is the enforcement contract for cells that reference it. Skills and validators read these checklists verbatim; do not paraphrase them in skill prose.
 
-| Profile         | Used at                                              | Action checklist (each cell is enforceable) |
-|-----------------|-------------------------------------------------------|---------------------------------------------|
-| `P-EXEC`        | OBSERVE/T0, BUILD/T0, EXECUTE/T0                      | inline action; no checkpoints, no halts |
-| `P-CHECKPOINT`  | OBSERVE/T1-2, BUILD/T1-2, EXECUTE/T1-2                | checkpoint per FR; surface state in run summary; no halts |
-| `P-ADVISOR`     | THINK/T1-2                                            | call `advisor()` before next phase; surface advisor verdict |
-| `P-ARCH-REVIEW` | THINK/T3-4                                            | run `/architecture-review` (3 parallel agents); HARD HALT after |
-| `P-CONFIRM`     | PLAN/T1-2                                             | draft + single explicit confirm before BUILD |
-| `P-MIN-VIABLE`  | PLAN/T3-4                                             | min-viable design ≤3 sentences; HARD HALT; full draft after confirm |
-| `P-HITL`        | EXECUTE/T3-4 (irreversible), VERIFY/T3-4 with criticals | HARD HALT before action; require explicit unblock |
+#### `P-EXEC` — inline execution
+
+- [ ] Run the action; no checkpoints, no advisor call, no halts
+- [ ] Emit one-line outcome to run log
+
+#### `P-CHECKPOINT` — checkpoint per functional requirement
+
+- [ ] Identify the FR/sub-step before starting
+- [ ] At each FR boundary: write a one-line status update (what completed, what is next)
+- [ ] On failure of any FR: surface error, do not auto-retry more than once, ask before changing approach
+- [ ] At phase end: emit run-summary block (FRs completed, FRs skipped, anomalies)
+
+#### `P-ADVISOR` — pre-phase advisor consultation
+
+- [ ] Before exiting THINK: call `advisor()` with current interpretation + plan summary
+- [ ] Surface advisor verdict verbatim in run log
+- [ ] If advisor flags a concrete issue: address it inline before exiting THINK
+- [ ] If advisor's recommendation conflicts with retrieved primary-source evidence: file a reconcile call before proceeding
+
+#### `P-ARCH-REVIEW` — multi-agent architecture review (T3-4 only)
+
+- [ ] Draft a one-paragraph proposal (≤120 words) before any sub-PRD or decision rule
+- [ ] Run `/architecture-review` with 3 parallel agents (first-principles, fallacy, red-team)
+- [ ] Wait for all 3 results; reconcile divergences into a verdict block
+- [ ] HARD HALT: surface the verdict block + axis profile to Eric, await explicit confirm
+- [ ] Do not advance to PLAN until halt is cleared
+
+#### `P-CONFIRM` — draft + single explicit confirm (T1-2)
+
+- [ ] Draft full PRD/plan with 4-axis frontmatter
+- [ ] Run `python tools/scripts/isc_validator.py --check-frontmatter --print-tier`; surface output verbatim
+- [ ] Run full `isc_validator.py` quality gate; address hard-fails inline
+- [ ] Surface plan summary (≤200 words) + tier + axis profile to Eric, await explicit confirm
+- [ ] On confirm: advance to BUILD. On change request: re-draft, do not patch around it
+
+#### `P-MIN-VIABLE` — min-viable then full draft (T3-4 only)
+
+- [ ] State minimum-viable design in ≤3 sentences before drafting any artifact
+- [ ] HARD HALT: surface min-viable design + axis profile to Eric, await explicit confirm
+- [ ] After confirm, draft full PRD with 4-axis frontmatter and `ceremony_tier` field
+- [ ] Run `python tools/scripts/isc_validator.py --check-frontmatter --print-tier`; surface ALL hard-fails verbatim (no inline fixes)
+- [ ] HARD HALT: surface validator output + ISC count + plan diff to Eric, await explicit confirm
+- [ ] Do not proceed to BUILD until both halts cleared
+- [ ] Write `data/halt_state/<task_slug>.json` sentinel at each halt; delete on unblock keyword
+
+#### `P-HITL` — human in the loop on irreversible/critical (T3-4 only)
+
+- [ ] Before any irreversible action (commit, push, network call, file delete outside `_archive/`): emit action description + reversibility classification
+- [ ] HARD HALT: surface the action + reversibility classification to Eric, await explicit unblock keyword
+- [ ] Ambiguous responses (`ok`, `sure`, `looks good`) do NOT clear the halt; re-surface verbatim
+- [ ] On unblock: execute the action, log to run log
+- [ ] If VERIFY phase produced any critical REVIEW FINDING: HARD HALT, surface findings verbatim, do NOT auto-fix
+- [ ] Sentinel at `data/halt_state/<task_slug>.json`; cleared only on canonical unblock keyword
+
+## Halt clearance — canonical unblock keywords
+
+Listed in Layer 5 above. Reproduced here for grep visibility:
+
+```
+approved | proceed | go ahead | unblock | confirm | yes proceed
+```
+
+Skill-specific keywords allowed when documented in the skill (e.g. `/implement-prd` accepts `build`).
+
+**Ambiguous responses NEVER clear a halt:** `ok`, `sounds good`, `looks good`, `sure`, `fine`, `cool`, `yep`, `yeah`. The skill re-surfaces the halt verbatim.
 
 ## Layer 5 — Eric-Interrupt Protocol (HARD HALT mechanism)
 
