@@ -230,6 +230,16 @@ check_result(
     _check_autonomous_telos_write("Write", {"file_path": "CLAUDE.md"}),
     True,
 )
+check_result(
+    "Write to tools/scripts/ (autonomous block)",
+    _check_autonomous_telos_write("Write", {"file_path": "tools/scripts/foo.py"}),
+    True,
+)
+check_result(
+    "Edit to tools/scripts/lib/ (autonomous block — directory prefix)",
+    _check_autonomous_telos_write("Edit", {"file_path": "tools/scripts/lib/worktree.py"}),
+    True,
+)
 # Negative: safe write target
 check_result(
     "Write to data/ (allow in autonomous)",
@@ -241,6 +251,11 @@ del os.environ["JARVIS_SESSION_TYPE"]
 check_result(
     "Write to telos/ (interactive session — allow)",
     _check_autonomous_telos_write("Write", {"file_path": "memory/work/telos/GOALS.md"}),
+    False,
+)
+check_result(
+    "Write to tools/scripts/ (interactive session — allow)",
+    _check_autonomous_telos_write("Write", {"file_path": "tools/scripts/foo.py"}),
     False,
 )
 os.environ["JARVIS_SESSION_TYPE"] = "autonomous"

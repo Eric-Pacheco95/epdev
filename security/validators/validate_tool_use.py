@@ -440,6 +440,16 @@ CLAUDE_MD_PATH_PATTERN = re.compile(
     r"CLAUDE\.md$", re.IGNORECASE
 )
 
+# tools/scripts/ -- autonomous workers spawn subprocesses that resolve under
+# this directory (jarvis_dispatcher allowlist, overnight runners, producers).
+# A prompt-injected worker writing arbitrary Python here could execute under
+# the autonomous agent's authority on the next dispatcher run. Write-protection
+# is the first half of autonomous-rules.md rule (the second is an explicit
+# Bash allowlist; tracked separately).
+TOOLS_SCRIPTS_PATH_PATTERN = re.compile(
+    r"tools[/\\]scripts[/\\]", re.IGNORECASE
+)
+
 def _is_secret_path(path_str: str) -> bool:
     """Return True if the path references a secret/credential file.
 
@@ -562,6 +572,17 @@ def _check_autonomous_telos_write(tool: str, inp: dict) -> dict[str, Any] | None
             f"This root instruction file controls identity, steering rules, and "
             f"skill routing -- autonomous modification could weaken security or "
             f"inject persistent instructions into every future session. "
+            f"Blocked: {tool} to {file_path}"
+        )
+
+    if TOOLS_SCRIPTS_PATH_PATTERN.search(file_path):
+        return _result(
+            "block",
+            f"Autonomous sessions MUST NOT write to tools/scripts/. "
+            f"Subprocesses resolved under this directory execute under the "
+            f"autonomous agent's authority on the next dispatcher run -- "
+            f"a prompt-injected worker writing arbitrary Python here could "
+            f"escalate to arbitrary code execution. "
             f"Blocked: {tool} to {file_path}"
         )
 
