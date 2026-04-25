@@ -1,0 +1,6 @@
+{
+  "min_words": 300,
+  "min_citation_urls": 3,
+  "bytes_per_token_min_ratio": 2.0,
+  "_note": "bytes_per_token_min_ratio is informational in v1 — calibrate after 5+ baseline runs before enforcing as hard gate"
+}

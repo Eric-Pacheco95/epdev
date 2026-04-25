@@ -36,7 +36,7 @@ BUILD
 - Side effects: creates git branch, modifies scoped files, writes report to memory/work/jarvis/autoresearch/
 
 ## autonomous_safe
-false
+true
 
 # STEPS
 
