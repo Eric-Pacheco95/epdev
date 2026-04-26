@@ -14,7 +14,11 @@ from unittest import mock
 import pytest
 
 import tools.scripts.lib.worktree as wt_mod
-from tools.scripts.lib.worktree import _hide_symlink_from_git, _symlink_local_memory
+from tools.scripts.lib.worktree import (
+    _hide_symlink_from_git,
+    _symlink_local_memory,
+    _exclude_file_has_line,
+)
 
 
 def _git(args: list, cwd: Path) -> subprocess.CompletedProcess:
@@ -225,3 +229,28 @@ def test_keep_files_tracked_in_main_index():
         assert f"{rel_path}/.keep" in result.stdout, (
             f"{rel_path}/.keep not tracked in git index"
         )
+
+
+class TestExcludeFileHasLine:
+    def test_exact_match_returns_true(self):
+        assert _exclude_file_has_line("memory/learning/signals\n", "memory/learning/signals")
+
+    def test_no_match_returns_false(self):
+        assert not _exclude_file_has_line("something/else\n", "memory/learning/signals")
+
+    def test_empty_string_returns_false(self):
+        assert not _exclude_file_has_line("", "memory/learning/signals")
+
+    def test_comment_lines_are_skipped(self):
+        content = "# memory/learning/signals\nmemory/other\n"
+        assert not _exclude_file_has_line(content, "memory/learning/signals")
+
+    def test_whitespace_trimmed_for_comparison(self):
+        assert _exclude_file_has_line("  memory/learning/signals  \n", "memory/learning/signals")
+
+    def test_partial_match_returns_false(self):
+        assert not _exclude_file_has_line("memory/learning\n", "memory/learning/signals")
+
+    def test_multiline_finds_pattern(self):
+        content = "memory/other\nmemory/learning/signals\nstill/more\n"
+        assert _exclude_file_has_line(content, "memory/learning/signals")
