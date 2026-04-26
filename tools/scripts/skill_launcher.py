@@ -87,7 +87,8 @@ def main() -> int:
         spawn_quality_gate, write_park_gate, write_run_log,
     )
 
-    if not acquire_claude_lock("skill-launcher"):
+    _launcher_slot = acquire_claude_lock("skill-launcher")
+    if _launcher_slot is None:
         print("ERROR: claude lock held — another autonomous process running", file=sys.stderr)
         return 1
 
@@ -166,7 +167,7 @@ def main() -> int:
 
     finally:
         worktree_cleanup(slug_dir)
-        release_claude_lock()
+        release_claude_lock(_launcher_slot)
 
 
 if __name__ == "__main__":

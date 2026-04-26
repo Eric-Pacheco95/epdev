@@ -1007,7 +1007,8 @@ def main() -> int:
         print("  Sleep prevention: active")
 
     # 4. Acquire global claude -p mutex
-    if not acquire_claude_lock("autoresearch"):
+    _autoresearch_slot = acquire_claude_lock("autoresearch")
+    if _autoresearch_slot is None:
         print("ERROR: Another claude -p process is running. Aborting.",
               file=sys.stderr)
         allow_sleep()
@@ -1064,7 +1065,7 @@ def main() -> int:
         print("  %s" % (run_dir / "proposals.md"))
         return 0
     finally:
-        release_claude_lock()
+        release_claude_lock(_autoresearch_slot)
         allow_sleep()
 
 

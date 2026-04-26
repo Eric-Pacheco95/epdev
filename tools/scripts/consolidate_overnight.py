@@ -38,7 +38,6 @@ sys.path.insert(0, str(REPO_ROOT))
 from tools.scripts.lib.worktree import cleanup_old_branches
 
 SUMMARY_DIR = REPO_ROOT / "data" / "overnight_summary"
-CLAUDE_LOCK = REPO_ROOT / "data" / "claude_session.lock"
 RUNNER_WAIT_TIMEOUT_S = 900   # 15 min cap waiting for overnight runner to release claude lock
 RUNNER_WAIT_POLL_S = 30
 
@@ -404,33 +403,44 @@ def save_summary(
     return json_path, md_path
 
 
+def _active_lock_slots() -> list[Path]:
+    """Return all currently-existing claude_session.*.lock files under data/."""
+    import glob as _glob
+    pattern = str(REPO_ROOT / "data" / "claude_session.*.lock")
+    return [Path(p) for p in _glob.glob(pattern)]
+
+
 def wait_for_claude_lock(timeout_s: int = RUNNER_WAIT_TIMEOUT_S,
                          poll_s: int = RUNNER_WAIT_POLL_S) -> tuple[bool, str]:
-    """Wait for data/claude_session.lock to be free before consolidating.
+    """Wait for all data/claude_session.*.lock slots to be free before consolidating.
 
     Overnight runner can run up to 2 hours starting at 04:00 EDT (08:00 UTC),
     finishing as late as 10:00 UTC. Consolidate is scheduled at 10:30 UTC --
     a 30-min margin with no defense in depth. This poll closes that gap by
-    deferring consolidation up to `timeout_s` seconds while the lock is held.
+    deferring consolidation up to `timeout_s` seconds while any slot is held.
 
-    Returns (proceeded, reason). proceeded=True means the lock is free or was
-    never present; False means the timeout elapsed and the caller should skip.
+    Returns (proceeded, reason). proceeded=True means all slots are free or
+    none were present; False means the timeout elapsed and the caller should skip.
     """
     import time
 
-    if not CLAUDE_LOCK.exists():
+    slots = _active_lock_slots()
+    if not slots:
         return True, "no lock present"
 
     waited = 0
     while waited < timeout_s:
-        if not CLAUDE_LOCK.exists():
+        slots = _active_lock_slots()
+        if not slots:
             return True, f"lock released after {waited}s"
-        try:
-            data = json.loads(CLAUDE_LOCK.read_text(encoding="utf-8"))
-            owner = data.get("owner", "?")
-        except (json.JSONDecodeError, OSError):
-            owner = "?"
-        print(f"  claude lock held by {owner}; waited {waited}s/{timeout_s}s")
+        owners = []
+        for slot_path in slots:
+            try:
+                data = json.loads(slot_path.read_text(encoding="utf-8"))
+                owners.append(data.get("owner", "?"))
+            except (json.JSONDecodeError, OSError):
+                owners.append("?")
+        print(f"  claude lock held by {owners}; waited {waited}s/{timeout_s}s")
         time.sleep(poll_s)
         waited += poll_s
 
@@ -601,7 +611,7 @@ def self_test() -> int:
         # Note: this only runs if there is no lock; otherwise just checks the
         # function exists and is callable with a 0-timeout to avoid blocking.
         proceeded, reason = wait_for_claude_lock(timeout_s=0, poll_s=0)
-        if not CLAUDE_LOCK.exists():
+        if not _active_lock_slots():
             assert proceeded, f"expected proceed=True with no lock, got reason={reason}"
             print(f"  PASS: no lock -> proceeded ({reason})")
         else:
@@ -621,7 +631,7 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="List branches, no merge")
     parser.add_argument("--test", action="store_true", help="Run self-test")
     parser.add_argument("--no-wait", action="store_true",
-                        help="Skip claude_session.lock wait (manual ad-hoc runs)")
+                        help="Skip claude slot-lock wait (manual ad-hoc runs)")
     args = parser.parse_args()
 
     if args.test:

@@ -61,11 +61,10 @@ DIMENSION_ORDER = [
 # 120 min = 7200s, leaving ~20 min buffer for worktree setup, quality checks, cleanup.
 TIME_BUDGET_S = 7200
 
-# Pre-flight memory threshold (bytes). If available virtual memory (physical+pagefile)
-# is below this, the runner skips the night cleanly with a Slack alert instead of
-# crashing inside `git worktree add` with WinError 1455.
-# 2 GiB chosen as floor for "worktree create + 1 claude -p invocation can fit".
-PREFLIGHT_MIN_AVAIL_BYTES = 2 * 1024 * 1024 * 1024
+# Pre-flight memory base per slot (bytes).  Threshold = 2 × n_slots × this value.
+# 2 GiB base chosen as floor for "1 claude -p invocation can fit"; multiplied by
+# n_slots so N-concurrent configs scale the guard proportionally.
+_PREFLIGHT_BYTES_PER_SLOT = 2 * 1024 * 1024 * 1024
 
 # Hours between automatic /synthesize-signals triggers in knowledge_synthesis.
 SYNTHESIS_CADENCE_HOURS = 72
@@ -170,8 +169,11 @@ def check_synthesis_trigger() -> bool:
     return True
 
 
-def check_memory_preflight() -> tuple[bool, str]:
+def check_memory_preflight(n_slots: int = 1) -> tuple[bool, str]:
     """Return (ok, message). Uses GlobalMemoryStatusEx via ctypes -- no PowerShell.
+
+    Threshold scales with n_slots: 2 × n_slots × 2 GiB so N-concurrent configs
+    require proportionally more free pagefile before the runner starts.
 
     On non-Windows, always returns ok=True (Windows pagefile OOM doesn't apply).
     """
@@ -212,7 +214,8 @@ def check_memory_preflight() -> tuple[bool, str]:
             stat.dwMemoryLoad,
         )
 
-        if avail_pagefile < PREFLIGHT_MIN_AVAIL_BYTES:
+        threshold = 2 * n_slots * _PREFLIGHT_BYTES_PER_SLOT
+        if avail_pagefile < threshold:
             return False, "LOW PAGEFILE: " + msg
         return True, msg
     except Exception as exc:
@@ -222,29 +225,31 @@ def check_memory_preflight() -> tuple[bool, str]:
 
 # -- State management -------------------------------------------------------
 
+_STATE_DEFAULT = {
+    "last_dimension": None,
+    "last_run_date": None,
+    "run_count": 0,
+    "dimensions": {},
+    "total_reviewed_by_human": 0,
+    "total_merged_to_main": 0,
+}
+
+
 def load_state() -> dict:
-    """Load overnight state from JSON file."""
-    if STATE_FILE.is_file():
-        try:
-            return json.loads(STATE_FILE.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-    return {
-        "last_dimension": None,
-        "last_run_date": None,
-        "run_count": 0,
-        "dimensions": {},
-        "total_reviewed_by_human": 0,
-        "total_merged_to_main": 0,
-    }
+    """Load overnight state from JSON file atomically."""
+    return locked_read_modify_write(
+        STATE_FILE,
+        mutator=lambda s: s,
+        default=_STATE_DEFAULT,
+    )
 
 
 def save_state(state: dict) -> None:
-    """Save overnight state to JSON file."""
-    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(
-        json.dumps(state, indent=2, default=str) + "\n",
-        encoding="utf-8",
+    """Save overnight state to JSON file atomically."""
+    locked_read_modify_write(
+        STATE_FILE,
+        mutator=lambda _: state,
+        default=_STATE_DEFAULT,
     )
 
 
@@ -443,6 +448,7 @@ from tools.scripts.lib.worktree import (
     acquire_claude_lock,
     release_claude_lock,
 )
+from tools.scripts.lib.file_lock import locked_read_modify_write
 
 WORKTREE_DIR = REPO_ROOT.parent / "epdev-overnight"
 
@@ -909,7 +915,8 @@ def main() -> int:
         return 1
 
     # Acquire global claude -p mutex
-    if not acquire_claude_lock("overnight"):
+    _overnight_slot = acquire_claude_lock("overnight")
+    if _overnight_slot is None:
         print("ERROR: Another claude -p process is running. Aborting.", file=sys.stderr)
         worktree_cleanup()
         return 1
@@ -1076,7 +1083,7 @@ def main() -> int:
 
     finally:
         # 9. Release claude lock + clean up worktree
-        release_claude_lock()
+        release_claude_lock(_overnight_slot)
         worktree_cleanup()
 
     # 10. Run /dream memory consolidation (runs from main tree -- writes to ~/.claude/projects/)

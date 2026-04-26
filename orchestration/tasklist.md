@@ -31,6 +31,8 @@
 
 ### Priority: Active
 
+- [x] **claude-concurrency Phase 0: N-slot lock API + 4 blocker fixes** — COMPLETE 2026-04-26. `acquire_claude_lock` → `Optional[int]` slot API; `release_claude_lock(slot_index)`; `consolidate_overnight` glob-based wait; `overnight_runner` atomic state writes via `locked_read_modify_write`; preflight `n_slots` multiplier; skip-event log; all 5 callers migrated; 9-test suite rewritten. Phase 1 gated until 2026-05-18. Decision record: `history/decisions/2026-04-26-claude-concurrency-phase0.md`.
+
 - [x] **jarvis-app Sprint 5: Design system** — COMPLETE 2026-04-25. UI upgraded using imported design reference (`jarvis-app/design`). NOTE: `/design-verify` fidelity check not yet run — pending before Sprint 5 is fully closed.
 - [ ] **Wire Claude Code "defer" into dispatcher (code)** — validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface. Requires `claude -p --resume` e2e spike first. (split from doc task 2026-04-08)
 - [ ] **5C-5C: ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs). Current: ISC generated inline per-branch, functional but not templated.

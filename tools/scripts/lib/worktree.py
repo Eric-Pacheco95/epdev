@@ -22,61 +22,140 @@ from typing import Optional
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
-# Global mutex for claude -p invocations. All autonomous processes
-# (dispatcher, overnight runner, autoresearch) must acquire this before
-# running claude -p to prevent subprocess contention and hangs.
-_CLAUDE_LOCK = REPO_ROOT / "data" / "claude_session.lock"
+# Slot-based semaphore for claude -p invocations.  N = JARVIS_CLAUDE_SLOTS
+# (default 1, Phase 1 may raise to 2).  Lock files live in data/ as
+# claude_session.{slot}.lock so callers can hold distinct slots concurrently.
+_LOCK_DIR = REPO_ROOT / "data"
+_LOCK_EVENTS = _LOCK_DIR / "claude_lock_events.jsonl"
 _CLAUDE_LOCK_STALE_HOURS = 3
 
 
-def acquire_claude_lock(owner: str, timeout_hours: float = 3) -> bool:
-    """Acquire global claude -p mutex. Returns True if acquired.
+def _slot_path(slot: int) -> Path:
+    return _LOCK_DIR / f"claude_session.{slot}.lock"
+
+
+def _n_slots() -> int:
+    """Read JARVIS_CLAUDE_SLOTS at call time so tests can override via env."""
+    try:
+        return max(1, int(os.environ.get("JARVIS_CLAUDE_SLOTS", "1")))
+    except (ValueError, TypeError):
+        return 1
+
+
+def _pid_alive(pid: int) -> bool:
+    """Return True if `pid` is a running process on this host."""
+    if os.name == "nt":
+        try:
+            import ctypes
+            SYNCHRONIZE = 0x00100000
+            handle = ctypes.windll.kernel32.OpenProcess(SYNCHRONIZE, False, pid)
+            if handle:
+                ctypes.windll.kernel32.CloseHandle(handle)
+                return True
+            return False
+        except Exception:
+            return False
+    else:
+        try:
+            os.kill(pid, 0)
+            return True
+        except (ProcessLookupError, PermissionError):
+            return pid > 0
+
+
+def acquire_claude_lock(owner: str, timeout_hours: float = 3) -> Optional[int]:
+    """Acquire one free slot from the claude -p semaphore.
+
+    Returns the acquired slot index (>= 0) on success, or None if all slots
+    are held.  Callers MUST use ``if acquired is not None:`` — slot 0 is
+    falsy and would silently skip the guard with a plain ``if acquired:``.
 
     Args:
-        owner: Identifier for the process acquiring the lock (e.g., "dispatcher", "overnight").
-        timeout_hours: How long before a lock is considered stale and auto-broken.
+        owner: Identifier for the acquiring process (e.g. "dispatcher").
+        timeout_hours: Slots older than this are broken automatically.
 
-    Uses atomic O_CREAT|O_EXCL to prevent races. Stale locks (older than
-    timeout_hours) are automatically broken -- handles crash recovery.
+    Stale detection uses two signals: age-TTL AND PID liveness.  A slot is
+    broken when its age exceeds ``timeout_hours`` OR its recorded PID is no
+    longer alive (crash recovery without waiting the full TTL).
     """
-    _CLAUDE_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    _LOCK_DIR.mkdir(parents=True, exist_ok=True)
+    n = _n_slots()
 
-    # Check for stale lock
-    if _CLAUDE_LOCK.exists():
-        try:
-            lock_data = json.loads(_CLAUDE_LOCK.read_text(encoding="utf-8"))
-            locked_at = datetime.fromisoformat(lock_data.get("locked_at", ""))
-            age_hours = (datetime.now(timezone.utc) - locked_at).total_seconds() / 3600
-            if age_hours > timeout_hours:
-                print(f"  Breaking stale claude lock (owner={lock_data.get('owner')}, "
-                      f"age={age_hours:.1f}h)", file=sys.stderr)
-                _CLAUDE_LOCK.unlink(missing_ok=True)
+    for slot in range(n):
+        p = _slot_path(slot)
+        if p.exists():
+            stale = False
+            try:
+                lock_data = json.loads(p.read_text(encoding="utf-8"))
+                locked_at = datetime.fromisoformat(lock_data.get("locked_at", ""))
+                age_hours = (datetime.now(timezone.utc) - locked_at).total_seconds() / 3600
+                recorded_pid = lock_data.get("pid", 0)
+                if age_hours > timeout_hours:
+                    stale = True
+                    print(
+                        f"  Breaking stale claude lock slot={slot} "
+                        f"(owner={lock_data.get('owner')}, age={age_hours:.1f}h)",
+                        file=sys.stderr,
+                    )
+                elif not _pid_alive(recorded_pid):
+                    stale = True
+                    print(
+                        f"  Breaking dead-process claude lock slot={slot} "
+                        f"(owner={lock_data.get('owner')}, pid={recorded_pid})",
+                        file=sys.stderr,
+                    )
+            except (json.JSONDecodeError, OSError, ValueError):
+                stale = True
+                print(f"  Breaking corrupted claude lock slot={slot}", file=sys.stderr)
+
+            if stale:
+                p.unlink(missing_ok=True)
             else:
-                print(f"  Claude lock held by {lock_data.get('owner')} "
-                      f"({age_hours:.1f}h ago) -- skipping", file=sys.stderr)
-                return False
-        except (json.JSONDecodeError, OSError, ValueError):
-            # Corrupted lock file -- break it
-            _CLAUDE_LOCK.unlink(missing_ok=True)
+                continue  # slot genuinely held
 
-    # Atomic create
+        # Slot appears free — attempt atomic claim
+        try:
+            fd = os.open(str(p), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            lock_data = {
+                "owner": owner,
+                "locked_at": datetime.now(timezone.utc).isoformat(),
+                "pid": os.getpid(),
+                "slot": slot,
+            }
+            os.write(fd, json.dumps(lock_data).encode("utf-8"))
+            os.close(fd)
+            return slot
+        except FileExistsError:
+            continue  # race — another process claimed this slot first
+
+    # All slots held — log a skip event
+    _log_lock_skip_event(owner, n)
+    return None
+
+
+def _log_lock_skip_event(owner: str, n_slots: int) -> None:
+    """Append one JSON line to the lock-events log on all-slots-held failure."""
     try:
-        fd = os.open(str(_CLAUDE_LOCK), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        lock_data = {
-            "owner": owner,
-            "locked_at": datetime.now(timezone.utc).isoformat(),
+        from tools.scripts.lib.file_lock import locked_append
+        event = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "caller": owner,
+            "reason": "all_slots_held",
+            "slots_checked": n_slots,
             "pid": os.getpid(),
         }
-        os.write(fd, json.dumps(lock_data).encode("utf-8"))
-        os.close(fd)
-        return True
-    except FileExistsError:
-        return False
+        locked_append(_LOCK_EVENTS, json.dumps(event))
+    except Exception:
+        pass  # never let event logging break the caller
 
 
-def release_claude_lock() -> None:
-    """Release global claude -p mutex."""
-    _CLAUDE_LOCK.unlink(missing_ok=True)
+def release_claude_lock(slot_index: int) -> None:
+    """Release the slot acquired by ``acquire_claude_lock``.
+
+    Args:
+        slot_index: The value returned by ``acquire_claude_lock``.
+    """
+    _slot_path(slot_index).unlink(missing_ok=True)
 
 # Directories to symlink from main repo into worktree.
 # Each tuple: (relative path from repo root, read-only flag for logging).

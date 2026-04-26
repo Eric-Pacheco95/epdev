@@ -2553,12 +2553,12 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
 
         # Acquire global claude -p mutex before worktree creation (fail fast).
         # Pipeline/local-model paths exit above; this guard covers LLM tasks only.
-        if not dry_run and not acquire_claude_lock("dispatcher"):
+        _dispatcher_slot = acquire_claude_lock("dispatcher") if not dry_run else None
+        if not dry_run and _dispatcher_slot is None:
             print("  Another claude -p process is running -- aborting")
             task["status"] = "pending"
             write_backlog(backlog)
             return "stop_lock"
-        _acquired_lock = not dry_run
 
         if not dry_run:
             if inline:
@@ -2721,8 +2721,8 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
         # The consolidation script (run after all overnight jobs finish)
         # merges completed branches into jarvis/review-YYYY-MM-DD and
         # cleans up worktrees + stale branches.
-        if _acquired_lock:
-            release_claude_lock()
+        if _dispatcher_slot is not None:
+            release_claude_lock(_dispatcher_slot)
         release_lock()
         if wt_path and not dry_run:
             if inline:
