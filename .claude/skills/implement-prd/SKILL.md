@@ -87,6 +87,7 @@ Subagent rules: pass ISC item text, verify method, context files; return file wr
 - If the PRD has 3+ hard fails across multiple criteria: STOP and print "ISC Quality Gate: FAIL -- this PRD needs /create-prd revision before implementation" with specifics
 - Fallback: if isc_validator.py is unavailable, manually validate against the 6-check gate (see CLAUDE.md > ISC Quality Gate): count (3-8 per phase), conciseness (no compound "and"), state-not-action, binary-testable, anti-criteria (at least one), verify method present
 - **Escalation check**: if PRD has unannotated main-thread items with `[I]`/`[R]` tags OR irreversible verify methods (prod deploys, external API writes, credential changes), recommend `/architecture-review` or `advisor()` before BUILD. See `orchestration/steering/model-effort-routing.md`. If session compacted since any prior `advisor()` call, treat authorization as expired and re-read PRD.
+- **OQ→BUILD advisor gate**: after all `must-resolve-before-BUILD` OQs are resolved and marked in the PRD, call `advisor()` once before BUILD begins — framing: "OQs resolved — checking for architectural gaps before BUILD." This is the last cheap moment to surface blockers; after BUILD starts, any blocker found requires code rollback.
 
 ### PHASE SCOPE FILTER (only if --phase N was provided)
 

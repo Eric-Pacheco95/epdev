@@ -33,6 +33,7 @@
 - MCP servers: stdio transport (npx/uvx), `.mcp.json` in project root. Two distinct behaviors: **`.mcp.json` config edits require session restart** (structural config change); runtime tool/resource additions propagate via `list_changed` notifications without disconnect. Debug by reading `C:/Users/ericp/.claude.json` directly (`mcp list` shows health only)
 - Never use `mcp__<server>__*` wildcards in allow lists for servers with mutation tools — enumerate read tools explicitly; wildcards only safe for read-only servers
 - Hook commands must use absolute paths (relative breaks silently); hooks fire on every message — never print content already in CLAUDE.md, only surface dynamic state
+- **When adding or modifying a PreToolUse hook, verify three constraints before BUILD: (A) stateless — no state survives between invocations; (B) process-per-call — integrate into an existing hook file via fast-path early return rather than creating a new hook file; (C) command-boundary guard — if pattern-matching the full Bash command string, confirm the trigger keyword is the leading token, not a substring in a quoted argument: `if not re.match(r'^(?:\w+=\S+\s+)*KEYWORD\b', cmd.lstrip()): return None`.** Why: omitting (C) caused the gh-allowlist hook to block its own commit message; omitting (A) silently breaks FRs described as "at startup"; omitting (B) adds N Python process startups per Bash call.
 
 ## External HTTP Tools (YouTube / Web Scraping)
 

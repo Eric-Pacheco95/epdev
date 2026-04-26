@@ -239,6 +239,66 @@
       "prediction_file": "data\\predictions\\backtest\\2026-04-08-mkt-gamestop-squeeze-jan2021.md",
       "signal_file": "memory\\learning\\signals\\2026-04-08_prediction-backtest-mkt-gamestop-squeeze-jan2021.md",
       "suspect_leakage": false
+    },
+    "plan-amazon-hq2-single-city": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-plan-amazon-hq2-single-city.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-plan-amazon-hq2-single-city.md",
+      "suspect_leakage": false
+    },
+    "plan-boeing-737max-return-2019": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-plan-boeing-737max-return-2019.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-plan-boeing-737max-return-2019-2.md",
+      "suspect_leakage": false
+    },
+    "plan-spacex-starship-orbital-2021": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-plan-spacex-starship-orbital-2021.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-plan-spacex-starship-orbital-2021-2.md",
+      "suspect_leakage": false
+    },
+    "plan-us-infrastructure-bill-2019": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-plan-us-infrastructure-bill-2019.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-plan-us-infrastructure-bill-2019-3.md",
+      "suspect_leakage": false
+    },
+    "tech-google-stadia-viability-2020": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-tech-google-stadia-viability-2020.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-tech-google-stadia-viability-2020-3.md",
+      "suspect_leakage": false
+    },
+    "tech-5g-nationwide-us-2020": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-tech-5g-nationwide-us-2020.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-tech-5g-nationwide-us-2020-3.md",
+      "suspect_leakage": false
+    },
+    "tech-zoom-stock-sustained-2021": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-tech-zoom-stock-sustained-2021.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-tech-zoom-stock-sustained-2021-3.md",
+      "suspect_leakage": false
+    },
+    "geo-venezuela-maduro-removal-2019": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-geo-venezuela-maduro-removal-2019.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-geo-venezuela-maduro-removal-2019-3.md",
+      "suspect_leakage": false
+    },
+    "geo-north-korea-denuclearization-2019": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-geo-north-korea-denuclearization-2019.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-geo-north-korea-denuclearization-2019-3.md",
+      "suspect_leakage": false
+    },
+    "mkt-softbank-vision-fund-2-raise": {
+      "date": "2026-04-24",
+      "prediction_file": "data\\predictions\\backtest\\2026-04-24-mkt-softbank-vision-fund-2-raise.md",
+      "signal_file": "memory\\learning\\signals\\2026-04-24_prediction-backtest-mkt-softbank-vision-fund-2-raise-2.md",
+      "suspect_leakage": false
     }
   }
 }

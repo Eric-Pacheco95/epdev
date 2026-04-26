@@ -84,6 +84,7 @@ _MEMORY_SYMLINKS = [
     ("memory/learning/signals", True),
     ("memory/learning/synthesis", False),
     ("memory/learning/failures", True),
+    ("memory/knowledge", False),
 ]
 
 

@@ -31,7 +31,7 @@
 
 ### Priority: Active
 
-- [ ] **jarvis-app Sprint 5: Design system** — Install shadcn/ui (dark mode), establish v0.dev workflow, regenerate /dashboard tabs using v0.dev + Pulse screenshots. Root cause: Sprint 4 GUI is functionally correct but visually off — pure-Tailwind iteration without design tooling doesn't converge. PRD: `memory/work/jarvis-app/PRD.md` Sprint 5 section. | Gate: Sprint 4 COMPLETE ✓
+- [x] **jarvis-app Sprint 5: Design system** — COMPLETE 2026-04-25. UI upgraded using imported design reference (`jarvis-app/design`). NOTE: `/design-verify` fidelity check not yet run — pending before Sprint 5 is fully closed.
 - [ ] **Wire Claude Code "defer" into dispatcher (code)** — validate_tool_use.py defer path, dispatcher resume flow, morning briefing surface. Requires `claude -p --resume` e2e spike first. (split from doc task 2026-04-08)
 - [ ] **5C-5C: ISC template library** — Deterministic ISC generation from structured gap output (add_tests, fix_lint, remove_dead_code, update_docs). Current: ISC generated inline per-branch, functional but not templated.
 - [x] **TheCodingGopher — bounded first slice** — Pattern `memory/work/large-extract-pattern.md` executed Phases 1–3 on 2026-04-19 + 2026-04-20 (confirming re-run). Decision: **route-to-existing `ai-infra/` + targeted expand-slice; no new sub-domain**. Knowledge files already written 2026-04-19: `ai-infra/2026-04-19_postgres-unified-backend.md`, `ai-infra/2026-04-19_mcp-protocol.md`, `networking/2026-04-19_socket-fundamentals.md`. Expand slice (4 AI-keyword videos) extracted 2026-04-20 → eval: `tools/scratch/gopher_eval.md`. Follow-on ai-infra writes queued via overnight dispatcher (not this session).

@@ -138,6 +138,7 @@ memory/learning/synthesis/*.md
 memory/learning/absorbed/*.md
 memory/learning/_signal_meta.json
 memory/learning/wisdom/*.md
+memory/learning/**/.keep
 
 # ------------------------------------------------------------------------------
 # Personal history content — blank-slate template only

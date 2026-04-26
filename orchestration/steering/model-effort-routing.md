@@ -44,6 +44,10 @@ Sonnet + normal effort. No change needed for routine tasks (file ops, status che
 
 **Boundary:** advisor() = plan review (reviews the HOW before execution); /architecture-review = design review (reviews the WHAT before planning). Run /architecture-review before the PRD, advisor() before BUILD.
 
+## Parallel Agent Splitting
+
+- **For plan-mode tasks touching both skill internals (SKILL.md, steering docs) and generated artifacts (scripts, manifests, runtime), default to 2 parallel Explore agents split along that seam — one reads each side.** Mixing both in a single Explore pass produces shallow coverage of both.
+
 ## "Opus-only" Tasks
 
 There is no mid-session model switch in Claude Code — the session model is set at start. "Opus-only" means: start a fresh session with Opus configured OR use advisor() as the Opus-equivalent review gate.
