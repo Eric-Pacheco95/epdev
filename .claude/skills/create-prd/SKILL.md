@@ -75,12 +75,12 @@ false
 
 ## Step 0.5: USER STORY CHECK (optional, auto-triggered)
 
-- Scan the input for multiple distinct actor types (e.g., "trader + Slack approver", "Eric + autonomous dispatcher + monitoring agent", "admin + end user")
-- If 2+ distinct actors are present AND the input does not already include user stories: generate user stories BEFORE writing requirements
-  - Format: `As a [actor] / I want [capability] / So that [outcome]` + 3-5 acceptance criteria bullets per story; plain, bulleted, no jargon
-  - Present stories to Eric and confirm before proceeding — stories define WHAT to build; requirements define HOW it should behave
-- If only 1 actor type (typical Jarvis task): skip this step silently
-- This step can be manually forced with `--user-stories` flag regardless of actor count
+- Scan input for distinct actor types
+- If 2+ actors AND no user stories in input: generate stories BEFORE requirements
+  - Format: `As a [actor] / I want [capability] / So that [outcome]` + 3-5 acceptance criteria; plain, no jargon
+  - Present to Eric, confirm before proceeding (stories = WHAT; requirements = HOW)
+- 1 actor: skip silently
+- Force with `--user-stories` flag
 
 ## Step 0.6: PAIRED-PRD CHECK (auto-triggered)
 
@@ -120,15 +120,15 @@ Check session context for evidence resolving each blocker before asking Eric. As
   ---
   ```
   Choose from input signal. Rubric: `stakes`=cost of getting it wrong; `ambiguity`=spec clarity; `solvability`=difficulty (see solvability-spectrum.md); `verifiability`=oracle strength (see verifiability-spectrum.md). Default unspecified axes to `medium`; add to OPEN QUESTIONS.
-- Extract the product or feature name, intended audience, and the problem being solved from the input
-- Separate stated goals from implied goals; list explicit non-goals when the input provides them or clearly implies boundaries
-- Identify primary users or personas only when the input supports them; otherwise use a short "Assumed users" note with gaps flagged
-- Derive functional requirements as testable statements; group them by theme or user journey when it aids clarity
-- Capture non-functional requirements the input mentions or clearly implies (performance, availability, accessibility, compliance, localization)
-- Define acceptance criteria in measurable or observable terms where possible; mark items that need stakeholder validation
-- List dependencies, integrations, and external systems the input names or reasonably implies
-- Record risks, assumptions, and open questions separately so they are visible to decision-makers
-- Structure the output using the prescribed sections below
+- Extract name, audience, problem from input
+- Separate stated from implied goals; list explicit non-goals when provided or implied
+- Identify personas when input supports them; otherwise "Assumed users: [X]" with gaps flagged
+- Derive functional requirements as testable statements; group by theme/journey
+- Capture NFRs the input mentions (performance, availability, compliance, localization)
+- Define acceptance criteria measurably; mark items needing stakeholder validation
+- List named dependencies, integrations, external systems
+- Record risks, assumptions, OQs separately
+- Structure per sections below
 - **ISC Quality Gate** — Validate every ISC criterion against the 6-check gate (CLAUDE.md > ISC Quality Gate): count 3-8/phase, single sentence, state-not-action, binary pass/fail, at least one anti-criterion, `| Verify:` suffix. Fix fails inline before writing PRD. Append "ISC Quality Gate: PASS (6/6)" or "PARTIAL (N/6 — {which failed})" at end of ACCEPTANCE CRITERIA
 
 - **Forward-causal ISC test (autonomous capabilities only)** — For any PRD enabling an autonomous capability, apply the forward-causal test to each gate: does it measure forward/causal/money-layer reality, or a code-quality/historical/calendar proxy? Calendar-duration thresholds are universally suspect in low-activity regimes — the system is least active exactly when verification matters most. Correlation checks require shuffle-test + regime-detector before they become causal claims. If a criterion fails the test, mark it with `[PROXY — needs causal replacement]` and require a replacement criterion before ISC Quality Gate passes.
