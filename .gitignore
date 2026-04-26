@@ -180,10 +180,7 @@ memory/work/td-innovation-keynote/
 # ------------------------------------------------------------------------------
 # Personal knowledge content — domain research files are user-specific
 # ------------------------------------------------------------------------------
-# All dated domain research files (ai-infra, crypto, security, fintech, etc.)
-memory/knowledge/*/
-# Consolidation reports and other aggregated outputs
-memory/knowledge/_consolidation_report.md
+memory/knowledge/
 
 # ------------------------------------------------------------------------------
 # Personal memory scratch, logs, and ephemeral work files
