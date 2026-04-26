@@ -82,3 +82,4 @@ INPUT:
 - Write a signal to memory/learning/signals/{YYYY-MM-DD}_spawn-agent-{slug}.md when a novel trait combination is discovered that is not represented in the existing trait library
 - Rating: 6-8 for genuinely new trait patterns; only write signal when the spawned agent architecture would be reusable for a class of future tasks (not just this one)
 - If a spawned agent prompt requires revision in the same section across multiple spawns (e.g., PRINCIPLES always too vague), capture the section pattern as a trait library gap for the next /create-pattern pass
+- Track Sonnet vs. Opus routing by task type — if a task type consistently needs multiple Sonnet passes to match one Opus pass, escalate that type's default routing in `memory/knowledge/harness/subagent_model_routing.md`
