@@ -97,28 +97,11 @@ Output the full classification table before proceeding. Wait for user confirmati
 For each KEEP and ADAPT skill:
 
 1. **Copy SKILL.md** to target directory
-2. **Strip personal references**:
-   - Remove any mention of "Jarvis", "Eric", owner names, personal goals
-   - Replace personal identity sections with generic purpose statements
-   - Remove TELOS references
-   - Remove personal MCP server references (Google Drive folder IDs, Slack channels, Notion databases)
-3. **Adapt file paths**:
-   - `memory/work/` → `docs/`
-   - `memory/learning/` → remove (no learning system)
-   - `history/decisions/` → keep (audit trail is universal)
-   - `orchestration/` → remove unless orchestration is extracted
-4. **Adapt examples for target audience**:
-   - Replace personal/project examples with target-environment examples
-   - For bank environments: use KYC, AML, regulatory change, requirements writing, API design review examples
-   - For dev environments: use code review, architecture, sprint planning examples
-   - Examples should speak the target user's language — this is what makes the tool feel built for them
-5. **Update skill chains**:
-   - Remove references to skills not included in the extraction
-   - Update chain documentation to reflect only available skills
-6. **Validate references**:
-   - Grep all extracted SKILL.md files for `/skill-name` patterns
-   - Verify every referenced skill exists in the extraction
-   - Flag any dangling references as errors — do not proceed until resolved
+2. **Strip personal refs**: remove "Jarvis"/"Eric"/owner names/personal goals; replace identity sections with generic purpose; remove TELOS and personal MCP refs (Drive IDs, Slack channels, Notion DBs)
+3. **Adapt paths**: `memory/work/` → `docs/`; `memory/learning/` → remove; `history/decisions/` → keep; `orchestration/` → remove unless extracted
+4. **Adapt examples**: use target-environment language (banks: KYC/AML/regulatory; devs: code review/arch/sprints)
+5. **Update skill chains**: remove refs to excluded skills; update chain docs
+6. **Validate references**: grep for `/skill-name`; every ref must exist; flag dangling refs as errors
 
 ## Step 3: BUILD INFRASTRUCTURE
 
@@ -155,7 +138,7 @@ Create the target repo structure:
 
 ### Active Context Population rules (add to CLAUDE.md):
 
-Target CLAUDE.md must include rules for: glossary auto-append to `context/glossary.md`; template loading from `templates/` before generating artifacts; ADR logging to `history/decisions/`; regulatory NFR injection from `knowledge/regulatory/`; stakeholder map creation at `context/stakeholders/{project}.md`; sprint log append to `context/sprint-log/{project}.md`; lessons-learned prompt after milestones.
+Glossary auto-append → `context/glossary.md`; load `templates/` before artifacts; ADR → `history/decisions/`; regulatory NFR from `knowledge/regulatory/`; stakeholder maps → `context/stakeholders/{project}.md`; sprint log → `context/sprint-log/{project}.md`; lessons-learned after milestones.
 
 ### CLAUDE.md: Remove personal identity, TELOS, learning-capture, autonomous steering rules, personal MCP rules, cross-project references. Update skill count + context routing. Keep: Algorithm, ISC Quality Gate, security rules, workflow discipline, platform rules.
 
