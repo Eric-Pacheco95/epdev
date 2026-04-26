@@ -53,32 +53,27 @@ true
 - If no argument: default scope is all checked items in tasklist -- proceed
 - Proceed to audit
 
-- Read `orchestration/steering/autonomous-rules.md` — load anti-criterion verification constraints (detector-for-class requirement, anti-criteria exit-code rules) AND the Task Typing (S×A + S×V) section before evaluating ISC compliance
-- **Task Typing frontmatter check** — if a PRD path is present (explicit `--prd` arg to the underlying script, or inferred from scope), run `python tools/scripts/isc_validator.py --prd <path> --check-frontmatter --json`:
-  - `grandfathered: true` (no frontmatter block) → pass through with a single-line "Task Typing: GRANDFATHERED (pre-cutoff PRD)" note in the findings table; do NOT reject on axis absence
-  - `four_axis.present: true` → note the four values in the findings table as informational
-  - `four_axis.present: false` (frontmatter exists but incomplete or invalid) → **REJECT** with message naming the missing/invalid axes; emit under Critical Gaps and include "four-axis labels present (for cutoff-new PRDs)" under Gate Verification Commands
-- **VERIFY phase requirement**: any task whose BUILD produced or modified a script that consumes external input (scraped, Slack, MCP, user paste, API) must show evidence that `/review-code` was run; phase-gate criteria must include a verification command or file-existence check, not self-reported status. Reject the quality gate if a VERIFY bullet says "tested manually" without a command or artifact path.
-- **Forward-causal ISC review (autonomous capabilities)**: for any gated criterion tagged to an autonomous capability, apply the forward-causal test — does it measure forward/causal/money-layer reality, or code-quality/historical/calendar proxy? Flag any proxy gate as PARTIAL even if it passed. Calendar-duration thresholds are universally suspect in low-activity regimes. Correlation checks require shuffle-test + regime-detector before counting as causal.
+- Read `orchestration/steering/autonomous-rules.md` — load anti-criterion constraints and Task Typing (S×A + S×V) before evaluating ISC compliance
+- **Task Typing frontmatter check** (if PRD path present): run `isc_validator.py --prd <path> --check-frontmatter --json`:
+  - `grandfathered: true` → note "GRANDFATHERED" in findings; do NOT reject
+  - `four_axis.present: true` → note values informational
+  - `four_axis.present: false` → **REJECT**; name missing axes in Critical Gaps
+- **VERIFY phase**: BUILD consuming external input (scraped/Slack/MCP/API) must show `/review-code` evidence; "tested manually" without command/artifact = REJECT
+- **Forward-causal ISC**: proxy gates (calendar thresholds, non-causal correlations) on autonomous criteria → flag PARTIAL even if passed
 - Run `python tools/scripts/quality_gate_check.py --check-files` to get the deterministic report: tasklist stats, open items, decision log coverage, and file reference validation. If a `--phase` argument was provided, pass it through: `python tools/scripts/quality_gate_check.py --check-files --phase <PHASE>`
 - If a PRD is being gated, also run `python tools/scripts/quality_gate_check.py --prd <path>` to validate ISC items (verify methods present, minimum count, completion percentage)
 - Parse the report output — the script handles all file counting, cross-referencing, and existence checks deterministically. You only need to interpret the findings
-- For each checked item in the tasklist (use `python tools/scripts/tasklist_parser.py --status checked --json` for structured data), evaluate four dimensions:
-  - **THINK-before-BUILD**: Was a THINK artifact (PRD, decision log, spec, design doc, or research brief) produced before or alongside the BUILD artifact? Check `memory/work/*/PRD.md`, `memory/work/*/research_brief.md`, `history/decisions/`, and any spec files referenced in the task description
-  - **Intent match**: Does the actual deliverable match the original intent described in the task text and phase header? Look for scope drift, silent reductions, or "pending" qualifiers embedded inside checked items
-  - **Decision log**: Is there an entry in `history/decisions/` that explains why this approach was chosen over alternatives? Not every task needs one — focus on architectural choices, tool selections, and phase-level decisions
-  - **Downstream satisfaction**: For items that gate later phases (gate criteria, dependency items), does the actual deliverable provide what the downstream phase needs? Read the downstream phase header and requirements
-- Use the knowledge index to cross-reference context: run `python tools/scripts/jarvis_index.py search "<task keywords>"` for items where deliverable existence is ambiguous
-- Verify deliverable existence by checking that referenced files, scripts, configs, or system state actually exist (use Glob, Grep, or Bash to confirm)
-- For gate criteria specifically, identify the verification command that proves the gate is met (e.g., `schtasks /query` for scheduled tasks, file existence checks for documents, `ls` for directories)
-- Identify the "checked but pending" anti-pattern: any `[x]` item whose description text contains words like "pending", "awaiting", "still needed", "TBD", or "not yet" — these are silent scope reductions
-- Classify each gap by severity:
-  - **Critical**: Blocks or undermines a downstream phase that is active or next
-  - **High**: Missing THINK artifact for an architectural decision that downstream phases depend on
-  - **Medium**: Missing decision log or partial deliverable that could cause confusion but has workarounds
-  - **Low**: Minor documentation gap with no functional impact
-- Compile findings into the output table
-- Summarize the top 3 risks to upcoming phases with specific downstream impact
+- For each checked item (use `python tools/scripts/tasklist_parser.py --status checked --json`), evaluate:
+  - **THINK-before-BUILD**: THINK artifact (PRD/spec/brief) before BUILD? Check `memory/work/*/PRD.md`, `history/decisions/`, spec files in task
+  - **Intent match**: deliverable matches original intent? Look for scope drift, silent reductions, "pending" qualifiers
+  - **Decision log**: entry in `history/decisions/` for architectural choices, tool selections, phase decisions
+  - **Downstream satisfaction**: deliverable provides what downstream phase needs?
+- Cross-reference: `python tools/scripts/jarvis_index.py search "<task keywords>"` for ambiguous deliverables
+- Verify existence: Glob/Grep/Bash to confirm files, scripts, configs
+- Gate criteria: identify verification command for each (e.g., `schtasks /query`, file-existence)
+- **Checked-but-pending**: `[x]` items with "pending"/"awaiting"/"TBD"/"not yet" = silent scope reduction
+- Severity: **Critical**=blocks active downstream; **High**=missing THINK for arch dependency; **Medium**=missing log/partial (workarounds); **Low**=docs only
+- Compile findings; summarize top 3 risks with downstream impact
 
 # OUTPUT INSTRUCTIONS
 
