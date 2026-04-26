@@ -101,3 +101,43 @@ def test_last_signal_date_returns_latest(tmp_path):
     # Should return the mtime of the newest matching file
     expected_mtime = datetime.fromtimestamp(md2.stat().st_mtime, tz=timezone.utc)
     assert abs((result - expected_mtime).total_seconds()) < 1
+
+
+def test_last_signal_date_non_md_files_ignored(tmp_path):
+    txt = tmp_path / "signal.txt"
+    txt.write_text("G1 financial trading", encoding="utf-8")
+    with patch.object(gdc, "SIGNALS", tmp_path):
+        result = gdc._last_signal_date("G1")
+    assert result is None  # .txt not matched by *.md glob
+
+
+def test_last_signal_date_case_insensitive(tmp_path):
+    md = tmp_path / "signal.md"
+    md.write_text("TRADING opportunity found today", encoding="utf-8")
+    with patch.object(gdc, "SIGNALS", tmp_path):
+        result = gdc._last_signal_date("G1")
+    assert result is not None
+
+
+def test_last_signal_date_g2_telos_match(tmp_path):
+    md = tmp_path / "signal.md"
+    md.write_text("Updated TELOS goals for Q2", encoding="utf-8")
+    with patch.object(gdc, "SIGNALS", tmp_path):
+        result = gdc._last_signal_date("G2")
+    assert result is not None
+
+
+def test_last_signal_date_g1_does_not_match_g2_keyword(tmp_path):
+    md = tmp_path / "signal.md"
+    md.write_text("Jarvis skill pipeline updated today", encoding="utf-8")
+    with patch.object(gdc, "SIGNALS", tmp_path):
+        result = gdc._last_signal_date("G1")
+    assert result is None  # Jarvis/skill pipeline are G2 keywords, not G1
+
+
+def test_load_state_empty_file(tmp_path):
+    f = tmp_path / "state.json"
+    f.write_text("", encoding="utf-8")
+    with patch.object(gdc, "STATE_FILE", f):
+        state = gdc._load_state()
+    assert state == {"alerts": {}}
