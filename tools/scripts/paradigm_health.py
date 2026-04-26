@@ -19,6 +19,7 @@ Outputs:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -42,6 +43,11 @@ AGENTS_DIR = REPO_ROOT / "orchestration" / "agents"
 PRDS_DIR = REPO_ROOT / "memory" / "work"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
+_SKIP_LLM: bool = False
+CONTRADICTION_STATE_FILE = REPO_ROOT / "data" / "paradigm_contradiction_state.json"
+STEERING_DIR = REPO_ROOT / "orchestration" / "steering"
+CORPUS_CHAR_LIMIT = 90_000
+
 # Thresholds: score must be >= threshold to be "healthy"
 THRESHOLDS: dict[str, float] = {
     "system_intelligence":    0.5,   # meta: average of others
@@ -54,6 +60,7 @@ THRESHOLDS: dict[str, float] = {
     "telos_identity_chain":   0.5,
     "sense_decide_act":       0.5,
     "context_routing":        0.5,
+    "semantic_contradictions": 0.5,
 }
 
 # Human-readable labels for display
@@ -68,6 +75,7 @@ LABELS: dict[str, str] = {
     "telos_identity_chain":   "TELOS Identity Chain",
     "sense_decide_act":       "SENSE/DECIDE/ACT",
     "context_routing":        "Context Routing",
+    "semantic_contradictions": "Semantic Contradictions",
 }
 
 
@@ -396,6 +404,188 @@ def measure_context_routing() -> tuple[float, str]:
     return score, f"{existing}/{len(routing_paths)} context routing paths exist"
 
 
+def measure_semantic_contradictions(
+    skip_llm: bool = False,
+    state_file: Path | None = None,
+    backlog_path: Path | None = None,
+) -> tuple[float, str]:
+    """Detect semantic contradictions in the governance corpus via Anthropic SDK.
+
+    Diff-aware: skips API call if no governance files changed since last scan.
+    SENSE-only: injects LOW-severity backlog tasks, never modifies governance files.
+    """
+    if skip_llm or _SKIP_LLM:
+        return (1.0, "skipped (--skip-llm)")
+
+    if state_file is None:
+        state_file = CONTRADICTION_STATE_FILE
+
+    # --- Candidate file assembly ---
+    candidate_files: list[Path] = []
+    if CLAUDE_MD.is_file():
+        candidate_files.append(CLAUDE_MD)
+    if STEERING_DIR.is_dir():
+        candidate_files.extend(sorted(STEERING_DIR.glob("*.md")))
+    skills_dir = REPO_ROOT / ".claude" / "skills"
+    if skills_dir.is_dir():
+        candidate_files.extend(sorted(skills_dir.glob("*/SKILL.md")))
+
+    if not candidate_files:
+        return (0.5, "no governance files found")
+
+    # --- Diff-aware early-exit gate ---
+    state: dict = {}
+    if state_file.exists():
+        try:
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            state = {}
+
+    stored_mtimes: dict[str, float] = state.get("file_mtimes", {})
+    any_changed = False
+    for f in candidate_files:
+        try:
+            mtime = f.stat().st_mtime
+        except OSError:
+            continue
+        rel = str(f.relative_to(REPO_ROOT))
+        if stored_mtimes.get(rel) != mtime:
+            any_changed = True
+            break
+
+    if not any_changed:
+        return (1.0, "0 contradictions — no files changed")
+
+    # --- Corpus assembly (all candidate files, newest-modified first) ---
+    def _mtime(p: Path) -> float:
+        try:
+            return p.stat().st_mtime
+        except OSError:
+            return 0.0
+
+    sorted_files = sorted(candidate_files, key=_mtime, reverse=True)
+    corpus_parts: list[str] = []
+    total_chars = 0
+    dropped: list[str] = []
+
+    for f in sorted_files:
+        try:
+            text = f.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        chunk = f"\n\n=== {f.relative_to(REPO_ROOT)} ===\n" + text
+        if total_chars + len(chunk) > CORPUS_CHAR_LIMIT:
+            dropped.append(str(f.relative_to(REPO_ROOT)))
+            continue
+        corpus_parts.append(chunk)
+        total_chars += len(chunk)
+
+    if dropped:
+        print(
+            f"[contradiction-scan] corpus truncated; dropped: {', '.join(dropped)}",
+            file=sys.stderr,
+        )
+
+    corpus = "".join(corpus_parts)
+
+    # --- Anthropic SDK call ---
+    try:
+        import anthropic
+    except ImportError:
+        return (0.5, "llm scan error: anthropic package not installed")
+
+    system_prompt = (
+        "You are a governance auditor. Review the following documentation corpus "
+        "and identify semantic contradictions: rule conflicts, numerical claim "
+        "mismatches, and cross-file policy disagreements.\n\n"
+        "Return ONLY a JSON array. Each element must have exactly these keys:\n"
+        '  {"claim": str, "location_a": str, "location_b": str, '
+        '"resolution_suggestion": str}\n\n'
+        "If there are no contradictions, return an empty array: []\n"
+        "Do not include any text outside the JSON array."
+    )
+
+    try:
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=2048,
+            system=system_prompt,
+            messages=[{"role": "user", "content": corpus}],
+        )
+        raw = response.content[0].text.strip()
+    except anthropic.APIError as e:
+        return (0.5, f"llm scan error: {e}")
+    except Exception as e:  # noqa: BLE001
+        return (0.5, f"llm scan error: {e}")
+
+    # --- Parse response ---
+    try:
+        contradictions = json.loads(raw)
+        if not isinstance(contradictions, list):
+            contradictions = []
+    except (json.JSONDecodeError, ValueError):
+        contradictions = []
+
+    count = len(contradictions)
+
+    # --- Inject backlog tasks ---
+    try:
+        from tools.scripts.lib.backlog import backlog_append
+    except ImportError:
+        pass
+    else:
+        for contradiction in contradictions:
+            if not isinstance(contradiction, dict):
+                continue
+            claim = contradiction.get("claim", "")
+            if not claim:
+                continue
+            routine_id = (
+                f"paradigm_contradiction_{hashlib.md5(claim.encode()).hexdigest()[:8]}"
+            )
+            task = {
+                "description": f"Governance contradiction: {claim}",
+                "tier": 1,
+                "priority": 5,
+                "autonomous_safe": False,
+                "status": "pending_review",
+                "severity": "low",
+                "routine_id": routine_id,
+                "isc": [
+                    f"Contradiction resolved — Eric confirms which source is authoritative "
+                    f"for: {claim[:80]} [A]"
+                ],
+                "notes": json.dumps(contradiction, ensure_ascii=False),
+            }
+            try:
+                backlog_append(task, backlog_path=backlog_path)
+            except (ValueError, OSError):
+                pass
+
+    # --- Write state file ---
+    new_mtimes: dict[str, float] = {}
+    for f in candidate_files:
+        try:
+            new_mtimes[str(f.relative_to(REPO_ROOT))] = f.stat().st_mtime
+        except OSError:
+            pass
+
+    state_data = {
+        "last_scan": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "file_mtimes": new_mtimes,
+        "contradiction_count": count,
+    }
+    try:
+        state_file.parent.mkdir(parents=True, exist_ok=True)
+        state_file.write_text(json.dumps(state_data, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+    score = 1.0 - min(1.0, count / 5)
+    return (score, f"{count} contradiction(s) detected")
+
+
 # ---------------------------------------------------------------------------
 # Measurement dispatcher
 # ---------------------------------------------------------------------------
@@ -414,6 +604,7 @@ def run_all_metrics() -> dict[str, dict]:
         ("telos_identity_chain",   measure_telos_identity_chain),
         ("sense_decide_act",       measure_sense_decide_act),
         ("context_routing",        measure_context_routing),
+        ("semantic_contradictions", lambda: measure_semantic_contradictions()),
     ]
 
     for key, func in paradigm_funcs:
@@ -534,6 +725,7 @@ def run_self_test() -> int:
         ("telos_identity_chain",   measure_telos_identity_chain),
         ("sense_decide_act",       measure_sense_decide_act),
         ("context_routing",        measure_context_routing),
+        ("semantic_contradictions", lambda: measure_semantic_contradictions(skip_llm=True)),
     ]
 
     for name, func in metric_funcs:
@@ -566,6 +758,40 @@ def run_self_test() -> int:
     except (TypeError, ValueError) as exc:
         failures.append(f"JSON serialization: {exc}")
         print(f"  FAIL  JSON serialization: {exc}")
+
+    # Mock test: measure_semantic_contradictions API path with injected temp files
+    try:
+        import tempfile
+        import unittest.mock
+        from unittest.mock import MagicMock
+
+        mock_contradiction = {
+            "claim": "test contradiction claim",
+            "location_a": "CLAUDE.md",
+            "location_b": "orchestration/steering/test.md",
+            "resolution_suggestion": "resolve by updating CLAUDE.md",
+        }
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps([mock_contradiction]))]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            with unittest.mock.patch("anthropic.Anthropic") as MockAnth:
+                MockAnth.return_value.messages.create.return_value = mock_response
+                score, metric = measure_semantic_contradictions(
+                    state_file=tmp_path / "state.json",
+                    backlog_path=tmp_path / "backlog.jsonl",
+                )
+
+        assert isinstance(score, float), f"score not float: {type(score)}"
+        assert 0.0 <= score <= 1.0, f"score out of range: {score}"
+        assert isinstance(metric, str) and len(metric) > 0, "metric empty"
+        print(f"  PASS  semantic_contradictions (mock API): {score:.2f} -- {metric}")
+    except ImportError:
+        print("  SKIP  semantic_contradictions mock test: anthropic not installed")
+    except Exception as exc:  # noqa: BLE001
+        failures.append(f"semantic_contradictions mock test: {exc}")
+        print(f"  FAIL  semantic_contradictions mock test: {exc}")
 
     print()
     if failures:
@@ -642,7 +868,16 @@ def main() -> int:
         action="store_true",
         help="Run self-test and exit",
     )
+    parser.add_argument(
+        "--skip-llm",
+        action="store_true",
+        help="Skip LLM-based semantic contradiction scan (for CI/fast runs)",
+    )
     args = parser.parse_args()
+
+    if args.skip_llm:
+        global _SKIP_LLM
+        _SKIP_LLM = True
 
     if args.test:
         return run_self_test()
