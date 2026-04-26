@@ -57,10 +57,9 @@ Input errors -> STOP with guidance:
 
 ## Step 1: READ PRD
 
-- Read the PRD file supplied in the input
-- Extract every ISC item (lines matching `- [ ] ... | Verify:`) into a numbered checklist — these are the acceptance criteria you must satisfy
-- Read every context file, existing script, or related module referenced in the PRD before writing a single line of code
-- Adopt the Engineer persona (see `orchestration/agents/Engineer.md`): senior developer, defensive by default, security-first, minimal surface area — no gold-plating, no unnecessary abstractions
+- Read the PRD file; extract every ISC item (`- [ ] ... | Verify:`) into a numbered checklist
+- Read every context file, existing script, or related module referenced in the PRD before writing code
+- Adopt the Engineer persona (`orchestration/agents/Engineer.md`): defensive, security-first, minimal surface area
 
 ### TASK TYPING FRONTMATTER EXTRACT
 
@@ -80,14 +79,12 @@ Subagent rules: pass ISC item text, verify method, context files; return file wr
 
 ### ISC QUALITY GATE (blocks BUILD)
 
-- Run `python tools/scripts/isc_validator.py --prd <PRD-path> --pretty` to get deterministic quality gate results
-- Review the validator output: check `gate_passed`, `hard_fails`, and `warnings`
-- If `gate_passed: true`: proceed to BUILD
-- If `gate_passed: false`: review the hard fails and fix the criteria in the PRD file. Note fixes in IMPLEMENTATION LOG
-- If the PRD has 3+ hard fails across multiple criteria: STOP and print "ISC Quality Gate: FAIL -- this PRD needs /create-prd revision before implementation" with specifics
-- Fallback: if isc_validator.py is unavailable, manually validate against the 6-check gate (see CLAUDE.md > ISC Quality Gate): count (3-8 per phase), conciseness (no compound "and"), state-not-action, binary-testable, anti-criteria (at least one), verify method present
-- **Escalation check**: if PRD has unannotated main-thread items with `[I]`/`[R]` tags OR irreversible verify methods (prod deploys, external API writes, credential changes), recommend `/architecture-review` or `advisor()` before BUILD. See `orchestration/steering/model-effort-routing.md`. If session compacted since any prior `advisor()` call, treat authorization as expired and re-read PRD.
-- **OQ→BUILD advisor gate**: after all `must-resolve-before-BUILD` OQs are resolved and marked in the PRD, call `advisor()` once before BUILD begins — framing: "OQs resolved — checking for architectural gaps before BUILD." This is the last cheap moment to surface blockers; after BUILD starts, any blocker found requires code rollback.
+- Run `python tools/scripts/isc_validator.py --prd <PRD-path> --pretty`; check `gate_passed`, `hard_fails`, `warnings`
+- `gate_passed: true` → proceed; `gate_passed: false` → fix hard fails, note in LOG
+- 3+ hard fails across multiple criteria: STOP — "ISC Quality Gate: FAIL -- needs /create-prd revision"
+- Fallback (unavailable): manually validate: count (3-8/phase), no compound "and", state-not-action, binary-testable, anti-criteria (≥1), verify method present
+- **Escalation**: unannotated `[I]`/`[R]` items OR irreversible verify methods → recommend `/architecture-review` or `advisor()`. Session compacted since prior `advisor()` → treat authorization expired, re-read PRD.
+- **OQ→BUILD gate**: all `must-resolve-before-BUILD` OQs resolved → call `advisor()` before BUILD — last cheap moment to surface blockers.
 
 ### PHASE SCOPE FILTER (only if --phase N was provided)
 
