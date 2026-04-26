@@ -114,3 +114,4 @@ INPUT:
 - Write a signal to memory/learning/signals/{YYYY-MM-DD}_deep-audit-{slug}.md when the audit finds >= 2 Tier 1 blockers or a security finding that was not caught by existing security tests
 - Rating: 8-9 for Tier 1 security findings; 6-7 for architecture blockers; 4-5 for tech debt patterns; only write signal when findings exceed what /security-audit would have caught
 - If --onboard mode: add a project entry to orchestration/tasklist.md linking to the audit findings
+- If onboarded projects accumulate findings that echo each other's Tier 1 blockers, extract the shared pattern into a diagnostic check in `tools/scripts/` rather than auditing it manually each time
