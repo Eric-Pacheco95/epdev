@@ -1,9 +1,45 @@
-"""Tests for dream.py -- _slug_from_theme, _infer_memory_type, _parse_synthesis_themes."""
+"""Tests for dream.py -- _slug_from_theme, _infer_memory_type, _parse_synthesis_themes, _parse_frontmatter_field."""
 
 import tempfile
 from pathlib import Path
 
-from tools.scripts.dream import _infer_memory_type, _parse_synthesis_themes, _slug_from_theme
+from tools.scripts.dream import _infer_memory_type, _parse_synthesis_themes, _slug_from_theme, _parse_frontmatter_field
+
+
+# --- _parse_frontmatter_field ---
+
+class TestParseFrontmatterField:
+    def _write(self, tmp_path, content):
+        f = tmp_path / "test.md"
+        f.write_text(content, encoding="utf-8")
+        return f
+
+    def test_reads_existing_field(self, tmp_path):
+        f = self._write(tmp_path, "---\nname: My Title\ntype: feedback\n---\nbody\n")
+        assert _parse_frontmatter_field(f, "name") == "My Title"
+
+    def test_reads_second_field(self, tmp_path):
+        f = self._write(tmp_path, "---\nname: X\ntype: user\n---\n")
+        assert _parse_frontmatter_field(f, "type") == "user"
+
+    def test_returns_none_for_missing_field(self, tmp_path):
+        f = self._write(tmp_path, "---\nname: X\n---\n")
+        assert _parse_frontmatter_field(f, "description") is None
+
+    def test_returns_none_when_no_frontmatter(self, tmp_path):
+        f = self._write(tmp_path, "Just plain text\nno frontmatter\n")
+        assert _parse_frontmatter_field(f, "name") is None
+
+    def test_returns_none_for_missing_file(self, tmp_path):
+        assert _parse_frontmatter_field(tmp_path / "nonexistent.md", "name") is None
+
+    def test_strips_value_whitespace(self, tmp_path):
+        f = self._write(tmp_path, "---\nname:   padded value   \n---\n")
+        assert _parse_frontmatter_field(f, "name") == "padded value"
+
+    def test_stops_at_closing_fence(self, tmp_path):
+        f = self._write(tmp_path, "---\nname: inside\n---\nname: outside\n")
+        assert _parse_frontmatter_field(f, "name") == "inside"
 
 
 # --- _slug_from_theme ---
