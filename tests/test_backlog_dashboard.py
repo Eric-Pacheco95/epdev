@@ -11,6 +11,7 @@ from tools.scripts.backlog_dashboard import (
     parse_date,
     bucket_tasks,
     compute_stats,
+    load_execution_time,
     ALL_STATUSES,
 )
 
@@ -155,3 +156,41 @@ class TestComputeStats:
         tasks = [{"status": "done", "completed": old_date}]
         stats = compute_stats(tasks)
         assert stats["tasks_completed_14d"] == 0
+
+
+class TestLoadExecutionTime:
+    def test_returns_none_for_none_path(self):
+        assert load_execution_time(None) is None
+
+    def test_returns_none_for_missing_file(self, tmp_path):
+        assert load_execution_time(str(tmp_path / "nonexistent.json")) is None
+
+    def test_reads_elapsed_min(self, tmp_path):
+        f = tmp_path / "report.json"
+        f.write_text(json.dumps({"elapsed_min": 7.5}), encoding="utf-8")
+        assert load_execution_time(str(f)) == 7.5
+
+    def test_reads_elapsed_sec_and_converts(self, tmp_path):
+        f = tmp_path / "report.json"
+        f.write_text(json.dumps({"elapsed_sec": 120}), encoding="utf-8")
+        assert load_execution_time(str(f)) == 2.0
+
+    def test_reads_duration_minutes(self, tmp_path):
+        f = tmp_path / "report.json"
+        f.write_text(json.dumps({"duration_minutes": 5}), encoding="utf-8")
+        assert load_execution_time(str(f)) == 5.0
+
+    def test_reads_elapsed_seconds(self, tmp_path):
+        f = tmp_path / "report.json"
+        f.write_text(json.dumps({"elapsed_seconds": 90}), encoding="utf-8")
+        assert load_execution_time(str(f)) == 1.5
+
+    def test_returns_none_when_no_time_key(self, tmp_path):
+        f = tmp_path / "report.json"
+        f.write_text(json.dumps({"status": "done"}), encoding="utf-8")
+        assert load_execution_time(str(f)) is None
+
+    def test_returns_none_for_invalid_json(self, tmp_path):
+        f = tmp_path / "report.json"
+        f.write_text("not valid", encoding="utf-8")
+        assert load_execution_time(str(f)) is None
