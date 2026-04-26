@@ -122,14 +122,14 @@ Non-optional gate once all ISC items are built/blocked.
 
 **Step 2 — Cross-model review (evaluator routed by `verifiability`):**
 
-Route evaluator tier per the Task Typing labels extracted in Step 1 — see `orchestration/steering/autonomous-rules.md` > Task Typing and `orchestration/steering/verifiability-spectrum.md`:
+Route evaluator by `verifiability` (see `autonomous-rules.md`, `verifiability-spectrum.md`):
 
-- **`verifiability: high`** → skip Sonnet subagent; script oracle satisfies REVIEW GATE; set `evaluator: "script-oracle"`, `findings_count: 0`. Still run deterministic prescan (Step 1) — script-oracle does not substitute for ruff/security scan.
-- **`verifiability: medium`** → spawn Sonnet subagent (current default path). See subagent flow below.
-- **`verifiability: low`** → escalate: spawn Opus subagent OR invoke `/second-opinion` OR print "VERIFY REQUIRES HITL — pausing for Eric" and stop. Set `evaluator: "opus-subagent" | "second-opinion" | "hitl"` accordingly in the log.
-- **Stakes override**: if `stakes: high`, require HITL regardless of `verifiability` (the stakes eval-depth multiplier — see Task Typing).
-- **Fluent-bluff override**: if `solvability: low` AND `verifiability: low`, force HITL — do not rely on any subagent alone.
-- **Grandfathered PRDs** (no frontmatter): fall back to Sonnet subagent default.
+- **`verifiability: high`** → skip subagent; script oracle satisfies gate; `evaluator: "script-oracle"`, `findings_count: 0`. Still run Step 1 prescan.
+- **`verifiability: medium`** → Sonnet subagent (default).
+- **`verifiability: low`** → escalate: Opus subagent OR `/second-opinion` OR "VERIFY REQUIRES HITL"; set `evaluator` accordingly.
+- **Stakes override**: `stakes: high` → HITL regardless of `verifiability`.
+- **Fluent-bluff**: `solvability: low` AND `verifiability: low` → force HITL.
+- **Grandfathered PRDs**: fall back to Sonnet subagent.
 
 **Sonnet / Opus subagent flow (when routed here):**
 - Spawn fresh-eyes evaluator at routed tier; pass changed files, ISC context, build summary
