@@ -53,31 +53,19 @@ false
 
 ## Step 1: LOAD DATA
 
-- Run `python tools/scripts/tasklist_parser.py --json --pretty` for structured tasklist data (tasks, tiers, phases, completion stats, active projects) -- this replaces manual markdown parsing
-- Run `python tools/scripts/tasklist_parser.py --completion` for a quick completion summary if only a status check is needed
-- Read TELOS context from:
-  - `memory/work/telos/PROJECTS.md` — project-level tracking
-  - `memory/work/telos/GOALS.md` — goal alignment
-  - `memory/work/telos/STATUS.md` — current life context
-- For external projects (repos outside epdev), also read their ISC health:
-  - Check the project's External Health Source (see registry below) for ISC pass/fail counts
-  - Read their CLAUDE.md "Current State" section for latest status
-  - Incorporate ISC health into the project's health color (red if Tier-1 blockers open, yellow if Tier-2 only, green if all clear)
-- Based on the request, perform one of these operations:
-  - **Status check**: Summarize all active projects, their health, and blockers. For external projects, include ISC tier summary.
-  - **Add project**: Create a new project entry, trace it to a Problem/Goal, define initial tasks
-  - **Update project**: Change status, add tasks, mark tasks complete, update health
-  - **Prioritize**: Given current time/energy, recommend what to work on next
-  - **Archive**: Move completed or abandoned projects to done status with rationale
-  - **Decompose**: Break a project into phases and tasks with ordering
-  - **Deep health**: For a specific external project, read its full ISC tasklist and report per-tier status with blockers
-- For prioritization, consider:
-  - Which goal does this serve? (higher-weighted goals = higher priority)
-  - What's the current blocker? (unblocked work first)
-  - What's Eric's current energy/time? (match task complexity to available capacity)
-  - What has momentum? (continue in-progress work over starting new)
-  - What has a deadline? (time-sensitive first)
-- Write changes to both `tasklist.md` and `PROJECTS.md` to keep them in sync
+- `python tools/scripts/tasklist_parser.py --json --pretty` — structured tasklist data (tasks, tiers, phases, completion stats)
+- `python tools/scripts/tasklist_parser.py --completion` — quick summary for status-only checks
+- Read TELOS: `memory/work/telos/PROJECTS.md` (projects), `GOALS.md` (goal alignment), `STATUS.md` (life context)
+- External projects: check External Health Source for ISC pass/fail; read CLAUDE.md "Current State"; health = red (Tier-1 open) / yellow (Tier-2 only) / green (clear)
+- Operations:
+  - **Status**: summarize projects, health, blockers; ISC tier summary for external projects
+  - **Add**: new entry, trace to Problem/Goal, define tasks
+  - **Update**: status, tasks, health
+  - **Prioritize**: recommend by goal weight > unblocked > momentum > deadline
+  - **Archive**: move to done with rationale
+  - **Decompose**: phases + tasks with ordering
+  - **Deep health**: full ISC tasklist report per-tier with blockers
+- Write changes to both `tasklist.md` and `PROJECTS.md`
 - Log significant project decisions to `history/decisions/`
 
 # PROJECT LIFECYCLE

@@ -41,22 +41,18 @@ true
 
 - Read `orchestration/steering/autonomous-rules.md` — load producer behavior constraints and synthesis thresholds before processing signals
 
-- Run `python tools/scripts/compress_signals.py --stats --json` to get signal counts, velocity, and synthesis metadata -- this tells you if synthesis is even needed (check unprocessed count and velocity)
-- Run `python tools/scripts/compress_signals.py --group --json` to get all unprocessed signals pre-grouped by category with ratings -- this replaces manual file reading and categorization
-- Read all failure records from `memory/learning/failures/` -- failures are a first-class input source with 4x harm multiplier
-- Read all absorbed content from `memory/learning/absorbed/` -- external insights absorbed via /absorb are synthesis input alongside session signals
-- Read existing synthesis documents from `memory/learning/synthesis/` for context
-- **Input sources** (all three are required): `signals/` (session learnings) + `failures/` (what went wrong) + `absorbed/` (external insights). The combined unprocessed count across all three directories determines synthesis threshold (35 items).
-- The grouping is already done by the script. Review the groups and identify recurring themes (repeated patterns, contradictions to prior assumptions, frequently-requested improvements).
-- For each theme: name the pattern, list supporting signals by filename, assign maturity level (see Confidence Model), state the implication, propose a concrete action (steering rule, TELOS update, workflow change).
-- Apply the **harm multiplier**: failures weigh 4x — one failure outweighs four successes.
-- Check if findings warrant: a new steering rule (apply `/update-steering-rules` routing tree for target file); a TELOS update; a new/modified skill; a failure prevention rule.
-- For every proposed steering rule, record: target file, rule text, evidence signals, why it matters — not just the rule text
-- Review existing synthesis themes from prior runs for **confidence decay**: any theme not revalidated by new signals within 90 days should be downgraded one maturity level. Themes that decay below candidate become archived.
-- Write the synthesis document to `memory/learning/synthesis/`
-- Invoke a fresh evaluator subagent (no shared context with this session) with only the synthesis doc content. Spawn with `model="claude-sonnet-4-6"` per `memory/knowledge/harness/subagent_model_routing.md` (adversarial review downgrade). The evaluator must output exactly one of: `VERDICT: ACCEPT` (synthesis is coherent, covers dominant themes, no major gaps) or `VERDICT: REVISE + [one-sentence specific delta]`. If REVISE: apply the specific delta as a targeted edit to the synthesis doc (do not rewrite from scratch); then accept the result. Max 1 evaluator pass — never loop. If the delta substantially changes the document, write to a new dated file rather than overwriting. Evaluator reads only the synthesis doc, not signal files (evaluator independence).
-- Record lineage: run `python tools/scripts/compress_signals.py --lineage "YYYY-MM-DD_synthesis"` to append lineage records linking all unprocessed signals to this synthesis run
-- Mirror lineage records to SQLite by running: `python tools/scripts/sync_lineage.py` after recording lineage. This syncs all JSONL rows to the DB (idempotent, safe to re-run). If this fails, the JSONL file is still the source of truth.
+- `python tools/scripts/compress_signals.py --stats --json` — check unprocessed count/velocity (threshold: 35)
+- `python tools/scripts/compress_signals.py --group --json` — pre-grouped signals by category with ratings
+- Read: `memory/learning/failures/` (4x harm), `memory/learning/absorbed/` (/absorb insights), `memory/learning/synthesis/` (prior context)
+- **Input sources** (all required): `signals/` + `failures/` + `absorbed/`; combined unprocessed ≥35 triggers synthesis
+- Groups are script-output. Identify recurring themes: name pattern, list supporting signals, assign maturity (Confidence Model), state implication, propose action (steering rule / TELOS update / workflow change)
+- **Harm multiplier**: failures weigh 4x
+- Findings may warrant: steering rule (`/update-steering-rules` routing tree); TELOS update; skill change; failure prevention. Per rule: record target file, rule text, evidence signals, why it matters
+- **Confidence decay**: unrevalidated >90d → downgrade one level; below candidate → archived
+- Write synthesis doc to `memory/learning/synthesis/`
+- Spawn fresh evaluator subagent (no shared context) with synthesis doc only. Model: `claude-sonnet-4-6`. Output must be `VERDICT: ACCEPT` or `VERDICT: REVISE + [one-sentence delta]`. If REVISE: targeted edit (not full rewrite); accept result. Max 1 pass; substantial delta → new dated file. Evaluator reads synthesis doc only.
+- Record lineage: `python tools/scripts/compress_signals.py --lineage "YYYY-MM-DD_synthesis"`
+- Mirror to SQLite: `python tools/scripts/sync_lineage.py` (idempotent; JSONL is source of truth if this fails)
 
 # CONFIDENCE MODEL
 
