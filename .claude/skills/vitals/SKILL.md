@@ -341,3 +341,4 @@ Run vitals check now.
 - Signal: memory/learning/signals/{YYYY-MM-DD}_vitals-alert.md when CRITICAL/DEGRADED >= 2 consecutive days or new collector failure category
 - Rating: 8+ unknown failures; 6-7 recurring degradation; skip routine/isolated blips
 - "Top 3 Today" unchanged across 3+ vitals runs → flag as ADHD momentum blocker
+- Track overall HEALTH score trend across the last 7 runs — a drifting-down score without a known cause warrants a full `/security-audit` + `/quality-gate` sweep, not just individual component fixes
