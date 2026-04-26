@@ -98,6 +98,7 @@ If the Notion write fails, log the error but do not fail the skill — the local
 - Flat/declining goal progress -> candidate for re-evaluation
 - File consistently stale in SYSTEM HEALTH -> add to /backlog
 - Repeated Notion write failures -> signal + /self-heal investigation
+- If the same goal has had no entry in 3+ consecutive reports, surface it as a potential TELOS pivot candidate via `/telos-update` — sustained inactivity may mean the goal is outdated, not just deferred
 
 # INPUT
 
