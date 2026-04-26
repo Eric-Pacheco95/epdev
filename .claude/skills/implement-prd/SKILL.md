@@ -207,6 +207,7 @@ Present a scaffold sentence per ISC item (what was built and why, not what file 
 - Track which ISC criterion types need fix cycles — high-cycle items reveal where planning is weakest
 - PARTIAL on 2+ consecutive phases: ISC items too ambitious for single sessions; break down further
 - Approach retrospective in VERIFY RESULTS: surface recurring "would not choose again" patterns in /learning-capture
+- ISC criterion passes only after >1 fix cycle in consecutive sessions: that criterion type needs stronger verify methods or clearer definition; flag for `/quality-gate` ISC review
 
 # INPUT
 
