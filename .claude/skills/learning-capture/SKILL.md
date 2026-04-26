@@ -64,11 +64,9 @@ false
   - Tier: **S** (18+/multi-theme: capture) | **A** (15+/good: write) | **B** (12+/decent: write concise) | **C** (10+/some: skip) | **D** (noise: skip)
   - Write B+ only; note filtered C/D in summary with tier so Eric can override. Add tier to signal header.
 - Assess session sentiment (positive/negative/neutral). Signals: explicit feedback, repeated corrections (frustration), quick approvals (satisfaction), session length (energy). Log as pattern signal tagged `sentiment:{positive|negative|neutral}`.
-- Check if any learnings qualify as **failures** (something went wrong, broke, or produced bad output). Failures get extra fields: root cause, fix applied, prevention
-- **Worktree-safe path resolution**: Signal and failure files MUST be written to the main working tree, not the current working directory. Use the absolute path `C:/Users/ericp/Github/epdev/memory/learning/signals/` (and `.../failures/`) regardless of whether the session is running in a worktree context. Worktree-relative writes vanish when the worktree is pruned.
-- Write each signal to `C:/Users/ericp/Github/epdev/memory/learning/signals/` using the format below
-- Write any failures to `C:/Users/ericp/Github/epdev/memory/learning/failures/` using the failure format below
-- **Write-then-read-back**: After writing each signal, immediately read it back to confirm. If read-back fails, retry once with absolute path. If second write fails, output signal as plain text and log a failure record — do not silently drop.
+- Failures (broke/bad output): extra fields: root cause, fix applied, prevention
+- **Worktree-safe paths**: always write to absolute `C:/Users/ericp/Github/epdev/memory/learning/signals/` and `.../failures/` — worktree-relative writes vanish when pruned
+- **Write-then-read-back**: read back after write to confirm. Retry once on failure. If second fails, output as plain text + failure record.
 - **Reconcile `_signal_meta.json`**: Count actual `.md` files in `memory/learning/signals/` (exclude `_signal_meta.json`) and write count to `_signal_meta.json`. Do NOT increment — always reconcile against filesystem state.
 - Run `python tools/scripts/jarvis_index.py update` after writing signals (required — velocity metric and synthesis threshold checks read `jarvis_index.db`, not filesystem).
 - After writing signals, count unprocessed signals (signals/ + failures/ + absorbed/, where unprocessed = not referenced in `data/signal_lineage.jsonl`). Auto-invoke `/synthesize-signals` immediately if: combined unprocessed count >= 35 OR last synthesis >72h ago with any unprocessed signals. Present proposed steering rules to Eric for approval but do not auto-invoke `/update-steering-rules`

@@ -105,14 +105,9 @@ Proceed to Step 5.
 
 ## Step 5: ASSESS TELOS RELEVANCE
 
-- Map analysis output to TELOS files: beliefs/values → BELIEFS.md; life lessons → WISDOM.md; mental models/frameworks → MODELS.md or FRAMES.md; self-narratives → NARRATIVES.md; predictions → PREDICTIONS.md; new knowledge → LEARNED.md; goals → GOALS.md; strategies → STRATEGIES.md; ideas → IDEAS.md
-- For each relevant insight, create a proposal:
-  - **Target file**: which TELOS file
-  - **Proposed addition**: YOUR synthesized interpretation (never verbatim source text)
-  - **Relevance rationale**: why this belongs in this TELOS file
-  - **Tag**: `[source: external]`
-- If no TELOS-relevant insights found: set status to `NO_PROPOSALS`
-- If proposals generated: set status to `PENDING` (or proceed to immediate review in Step 7)
+- Map output to TELOS: beliefs/values → BELIEFS.md; life lessons → WISDOM.md; models/frameworks → MODELS.md or FRAMES.md; narratives → NARRATIVES.md; predictions → PREDICTIONS.md; knowledge → LEARNED.md; goals → GOALS.md; strategies → STRATEGIES.md; ideas → IDEAS.md
+- Per relevant insight: target file, proposed addition (synthesized only — never verbatim), rationale, tag `[source: external]`
+- No insights: status `NO_PROPOSALS`; proposals found: status `PENDING`
 
 ## Step 6: WRITE ANALYSIS FILE
 
@@ -171,17 +166,17 @@ signal_file: {signal filename}
 
 ## Step 7: TELOS PROPOSAL REVIEW (Interactive Mode)
 
-- If interactive (not `claude -p`): present each proposal (target file, proposed text, rationale) one at a time and ask "Approve? (y/n)". Approved → write in Step 8. Rejected → mark `status: REJECTED`. After all reviewed: proceed to Step 8.
-- If autonomous: proposals stay queued as PENDING. Skip to Step 9.
+- Interactive: present each proposal one at a time, "Approve? (y/n)". Approved → Step 8. Rejected → `status: REJECTED`. After all reviewed → Step 8.
+- Autonomous: stay PENDING. Skip to Step 9.
 
 ## Step 8: WRITE TELOS ENTRIES (Interactive Mode Only)
 
-- For each approved proposal:
-  1. Snapshot target file to `memory/work/telos/.snapshots/{filename}.{ISO-timestamp}.md`
-  2. If file has > 50 entries, warn: "TELOS file {name} has {N} entries. Consider /telos-update."
-  3. Append entry to appropriate section, tagged `[source: external]` with date
-  4. Log: `{YYYY-MM-DD HH:MM} | /absorb | {url} | {target} | APPROVED | {summary}` → `history/changes/absorb_log.md`
-- Report any write failures (never silent). Update analysis file: status → REVIEWED, each proposal → APPROVED or REJECTED.
+- Per approved proposal:
+  1. Snapshot → `memory/work/telos/.snapshots/{filename}.{ISO-timestamp}.md`
+  2. >50 entries → warn "TELOS file {name} has {N} entries. Consider /telos-update."
+  3. Append tagged `[source: external]` with date
+  4. Log → `history/changes/absorb_log.md`
+- Report write failures (never silent). Update: status → REVIEWED; proposals → APPROVED or REJECTED.
 
 ## Step 9: GENERATE LEARNING SIGNAL
 
