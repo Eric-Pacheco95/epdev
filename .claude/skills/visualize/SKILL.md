@@ -149,3 +149,4 @@ INPUT:
 - Write a signal to memory/learning/signals/{YYYY-MM-DD}_visualize-{slug}.md when a visualization reveals a structural insight about Jarvis architecture that was not obvious from the code or docs (e.g., missing link in a flow, unexpected coupling, critical path)
 - Rating: 7+ for architectural insights; 4-6 for documentation value only; skip signal for simple one-off diagrams with no reuse value
 - If a diagram type (sequence, ER, flowchart) requires >2 iterations to pass syntax validation, note it: indicates the Mermaid syntax reference for that type needs an inline example added to STEPS
+- If the same architecture component appears as an island (no edges) across 2+ independent diagrams, it is a dead or orphaned component — flag for `/quality-gate` review
