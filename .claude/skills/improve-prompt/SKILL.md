@@ -81,3 +81,4 @@ INPUT:
 - Write a signal to memory/learning/signals/{YYYY-MM-DD}_improve-prompt-{slug}.md when the improvement identifies a structural pattern (e.g., missing role, vague output contract, no examples) that recurs across 2+ prompts Eric brings
 - Rating: 6-8 for systemic prompt weakness patterns; only write signal when a reusable insight applies beyond the specific prompt reviewed
 - If --check-only mode consistently passes without fixes for a specific prompt category, recalibrate: note the category -- clean-pass patterns indicate DIAGNOSIS criteria are under-specified for that type
+- If a prompt passes `--check-only` clean but the downstream task still fails, escalate: the prompt is structurally sound but semantically misspecified — log for a deeper `/red-team` review of the task spec
