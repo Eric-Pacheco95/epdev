@@ -122,6 +122,7 @@ true
 - Track which content types (YouTube, articles, X threads, podcasts) yield the most actionable KEY POINTS -- this reveals which sources are worth prioritizing for /absorb
 - If WISDOM AND INSIGHTS is consistently sparse for a content type, note it as a low-wisdom source category
 - MENTAL MODELS extracted from content are high-value -- if a model appears in 3+ extractions, consider promoting it to TELOS MODELS.md via /telos-update
+- If NEXT STEPS consistently recommend the same action (e.g., always 'read more on X'), that action is recurrent enough for a `backlog` task — add to tasklist directly rather than repeating as a recommendation
 
 # INPUT
 
