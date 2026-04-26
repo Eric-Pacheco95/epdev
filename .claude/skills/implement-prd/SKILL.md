@@ -151,21 +151,21 @@ Route evaluator by `verifiability` (see `autonomous-rules.md`, `verifiability-sp
 
 ### VERIFY PHASE: Full pass
 
-- **Re-read PRD from disk before executing verify methods** — auto-compaction may have fired; on-disk PRD is the source of truth; trust file over in-memory copy.
-- **Full test suite**: if the project has a test runner (`pytest`, `npm test`, `make test`), execute it now and record aggregate pass/fail count as structural evidence before running per-ISC verify methods.
-- Run every ISC verify method in sequence, record pass/fail.
-- **Structured Evidence** per ISC item: (1) Evidence type (CLI output | test result | file exists | grep match | manual review), (2) Source (exact command/path), (3) Content (output snippet proving pass/fail, truncated)
-- Mark completed ISC checkboxes in the PRD (`- [ ]` → `- [x]`) only after the verify method passes AND structured evidence is recorded
-- Find the corresponding task in `orchestration/tasklist.md` and mark it complete (`[ ]` → `[x]`) with a one-line completion note
-- Run `/quality-gate` on the completed phase — this is a non-optional gate, same as `/review-code`. It checks for skipped THINK steps, unvalidated deliverables, and downstream risks. If it surfaces issues, resolve them before marking COMPLETION STATUS as COMPLETE
+- **Re-read PRD from disk** before verify — compaction may have fired; file is source of truth.
+- **Full test suite**: run `pytest`/`npm test`/`make test` first; record aggregate pass/fail.
+- Run every ISC verify method in sequence; record pass/fail.
+- **Structured Evidence** per item: (1) type (CLI/test/file/grep/manual), (2) source (command/path), (3) content (snippet, truncated)
+- Mark `- [ ]` → `- [x]` only after verify passes AND evidence recorded
+- Mark tasklist (`[ ]` → `[x]`) with one-line note
+- Run `/quality-gate` (non-optional); resolve before marking COMPLETE
 
 ### OWNERSHIP CHECK (non-bypassable gate before COMPLETION STATUS)
 
-Present a scaffold sentence per ISC item (what was built and why, not what file changed). Do not write COMPLETION STATUS until Eric responds. Use his edited version verbatim; use scaffold if approved without edits. Record in VERIFY RESULTS table.
+Present a scaffold sentence per ISC item (what was built and why, not what file changed). STOP until Eric responds. Use his version verbatim; use scaffold if approved. Record in VERIFY RESULTS table.
 
-- Log a brief decision record to `history/decisions/` noting what was built, which ISC items passed, and any deferred items
-- **Final commit prompt**: Run `git status` — if there are uncommitted changes, prompt: "BUILD complete and verified. Ready to commit? Run /commit or I can stage and commit now." Do not auto-commit — wait for Eric's confirmation. If Eric declines, proceed to /learning-capture
-- Invoke `/learning-capture` to close the session with captured signals — include approach retrospective here (what approach was taken, what alternatives existed, whether the same path would be chosen again); retrospective belongs in LEARN, not self-judged in the same VERIFY pass that generated the output
+- Log decision record to `history/decisions/`
+- **Final commit prompt**: `git status` — if uncommitted changes, prompt "BUILD complete. Run /commit?" No auto-commit.
+- Invoke `/learning-capture`; include approach retrospective (taken, alternatives, would-repeat) in LEARN, not VERIFY
 
 # OUTPUT INSTRUCTIONS
 
