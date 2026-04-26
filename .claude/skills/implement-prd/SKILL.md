@@ -141,13 +141,13 @@ Route evaluator tier per the Task Typing labels extracted in Step 1 — see `orc
 - **Catch-rate log**: after REVIEW GATE completes (regardless of outcome), append one entry to `data/review_gate_log.jsonl` stamping all four Task Typing axes plus the ceremony-tier outcome fields:
   `{"date": "YYYY-MM-DD", "task_slug": "<prd-slug>", "evaluator": "script-oracle|sonnet-subagent|opus-subagent|second-opinion|hitl", "generator": "sonnet-main|opus-main|haiku-main", "findings_count": N, "severity_max": "Critical|High|Med|Low|none", "applied_fix": true/false, "rate_limited": false, "skill": "implement-prd", "stakes": "low|medium|high", "ambiguity": "low|medium|high", "solvability": "low|medium|high", "verifiability": "low|medium|high", "ceremony_tier_used": 0-4, "verify_loops_min": 0, "verify_loops_max": 0-2, "verify_outcome": "pass|partial|fail", "surprise_flag": true|false, "interrupt_count": 0, "interrupt_value": null}`
   `applied_fix: true` only if Critical/High required code change; `rate_limited: true` + `findings_count: null` if rate-limit guard fired; `findings_count: 0` for script-oracle paths; omit axis fields for grandfathered PRDs. Feeds kill switch in `orchestration/steering/autonomous-rules.md` (rate <10% over 20 non-rate-limited entries disables eval loop).
-  - `ceremony_tier_used`: derived from this PRD's frontmatter via `tools/scripts/ceremony_tier.py` (range 0-4); null on grandfathered PRDs.
-  - `verify_loops_min` / `verify_loops_max`: min and max fix-cycle counts across ISC items (0-2 per the Review Fix Loop cap).
-  - `verify_outcome`: aggregate VERIFY result — `pass` if all ISCs PASS, `fail` if any FAIL after the cycle cap, `partial` if any DEFERRED.
-  - `surprise_flag`: true when a critical finding emerged that contradicted Eric's pre-BUILD interpretation; default false.
-  - `interrupt_count`: count of HARD HALT lines emitted during this run (read from `data/halt_state/<task_slug>.json` history; 0 if no halts fired).
-  - `interrupt_value`: null at write time. Labelled by `/learning-capture` LEARN phase (`high|low|none`) — never self-scored by the implement-prd run that emitted the halt.
-  - **Backward compatibility**: missing fields in older entries are treated as null by `tools/scripts/calibration_rollup.py`. Schema is forward-only — do not back-fill historical entries.
+  - `ceremony_tier_used`: 0-4 from frontmatter; null if grandfathered.
+  - `verify_loops_min`/`verify_loops_max`: min/max fix-cycle counts (0-2) across ISC items.
+  - `verify_outcome`: `pass`=all PASS, `fail`=any FAIL after cap, `partial`=any DEFERRED.
+  - `surprise_flag`: true if critical finding contradicted pre-BUILD interpretation; default false.
+  - `interrupt_count`: HARD HALT count from `data/halt_state/<task_slug>.json`; 0 if none.
+  - `interrupt_value`: null at write; labelled by `/learning-capture` (`high|low|none`), never self-scored.
+  - **Backward compat**: missing fields = null in `calibration_rollup.py`; forward-only schema.
 
 **Trust-boundary guard**: Any future gate addition that introduces mutable state (fixes, rewrites) must be positioned *before* this step, not after. Downstream placement means new code bypasses fresh-eyes review — a silent coverage regression on every build where the gate fires.
 
