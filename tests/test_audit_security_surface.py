@@ -11,6 +11,8 @@ if str(REPO_ROOT) not in sys.path:
 from tools.scripts.audit_security_surface import (
     _extract_guard_functions,
     _extract_constants,
+    _extract_protected_path_patterns,
+    _extract_autonomous_guards,
 )
 
 
@@ -63,3 +65,49 @@ class TestExtractConstants:
     def test_returns_empty_for_no_constants(self):
         result = _extract_constants("x = 1" + NL + "y = 2" + NL)
         assert result == []
+
+
+class TestExtractProtectedPathPatterns:
+    def test_extracts_regex_patterns_from_protected_path(self):
+        src = (
+            "def _protected_path(cmd, tool_input):\n"
+            "    if re.search(r\"memory/work/telos/\", cmd):\n"
+            "        return True\n"
+            "    if re.search(r\"\\.env$\", cmd):\n"
+            "        return True\n"
+            "\n"
+            "def other_fn():\n"
+            "    pass\n"
+        )
+        patterns = _extract_protected_path_patterns(src)
+        assert "memory/work/telos/" in patterns
+
+    def test_returns_empty_when_function_absent(self):
+        src = "def unrelated():\n    pass\n"
+        patterns = _extract_protected_path_patterns(src)
+        assert patterns == []
+
+
+class TestExtractAutonomousGuards:
+    def test_detects_present_guard_functions(self):
+        src = (
+            "def _check_autonomous_git_push(cmd):\n    pass\n"
+            "def _check_autonomous_read_secrets(cmd):\n    pass\n"
+        )
+        guards = _extract_autonomous_guards(src)
+        names = [g["name"] for g in guards]
+        assert "_check_autonomous_git_push" in names
+        assert "_check_autonomous_read_secrets" in names
+
+    def test_returns_empty_when_no_guards_present(self):
+        src = "def unrelated():\n    pass\n"
+        guards = _extract_autonomous_guards(src)
+        assert guards == []
+
+    def test_each_guard_has_name_and_desc(self):
+        src = "def _check_autonomous_telos_write(cmd):\n    pass\n"
+        guards = _extract_autonomous_guards(src)
+        assert len(guards) == 1
+        assert "name" in guards[0]
+        assert "desc" in guards[0]
+        assert guards[0]["desc"]
