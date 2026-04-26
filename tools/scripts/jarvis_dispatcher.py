@@ -2470,6 +2470,7 @@ def _dispatch_one(task: dict, backlog: list[dict], dry_run: bool = False) -> str
     inline_original_branch: str | None = None
     report = {}
     _acquired_lock = False
+    _dispatcher_slot = None
 
     try:
         # Update status
