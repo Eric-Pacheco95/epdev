@@ -9,11 +9,15 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 import pytest
+import json
+
 from tools.scripts.corpus_extractor import (
     count_keywords,
     overlap_terms,
     _normalize_pending_entry,
     vtt_to_text,
+    cmd_queue_pop,
+    cmd_queue_append_written,
     KEYWORDS,
     STOPWORDS,
 )
@@ -165,3 +169,57 @@ class TestVttToText:
             assert result.count("Repeated line") == 1
         finally:
             tmp.unlink()
+
+
+class TestCmdQueuePop:
+    def _make_queue(self, tmp_path, data):
+        q = tmp_path / "queue.json"
+        q.write_text(json.dumps(data), encoding="utf-8")
+        return q
+
+    def test_pops_from_pending_list(self, tmp_path):
+        q = self._make_queue(tmp_path, {"pending": ["vid1", "vid2", "vid3"]})
+        cmd_queue_pop(q, 1, None)
+        data = json.loads(q.read_text(encoding="utf-8"))
+        assert len(data["pending"]) == 2
+        assert "vid1" not in data["pending"]
+
+    def test_adds_popped_to_processed(self, tmp_path):
+        q = self._make_queue(tmp_path, {"pending": ["vid1", "vid2"]})
+        cmd_queue_pop(q, 2, None)
+        data = json.loads(q.read_text(encoding="utf-8"))
+        assert "vid1" in data["processed"]
+        assert "vid2" in data["processed"]
+
+    def test_pop_more_than_available(self, tmp_path):
+        q = self._make_queue(tmp_path, {"pending": ["vid1"]})
+        cmd_queue_pop(q, 5, None)
+        data = json.loads(q.read_text(encoding="utf-8"))
+        assert len(data["pending"]) == 0
+
+    def test_writes_popped_output_file(self, tmp_path):
+        q = self._make_queue(tmp_path, {"pending": ["vid1"]})
+        out = tmp_path / "popped.json"
+        cmd_queue_pop(q, 1, out)
+        summary = json.loads(out.read_text(encoding="utf-8"))
+        assert "vid1" in summary["ids"]
+
+
+class TestCmdQueueAppendWritten:
+    def _make_queue(self, tmp_path, data):
+        q = tmp_path / "queue.json"
+        q.write_text(json.dumps(data), encoding="utf-8")
+        return q
+
+    def test_appends_path_to_written_files(self, tmp_path):
+        q = self._make_queue(tmp_path, {})
+        cmd_queue_append_written(q, ["file1.txt", "file2.txt"])
+        data = json.loads(q.read_text(encoding="utf-8"))
+        assert "file1.txt" in data["written_files"]
+        assert "file2.txt" in data["written_files"]
+
+    def test_no_duplicate_entries(self, tmp_path):
+        q = self._make_queue(tmp_path, {"written_files": ["file1.txt"]})
+        cmd_queue_append_written(q, ["file1.txt"])
+        data = json.loads(q.read_text(encoding="utf-8"))
+        assert data["written_files"].count("file1.txt") == 1
