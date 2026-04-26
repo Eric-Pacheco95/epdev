@@ -119,10 +119,10 @@ Write the file with this structure:
 
 # VERIFY
 
-- File exists at expected path | `ls data/session_handoff_{date}*.md`
-- File contains `## Done This Session` and `## Pending Efforts` sections | grep headers
-- Every pending effort has a `**Kickoff prompt:**` block | check manually
-- No pending effort left without `**State:**` field (no vague "figure it out" entries)
+- Handoff file written to `data/` | Verify: `ls data/session_handoff_$(date +%Y-%m-%d)*.md`
+- File contains required sections | Verify: `grep -l "## Done This Session" data/session_handoff_$(date +%Y-%m-%d)*.md && grep -l "## Pending Efforts" data/session_handoff_$(date +%Y-%m-%d)*.md`
+- Every pending effort has kickoff prompt | Verify: Read handoff file and confirm `**Kickoff prompt:**` block exists for each effort under `## Pending Efforts`
+- No pending effort missing `**State:**` field | Verify: Read handoff file and confirm each effort section contains `**State:**` line
 
 # CONSTRAINTS
 
