@@ -166,6 +166,7 @@ Interpret the exit code and deliver the final verdict:
 - Track which ISC criterion types fail most — reveals least reliable verify methods
 - Same PRD item fails 2+ sessions: verify method too brittle; propose stronger method via /learning-capture
 - All-PASS validation: log signal with phase and date (audit trail)
+- Track whether ISC items drafted by Eric vs. Jarvis fail at different rates — if Eric-authored items fail more, the collaborative PRD process needs a verify-method review gate before approval
 
 # INPUT
 
