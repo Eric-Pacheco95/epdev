@@ -219,6 +219,7 @@ Append to `history/changes/notion_sync.md` (create if it doesn't exist):
 - Track highest-rated signal sources — high-yield pages should sync more frequently
 - Same Notion content unprocessed across 2+ sync runs → processing bottleneck; check extraction thresholds
 - Notion MCP fails repeatedly on specific pages → log page IDs as /self-heal task
+- Track orphaned local signals (signals written without a matching Notion page) over time — rising count signals Notion coverage gaps for active project areas
 
 # INPUT
 
