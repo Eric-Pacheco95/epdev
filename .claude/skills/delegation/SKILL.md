@@ -180,6 +180,7 @@ Project initialization (new project from scratch):
 - Track most-routed skills — high-frequency = core workflow, needs strongest DISCOVERY sections
 - Delegation first-step for same task type repeatedly → candidate for direct skill or CLAUDE.md chain entry
 - Routed skill not found or errors → log routing failure as signal (skill gap or naming mismatch)
+- If routing produces 2+ skills with overlapping scope for the same task type, that boundary is ambiguous — note the skill pair for `/update-steering-rules` to add a tiebreaker heuristic
 
 # INPUT
 
