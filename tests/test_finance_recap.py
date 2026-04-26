@@ -77,3 +77,56 @@ def test_format_recap_summary_line():
     result = format_recap(qt_pos, [], [], token_age_hours=1.0)
     assert "1 Questrade" in result
     assert "1 leveraged" in result
+
+
+def test_format_recap_negative_pnl():
+    pos = {
+        "ticker": "SQQQ",
+        "shares": 50,
+        "entry_price": 20.0,
+        "current_price": 18.0,
+        "open_pnl": -100.0,
+        "open_pnl_pct": -5.0,
+        "leveraged": False,
+    }
+    result = format_recap([pos], [], [], token_age_hours=1.0)
+    assert "SQQQ" in result
+    assert "$-100.00" in result
+
+
+def test_format_recap_manual_position_shows_ticker():
+    manual = [{
+        "ticker": "SDS",
+        "entry_price": 35.0,
+        "stop": 32.0,
+        "target": 40.0,
+        "entry_date": "2020-01-01",
+        "max_hold_days": 999,
+        "leveraged": False,
+    }]
+    result = format_recap([], manual, [], token_age_hours=1.0)
+    assert "SDS" in result
+    assert "TD Positions" in result
+
+
+def test_format_recap_over_max_hold_alert():
+    from datetime import datetime, timedelta
+    # entry_date set to 30 days ago with max_hold_days=10
+    entry = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+    manual = [{
+        "ticker": "UCO",
+        "entry_price": 25.0,
+        "stop": 22.0,
+        "target": 30.0,
+        "entry_date": entry,
+        "max_hold_days": 10,
+        "leveraged": False,
+    }]
+    result = format_recap([], manual, [], token_age_hours=1.0)
+    assert "OVER MAX HOLD" in result
+
+
+def test_format_recap_active_trade_plans_count():
+    plans = [{"name": "plan1"}, {"name": "plan2"}]
+    result = format_recap([], [], plans, token_age_hours=1.0)
+    assert "2 active trade plan(s)" in result
