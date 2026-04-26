@@ -116,10 +116,10 @@ Rate sources 1-10 for relevance/credibility. Discard below 5.
 
 > **This routing applies in ALL contexts — inside or outside /research.** `WebFetch` on x.com/twitter/linkedin returns 402. Always use `tavily_extract` for these domains, even in ad-hoc mid-session URL lookups.
 
-1. **YouTube (transcript or full description needed)**: **Firecrawl FIRST** — `tavily_extract` and `WebFetch` only return sidebar/SPA shell on youtube.com. Firecrawl `/scrape` returns full transcript + description + metadata in one call. Tavily still wins for video metadata-only lookups (cheaper, no API key needed).
-2. **Difficult domains** (x.com, twitter.com, linkedin.com, medium.com): `tavily_extract` with `extract_depth: "advanced"` — tavily_extract (advanced) successfully retrieves x.com tweet content where WebFetch returns 402
+1. **YouTube**: Firecrawl FIRST (`tavily_extract`/`WebFetch` return SPA shell only). Use Tavily for metadata-only lookups.
+2. **Difficult domains** (x.com, twitter.com, linkedin.com, medium.com): `tavily_extract` with `extract_depth: "advanced"`
 3. **Static/public sites** (github, blogs, docs): WebFetch (faster)
-4. **JS-heavy / SPA sites** (React apps, Linear/Vercel/Notion changelogs, anything WebFetch returns as an empty shell): Firecrawl wrapper (same as YouTube path).
+4. **JS-heavy/SPA sites** (React/Vercel/Notion changelogs, empty WebFetch shells): Firecrawl (same as YouTube)
 
 **Firecrawl invocation pattern** (used by paths 1 and 4):
 ```python

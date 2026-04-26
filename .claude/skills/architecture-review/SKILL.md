@@ -105,17 +105,14 @@ Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 aft
 
 ## Step 3: SYNTHESIZE FINDINGS
 
-- Read all agent outputs from `memory/work/_arch-review-{timestamp}/` — do NOT rely on agent return values alone, as these may be lost to context compaction in long sessions
-- When all agents have completed (all 3 files exist), read their full outputs
-- Identify points of convergence (findings that multiple agents agree on — these are high-confidence)
-- Identify points of divergence (where agents disagree — these need explicit resolution)
-- For each element of the proposal, classify as:
-  - **Validated**: Multiple agents confirm this is sound
-  - **Corrected**: One or more agents identified a flaw; state the correction
-  - **Contested**: Agents disagree — **a verdict is required**: declare one position correct, name the evidence, and state specifically why the other position is wrong. "Both positions have merit" is NOT an acceptable resolution — it is a synthesis failure.
-  - **Risk identified**: Not wrong, but carries specific risk that needs mitigation
-- **Opportunistic bug capture**: If any agent surfaces a bug or finding UNRELATED to the decision under review, append to `orchestration/task_backlog.jsonl` (or "side findings" bullet if unavailable) — never fix inline. Architecture reviews stay scoped; inline fixes bury the recommendation.
-- Produce the unified output using the format below
+- Read all agent outputs from `memory/work/_arch-review-{timestamp}/` — do NOT rely on return values; compaction may have cleared them
+- When all 3 files exist, classify each proposal element:
+  - **Validated**: multiple agents confirm sound
+  - **Corrected**: agent identified flaw; state correction
+  - **Contested**: agents disagree — **verdict required**: declare one correct, cite evidence, state why the other is wrong. "Both have merit" = synthesis failure.
+  - **Risk identified**: not wrong, but carries specific risk
+- **Opportunistic bug capture**: unrelated bugs → `orchestration/task_backlog.jsonl`; never fix inline
+- Produce unified output per format below
 
 ## Step 3.5: INCIDENT FIX CLASSIFICATION [--incident only]
 
