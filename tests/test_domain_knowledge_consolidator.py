@@ -111,3 +111,33 @@ class TestWriteSubdomainFile:
         _write_subdomain_file(domain_dir, "agents", content, ["new"], dry_run=False)
         text = (domain_dir / "agents.md").read_text()
         assert text.count("## Caveats") == 1
+
+
+class TestLoadState:
+    def test_returns_empty_dict_when_file_missing(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(dkc, "STATE_FILE", tmp_path / "state.json")
+        result = dkc._load_state()
+        assert result == {}
+
+    def test_loads_valid_state(self, tmp_path, monkeypatch):
+        import json
+        f = tmp_path / "state.json"
+        f.write_text(json.dumps({"domains": ["crypto", "fintech"]}), encoding="utf-8")
+        monkeypatch.setattr(dkc, "STATE_FILE", f)
+        result = dkc._load_state()
+        assert result["domains"] == ["crypto", "fintech"]
+
+    def test_returns_empty_on_invalid_json(self, tmp_path, monkeypatch):
+        f = tmp_path / "state.json"
+        f.write_text("not valid json", encoding="utf-8")
+        monkeypatch.setattr(dkc, "STATE_FILE", f)
+        result = dkc._load_state()
+        assert result == {}
+
+    def test_returns_empty_if_top_level_is_not_dict(self, tmp_path, monkeypatch):
+        import json
+        f = tmp_path / "state.json"
+        f.write_text(json.dumps(["not", "a", "dict"]), encoding="utf-8")
+        monkeypatch.setattr(dkc, "STATE_FILE", f)
+        result = dkc._load_state()
+        assert result == {}
