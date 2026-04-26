@@ -65,10 +65,10 @@ Input errors -> STOP with guidance:
 ### TASK TYPING FRONTMATTER EXTRACT
 
 - Run `python tools/scripts/isc_validator.py --prd <PRD-path> --check-frontmatter --print-tier --json` and parse `four_axis.present`, `grandfathered`, `values.{stakes,ambiguity,solvability,verifiability}`, `ceremony_tier`, and `ceremony_band` into runtime vars
-- If `grandfathered: true` (no frontmatter at all): note "Task Typing: GRANDFATHERED (no four-axis labels)" in IMPLEMENTATION LOG and proceed — REVIEW GATE falls back to the current Sonnet-subagent default; ceremony-tier action table not applied
-- If `four_axis.present: false` (frontmatter exists but incomplete/invalid): STOP and print the missing/invalid axes; require `/create-prd` to add them before BUILD proceeds
-- Surface `ceremony_tier` and `ceremony_band` (T0 / T1-2 / T3-4) in IMPLEMENTATION LOG; route per-phase actions per `orchestration/steering/ceremony-tier.md` Layer 2 table. Tier 3-4 phases require HARD HALT clearance per Layer 5 before advancing
-- If `four_axis.present: true`: hold `stakes`, `ambiguity`, `solvability`, `verifiability` for downstream routing — GENERATE-phase consumers below and REVIEW GATE Step 2
+- If `grandfathered: true`: note "GRANDFATHERED" in LOG; proceed — REVIEW GATE falls back to Sonnet default; ceremony table not applied
+- If `four_axis.present: false`: STOP, print missing axes, require `/create-prd` before BUILD
+- Surface `ceremony_tier`/`ceremony_band` in LOG; route per `ceremony-tier.md` Layer 2. T3-4 → HARD HALT before advancing
+- If `four_axis.present: true`: hold axis values for downstream routing and REVIEW GATE Step 2
 
 ### MODEL ANNOTATION CHECK
 
