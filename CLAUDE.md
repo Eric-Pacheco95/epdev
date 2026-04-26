@@ -45,6 +45,7 @@ Load documentation on-demand, not upfront:
 | ISC authoring + PLAN→BUILD quality gate (vacuous-truth, anti-criteria, verify methods) | `orchestration/steering/isc-governance.md` |
 | Model and effort routing | `orchestration/steering/model-effort-routing.md` |
 | Ceremony tier (4-axis composite, per-phase action checklists, HARD HALT) | `orchestration/steering/ceremony-tier.md` |
+| Producer artifact paths (canonical state/history file locations, orphan-path prevention) | `orchestration/steering/producer-artifacts.md` |
 | Topic includes: OOM, RCA, root cause, post-mortem, drain, memory pressure, incident, thrash, pagefile, preflight | `orchestration/steering/incident-triage.md` |
 | Decision rationale | `history/decisions/` |
 | Math reference (university-level) | WebFetch `algebrica.org/<slug>` — CC BY-NC, cite "Antonio Lupetti / algebrica.org" on any reuse; no local mirror, no Substack quoting |

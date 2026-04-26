@@ -38,6 +38,9 @@ sys.path.insert(0, str(REPO_ROOT))
 from tools.scripts.lib.worktree import cleanup_old_branches
 
 SUMMARY_DIR = REPO_ROOT / "data" / "overnight_summary"
+CLAUDE_LOCK = REPO_ROOT / "data" / "claude_session.lock"
+RUNNER_WAIT_TIMEOUT_S = 900   # 15 min cap waiting for overnight runner to release claude lock
+RUNNER_WAIT_POLL_S = 30
 
 # Branch prefixes created by overnight jobs
 OVERNIGHT_PREFIXES = [
@@ -401,10 +404,53 @@ def save_summary(
     return json_path, md_path
 
 
-def consolidate(dry_run: bool = False) -> int:
+def wait_for_claude_lock(timeout_s: int = RUNNER_WAIT_TIMEOUT_S,
+                         poll_s: int = RUNNER_WAIT_POLL_S) -> tuple[bool, str]:
+    """Wait for data/claude_session.lock to be free before consolidating.
+
+    Overnight runner can run up to 2 hours starting at 04:00 EDT (08:00 UTC),
+    finishing as late as 10:00 UTC. Consolidate is scheduled at 10:30 UTC --
+    a 30-min margin with no defense in depth. This poll closes that gap by
+    deferring consolidation up to `timeout_s` seconds while the lock is held.
+
+    Returns (proceeded, reason). proceeded=True means the lock is free or was
+    never present; False means the timeout elapsed and the caller should skip.
+    """
+    import time
+
+    if not CLAUDE_LOCK.exists():
+        return True, "no lock present"
+
+    waited = 0
+    while waited < timeout_s:
+        if not CLAUDE_LOCK.exists():
+            return True, f"lock released after {waited}s"
+        try:
+            data = json.loads(CLAUDE_LOCK.read_text(encoding="utf-8"))
+            owner = data.get("owner", "?")
+        except (json.JSONDecodeError, OSError):
+            owner = "?"
+        print(f"  claude lock held by {owner}; waited {waited}s/{timeout_s}s")
+        time.sleep(poll_s)
+        waited += poll_s
+
+    return False, f"lock still held after {timeout_s}s"
+
+
+def consolidate(dry_run: bool = False, no_wait: bool = False) -> int:
     """Main consolidation flow."""
     today = datetime.now().strftime("%Y-%m-%d")
     print(f"\n=== Jarvis Overnight Consolidation === {today}")
+
+    # 0. Wait for any in-flight claude -p run (overnight runner, dispatcher,
+    #    autoresearch) to release its lock before consolidating. Prevents
+    #    grabbing branches mid-flight when overnight runner overruns.
+    if not dry_run and not no_wait:
+        proceeded, reason = wait_for_claude_lock()
+        if not proceeded:
+            print(f"  ABORT: {reason}. Re-run consolidate later.", file=sys.stderr)
+            return 2
+        print(f"  claude lock check: {reason}")
 
     # 1. Find overnight branches
     branches = find_overnight_branches()
@@ -549,6 +595,22 @@ def self_test() -> int:
         print(f"  FAIL: {exc}")
         ok = False
 
+    # Test 5: wait_for_claude_lock returns immediately when no lock present
+    print("Test 5: wait_for_claude_lock (no lock)...")
+    try:
+        # Note: this only runs if there is no lock; otherwise just checks the
+        # function exists and is callable with a 0-timeout to avoid blocking.
+        proceeded, reason = wait_for_claude_lock(timeout_s=0, poll_s=0)
+        if not CLAUDE_LOCK.exists():
+            assert proceeded, f"expected proceed=True with no lock, got reason={reason}"
+            print(f"  PASS: no lock -> proceeded ({reason})")
+        else:
+            assert not proceeded, "expected proceed=False with held lock + 0 timeout"
+            print(f"  PASS: lock held -> aborted ({reason})")
+    except Exception as exc:
+        print(f"  FAIL: {exc}")
+        ok = False
+
     print(f"\n{'ALL TESTS PASSED' if ok else 'SOME TESTS FAILED'}")
     return 0 if ok else 1
 
@@ -558,12 +620,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Jarvis Overnight Consolidation")
     parser.add_argument("--dry-run", action="store_true", help="List branches, no merge")
     parser.add_argument("--test", action="store_true", help="Run self-test")
+    parser.add_argument("--no-wait", action="store_true",
+                        help="Skip claude_session.lock wait (manual ad-hoc runs)")
     args = parser.parse_args()
 
     if args.test:
         sys.exit(self_test())
 
-    sys.exit(consolidate(dry_run=args.dry_run))
+    sys.exit(consolidate(dry_run=args.dry_run, no_wait=args.no_wait))
 
 
 if __name__ == "__main__":
