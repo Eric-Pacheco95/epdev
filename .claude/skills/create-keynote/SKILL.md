@@ -42,13 +42,13 @@ false
 
 # PRE-FLIGHT CHECKS
 
-Before building the presentation, check for these and prompt Eric if missing:
+Prompt before building if not specified:
 
-1. **Audience**: If no audience is specified or inferable, ask: "Who is this for? (consumer / enterprise / technical / executive)" -- vocabulary, slide density, and examples change dramatically by audience.
-2. **PPTX export**: If Eric doesn't mention `--pptx` or downloadable slides, ask: "Want me to generate a downloadable .pptx too? I can create one you can pull from your phone."
-3. **Paired decks**: If the topic involves a product, platform, or service that could be marketed or sold, ask: "Should I create paired decks? (1) Consumer/user-facing and (2) Enterprise/leadership-facing -- different angles on the same thing."
+1. **Audience**: "Who is this for? (consumer / enterprise / technical / executive)"
+2. **PPTX export**: "Want a downloadable .pptx?"
+3. **Paired decks** (product/service topics): "Consumer-facing + enterprise/leadership-facing decks?"
 
-These prompts should be quick yes/no questions before starting the build, not blockers.
+Quick yes/no — not blockers.
 
 # AUDIENCE MODES
 
@@ -72,27 +72,17 @@ Default to **consumer** if unspecified and topic is general, **technical** if to
 
 1. **Run pre-flight checks** -- prompt for audience, PPTX, paired decks if not specified.
 
-2. **Identify the real takeaway first** -- what is the ONE practical thing the audience should leave with? Build backwards from that.
+2. **Takeaway first** -- one practical thing the audience leaves with; build backwards.
 
-3. **Map the narrative arc** -- build a story, not a list of facts. Each slide advances the story.
+3. **Narrative arc** -- story, not fact list; each slide advances it.
 
-4. **Structure the deck**:
-   - Hook slide: surprising fact, provocative question, or bold claim
-   - Context: why this matters now
-   - Core argument: 3–5 key points, each with a slide
-   - Evidence/examples: concrete, specific, memorable
-   - Implication: so what? what changes?
-   - Call to action / close: the takeaway made concrete
+4. **Deck structure**: Hook (fact/question/claim) → Context (why now) → Core argument (3–5 slides) → Evidence → Implication (so what?) → CTA/close
 
-5. **Write each slide**:
-   - Title (≤8 words)
-   - 3–5 bullets (≤10 words each)
-   - Image description for an AI image generator (what the visual should show)
-   - Speaker notes in first-person: exactly what Eric would say for that slide (bullets of ≤16 words each)
+5. **Each slide**: title (≤8 words), 3–5 bullets (≤10 words), image description, first-person speaker notes (bullets ≤16 words)
 
-6. **Check the flow** -- read all slide titles in order. Does it tell a clean story? If not, reorder.
+6. **Flow check** -- read all titles in order; clean story? reorder if not.
 
-7. **Total slides**: 10-20 depending on input complexity (see audience mode for guidance).
+7. **Total slides**: 10-20 (see audience mode).
 
 8. **Image generation** (default — skip with `--no-images`): After writing the deck markdown, generate real images for each slide using `/create-image` (nanobanana MCP):
    - Unless `--no-images` was passed, proceed directly to image generation without asking
