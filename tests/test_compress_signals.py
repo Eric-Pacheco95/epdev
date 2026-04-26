@@ -112,4 +112,53 @@ def test_parse_signal_frontmatter_unreadable():
 
 def test_sanitize_ascii_arrows():
     assert _sanitize_ascii("\u2192 next") == "-> next"
+
+
+def test_sanitize_ascii_em_dash():
+    assert _sanitize_ascii("before\u2014after") == "before--after"
+
+
+def test_sanitize_ascii_en_dash():
+    assert _sanitize_ascii("2020\u20132026") == "2020-2026"
+
+
+def test_sanitize_ascii_curly_single_quotes():
+    assert _sanitize_ascii("\u2018hello\u2019") == "'hello'"
+
+
+def test_sanitize_ascii_curly_double_quotes():
+    assert _sanitize_ascii("\u201chello\u201d") == '"hello"'
+
+
+def test_sanitize_ascii_no_change_for_plain_text():
+    plain = "just normal ASCII text -> already fine"
+    assert _sanitize_ascii(plain) == plain
+
+
+def test_find_compressible_old_files_included(tmp_path):
+    import os, time
+    md = tmp_path / "old.md"
+    md.write_text("content", encoding="utf-8")
+    # backdate mtime by 200 days
+    old_time = time.time() - (200 * 86400)
+    os.utime(str(md), (old_time, old_time))
+    results = find_compressible(tmp_path, max_age_days=180)
+    assert md in results
+
+
+def test_find_compressible_new_files_excluded(tmp_path):
+    md = tmp_path / "new.md"
+    md.write_text("content", encoding="utf-8")
+    results = find_compressible(tmp_path, max_age_days=180)
+    assert md not in results
+
+
+def test_find_compressible_only_md_extension(tmp_path):
+    import os, time
+    txt = tmp_path / "old.txt"
+    txt.write_text("content", encoding="utf-8")
+    old_time = time.time() - (200 * 86400)
+    os.utime(str(txt), (old_time, old_time))
+    results = find_compressible(tmp_path, max_age_days=180)
+    assert txt not in results
     assert _sanitize_ascii("a \u2014 b") == "a -- b"
