@@ -77,16 +77,11 @@ Ask 1-3 questions: (1) Binary/range/directional? Restate in falsifiable form. (2
 
 ## Step 1: ORIENT
 
-1. **Restate the question** in one precise, falsifiable sentence with the confirmed time horizon
-2. **Auto-detect domain** (or use flag):
-   - Geopolitics: countries, power dynamics, wars, alliances, hegemony, geopolitical actors
-   - Market: assets, prices, economic indicators, cycles, monetary policy, business opportunities
-   - General: technology trends, personal decisions, social dynamics, anything else
-3. **Identify the reference class**: "Of N historical situations like this, what % resulted in outcome X?"
-   - If a clear reference class exists, state the base rate
-   - If no reference class exists, state: "No clear reference class — estimate is unanchored" and note this increases uncertainty
-3.5. **Check domain priors**: If articles loaded in Step 0, scan for prior findings that refine the reference class, domain factors that weight scenario probabilities, and open questions this prediction might resolve. Reference specific findings when they inform the analysis.
-4. **State the starting probability anchor** from the reference class base rate
+1. **Restate** in one falsifiable sentence with time horizon
+2. **Auto-detect domain**: Geopolitics (countries/power/wars/alliances); Market (assets/prices/cycles/macro); General (all else)
+3. **Reference class**: "Of N situations like this, X% resulted in outcome Y." No class → "unanchored — higher uncertainty."
+3.5. **Check domain priors**: if articles loaded, cite specific findings that refine reference class or weight scenarios.
+4. **Probability anchor** from reference class
 
 ### Domain-Specific ORIENT
 
@@ -96,18 +91,12 @@ Ask 1-3 questions: (1) Binary/range/directional? Restate in falsifiable form. (2
 
 ## Step 2: STRUCTURE
 
-Build 3-4 distinct outcome scenarios driven by different causal mechanisms (not just good/bad/middle).
+Build 3-4 distinct outcomes with different causal mechanisms (not just good/bad/middle).
 
-1. **Name each scenario** with domain-appropriate labels:
-   - Geopolitics: e.g., Escalation / Status Quo / Realignment / Collapse
-   - Market: e.g., Bull Run / Consolidation / Correction / Regime Change
-   - General: use descriptive labels that capture the essence of each path
-2. **For each scenario, state:**
-   - Committed probability (single number, e.g., "35%")
-   - Key driver: one sentence explaining WHY this scenario happens
-   - One observable signpost: a specific, concrete signal Eric can watch for that indicates this scenario is unfolding
-3. **Probabilities must sum to 100%**
-4. **For long-horizon predictions (5+ years):** include intermediate signposts at multiple timeframes (e.g., "By 2028:", "By 2032:", "By 2036:")
+1. **Name** with domain labels: Geopolitics (Escalation/Status Quo/Realignment/Collapse); Market (Bull Run/Consolidation/Correction/Regime Change); General (descriptive)
+2. **Per scenario**: committed probability (single number); key driver (why); one observable signpost (concrete signal)
+3. Probabilities sum to 100%
+4. **Long-horizon (5+ years)**: intermediate signposts at multiple timeframes
 
 ### Actor Analysis (geopolitics and competitive markets only)
 
