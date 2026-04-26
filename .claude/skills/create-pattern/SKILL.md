@@ -48,21 +48,19 @@ false
 - Similar name exists: "/{existing} already exists. Update it, or genuinely different?"
 - Narrow sub-step of /{parent}: "Add there instead?"
 
-### Skill Lifecycle Gate (must pass before proceeding)
+### Skill Lifecycle Gate
 
-Before creating any new skill, evaluate these 4 checks in order. If any check redirects, follow the redirect — do not proceed to Step 1.
+1. **Flag first**: scan for overlapping skill; propose `--flag` mode if new behavior is a mode of an existing skill. Create standalone only when genuinely independent. (Exception: `/extract-corpus` for channel corpora.)
 
-1. **Can this be a `--flag` on an existing skill?** Scan existing skills for overlapping domain or workflow. If the new behavior is a mode of an existing skill (e.g., outreach mode on /research), propose adding a `--flag` mode instead. Default posture: extend before create. Only create standalone when the workflow is genuinely independent of all existing skills. **Exception already decided:** large YouTube/channel corpus extraction is `/extract-corpus` (not a flag on this skill).
+2. **Architecture-review run?** Required if skill touches external data, sends to real people, or has security implications. If not: recommend it first.
 
-2. **Has `/architecture-review` been run?** Required if the skill touches external data (WebSearch, APIs), sends output to real people (email, Slack, notifications), or has security implications. If not run, recommend it before proceeding: "This skill [reason]. Run `/architecture-review` first to validate the design."
+3. **Recurrence vs recency**: "How many times in 12 months?" If < 4, `--flag` or ad-hoc may suffice. Guard availability bias.
 
-3. **Is recurrence scored against base rate, not recency?** Ask: "How many times would this workflow realistically fire in the next 12 months?" If the answer is < 4, the recurrence is Low/Medium — a `--flag` mode or ad-hoc prompting may be sufficient. Guard against availability bias from a single satisfying session.
+4. **Promotion trigger defined?** `--flag` modes: promote at N uses × M contexts. Standalone: archive if unused 6+ months.
 
-4. **Is a promotion trigger defined?** Every new `--flag` mode should include a promotion trigger: "If used N+ times across M+ different contexts, evaluate promoting to standalone skill." Every new standalone skill should include a retirement trigger: "If unused for 6+ months, archive." Document both in the skill's constraints section.
+5. **Manual validation first?** Don't scaffold from hypothetical — steps freeze before real friction surfaces. Default: "do manually this session, extract next time." Only proceed with at least one completed manual run or explicit override.
 
-5. **Has the workflow been validated manually 1–3 times first?** Even when the skill shape seems clear, do not scaffold SKILL.md from a hypothesized workflow — the steps freeze in before real friction surfaces. Default response when proposing a new skill: "let's do this manually this session, then extract the pattern next time." Only proceed to Step 1 when there is at least one completed manual run that informed the step list, OR when the user explicitly overrides. Why: 2026-04-19 — `/create-design-prd` proposal had a clear shape on paper but Eric deferred until Phase A sessions surfaced the real spec needs; this prevents premature freezing of an unvalidated workflow.
-
-If all 5 checks pass (or the user explicitly overrides after seeing the recommendations), proceed to Step 1.
+Proceed to Step 1 only if all 5 pass or user explicitly overrides.
 
 ## Step 1: PARSE AND GENERATE
 
