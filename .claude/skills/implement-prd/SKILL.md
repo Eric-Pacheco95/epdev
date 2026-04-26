@@ -99,17 +99,15 @@ Subagent rules: pass ISC item text, verify method, context files; return file wr
 
 ### BUILD PHASE: Implement with per-item verify loop
 
-- For each ISC item, implement the required component or change in dependency order (foundations before features)
-- After each component, enter the **Verify Loop** (max 3 cycles):
-  1. Run the verify method specified in the ISC line
-  2. If PASS: log result, move to next ISC item
-  3. If FAIL: diagnose root cause from error output — is it a code bug, environment issue, data issue, or config mismatch?
-  4. Apply the minimal fix (change only what's necessary to resolve the failure)
-  5. Re-run the same verify method
-  6. If still failing after cycle 3: log the failure to `memory/learning/failures/`, mark ISC item as BLOCKED with diagnosis notes, and move to next item — do NOT silently skip
-- Track loop iterations: after BUILD completes, report in IMPLEMENTATION LOG how many items needed 0, 1, 2, or 3 fix cycles (this measures loop value)
-- **Mid-build checkpoint**: After every 3-4 ISC items, prompt: "Checkpoint: {N} verified. Run /commit?" Do not auto-commit.
-- **Verify script hygiene**: verify scripts must expose `--log-file`/`--input-file` CLI override (tests point at `tmp_path`). Pure helpers accept primitive inputs only — never call `psutil`/WMI/CIM internally; only `main()` does I/O.
+- Implement in dependency order (foundations before features)
+- **Verify Loop** (max 3 cycles) per ISC item:
+  1. Run verify method
+  2. PASS → log, next item
+  3. FAIL → diagnose (code/env/data/config), apply minimal fix, re-run
+  4. Still failing after cycle 3 → log to `memory/learning/failures/`, mark BLOCKED, do NOT silently skip
+- After BUILD: report 0/1/2/3-cycle distribution in IMPLEMENTATION LOG
+- **Mid-build checkpoint**: every 3-4 items, prompt "Checkpoint: {N} verified. Run /commit?" No auto-commit.
+- **Verify script hygiene**: scripts must expose `--log-file`/`--input-file`; pure helpers take primitive inputs only; no `psutil`/WMI/CIM in helpers — only in `main()`.
 
 ### REVIEW GATE: Deterministic prescan + cross-model review
 
