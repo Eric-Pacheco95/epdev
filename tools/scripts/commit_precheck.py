@@ -79,8 +79,8 @@ def run_git(args: list[str]) -> str:
     try:
         result = subprocess.run(
             ["git"] + args,
-            capture_output=True, text=True, cwd=str(REPO_ROOT),
-            timeout=15,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=str(REPO_ROOT), timeout=15,
         )
         return result.stdout.strip()
     except Exception:
