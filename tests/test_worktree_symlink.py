@@ -207,8 +207,16 @@ def test_memory_learning_dirs_are_real_directories():
         )
 
 def test_keep_files_tracked_in_main_index():
-    """Verify .keep files for the three dirs are in the git index."""
+    """Verify .keep files for non-gitignored symlink dirs are in the git index."""
     for rel_path, _ in wt_mod._MEMORY_SYMLINKS:
+        # Skip directories that are gitignored — they can't have tracked .keep files.
+        ignore_check = subprocess.run(
+            ["git", "check-ignore", "-q", f"{rel_path}/"],
+            capture_output=True,
+            cwd=str(wt_mod.REPO_ROOT),
+        )
+        if ignore_check.returncode == 0:
+            continue
         result = subprocess.run(
             ["git", "ls-files", f"{rel_path}/.keep"],
             capture_output=True, text=True, encoding="utf-8",
