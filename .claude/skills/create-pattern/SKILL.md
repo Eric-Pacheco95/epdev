@@ -111,3 +111,4 @@ INPUT:
 - After generating the skill, evaluate: would this pattern apply to >= 3 future recurring tasks?
 - If yes: note the pattern name in memory/learning/signals/{YYYY-MM-DD}_new-pattern-{slug}.md
 - Rating: 7-8 for high-reuse patterns that fill a clear skill gap; 4-6 for narrow single-purpose skills; skip signal for one-off tasks that were forced into skill format
+- Track skill invocation frequency post-creation — skills invoked <3 times in 60 days are candidates for merge into an existing skill or archival at the next `/update-steering-rules --audit`
