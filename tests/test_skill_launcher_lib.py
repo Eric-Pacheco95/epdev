@@ -8,6 +8,8 @@ import pytest
 from tools.scripts.lib.skill_launcher_lib import (
     parse_tokens_from_stream_json,
     estimate_cost_usd,
+    write_park_gate,
+    write_run_log,
 )
 
 _DEFAULT_MODEL = "claude-sonnet-4-6"
@@ -71,3 +73,45 @@ class TestEstimateCostUsd:
         # Unknown model with no pricing file -> should not raise, returns 0.0
         result = estimate_cost_usd(100, "nonexistent-model-xyz")
         assert isinstance(result, float)
+
+
+class TestWriteParkGate:
+    def test_creates_json_file(self, tmp_path):
+        path = write_park_gate(
+            tmp_path, "abc123", "autoresearch", "topic here",
+            "verifier_failed", "python tool.py", "2026-04-26T00:00:00Z", 500, 0.25
+        )
+        assert path.exists()
+        assert path.suffix == ".json"
+
+    def test_file_contains_expected_fields(self, tmp_path):
+        path = write_park_gate(
+            tmp_path, "def456", "autoresearch", "my topic",
+            "timeout", "cmd here", "2026-04-26T01:00:00Z", 1000, 1.5
+        )
+        data = json.loads(path.read_text(encoding="utf-8"))
+        assert data["run_id"] == "def456"
+        assert data["skill"] == "autoresearch"
+        assert data["topic"] == "my topic"
+        assert data["exit_reason"] == "timeout"
+        assert data["tokens_spent"] == 1000
+        assert data["cost_usd"] == 1.5
+
+    def test_creates_parent_directory(self, tmp_path):
+        sub = tmp_path / "park" / "gates"
+        write_park_gate(sub, "ghi789", "autoresearch", "topic", "success", "cmd", "ts", 0, 0.0)
+        assert sub.is_dir()
+
+
+class TestWriteRunLog:
+    def test_creates_json_file(self, tmp_path):
+        write_run_log(tmp_path, "run001", "claude-sonnet-4-6", "claude-opus-4-7", "s1", "s2")
+        assert (tmp_path / "run001.json").exists()
+
+    def test_file_contains_model_fields(self, tmp_path):
+        write_run_log(tmp_path, "run002", "claude-sonnet-4-6", "claude-opus-4-7", "sess-gen", "sess-qg")
+        data = json.loads((tmp_path / "run002.json").read_text(encoding="utf-8"))
+        assert data["generator_model"] == "claude-sonnet-4-6"
+        assert data["quality_gate_model"] == "claude-opus-4-7"
+        assert data["generator_session"] == "sess-gen"
+        assert data["quality_gate_session"] == "sess-qg"
