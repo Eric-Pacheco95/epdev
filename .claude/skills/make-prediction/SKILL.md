@@ -314,3 +314,4 @@ INPUT:
 - Check data/predictions/ for resolved predictions (status: resolved) not yet analyzed; compare forecast to actual, identify missed signals, append lessons-learned to resolution section
 - Signal: memory/learning/signals/{YYYY-MM-DD}_prediction-resolved-{slug}.md — only for wrong/partial outcomes with clear root cause
 - Rating: 7-9 systematic errors; 4-6 one-off misses; skip correct predictions unless unusual
+- If prediction is at floor confidence (≤20%) and Eric proceeds anyway, note it in the prediction file: signals optimism bias or FOMO-driven reasoning worth flagging in the resolution section for calibration review
