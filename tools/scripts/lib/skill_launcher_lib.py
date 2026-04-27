@@ -121,10 +121,25 @@ def estimate_cost_usd(tokens: int, model: str) -> float:
 def build_prompt(skill: str, args_str: str, max_cost: float) -> str:
     skill_md = _SKILLS_DIR / skill / "SKILL.md"
     skill_text = skill_md.read_text(encoding="utf-8") if skill_md.is_file() else ""
+    autonomous_overrides = (
+        "AUTONOMOUS EXECUTION RULES (these override the SKILL DEFINITION below):\n"
+        "- NEVER ask Eric or wait for confirmation — auto-proceed at every step\n"
+        "- Force type: --technical (skip Phase 0 classification entirely)\n"
+        "- Force depth: default (skip depth selection)\n"
+        "- Never invoke outreach mode\n"
+        "- PRIMARY DELIVERABLE: write a knowledge article to "
+        "memory/knowledge/{domain}/YYYY-MM-DD_{slug}.md — this is REQUIRED, not optional\n"
+        "  - Determine domain from topic (general/economics if no specific domain fits)\n"
+        "  - Create the domain directory if it does not exist\n"
+        "  - Article must be >=500 words with >=3 cited https:// URLs inline\n"
+        "- Append one line to memory/knowledge/index.md under the correct domain heading\n"
+        "- The memory/work/{slug}/ brief is OPTIONAL; knowledge file is MANDATORY\n"
+        "- SUCCESS = knowledge file written and readable\n"
+    )
     return (
         f"<command-name>/{skill}</command-name>\n\n"
-        f"Running autonomously in isolated worktree. Cost cap: ${max_cost} USD.\n"
-        f"Write all output to memory/knowledge/.\n\n"
+        f"Running autonomously in isolated worktree. Cost cap: ${max_cost} USD.\n\n"
+        f"{autonomous_overrides}\n"
         f"SKILL DEFINITION:\n{skill_text}\n\nINPUT:\n{args_str}\n"
     )[:90_000]
 
@@ -143,15 +158,50 @@ def run_verifier(verifier: Path, knowledge_dir: Path, tokens: int, started_at: s
     return r.returncode
 
 
-def spawn_quality_gate(claude_bin: str, branch: str, topic: str, worktree: Path) -> tuple[bool, str]:
+def spawn_quality_gate(
+    claude_bin: str, branch: str, topic: str, worktree: Path,
+    knowledge_dir: Path | None = None,
+    started_at: str | None = None,
+) -> tuple[bool, str]:
     """Run Opus quality-gate review; return (passed, session_id)."""
     diff = subprocess.run(
         ["git", "diff", "--stat", f"main...{branch}"],
         capture_output=True, text=True, cwd=str(worktree),
     ).stdout or "(no diff)"
+
+    # Knowledge files are gitignored so they never appear in the diff.
+    # Read the newest file written during this run and include it directly.
+    knowledge_excerpt = ""
+    if knowledge_dir and knowledge_dir.is_dir():
+        since = None
+        if started_at:
+            try:
+                from datetime import datetime, timezone
+                since = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+            except ValueError:
+                pass
+        candidates = []
+        for p in knowledge_dir.rglob("*.md"):
+            if not p.is_file():
+                continue
+            if since is not None:
+                from datetime import datetime, timezone
+                mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
+                if mtime < since:
+                    continue
+            candidates.append(p)
+        if candidates:
+            newest = max(candidates, key=lambda p: p.stat().st_mtime)
+            try:
+                content = newest.read_text(encoding="utf-8", errors="replace")
+                knowledge_excerpt = f"\n\nKnowledge file ({newest.name}):\n{content[:3000]}"
+            except OSError:
+                pass
+
     prompt = (
         "Quality-gate review for autoresearch output.\n\n"
-        f"Diff summary:\n{diff[:4000]}\n\nTopic: {topic}\n\n"
+        f"Diff summary:\n{diff[:2000]}\n\nTopic: {topic}"
+        f"{knowledge_excerpt}\n\n"
         "Check: real knowledge content (not stub), citations present, >300 words. "
         "Reply with exactly: QUALITY_GATE_PASS or QUALITY_GATE_FAIL <reason>"
     )

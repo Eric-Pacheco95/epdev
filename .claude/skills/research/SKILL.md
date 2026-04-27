@@ -39,7 +39,7 @@ OBSERVE
 - Side effects: signals to memory/learning/signals/, log to history/changes/research_log.md, domain knowledge article to memory/knowledge/{domain}/ (market/technical only)
 
 ## autonomous_safe
-false
+true
 
 # STEPS
 

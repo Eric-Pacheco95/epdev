@@ -107,7 +107,9 @@ def main() -> int:
             send_park_alert(REPO_ROOT, args.skill_args, exit_reason, park)
             return 1
 
-        knowledge_dir = worktree / "memory" / "knowledge"
+        # Writes flow through the worktree junction to the main repo — scan main
+        # repo directly to avoid Windows junction directory-listing cache lag.
+        knowledge_dir = REPO_ROOT / "memory" / "knowledge"
         env = os.environ.copy()
         env["JARVIS_SESSION_TYPE"] = "autonomous"
         env["JARVIS_WORKTREE_ROOT"] = str(worktree)
@@ -136,6 +138,12 @@ def main() -> int:
         tokens, gen_model = parse_tokens_from_stream_json(stdout)
         cost = estimate_cost_usd(tokens, gen_model)
 
+        # Write raw stdout to a log so failed runs can be diagnosed.
+        run_log_raw = RUN_LOG_DIR / f"{run_id}_raw.txt"
+        RUN_LOG_DIR.mkdir(parents=True, exist_ok=True)
+        run_log_raw.write_text(stdout or "", encoding="utf-8", errors="replace")
+        print(f"  Agent output logged -> {run_log_raw}")
+
         if watchdog.killed:
             exit_reason = watchdog.kill_reason or "watchdog_null_signal"
         elif exit_reason == "unknown":
@@ -147,7 +155,8 @@ def main() -> int:
                     exit_reason = "verifier_failed"
                 else:
                     qg_passed, qg_session = spawn_quality_gate(
-                        CLAUDE_BIN, branch, args.skill_args, worktree
+                        CLAUDE_BIN, branch, args.skill_args, worktree,
+                        knowledge_dir=knowledge_dir, started_at=started_at,
                     )
                     write_run_log(RUN_LOG_DIR, run_id, gen_model, QUALITY_GATE_MODEL,
                                   gen_session, qg_session)

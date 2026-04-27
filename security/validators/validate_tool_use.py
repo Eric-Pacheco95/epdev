@@ -663,12 +663,15 @@ def _check_autonomous_file_containment(tool: str, inp: dict) -> dict[str, Any] |
     if not file_path:
         return None
 
-    # Normalize paths for comparison; use is_relative_to (Python 3.9+) to
-    # avoid the epdev/epdev_evil prefix-collision false-pass.
+    # Use abspath (normalizes .. without following junctions/symlinks) so that
+    # intentional junction mounts inside the worktree (e.g. memory/knowledge,
+    # memory/learning/*) are allowed. resolve() would follow junctions to the
+    # main repo path, which is outside the worktree, causing false blocks.
+    # normcase handles Windows case-insensitive paths.
     try:
-        resolved = Path(file_path).resolve()
-        wt_resolved = Path(worktree_root).resolve()
-        contained = resolved.is_relative_to(wt_resolved)
+        normalized = Path(os.path.normcase(os.path.abspath(file_path)))
+        wt_normalized = Path(os.path.normcase(os.path.abspath(worktree_root)))
+        contained = normalized.is_relative_to(wt_normalized)
     except (OSError, ValueError):
         return _result("block", f"Cannot resolve path for containment check: {file_path}")
 
