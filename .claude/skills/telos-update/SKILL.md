@@ -44,6 +44,8 @@ false
 - `--consolidate` flag: read all TELOS files, identify duplicates and cross-file overlaps, propose merge candidates; no writes until Eric confirms
 - If no input is provided (empty invocation with no context after `/telos-update`): print usage hint `'Usage: /telos-update <session notes, observations, or updates to record>'` and STOP
 - If input is < 10 words: ask Eric for more context before proceeding
+- If an unknown flag (not --consolidate) is provided: print valid flags and STOP
+- Never auto-write to TELOS files; all updates must be shown to Eric as proposals before any write
 
 ## Step 1: READ TELOS STATE
 
