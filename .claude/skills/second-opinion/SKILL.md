@@ -48,7 +48,7 @@ true
 - Both `--dynamic` and `--static`: "Conflicting flags: mutually exclusive", STOP
 - Default mode: `--dynamic` unless `--static` specified
 
-1. Resolve: `--target` (default: `git rev-parse --show-toplevel`), `--out` (default: `./REVIEW_PROMPT.md`), `--reviewer` (default: `Codex`), mode. If invoked as subagent: `model="claude-sonnet-4-6"` per `memory/knowledge/harness/subagent_model_routing.md`.
+1. Resolve: `--target` (default: `git rev-parse --show-toplevel`), `--out` (default: `./REVIEW_PROMPT.md`), `--reviewer` (default: `Codex`), mode. If subagent: `model="claude-sonnet-4-6"` (see subagent_model_routing.md).
 2. Read the embedded TEMPLATE block matching mode.
 3. Substitute `{REVIEWER}`, `{TARGET}`, `{DATE}` (YYYY-MM-DD), `{REPO_HINT}`.
 4. Write to `--out` (create parent dirs if needed); print the OUTPUT FORMAT block.
@@ -83,9 +83,9 @@ INPUT:
 
 # LEARN
 
-- Do not auto-write a signal for this skill — it is a prompt-generation utility, not an audit itself
+- No auto-signal — prompt-generation utility, not an audit.
 - If Eric returns with the external reviewer's findings, route to `/learning-capture` with rating based on finding severity
-- If the external reviewer consistently finds the same gap type (e.g., missing security checks, thin VERIFY criteria) that Jarvis missed, log it as a blind-spot signal for /learning-capture
+- If external reviewer consistently finds gap types Jarvis missed: log as blind-spot signal via /learning-capture.
 
 ---
 
