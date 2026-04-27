@@ -34,6 +34,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from tools.scripts.lib.isc_templates import isc_paradigm_degraded
 
 OUTPUT_FILE = REPO_ROOT / "data" / "paradigm_health.json"
+HISTORY_FILE = REPO_ROOT / "data" / "paradigm_health_history.jsonl"
 SKILLS_DIR = REPO_ROOT / ".claude" / "skills"
 TELOS_DIR = REPO_ROOT / "memory" / "work" / "telos"
 SIGNALS_DIR = REPO_ROOT / "memory" / "learning" / "signals"
@@ -76,6 +77,21 @@ LABELS: dict[str, str] = {
     "sense_decide_act":       "SENSE/DECIDE/ACT",
     "context_routing":        "Context Routing",
     "semantic_contradictions": "Semantic Contradictions",
+}
+
+# Static severity tier map — never derived from scores at runtime
+SEVERITY_TIERS: dict[str, str] = {
+    "constitutional_security":   "HIGH",
+    "semantic_contradictions":   "HIGH",
+    "compound_learning":         "HIGH",
+    "algorithm_adherence":       "MEDIUM",
+    "isc_driven_development":    "MEDIUM",
+    "immutable_audit_trail":     "MEDIUM",
+    "sense_decide_act":          "MEDIUM",
+    "context_routing":           "MEDIUM",
+    "skill_first_routing":       "LOW",
+    "telos_identity_chain":      "LOW",
+    "system_intelligence":       "LOW",
 }
 
 
@@ -645,18 +661,38 @@ def build_report(measurements: dict[str, dict]) -> dict:
     ]
     overall = sum(other_scores) / len(other_scores) if other_scores else 0.0
 
+    # Inject severity tier from static dict — never derived from score
+    paradigms = {
+        key: {**data, "severity": SEVERITY_TIERS.get(key, "LOW")}
+        for key, data in measurements.items()
+    }
+
     alerts = [
         f"{LABELS.get(k, k)}: {v['metric']} (score {v['score']:.2f} < threshold {v['threshold']:.2f})"
-        for k, v in measurements.items()
+        for k, v in paradigms.items()
         if v["status"] == "degraded"
     ]
 
     return {
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
-        "paradigms": measurements,
+        "paradigms": paradigms,
         "overall_score": round(overall, 4),
         "alerts": alerts,
     }
+
+
+def append_history(report: dict) -> None:
+    """Append one JSONL summary entry to HISTORY_FILE for Phase 2 calibration."""
+    from tools.scripts.lib.file_lock import locked_append
+    entry = {
+        "timestamp": report["timestamp"],
+        "overall_score": report["overall_score"],
+        "paradigms": {
+            k: {"score": v["score"], "status": v["status"]}
+            for k, v in report["paradigms"].items()
+        },
+    }
+    locked_append(HISTORY_FILE, json.dumps(entry, ensure_ascii=False))
 
 
 # ---------------------------------------------------------------------------
@@ -759,6 +795,64 @@ def run_self_test() -> int:
         failures.append(f"JSON serialization: {exc}")
         print(f"  FAIL  JSON serialization: {exc}")
 
+    # FR-006a: SEVERITY_TIERS maps all 11 paradigm keys with valid tier strings
+    try:
+        all_keys = set(THRESHOLDS.keys())
+        tier_keys = set(SEVERITY_TIERS.keys())
+        if all_keys != tier_keys:
+            missing = all_keys - tier_keys
+            extra = tier_keys - all_keys
+            raise AssertionError(f"key mismatch: missing={missing}, extra={extra}")
+        valid_tiers = {"HIGH", "MEDIUM", "LOW"}
+        invalid = {k: v for k, v in SEVERITY_TIERS.items() if v not in valid_tiers}
+        if invalid:
+            raise AssertionError(f"invalid tier values: {invalid}")
+        print(f"  PASS  SEVERITY_TIERS: all {len(tier_keys)} keys valid")
+    except Exception as exc:  # noqa: BLE001
+        failures.append(f"SEVERITY_TIERS: {exc}")
+        print(f"  FAIL  SEVERITY_TIERS: {exc}")
+
+    # FR-006b: build_report includes severity field in every paradigm entry
+    try:
+        missing_severity = [k for k, v in report["paradigms"].items() if "severity" not in v]
+        if missing_severity:
+            raise AssertionError(f"missing severity in: {missing_severity}")
+        bad_values = [
+            k for k, v in report["paradigms"].items()
+            if v["severity"] not in {"HIGH", "MEDIUM", "LOW"}
+        ]
+        if bad_values:
+            raise AssertionError(f"invalid severity values in: {bad_values}")
+        print(f"  PASS  severity field: present in all {len(report['paradigms'])} paradigm entries")
+    except Exception as exc:  # noqa: BLE001
+        failures.append(f"severity field: {exc}")
+        print(f"  FAIL  severity field: {exc}")
+
+    # FR-006c: history append writes valid JSONL with required keys
+    try:
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_history = Path(tmp_dir) / "test_history.jsonl"
+            from tools.scripts.lib.file_lock import locked_append as _locked_append
+            test_entry = {
+                "timestamp": report["timestamp"],
+                "overall_score": report["overall_score"],
+                "paradigms": {
+                    k: {"score": v["score"], "status": v["status"]}
+                    for k, v in report["paradigms"].items()
+                },
+            }
+            _locked_append(tmp_history, json.dumps(test_entry, ensure_ascii=False))
+            lines = tmp_history.read_text(encoding="utf-8").strip().split("\n")
+            assert len(lines) == 1, f"expected 1 line, got {len(lines)}"
+            parsed = json.loads(lines[0])
+            for key in ("timestamp", "overall_score", "paradigms"):
+                assert key in parsed, f"history entry missing {key}"
+        print("  PASS  history append: valid JSONL entry")
+    except Exception as exc:  # noqa: BLE001
+        failures.append(f"history append: {exc}")
+        print(f"  FAIL  history append: {exc}")
+
     # Mock test: measure_semantic_contradictions API path with injected temp files
     try:
         import tempfile
@@ -817,18 +911,20 @@ def inject_paradigm_tasks(report: dict) -> list[dict]:
     except ImportError:
         return []
 
+    _priority_map = {"HIGH": 6, "MEDIUM": 4, "LOW": 3}
     injected = []
     for key, p in report["paradigms"].items():
         if p["status"] != "degraded":
             continue
         label = LABELS.get(key, key)
+        severity_tier = p.get("severity", SEVERITY_TIERS.get(key, "MEDIUM"))
         task = {
             "description": (
                 f"Investigate degraded paradigm: {label} "
                 f"(score {p['score']:.2f} < {p['threshold']:.2f})"
             ),
             "tier": 1,
-            "priority": 4,
+            "priority": _priority_map.get(severity_tier, 4),
             "autonomous_safe": False,
             "status": "pending_review",
             "routine_id": f"paradigm_health_{key}",
@@ -890,6 +986,12 @@ def main() -> int:
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
+    # Append to history for Phase 2 calibration (FR-005)
+    try:
+        append_history(report)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[paradigm_health] history append failed: {exc}", file=sys.stderr)
+
     if args.json:
         print(json.dumps(report, indent=2))
         return 0
@@ -898,18 +1000,37 @@ def main() -> int:
     print_summary(report)
     print(f"\nReport written to: {OUTPUT_FILE}")
 
-    # Post to Slack only when alerts exist
+    # Severity-tiered Slack routing (FR-003)
+    # HIGH → critical channel; MEDIUM → routine channel; LOW → backlog only
     if report["alerts"]:
-        alert_count = len(report["alerts"])
-        overall = report["overall_score"]
-        alert_lines = "\n".join(f"  !! {a}" for a in report["alerts"])
-        msg = (
-            f"[Paradigm Health] {alert_count} alert(s) -- overall {overall:.2f}\n"
-            f"{alert_lines}"
-        )
+        degraded_high = []
+        degraded_medium = []
+        for k, v in report["paradigms"].items():
+            if v["status"] != "degraded":
+                continue
+            line = f"  !! {LABELS.get(k, k)}: {v['metric']} (score {v['score']:.2f})"
+            tier = v.get("severity", "MEDIUM")
+            if tier == "HIGH":
+                degraded_high.append(line)
+            elif tier == "MEDIUM":
+                degraded_medium.append(line)
+            # LOW: no Slack post
+
         try:
             from tools.scripts.slack_notify import notify
-            notify(msg, severity="routine")
+            overall = report["overall_score"]
+            if degraded_high:
+                msg = (
+                    f"[Paradigm Health] HIGH severity alert(s) -- overall {overall:.2f}\n"
+                    + "\n".join(degraded_high)
+                )
+                notify(msg, severity="critical")
+            if degraded_medium:
+                msg = (
+                    f"[Paradigm Health] MEDIUM severity alert(s) -- overall {overall:.2f}\n"
+                    + "\n".join(degraded_medium)
+                )
+                notify(msg, severity="routine")
         except ImportError:
             pass  # Slack notify not available -- skip silently
 
