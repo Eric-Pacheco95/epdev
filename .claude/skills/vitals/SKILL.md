@@ -65,17 +65,14 @@ true
 
 ## Phase 2: Terminal Dashboard
 
-6.5. Scan for unimplemented PRDs: run `grep -rl "\- \[ \]" memory/work/` and filter to paths matching `*/PRD.md`. These are PRDs with unchecked ISC items -- not yet fully /implement-prd'd. Store the list as `pending_prds` (file paths only, strip `memory/work/` prefix for display). PRDs where all ISC items are `[x]` are excluded.
+6.5. Scan for unimplemented PRDs:  filtered to . Store as  (strip  prefix). PRDs with all  excluded.
 
-6.6. Scan for unaddressed failure debt: run `grep -rl "Fix Applied: None" memory/learning/failures/` to find failure records with a diagnosed root cause but no fix applied. Store the list as `unaddressed_failures` (filenames only, strip directory). These are pre-diagnosed warm-up tasks -- the RCA is done, only the fix remains.
+6.6. Scan for unaddressed failures: memory/learning/failures/2026-04-20_reschedule-ps1-silent-failure.md
+memory/learning/failures/2026-04-21_commit-precheck-cp1252-decode-error.md. Store as  (filenames only; RCA done, fix pending).
 
-7. Interpret the collected data and format the compact terminal dashboard (see TERMINAL FORMAT)
-8. For threshold crossings: explain what each crossing means
-9. Generate "Top 3 Today" -- the 3 highest-value actions for today grounded in evidence from the collector data:
-   - Overnight findings that need review/merge
-   - TELOS contradictions that need action
-   - Open validations from tasklist
-   - Stale/unhealthy scheduled tasks
+7. Interpret collected data; format terminal dashboard (see TERMINAL FORMAT)
+8. For threshold crossings: explain what each means
+9. Generate "Top 3 Today" -- 3 highest-value actions grounded in collector data: overnight findings needing review/merge, TELOS contradictions, open tasklist validations, stale/unhealthy scheduled tasks
 10. Display the terminal dashboard immediately
 
 ## Phase 3: Slack Deep Dive
