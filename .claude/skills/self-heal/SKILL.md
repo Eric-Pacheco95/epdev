@@ -124,7 +124,7 @@ Write to `memory/learning/failures/{date}_{slug}.md`:
 - Track most common failure types — after 5+ self-heals, top type becomes a pre-build check
 - Same component fails 3+: structural debt; needs /review-code + refactor
 - Root cause consistently unclear: self-heal diagnostic needs improvement; log signal
-- After successful self-heal: run full defensive test suitee to confirm no regression: `python tests/defensive/run_all.py`
+- After successful self-heal: run full defensive test suite to confirm no regression: `python tests/defensive/run_all.py`
 
 # INPUT
 
