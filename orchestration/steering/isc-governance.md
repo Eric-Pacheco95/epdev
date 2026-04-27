@@ -33,6 +33,10 @@ Before BUILD begins, every ISC set must pass these 7 checks. If any check fails,
 6. **Verify method** — Every criterion has a `| Verify:` suffix specifying how to test it (CLI, Test, Grep, Read, Review, Custom)
 7. **Vacuous-truth audit** — For every verify method, ask: does it exit 0 on empty output? Pass when its data source is absent? Count non-executable items toward the gate? Grep an artifact that stores its own verify string? Does the verify command reference the **same primary data source** named in the ISC criterion text (if ISC says "producers.json", verify must load producers.json — not a secondary DB)? Any "yes" requires a guard — "exit 0" is not confirmation of the target state. Additionally, any verify using `-newer {ref}`, `stat -c {ref}`, or `diff {ref}` must include a file-existence guard (`test -f {ref} || exit 1`) — a missing reference file must not produce the same exit code as a missing output file. Additionally, for any gate/filter/detection ISC criterion, the verify method must include a **positive-control test** — inject a known-bad state and assert the gate fires. Rule-presence check alone (grep for a pattern, confirm file exists) is insufficient.
 
+## Corpus and Scope
+
+- **ALL-OR-NOTHING scope for cross-file analysis.** Any analysis where correctness depends on relationships between files (contradiction detection, policy coherence, dependency graphs) must use an all-or-nothing scope gate: if no candidate file changed → skip entirely; if any file changed → process the full corpus. Selective diff-based filtering silently breaks cross-file detection — a SKILL.md edit that contradicts an unchanged CLAUDE.md is undetectable if CLAUDE.md is excluded. Why: FR-003 originally specified selective corpus filtering for `measure_semantic_contradictions()`; the bug was that cross-file contradictions became structurally invisible. Evidence: `2026-04-26_diff-aware-gate-full-corpus-not-filter.md` (9). [PROVISIONAL — candidate maturity, 2 signals]
+
 ## Loaded by
 
 - `.claude/skills/create-prd/SKILL.md` — Step 0.9 ISC drafting and quality gate

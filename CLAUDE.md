@@ -117,7 +117,7 @@ Load documentation on-demand, not upfront:
 
 - CLAUDE.md token budget: hard cap **20 KB total file size**; soft caps of **8 rules per category** and **55 rules total**. Bytes are the real cost (loaded every cold session); rule count is just a leading indicator. When ANY threshold is hit, run `/update-steering-rules --audit` before adding new rules — merge related rules, move category-specific rules into the relevant `SKILL.md` or `orchestration/steering/` doc, and flag rules unused 90+ days for re-validation.
 - Never keep deprecated skills, completed-phase references, or one-time debugging notes as permanent steering rules — these waste context tokens on every session and confuse downstream behavior. Rules tagged `[MODEL-DEP]` must be re-validated against current model/CLI behavior at every audit, not assumed evergreen.
-- **When adding a behavioral rule to any steering doc, declare its enforcement layer (`Enforced by: <hook|validator|test|lint>`) in the same edit, or label `[ADVISORY]`.** Canonical rule + evidence: `orchestration/steering/autonomous-rules.md`.
+- **When adding a behavioral rule to any steering doc, declare its enforcement layer (`Enforced by: <hook|validator|test|lint>`) in the same edit, or label `[ADVISORY]`.** Also: when a load-on-demand steering doc contains a rule whose violation would matter in sessions where that doc is not loaded, mirror a summary counterpart in CLAUDE.md — on-demand docs are invisible in general sessions. Canonical rule + evidence: `orchestration/steering/autonomous-rules.md`.
 
 ## Skill-First Execution
 

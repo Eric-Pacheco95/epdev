@@ -67,6 +67,8 @@ true
 
 6.5. Scan for unimplemented PRDs: run `grep -rl "\- \[ \]" memory/work/` and filter to paths matching `*/PRD.md`. These are PRDs with unchecked ISC items -- not yet fully /implement-prd'd. Store the list as `pending_prds` (file paths only, strip `memory/work/` prefix for display). PRDs where all ISC items are `[x]` are excluded.
 
+6.6. Scan for unaddressed failure debt: run `grep -rl "Fix Applied: None" memory/learning/failures/` to find failure records with a diagnosed root cause but no fix applied. Store the list as `unaddressed_failures` (filenames only, strip directory). These are pre-diagnosed warm-up tasks -- the RCA is done, only the fix remains.
+
 7. Interpret the collected data and format the compact terminal dashboard (see TERMINAL FORMAT)
 8. For threshold crossings: explain what each crossing means
 9. Generate "Top 3 Today" -- the 3 highest-value actions for today grounded in evidence from the collector data:
@@ -195,6 +197,7 @@ MORALIS: {moralis_vitals.stream_status} | addr {moralis_vitals.addresses} | CU {
   {Poll {moralis_vitals.last_poll_age_min}m ago} | Today {moralis_vitals.cu_today} CU | {ALERT >=70% if alert_70pct else OK}
 
 Pending PRDs ({n}): {slug1/PRD.md, slug2/PRD.md} or "None"
+Unaddressed Failures ({n}): {filename1, filename2} or "None" -- root cause known, fix pending
 
 Threshold Crossings:
   {[SEV] metric: value} or "None"
@@ -278,6 +281,9 @@ Contradictions: {n} | Coverage: {n}% | Proposals: {n}
 *Pending PRDs (unimplemented)*
 {bulleted list of slug/PRD.md paths with one-line PRD title, or "None"}
 Next step for each: `/implement-prd memory/work/{slug}/PRD.md`
+
+*Unaddressed Failures (root cause known, fix pending)*
+{bulleted list of filenames from unaddressed_failures, or "None"} -- each is pre-diagnosed; only the fix remains
 
 *Threshold Crossings*
 {[SEV] metric: value (detail)} or "All clear"

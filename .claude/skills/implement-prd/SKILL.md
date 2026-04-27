@@ -86,6 +86,11 @@ Subagent rules: pass ISC item text, verify method, context files; return file wr
 - **Escalation**: unannotated `[I]`/`[R]` items OR irreversible verify methods → recommend `/architecture-review` or `advisor()`. Session compacted since prior `advisor()` → treat authorization expired, re-read PRD.
 - **OQ→BUILD gate**: all `must-resolve-before-BUILD` OQs resolved → call `advisor()` before BUILD — last cheap moment to surface blockers.
 
+### PROBLEM STATEMENT FRESHNESS CHECK
+
+- For each PRD problem statement or objective, grep-verify the stated problem still exists in current code
+- If the stated problem is no longer present in code, log "Problem no longer exists: [description]" in IMPLEMENTATION LOG and skip associated FRs — do not implement solutions to solved problems
+
 ### PHASE SCOPE FILTER (only if --phase N was provided)
 
 - Run: `python tools/scripts/isc_validator.py --prd <PRD-path> --phase N --json`
