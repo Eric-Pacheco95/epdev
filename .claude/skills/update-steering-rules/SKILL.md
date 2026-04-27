@@ -115,12 +115,14 @@ Read `data/calibration_weekly.md`. If any metric is RED, surface it in the healt
 **Step A: Health Check (deterministic)**
 Run these checks and report results before proposing any changes:
 
-1. **Size check**: `wc -c CLAUDE.md` — report bytes and pass/fail against 20KB (20480 bytes)
-2. **Rule count**: `grep -c '^- ' CLAUDE.md` — report count and pass/fail against 45-rule ceiling
-3. **MODEL-DEP review**: `grep 'MODEL-DEP' CLAUDE.md` — list model-limitation rules; verify each is still current
-4. **Conflict scan**: contradicting rules; universal-scoped rules that apply only to autonomous/specific contexts; compound rules violating ISC no-compound principle
-5. **Cross-file consistency**: Read ALL sub-steering files in Context Routing table. Check for: rules duplicated between CLAUDE.md and sub-files; misrouted rules. Files: `security/constitutional-rules.md`, `orchestration/steering/autonomous-rules.md`, `platform-specific.md`, `research-patterns.md`, `cross-project.md`, `trade-development.md`
-6. **Staleness scan**: completed phases, one-time incident workarounds, magic numbers belonging in config
+1. **Size check (CLAUDE.md)**: `wc -c CLAUDE.md` — report bytes and pass/fail against 20KB (20480 bytes)
+2. **Rule count (CLAUDE.md)**: `grep -c '^- ' CLAUDE.md` — report count and pass/fail against 45-rule ceiling
+3. **Sub-steering file health (NEW)**: For every file in the Context Routing table, run `wc -c <file>` and `grep -c '^- ' <file>`. Apply the same thresholds: ≤ 20,480 B per file, ≤ 8 rules per H2/H3 section (soft cap). Surface RED entries in the health table. Sub-files exceeding size cap are spinoff candidates (split by section into a more specific sub-file) — propose under Step B as MOVE/SPLIT.
+4. **MODEL-DEP review**: `grep 'MODEL-DEP' CLAUDE.md` — list model-limitation rules; verify each is still current
+5. **Conflict scan**: contradicting rules; universal-scoped rules that apply only to autonomous/specific contexts; compound rules violating ISC no-compound principle
+6. **Cross-file consistency**: Read ALL sub-steering files in Context Routing table. Check for: rules duplicated between CLAUDE.md and sub-files; misrouted rules. Files: `security/constitutional-rules.md`, `orchestration/steering/autonomous-rules.md`, `platform-specific.md`, `research-patterns.md`, `cross-project.md`, `trade-development.md`, `isc-governance.md`, `ceremony-tier.md`, `incident-triage.md`, `model-effort-routing.md`, `producer-artifacts.md`, `frontend-ui.md`, `testing-governance.md`
+7. **Staleness scan**: completed phases, one-time incident workarounds, magic numbers belonging in config
+8. **Spinoff trigger (NEW)**: For each file checked above (CLAUDE.md and every sub-file), if any single H2/H3 section contains ≥10 rules AND the rules cluster into ≥2 distinct themes (≥3 rules each, identifiable by leading bold phrase or shared keyword), propose a new sub-steering file. Heuristic for cluster detection: group rules by first-noun-phrase or shared bold lead-in; if 2+ groups have ≥3 rules each, flag as spinoff candidate. Propose under Step B as a new SUB-FILE creation with rule list to migrate and a Context Routing entry for CLAUDE.md.
 
 Present health check results as a table before proceeding.
 
@@ -131,6 +133,7 @@ For each issue found, propose one of:
 - **MOVE**: Rule belongs in a domain-specific file (autonomous-rules.md, a SKILL.md, constitutional-rules.md)
 - **SPLIT**: Compound rule should be separated into distinct concerns
 - **UPDATE**: Rule text is outdated but the concern is still valid — rewrite
+- **SPINOFF**: Section in CLAUDE.md or oversized sub-file should become a new sub-steering file (triggered by Step A check 3 or 8). Follow "Proposing new sub-steering files" template; include the rules to migrate and the Context Routing entry to add
 
 Present all proposals in a numbered list with evidence. Wait for Eric's approval before making any changes.
 
