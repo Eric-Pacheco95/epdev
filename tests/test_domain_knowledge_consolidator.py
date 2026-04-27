@@ -11,6 +11,7 @@ if str(REPO_ROOT) not in sys.path:
 import tools.scripts.domain_knowledge_consolidator as dkc
 from tools.scripts.domain_knowledge_consolidator import (
     _enforce_cap, _detect_domains, _write_context_md, _write_subdomain_file,
+    _build_synthesis_prompt, _read_synthesis_theme_hints,
 )
 
 
@@ -141,3 +142,58 @@ class TestLoadState:
         monkeypatch.setattr(dkc, "STATE_FILE", f)
         result = dkc._load_state()
         assert result == {}
+
+
+# ---------------------------------------------------------------------------
+# _build_synthesis_prompt
+# ---------------------------------------------------------------------------
+
+class TestBuildSynthesisPrompt:
+    def test_contains_domain_name(self):
+        prompt = _build_synthesis_prompt("crypto", [])
+        assert "crypto" in prompt
+
+    def test_contains_source_count(self):
+        sources = [{"filename": "a.md", "content": "hello", "source_type": "raw"}]
+        prompt = _build_synthesis_prompt("market", sources)
+        assert "1" in prompt
+
+    def test_includes_existing_context_when_provided(self):
+        prompt = _build_synthesis_prompt("geopolitics", [], existing_context="Prior knowledge here")
+        assert "Prior knowledge here" in prompt
+
+    def test_omits_context_section_when_empty(self):
+        prompt = _build_synthesis_prompt("tech", [], existing_context="")
+        assert "Existing _context.md" not in prompt
+
+    def test_includes_article_filename(self):
+        sources = [{"filename": "2026-01-15_article.md", "content": "body", "source_type": "raw"}]
+        prompt = _build_synthesis_prompt("cooking", sources)
+        assert "2026-01-15_article.md" in prompt
+
+
+# ---------------------------------------------------------------------------
+# _read_synthesis_theme_hints
+# ---------------------------------------------------------------------------
+
+class TestReadSynthesisThemeHints:
+    def test_missing_synthesis_dir_returns_empty(self, monkeypatch):
+        monkeypatch.setattr(dkc, "SYNTHESIS_DIR", Path("/no/such/dir"))
+        assert _read_synthesis_theme_hints() == []
+
+    def test_returns_themes_from_synthesis_files(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(dkc, "SYNTHESIS_DIR", tmp_path)
+        f = tmp_path / "2026-04-01_synthesis.md"
+        f.write_text("### Theme 1: Agent Orchestration\nsome content\n### Theme 2: Harness Tooling\n")
+        hints = _read_synthesis_theme_hints()
+        assert "Agent Orchestration" in hints
+        assert "Harness Tooling" in hints
+
+    def test_reads_only_last_three_files(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(dkc, "SYNTHESIS_DIR", tmp_path)
+        for i in range(5):
+            f = tmp_path / f"2026-04-0{i+1}_synthesis.md"
+            f.write_text(f"### Theme 1: Topic{i}\n")
+        hints = _read_synthesis_theme_hints()
+        assert "Topic0" not in hints  # first two files excluded
+        assert "Topic1" not in hints

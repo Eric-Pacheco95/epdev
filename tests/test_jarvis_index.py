@@ -1,5 +1,6 @@
 """Unit tests for tools/scripts/jarvis_index.py pure helpers."""
 
+import sqlite3
 import sys
 import tempfile
 from pathlib import Path
@@ -11,6 +12,7 @@ if str(REPO_ROOT) not in sys.path:
 from tools.scripts.jarvis_index import (
     _parse_signal_frontmatter,
     _parse_producer_from_logname,
+    _init_db, _is_indexed, _mark_indexed,
     _PRODUCER_MAP,
 )
 
@@ -119,3 +121,55 @@ class TestParseSignalFrontmatter:
     def test_nonexistent_file_returns_none(self):
         meta = _parse_signal_frontmatter(Path("/nonexistent/path/signal.md"))
         assert meta is None
+
+
+# ---------------------------------------------------------------------------
+# _init_db / _is_indexed / _mark_indexed
+# ---------------------------------------------------------------------------
+
+def _make_conn() -> sqlite3.Connection:
+    conn = sqlite3.connect(":memory:")
+    _init_db(conn)
+    return conn
+
+
+class TestInitDb:
+    def test_creates_documents_table(self):
+        conn = _make_conn()
+        tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        assert "documents" in tables
+
+    def test_creates_indexed_files_table(self):
+        conn = _make_conn()
+        tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        assert "indexed_files" in tables
+
+    def test_idempotent_double_init(self):
+        conn = _make_conn()
+        _init_db(conn)  # should not raise
+
+
+class TestIsIndexedMarkIndexed:
+    def test_unknown_path_not_indexed(self):
+        conn = _make_conn()
+        assert _is_indexed(conn, "/some/path.md", 123456) is False
+
+    def test_marked_path_is_indexed(self):
+        conn = _make_conn()
+        _mark_indexed(conn, "/some/path.md", 999)
+        conn.commit()
+        assert _is_indexed(conn, "/some/path.md", 999) is True
+
+    def test_different_mtime_not_indexed(self):
+        conn = _make_conn()
+        _mark_indexed(conn, "/path.md", 100)
+        conn.commit()
+        assert _is_indexed(conn, "/path.md", 200) is False
+
+    def test_mark_indexed_upserts(self):
+        conn = _make_conn()
+        _mark_indexed(conn, "/path.md", 100)
+        _mark_indexed(conn, "/path.md", 200)
+        conn.commit()
+        assert _is_indexed(conn, "/path.md", 200) is True
+        assert _is_indexed(conn, "/path.md", 100) is False

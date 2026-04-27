@@ -1,5 +1,8 @@
 """Tests for consolidate_overnight.py -- generate_summary_md pure function."""
 
+import json
+
+import tools.scripts.consolidate_overnight as co_mod
 from tools.scripts.consolidate_overnight import generate_summary_md
 
 
@@ -104,3 +107,34 @@ def test_next_steps_merge_commands_present():
     result = generate_summary_md([{"branch": "b1"}], merge_result, [], "2026-01-01")
     assert "git log --oneline" in result
     assert "git diff" in result
+
+
+# ---------------------------------------------------------------------------
+# get_dispatcher_reports
+# ---------------------------------------------------------------------------
+
+def test_get_dispatcher_reports_missing_dir(monkeypatch):
+    import tools.scripts.consolidate_overnight as co_mod
+    monkeypatch.setattr(co_mod, "REPO_ROOT", co_mod.REPO_ROOT.parent.parent / "no_such_dir_xyz")
+    reports = co_mod.get_dispatcher_reports("2026-04-27")
+    assert reports == []
+
+
+def test_get_dispatcher_reports_reads_matching_file(tmp_path, monkeypatch):
+    runs_dir = tmp_path / "data" / "dispatcher_runs"
+    runs_dir.mkdir(parents=True)
+    report_data = {"task_id": "t1", "status": "done"}
+    (runs_dir / "run_20260427_001.json").write_text(json.dumps(report_data), encoding="utf-8")
+    monkeypatch.setattr(co_mod, "REPO_ROOT", tmp_path)
+    reports = co_mod.get_dispatcher_reports("2026-04-27")
+    assert len(reports) == 1
+    assert reports[0]["task_id"] == "t1"
+
+
+def test_get_dispatcher_reports_skips_wrong_date(tmp_path, monkeypatch):
+    runs_dir = tmp_path / "data" / "dispatcher_runs"
+    runs_dir.mkdir(parents=True)
+    (runs_dir / "run_20260428_001.json").write_text('{"task_id": "other"}', encoding="utf-8")
+    monkeypatch.setattr(co_mod, "REPO_ROOT", tmp_path)
+    reports = co_mod.get_dispatcher_reports("2026-04-27")
+    assert reports == []
