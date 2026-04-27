@@ -235,5 +235,5 @@ INPUT:
 
 - Signal: `{YYYY-MM-DD}_extract-harness-{slug}.md` when >20% of skills blocked by Jarvis-specificity. Rating: 7-8 for architectural reusability insights, 5-6 for minor-adaptation extractions, skip for clean runs.
 - If --enterprise or --personal produced harness improvements: capture in history/decisions/.
-- If --enterprise extraction produced zero Jarvis-specific removals, log it: that corpus is a candidate for a clean-extraction reference standard and the skill gap taxonomy for that domain
-- Track harness extraction success by source skill age — skills >6 months without update tend to have Jarvis-specific patterns baked deeper; flag them for a `/dream` consolidation pass before extraction
+- If --enterprise extraction found zero Jarvis-specific removals: log as clean-extraction reference standard candidate.
+- Skills >6 months without update tend to have Jarvis-specific patterns baked in; flag for `/dream` pass before extraction.
