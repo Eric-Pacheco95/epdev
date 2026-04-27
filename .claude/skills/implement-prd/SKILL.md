@@ -50,7 +50,7 @@ Input errors -> STOP with guidance:
 
 ## Step 0.5: OUTCOME-SHAPE CHECK (v2+ and stalled projects)
 
-- If the PRD filename or directory signals a revision (v2, v3, v4, etc.) OR the project directory has git history older than 7 days: apply the outcome-shape test before reading ISC items.
+- If PRD signals revision (v2, v3, etc.) OR project git history >7 days: run outcome-shape test before reading ISC items.
 - Scan ISC items: does at least one criterion directly measure a forward, observable outcome (revenue, error rate, trade count, user behavior) rather than code completion (file exists, function returns, test passes)?
 - All ISC items are impl actions (no output-state outcome criterion): "OUTCOME-SHAPE WARNING: Activity-shaped PRD — run /create-prd --reshape to add outcome gate." Wait for confirmation.
 - Do NOT block if even one ISC item measures a primary behavioral/financial outcome.
