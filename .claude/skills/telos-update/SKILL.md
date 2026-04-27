@@ -63,12 +63,7 @@ false
   - **MUSIC.md**: Practice sessions, musical insights, genre explorations
   - **BELIEFS.md**: Fundamental value shifts (RARE — flag these prominently)
   - **MISSION.md**: Core purpose changes (VERY RARE — flag these prominently)
-- For each proposed change, classify its update frequency:
-  - **Every session**: LEARNED.md, STATUS.md (auto-update, show summary)
-  - **Weekly**: PROJECTS.md, IDEAS.md (auto-update, show summary)
-  - **Monthly**: GOALS.md, CHALLENGES.md, STRATEGIES.md, MODELS.md, FRAMES.md (propose, require approval)
-  - **Quarterly/Rare**: BELIEFS.md, MISSION.md (propose prominently, require explicit approval)
-  - **Anytime (user-driven)**: WISDOM.md, WRONG.md, PREDICTIONS.md, HISTORY.md, NARRATIVES.md (only write when Eric explicitly shares)
+- Classify update frequency per TELOS FILE LOCATIONS table below; approval tier determines whether to auto-write or propose.
 - Present all proposed changes in a clear diff format before writing
 - After approval, write changes using the Edit tool (prefer surgical edits over full rewrites)
 - Log the update to `history/changes/` with rationale
