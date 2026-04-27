@@ -12,6 +12,7 @@ from tools.scripts.stamp_prd_axes import (
     _text_contains_any,
     _score_axis,
     _classify_prd,
+    _build_frontmatter,
     _STAKES_HIGH,
     _STAKES_LOW,
     _AMBIGUITY_HIGH,
@@ -121,3 +122,43 @@ class TestClassifyPrd:
         assert "ambiguity:" in result["rationale"]
         assert "solvability:" in result["rationale"]
         assert "verifiability:" in result["rationale"]
+
+    def test_low_confidence_on_sparse_content(self):
+        # No keyword hits → low confidence
+        content = "## OVERVIEW\nA thing.\n"
+        result = _classify_prd(content, Path("PRD_sparse.md"))
+        assert result["confidence"] == "low"
+
+
+class TestBuildFrontmatter:
+    def test_valid_all_high(self):
+        out = _build_frontmatter("high", "high", "high", "high")
+        assert "stakes:        high" in out
+        assert "ambiguity:     high" in out
+
+    def test_valid_mixed_values(self):
+        out = _build_frontmatter("low", "medium", "high", "low")
+        assert "stakes:        low" in out
+        assert "ambiguity:     medium" in out
+        assert "solvability:   high" in out
+        assert "verifiability: low" in out
+
+    def test_output_starts_with_yaml_delimiters(self):
+        out = _build_frontmatter("medium", "medium", "medium", "medium")
+        assert out.startswith("---\n")
+        assert "---\n\n" in out
+
+    def test_invalid_stakes_raises(self):
+        import pytest
+        with pytest.raises(ValueError, match="stakes"):
+            _build_frontmatter("extreme", "low", "low", "low")
+
+    def test_invalid_verifiability_raises(self):
+        import pytest
+        with pytest.raises(ValueError, match="verifiability"):
+            _build_frontmatter("low", "low", "low", "unknown")
+
+    def test_empty_value_raises(self):
+        import pytest
+        with pytest.raises(ValueError):
+            _build_frontmatter("", "low", "low", "low")
