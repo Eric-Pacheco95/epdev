@@ -55,6 +55,8 @@ false
 - No input: print DISCOVERY as usage block, STOP
 - Edit request without image path or prior session: ask which image to edit, STOP
 - Prompt contains text-rendering demands (specific words in image): warn about text limitations, proceed
+- Invalid --ratio value (not 1:1, 16:9, 9:16, 4:3, 3:4): print valid ratios and STOP
+- Prompt < 5 words and no image context: ask Eric to describe the image more specifically before proceeding
 
 ## Step 1: Classify the request
 
