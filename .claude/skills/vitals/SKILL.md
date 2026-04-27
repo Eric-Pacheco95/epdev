@@ -89,16 +89,12 @@ memory/learning/failures/2026-04-21_commit-precheck-cp1252-decode-error.md. Stor
 
 ## Phase 4: Morning Guide (interactive 5-step walkthrough)
 
-After the Slack post, display the morning guide header and walk Eric through each step. Present one step at a time -- tell Eric what to do, give him the exact command or decision, and wait. This is learn-by-doing, not a checklist to read.
-
-Display the guide header:
+After Slack post, display then walk interactively (one step at a time; command-first; wait for Eric before proceeding):
 ```
 Morning Brief -- Step-by-Step Guide
 ------------------------------------------------------------
 Target: 30-60 min | Extend only for critical findings
 ```
-
-Then present each step in sequence:
 
 **Step 1 -- OBSERVE (done)**
 Tell Eric: "Step 1 complete -- /vitals ran, dashboard displayed, Slack posted. System status: {HEALTHY|WARN|CRITICAL}."
