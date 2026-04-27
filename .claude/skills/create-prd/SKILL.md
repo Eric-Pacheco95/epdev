@@ -144,8 +144,8 @@ Check session context for evidence resolving each blocker before asking Eric. As
 # OUTPUT INSTRUCTIONS
 
 - Only output Markdown.
-- The first element of the output PRD must be a YAML frontmatter block bounded by `---` lines declaring the four Task Typing axes: `stakes`, `ambiguity`, `solvability`, `verifiability` (each `low | medium | high`). No exceptions.
-- Output exactly these sections in order (level-2 headings) after the frontmatter: OVERVIEW, PROBLEM AND GOALS, NON-GOALS, USERS AND PERSONAS, USER JOURNEYS OR SCENARIOS, FUNCTIONAL REQUIREMENTS, NON-FUNCTIONAL REQUIREMENTS, ACCEPTANCE CRITERIA, SUCCESS METRICS, OUT OF SCOPE, DEPENDENCIES AND INTEGRATIONS, RISKS AND ASSUMPTIONS, OPEN QUESTIONS
+- PRD must start with YAML frontmatter (`---`) declaring the four Task Typing axes: `stakes`, `ambiguity`, `solvability`, `verifiability` (each `low | medium | high`). No exceptions.
+- Sections in order (level-2 headings): OVERVIEW, PROBLEM AND GOALS, NON-GOALS, USERS AND PERSONAS, USER JOURNEYS OR SCENARIOS, FUNCTIONAL REQUIREMENTS, NON-FUNCTIONAL REQUIREMENTS, ACCEPTANCE CRITERIA, SUCCESS METRICS, OUT OF SCOPE, DEPENDENCIES AND INTEGRATIONS, RISKS AND ASSUMPTIONS, OPEN QUESTIONS
 - OVERVIEW: 1-para, no bullets
 - PROBLEM AND GOALS: bullets tied to user/business outcomes
 - NON-GOALS: bullets; if none: "(none stated—confirm with stakeholders)"
@@ -157,7 +157,7 @@ Check session context for evidence resolving each blocker before asking Eric. As
 - SUCCESS METRICS: bullets; "(to be defined)" when missing
 - OUT OF SCOPE: bullets; if everything in scope: "(none stated)"
 - DEPENDENCIES AND INTEGRATIONS: bullets — teams, systems, APIs, data sources
-- RISKS AND ASSUMPTIONS: subsections for risks vs assumptions — **must appear BEFORE any IMPLEMENTATION PLAN or task-ready section** when both are present. Safety/review gate sections always structurally precede actionable items; gate-last output is bypassed by ADHD build velocity.
+- RISKS AND ASSUMPTIONS: subsections for risks vs assumptions — **must appear BEFORE any IMPLEMENTATION PLAN or task-ready section** when both are present; gate-last output is bypassed by ADHD build velocity.
 - OPEN QUESTIONS: bullets of decisions or info still needed
 - Do not invent revenue figures, legal commitments, or named customers not in input.
 - Do not add meta-commentary.
