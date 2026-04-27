@@ -162,8 +162,11 @@ def main() -> int:
                                   gen_session, qg_session)
                     exit_reason = "success" if qg_passed else "quality_gate_failed"
                     if qg_passed:
-                        if not open_pr_via_claude(CLAUDE_BIN, branch, args.skill_args):
-                            exit_reason = "pr_open_failed"
+                        # PR is best-effort — knowledge files are gitignored so branch
+                        # has no committed diff; skip if Claude can't open one.
+                        pr_ok = open_pr_via_claude(CLAUDE_BIN, branch, args.skill_args)
+                        if not pr_ok:
+                            print("  PR open skipped or failed (non-fatal for gitignored output)")
 
         if exit_reason != "success":
             park = write_park_gate(PARK_GATE_DIR, run_id, args.skill, args.skill_args,

@@ -43,6 +43,8 @@ def _find_target_file(knowledge_dir: Path, since_time: datetime | None) -> Path 
     for p in knowledge_dir.rglob("*.md"):
         if not p.is_file():
             continue
+        if p.name == "index.md":
+            continue
         if since_time is not None:
             mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
             if mtime < since_time:

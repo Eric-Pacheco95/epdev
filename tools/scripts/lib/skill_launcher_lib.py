@@ -131,10 +131,14 @@ def build_prompt(skill: str, args_str: str, max_cost: float) -> str:
         "memory/knowledge/{domain}/YYYY-MM-DD_{slug}.md — this is REQUIRED, not optional\n"
         "  - Determine domain from topic (general/economics if no specific domain fits)\n"
         "  - Create the domain directory if it does not exist\n"
-        "  - Article must be >=500 words with >=3 cited https:// URLs inline\n"
+        "  - Article must be >=500 words\n"
+        "  - CITATION REQUIREMENT (HARD): add `Source: https://...` after EVERY major section/finding\n"
+        "    Minimum 3 inline https:// URLs must appear in the knowledge article file itself.\n"
+        "    Do NOT defer citations to research_brief.md — the verifier checks the knowledge article.\n"
+        "    VERIFIER WILL FAIL with exit_reason=insufficient_citations if article has <3 https:// URLs.\n"
         "- Append one line to memory/knowledge/index.md under the correct domain heading\n"
-        "- The memory/work/{slug}/ brief is OPTIONAL; knowledge file is MANDATORY\n"
-        "- SUCCESS = knowledge file written and readable\n"
+        "- The memory/work/{slug}/ brief is OPTIONAL; knowledge file with inline citations is MANDATORY\n"
+        "- SUCCESS = knowledge file written with >=500 words and >=3 inline https:// URLs\n"
     )
     return (
         f"<command-name>/{skill}</command-name>\n\n"
@@ -184,6 +188,8 @@ def spawn_quality_gate(
         for p in knowledge_dir.rglob("*.md"):
             if not p.is_file():
                 continue
+            if p.name == "index.md":
+                continue
             if since is not None:
                 from datetime import datetime, timezone
                 mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
@@ -206,9 +212,18 @@ def spawn_quality_gate(
         "Reply with exactly: QUALITY_GATE_PASS or QUALITY_GATE_FAIL <reason>"
     )
     r = subprocess.run(
-        [claude_bin, "-p", "--output-format", "stream-json", "--model", _QUALITY_GATE_MODEL, "-"],
+        [claude_bin, "-p", "--output-format", "stream-json", "--verbose",
+         "--model", _QUALITY_GATE_MODEL, "-"],
         input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=300,
     )
+    # Log quality gate output for diagnosability
+    run_id = branch.split("-")[-1] if "-" in branch else branch
+    qg_log = _RUN_LOG_DIR / f"{run_id}_qg.txt"
+    _RUN_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    qg_log.write_text((r.stdout or "") + "\n---STDERR---\n" + (r.stderr or ""),
+                      encoding="utf-8", errors="replace")
+    print(f"  Quality gate output logged -> {qg_log}")
+
     session_id = f"{branch}-qg"
     for line in (r.stdout or "").splitlines():
         try:
@@ -217,7 +232,9 @@ def spawn_quality_gate(
                 session_id = obj["session_id"]
         except json.JSONDecodeError:
             pass
-    return "QUALITY_GATE_PASS" in (r.stdout or ""), session_id
+    passed = "QUALITY_GATE_PASS" in (r.stdout or "")
+    print(f"  Quality gate verdict: {'PASS' if passed else 'FAIL'}")
+    return passed, session_id
 
 
 def open_pr_via_claude(claude_bin: str, branch: str, topic: str) -> bool:
