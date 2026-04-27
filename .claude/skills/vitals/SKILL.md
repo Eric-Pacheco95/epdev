@@ -77,7 +77,7 @@ memory/learning/failures/2026-04-21_commit-precheck-cp1252-decode-error.md. Stor
 
 ## Phase 3: Slack Deep Dive
 
-7. After displaying terminal output, compose the full Slack report (see SLACK FORMAT) with ALL available sections: system health, overnight branch breakdown, TELOS introspection, external monitoring, cross-project findings, threshold crossings, autonomous value rate, unmerged branches, Top 3 actions.
+7. After displaying terminal output, compose the full Slack report (see SLACK FORMAT) with all sections defined in SLACK FORMAT.
 8. Post to #epdev Slack using:
    ```python
    import sys; sys.path.insert(0, str(__import__('pathlib').Path('.').resolve()))
