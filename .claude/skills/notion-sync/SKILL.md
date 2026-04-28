@@ -45,8 +45,6 @@ false
 
 # MODES
 
-`/notion-sync` runs in one of four modes based on the argument provided. If no argument is given, default to `inbox`.
-
 | Mode | Trigger | Purpose |
 |------|---------|---------|
 | `inbox` | `/notion-sync` or `/notion-sync inbox` | Check Inbox for new captures (default) |
