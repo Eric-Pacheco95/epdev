@@ -33,7 +33,7 @@
   "absorb":                { "autonomous_safe": true,  "tier": 2, "notes": "--quick mode safe; --deep queues TELOS proposals as PENDING" },
   "autoresearch":          { "autonomous_safe": true,  "tier": 2, "notes": "Creates branches, commits in worktree -- controlled loop" },
   "deep-audit":            { "autonomous_safe": true,  "tier": 2, "notes": "--evaluate is read-only; --onboard may auto-fix Tier 1 findings" },
-  "learning-capture":      { "autonomous_safe": true,  "tier": 2, "notes": "Writes signal/failure files, updates meta" },
+  "learning-capture":      { "autonomous_safe": false, "tier": 3, "notes": "User-only -- runs in calling session, not delegated. SKILL.md autonomous_safe: false; disable-model-invocation: true (2026-04-27). Was tier 2 until reconciled." },
   "security-audit":        { "autonomous_safe": true,  "tier": 2, "notes": "May git rm --cached or add .gitignore entries" },
   "self-heal":             { "autonomous_safe": true,  "tier": 2, "notes": "Max 3 heal cycles, reverts if unresolved" },
   "synthesize-signals":    { "autonomous_safe": true,  "tier": 2, "notes": "Writes synthesis docs, moves signal files" },
