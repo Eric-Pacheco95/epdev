@@ -80,6 +80,7 @@ INPUT:
 - All template placeholders ({REVIEWER}, {TARGET}, {DATE}, {REPO_HINT}) are substituted | Verify: `grep '{' <output-file>` returns zero hits inside the prompt body
 - Output file is NOT written inside a gitignored path (unless explicitly requested) | Verify: `git check-ignore <--out path>` returns no match
 - Mode section matches flag: dynamic → contains 'Phase 3 — Dynamic' and H1-H8 playbook; static → does NOT contain those strings | Verify: `grep 'Phase 3' <output>` for dynamic; absence for static
+- Output file opens with reviewer identification line (not blank/empty header) | Verify: `head -3 <output>` begins with "You are doing"
 
 # LEARN
 
