@@ -166,6 +166,7 @@ Project initialization (new project from scratch):
 - Routing rationale present per task (one sentence, not just skill name) | Verify: Read each routing decision
 - Pipeline chains: diagram shown, approval obtained before invoking | Verify: approval request in output
 - 'Next step' surfaced after each completed handoff | Verify: next-step prompt present
+- No tasks added beyond the input set (no scope inflation during routing) | Verify: routing output references only tasks present in input, no new tasks invented
 
 # LEARN
 
