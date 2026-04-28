@@ -114,12 +114,18 @@ def collect_snapshot(cfg: dict, root_dir: Path, prev_metrics: dict = None) -> di
     }
 
     for result in collector_results:
-        snapshot["metrics"][result["name"]] = {
+        entry = {
             "value": result["value"],
             "unit": result["unit"],
         }
         if result["detail"]:
-            snapshot["metrics"][result["name"]]["detail"] = result["detail"]
+            entry["detail"] = result["detail"]
+        # Preserve any collector-specific extra fields (e.g. stale_node_count
+        # from system_resources). value/unit/detail/name are already handled.
+        for k, v in result.items():
+            if k not in ("name", "value", "unit", "detail"):
+                entry[k] = v
+        snapshot["metrics"][result["name"]] = entry
 
     return snapshot
 

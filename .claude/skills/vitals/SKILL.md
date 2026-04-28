@@ -184,6 +184,7 @@ Windows tasks (detail): from scheduled_tasks_detail -- list each task where heal
 
 MEMORY ({memory.status}): peak {memory.peak_commit_gb} GB ({memory.peak_ratio_pct}% of pagefile)
   Top-1 at peak: {memory.top1_consumer_at_peak} | Ticks: {memory.tick_count}/{memory.expected_ticks} ({completion_pct}%)
+  Stale procs: {network_connections.stale_node_count} node (>4h), {network_connections.stale_python_count} python (>8h) -- show "none" when both are 0
   Drill down: /vitals --memory | Heatmap: /vitals --context-files
 
 MORALIS: {moralis_vitals.stream_status} | addr {moralis_vitals.addresses} | CU {moralis_vitals.cu_mtd}/{moralis_vitals.monthly_cap_cu} ({moralis_vitals.pct_used}%)

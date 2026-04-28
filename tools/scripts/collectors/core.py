@@ -954,11 +954,101 @@ def collect_backlog_health_metric(cfg: dict, root_dir: Path, _prev: dict = None)
 
 # ── system_resources ───────────────────────────────────────────────
 
+NODE_STALE_HOURS = 4
+PYTHON_STALE_HOURS = 8
+
+
+def _collect_stale_processes() -> tuple:
+    """Detect long-running node/python processes.
+
+    Returns (stale_node_count, stale_python_count, detail_str, leaks).
+    leaks is a list of dicts (pid, name, age_hours, cmdline_snippet).
+    Node procs whose command line contains 'claude' are excluded — those
+    are Claude Code itself, not jarvis-app or leaked dev servers.
+    """
+    ps_script = (
+        "Get-CimInstance Win32_Process -Filter \"Name='node.exe' OR Name='python.exe'\" "
+        "| ForEach-Object { [PSCustomObject]@{ pid=$_.ProcessId; name=$_.Name; "
+        "start=$_.CreationDate.ToString('o'); cmdline=$_.CommandLine; ws=$_.WorkingSetSize } } "
+        "| ConvertTo-Json -Compress -Depth 3"
+    )
+    try:
+        result = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", ps_script],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return 0, 0, "stale-proc query failed (powershell unavailable)", []
+
+    if result.returncode != 0 or not result.stdout.strip():
+        return 0, 0, "stale-proc query empty", []
+
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return 0, 0, "stale-proc JSON parse failed", []
+
+    if isinstance(data, dict):
+        data = [data]
+
+    now = datetime.now(timezone.utc)
+    stale_node = 0
+    stale_python = 0
+    leaks = []
+    for proc in data:
+        if not isinstance(proc, dict):
+            continue
+        name = (proc.get("name") or "").lower()
+        start_raw = proc.get("start") or ""
+        cmdline = proc.get("cmdline") or ""
+        try:
+            start_dt = datetime.fromisoformat(start_raw)
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=timezone.utc)
+            age_h = (now - start_dt).total_seconds() / 3600.0
+        except (ValueError, TypeError):
+            continue
+
+        if name == "node.exe":
+            if "claude" in cmdline.lower():
+                continue
+            if age_h >= NODE_STALE_HOURS:
+                stale_node += 1
+                leaks.append({
+                    "pid": proc.get("pid"),
+                    "name": "node.exe",
+                    "age_hours": round(age_h, 1),
+                    "cmdline_snippet": cmdline[:120],
+                })
+        elif name == "python.exe":
+            if age_h >= PYTHON_STALE_HOURS:
+                stale_python += 1
+                leaks.append({
+                    "pid": proc.get("pid"),
+                    "name": "python.exe",
+                    "age_hours": round(age_h, 1),
+                    "cmdline_snippet": cmdline[:120],
+                })
+
+    if stale_node == 0 and stale_python == 0:
+        detail = "none"
+    else:
+        parts = []
+        for lk in leaks[:5]:
+            parts.append("%s pid=%s age=%.1fh" % (lk["name"], lk["pid"], lk["age_hours"]))
+        detail = "node>=%dh: %d, python>=%dh: %d | %s" % (
+            NODE_STALE_HOURS, stale_node, PYTHON_STALE_HOURS, stale_python,
+            "; ".join(parts) if parts else "n/a",
+        )
+    return stale_node, stale_python, detail, leaks
+
+
 def collect_system_resources(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
     """Count Claude/node processes and HTTPS connections.
 
     Returns a composite score: total HTTPS connections.
-    Detail includes breakdown by process type.
+    Detail includes breakdown by process type and stale-proc detection
+    (node>=4h excluding Claude Code, python>=8h — leaked orchestration runners).
     """
     name = cfg.get("name", "system_resources")
 
@@ -1018,10 +1108,17 @@ def collect_system_resources(cfg: dict, root_dir: Path, _prev: dict = None) -> d
     except (OSError, subprocess.TimeoutExpired, ImportError):
         pass
 
-    detail = "claude=%d, node=%d, total=%d; top: %s" % (
-        claude_count, node_count, https_connections, top_holders_str
+    stale_node, stale_python, stale_detail, stale_leaks = _collect_stale_processes()
+
+    detail = "claude=%d, node=%d, total=%d; top: %s; stale: %s" % (
+        claude_count, node_count, https_connections, top_holders_str, stale_detail
     )
-    return _result(name, https_connections, "count", detail)
+    res = _result(name, https_connections, "count", detail)
+    res["stale_node_count"] = stale_node
+    res["stale_python_count"] = stale_python
+    res["stale_process_detail"] = stale_detail
+    res["stale_process_leaks"] = stale_leaks
+    return res
 
 
 # ── stale_branches ─────────────────────────────────────────────────
