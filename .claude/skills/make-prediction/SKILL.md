@@ -304,6 +304,7 @@ INPUT:
 - Prediction contains a falsifiable statement with resolution date or trigger | Verify: Read prediction file — concrete outcome condition and date present
 - At least two outcome scenarios with probabilities summing to 100% | Verify: Sum probabilities — must equal 100
 - Probabilities anchored to a reference class (not intuition) | Verify: Read calibration section — reference class or base rate named
+- Prediction does not duplicate an existing open prediction on the same slug | Verify: `grep -l <slug> data/predictions/` returns only the new file
 
 # LEARN
 
