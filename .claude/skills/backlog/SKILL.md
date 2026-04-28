@@ -105,6 +105,7 @@ INPUT:
 - Last entry in backlog.json has all required fields: id, title, priority, project, created_at | Verify: Read last entry in `orchestration/backlog.json`
 - backlog.json is valid JSON after write | Verify: `python -m json.tool orchestration/backlog.json` exits 0
 - No silent data loss: if backlog.json was missing or invalid, it was repaired before append, not silently replaced | Verify: Read backlog.json entry count — must be ≥ previous count
+- Task id is unique (no collision with existing ids) | Verify: `python -m json.tool orchestration/backlog.json | grep -c <new-id>` returns exactly 1
 
 # LEARN
 
