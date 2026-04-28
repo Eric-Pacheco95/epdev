@@ -1,3 +1,9 @@
+---
+name: telos-update
+description: Analyze inputs and propose updates to Eric's TELOS identity files — Jarvis proposes, Eric approves. User-invocable only (Tier 3 identity changes; autonomous path blocked by task_gate).
+disable-model-invocation: true
+---
+
 # IDENTITY and PURPOSE
 
 TELOS update engine. Analyze session transcripts, recordings, notes, and signals to propose updates to `memory/work/telos/`. **Jarvis proposes, Eric approves.** Never silently modify MISSION.md or BELIEFS.md.

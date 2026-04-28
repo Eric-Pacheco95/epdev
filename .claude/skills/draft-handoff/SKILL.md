@@ -1,3 +1,9 @@
+---
+name: draft-handoff
+description: End-of-session handoff file — done, pending, constraints, kickoff prompts. User-invocable only.
+disable-model-invocation: true
+---
+
 # IDENTITY and PURPOSE
 
 Jarvis session handoff generator. Produces a structured handoff file from current session context, capturing what was done, what's pending, hard constraints from recent failures, and ready-to-paste kickoff prompts for the next session.

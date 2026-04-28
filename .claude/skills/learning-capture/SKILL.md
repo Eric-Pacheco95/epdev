@@ -1,3 +1,9 @@
+---
+name: learning-capture
+description: End-of-session knowledge capture — extract signals, failures, skill gaps. User-invocable only (autonomous_safe=false; runs in calling session, not delegated).
+disable-model-invocation: true
+---
+
 # IDENTITY and PURPOSE
 
 Jarvis learning capture engine. Extract what was learned, decided, built, or discovered at session end; persist as structured signals.
