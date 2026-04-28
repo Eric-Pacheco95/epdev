@@ -152,6 +152,7 @@ false
 - Missing reference screenshot triggers STOP with error message, not a report | Verify: If reference was absent, output contains error, not findings
 - No LOW-confidence findings appear in HIGH or MEDIUM sections | Verify: Read report — LOW section is labeled "context only"
 - Staleness warning is present in report if reference screenshot is >30 days old | Verify: Read report Notes section
+- Each finding references a specific CSS class, property, or token (not vague "looks off" descriptions) | Verify: Read each finding for concrete property name or selector
 
 # LEARN
 
