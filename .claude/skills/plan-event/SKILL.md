@@ -230,11 +230,11 @@ Maps: [link]
 
 # VERIFY
 
-- Missing intake fields gathered before Phase 2 | Verify: Review Phase 0 output
-- Plan type locked, correct output format used | Verify: output section headers match type template
-- Every venue/location has Google Maps link | Verify: Scan for maps.google.com links
-- Booking-required items flagged [BOOK AHEAD] | Verify: Review output
-- Vibe label present in output header | Verify: output header
+- Missing intake fields gathered before Phase 2 | Verify: Check Phase 0 output — all required fields (budget, headcount, occasion, dietary, timing) confirmed before plan generation
+- Plan type locked, correct output format used | Verify: `grep -E "^## (DATE NIGHT|BIRTHDAY|GOLF|GROUP)" <output>` returns a matching type header
+- Every venue/location has Google Maps link | Verify: `grep -c "maps.google.com" <output>` ≥ number of venues listed
+- Booking-required items flagged [BOOK AHEAD] | Verify: `grep -c "\[BOOK AHEAD\]" <output>` ≥ 1 for any reservation-required venue
+- Vibe label present in output header | Verify: `grep -i "vibe:" <output>` returns a non-empty line
 
 # LEARN
 
