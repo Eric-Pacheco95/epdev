@@ -22,6 +22,7 @@
   "research":              { "autonomous_safe": true,  "tier": 0, "notes": "Web search + synthesis, reads only" },
   "review-code":           { "autonomous_safe": true,  "tier": 0, "notes": "Code review, no modifications" },
   "spawn-agent":           { "autonomous_safe": false, "tier": 0, "notes": "User-invocable -- SKILL.md autonomous_safe: false (2026-04-27 audit)" },
+  "sync-handoff":          { "autonomous_safe": false, "tier": 0, "notes": "User-invocable -- read-only git evidence collector; SKILL.md disable-model-invocation: true (added 2026-04-28)" },
   "telos-report":          { "autonomous_safe": false, "tier": 0, "notes": "User-invocable -- SKILL.md autonomous_safe: false; identity surface (2026-04-27 audit)" },
 
   "create-image":          { "autonomous_safe": false, "tier": 1, "notes": "User-invocable -- SKILL.md autonomous_safe: false; Gemini API cost per call (2026-04-27 audit)" },
