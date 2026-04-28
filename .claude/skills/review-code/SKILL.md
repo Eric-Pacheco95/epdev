@@ -93,6 +93,7 @@ true
 - No weaponized payloads or exploit code in SECURITY FINDINGS | Verify: Review output
 - Severity levels consistent; no High findings mislabeled Low | Verify: Read findings table
 - External input handling -> at least one SECURITY entry or explicit '(none identified)' | Verify: Check SECURITY FINDINGS
+- Each Critical or High finding includes a concrete fix (file path, line, or code change) — not just 'refactor this' | Verify: Read each Critical/High finding body for specificity
 
 # LEARN
 
