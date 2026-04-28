@@ -163,6 +163,83 @@ def test_query_producer_health_failed(tmp_path):
     assert any(r["issue"] == "failed" for r in result)
 
 
+def test_write_producer_run_normalizes_failed_alias(tmp_path):
+    """Writers historically used 'failed' (domain_consolidator) vs 'failure'
+    (everyone else) — write path must normalize to canonical 'failure' so the
+    reader can match a single string."""
+    db = tmp_path / "jarvis_index.db"
+    _make_test_db(db)
+    with mock.patch.object(mdb, "_DB_PATH", db):
+        assert mdb.write_producer_run(
+            producer="alias_check", run_date="2026-01-01",
+            started_at="2026-01-01T00:00:00Z", status="failed",
+        ) is True
+    conn = sqlite3.connect(str(db))
+    row = conn.execute(
+        "SELECT status FROM producer_runs WHERE producer='alias_check'"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "failure"
+
+
+def test_write_producer_run_unknown_status_falls_back(tmp_path):
+    """Unrecognized status strings must not silently corrupt the table — fall
+    back to 'unknown' so downstream classifiers stay deterministic."""
+    db = tmp_path / "jarvis_index.db"
+    _make_test_db(db)
+    with mock.patch.object(mdb, "_DB_PATH", db):
+        assert mdb.write_producer_run(
+            producer="bogus", run_date="2026-01-01",
+            started_at="2026-01-01T00:00:00Z", status="weird-value",
+        ) is True
+    conn = sqlite3.connect(str(db))
+    row = conn.execute(
+        "SELECT status FROM producer_runs WHERE producer='bogus'"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "unknown"
+
+
+def test_query_producer_health_recognizes_failed_alias(tmp_path):
+    """Defense in depth — even if a future direct-SQL writer skips
+    write_producer_run() and inserts the 'failed' alias, the reader still
+    classifies it as a failure."""
+    db = tmp_path / "jarvis_index.db"
+    _make_test_db(db)
+    conn = sqlite3.connect(str(db))
+    conn.execute(
+        "INSERT INTO producer_runs (producer, run_date, started_at, status) "
+        "VALUES (?, ?, ?, ?)",
+        ("legacy_writer", "2026-01-01", "2026-01-01T00:00:00Z", "failed"),
+    )
+    conn.commit()
+    conn.close()
+    with mock.patch.object(mdb, "_DB_PATH", db):
+        result = mdb.query_producer_health(max_age_hours=99999)
+    assert any(r["producer"] == "legacy_writer" and r["issue"] == "failed"
+               for r in result)
+
+
+def test_query_producer_health_per_producer_cadence_override(tmp_path):
+    """domain_consolidator runs weekly (168h) — must not be flagged stale at
+    the daily 26h default."""
+    db = tmp_path / "jarvis_index.db"
+    _make_test_db(db)
+    from datetime import datetime, timezone, timedelta
+    forty_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=40)).isoformat()
+    conn = sqlite3.connect(str(db))
+    conn.execute(
+        "INSERT INTO producer_runs (producer, run_date, started_at, status) "
+        "VALUES (?, ?, ?, ?)",
+        ("domain_consolidator", "2026-01-01", forty_hours_ago, "success"),
+    )
+    conn.commit()
+    conn.close()
+    with mock.patch.object(mdb, "_DB_PATH", db):
+        result = mdb.query_producer_health(max_age_hours=26)
+    assert result == [], "weekly producer at 40h must not trip a 26h stale flag"
+
+
 def test_query_producer_health_status_matches_latest_started_at(tmp_path):
     """Status must come from the latest row per producer, not an arbitrary GROUP BY row."""
     db = tmp_path / "jarvis_index.db"

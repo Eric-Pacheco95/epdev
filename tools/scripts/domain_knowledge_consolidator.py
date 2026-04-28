@@ -1092,7 +1092,7 @@ def run_consolidation(dry_run: bool = False, autonomous: bool = False) -> int:
         _send_slack(slack_msg, errors)
 
     # --- Health signal ---
-    status = "failed" if errors else "success"
+    status = "failure" if errors else "success"
     if not dry_run:
         _emit_health_signal(status, len(domain_results), "; ".join(errors))
         _emit_producer_run(status, len(domain_results))

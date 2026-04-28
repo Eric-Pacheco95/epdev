@@ -15,6 +15,25 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _DB_PATH = _REPO_ROOT / "data" / "jarvis_index.db"
 _EXPECTED_SCHEMA_VERSION = 1
 
+# Per-producer staleness thresholds (hours). Producers not listed fall back to
+# the caller-supplied max_age_hours default (typically 26h = daily + buffer).
+PRODUCER_CADENCE_HOURS: dict[str, float] = {
+    "domain_consolidator": 168,  # weekly
+}
+
+# Canonical status vocabulary for producer_runs.status. Writers must use these.
+# Schema is unconstrained TEXT, so the writer normalizes aliases (defense in
+# depth — historic mismatch: domain_consolidator wrote "failed", everyone else
+# "failure", causing query_producer_health to silently miss real failures).
+_CANONICAL_STATUSES = frozenset({"success", "failure", "unknown"})
+_STATUS_ALIASES: dict[str, str] = {
+    "failed": "failure",
+    "ok": "success",
+    "succeeded": "success",
+    "error": "failure",
+}
+_FAILURE_STATUSES = frozenset({"failure", "failed", "error"})
+
 
 def _get_conn() -> sqlite3.Connection | None:
     """Get a DB connection, or None if DB is unavailable or version mismatched."""
@@ -49,6 +68,9 @@ def write_producer_run(
     conn = _get_conn()
     if conn is None:
         return False
+    status = _STATUS_ALIASES.get(status, status)
+    if status not in _CANONICAL_STATUSES:
+        status = "unknown"
     try:
         conn.execute(
             """INSERT OR IGNORE INTO producer_runs
@@ -191,10 +213,11 @@ def query_producer_health(max_age_hours: float = 26) -> list[dict]:
             except ValueError:
                 continue
             hours_ago = (now - last_dt).total_seconds() / 3600
+            threshold = PRODUCER_CADENCE_HOURS.get(producer, max_age_hours)
             issue = None
-            if hours_ago > max_age_hours:
+            if hours_ago > threshold:
                 issue = "stale"
-            if status == "failure":
+            if status in _FAILURE_STATUSES:
                 issue = "failed"
             if issue:
                 issues.append({
