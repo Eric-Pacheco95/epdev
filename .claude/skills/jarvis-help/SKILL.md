@@ -114,7 +114,6 @@ true
   /create-image       -- Generate/edit images via Gemini | --flash --ratio
   /capture-recording  -- Process music recordings | --solo --band --batch
   /visualize          -- Mermaid diagrams of workflows/structure
-  /label-and-rate     -- Classify and tier-rate content
 
 **ORCHESTRATE** (manage work)
   /delegation         -- Route any task to the right skill/pipeline
@@ -241,7 +240,8 @@ Print suggestions under a `SUGGESTED FOR THIS SESSION:` header. Only print if at
 - If a stage consistently has more queries than others, note it -- may indicate a workflow bottleneck or missing skills in that stage
 - If contextual suggestions are frequently rejected or ignored, recalibrate the trigger thresholds
 - If a new skill is added and Eric is unaware of it after 3+ sessions, evaluate adding it to the contextual suggestions rotation
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_jarvis-help-{slug}.md when Eric queries for a skill that doesn't exist but should (intent gap) or when contextual suggestions surface a skill Eric hadn't considered and it became immediately useful (serendipity win)
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_jarvis-help-{slug}.md when Eric queries for a skill that doesn't exist but should (intent gap) or when contextual suggestions surface a skill Eric hadn't considered and it became immediately useful (serendipity win)
 
 # INPUT
 
