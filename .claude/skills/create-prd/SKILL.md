@@ -172,7 +172,7 @@ Check session context for evidence resolving each blocker before asking Eric. As
 
 # SKILL CHAIN
 
-- **Composes:** (leaf at this step — produces the PRD document)
+- **Composes:** (leaf — produces the PRD document)
 - **Escalate to:** `/delegation` if requirements are unclear or scope needs redefinition
 
 # VERIFY

@@ -157,8 +157,7 @@ Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 aft
 
 # SKILL CHAIN
 
-- **Composes:** `/first-principles` + `/find-logical-fallacies` + `/red-team` (launches these as parallel agents)
-- **Replaces:** Manual sequential invocation of thinking skills on architecture decisions
+- **Composes:** `/first-principles` + `/find-logical-fallacies` + `/red-team`
 - **Escalate to:** `/delegation` if the review reveals the proposal needs fundamental redesign before any of these skills apply
 
 INPUT:
