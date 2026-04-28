@@ -71,11 +71,11 @@ INPUT:
 
 # VERIFY
 
-- All five sections present (TASK SUMMARY through SPAWNED AGENT PROMPT) | Verify: Scan headings
-- SPAWNED AGENT PROMPT is a single fenced block, no commentary inside | Verify: Count fences
-- Prompt includes identity, mission, principles, format, boundaries, input invitation | Verify: Scan prompt
-- No actual secrets in prompt; placeholders only | Verify: Review prompt
-- No check failures remain | Verify: Re-run after fixes
+- All five sections present (TASK SUMMARY through SPAWNED AGENT PROMPT) | Verify: `grep -E "## TASK SUMMARY|## SPAWNED AGENT PROMPT" <output>` returns 2 matches
+- SPAWNED AGENT PROMPT is a single fenced block, no commentary inside | Verify: `grep -c "^\`\`\`" <output>` returns exactly 2 (open + close fence)
+- Prompt includes identity, mission, principles, format, boundaries, input invitation | Verify: `grep -i "mission\|boundaries\|INPUT:" <prompt_block>` returns matches
+- No actual secrets in prompt; only placeholders like {API_KEY} or <redacted> | Verify: `grep -iE "sk-|xoxb-|ghp_" <prompt_block>` returns empty
+- No check failures remain | Verify: Re-run output through sections check after any fix
 
 # LEARN
 
