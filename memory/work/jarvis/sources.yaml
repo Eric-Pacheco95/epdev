@@ -12,3 +12,12 @@ sources:
     last_version: "0.97.0"
     status: current
     notes: "Stable release. Supports Python 3.9+. No breaking changes flagged."
+
+  - slug: claude-code-cli
+    type: npm
+    url: https://www.npmjs.com/package/@anthropic-ai/claude-code
+    description: Claude Code CLI — agentic coding tool (the harness running Jarvis)
+    last_checked: "2026-04-28"
+    last_version: "2.1.121"
+    status: current
+    notes: "Active development; ships every 1-3 weeks. npm install deprecated — use official install methods."
