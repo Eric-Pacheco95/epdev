@@ -82,6 +82,7 @@ INPUT:
 - No `# Title` header added unless explicitly requested in prompt | Verify: Read first line of essay — must not be a markdown header
 - JARVIS INTEGRATION block (separator + Signal + TELOS relevance) appended after essay body | Verify: grep 'Signal' output — block and separator must be present
 - No banned phrases remain after any rewrite pass | Verify: Re-run grep check after rewrites complete
+- Essay body is at least 300 words before the JARVIS INTEGRATION block (no stub output) | Verify: `wc -w` on essay section before the `---` separator
 
 # LEARN
 
