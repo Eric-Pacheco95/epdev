@@ -1,5 +1,4 @@
 """Tests for costs_aggregator.py -- pure helper functions."""
-import pytest
 import sys
 from pathlib import Path
 
@@ -7,7 +6,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.scripts.costs_aggregator import compute_cost, extract_text, _empty_window, load_pricing
+import pytest
+from datetime import datetime, timedelta, timezone
+from tools.scripts.costs_aggregator import compute_cost, extract_text, _empty_window, load_pricing, build_window
 
 
 class TestComputeCost:
@@ -87,3 +88,99 @@ class TestLoadPricing:
         p.write_text(_json.dumps({"claude": {"models": {}}}))
         _, budget = load_pricing(p)
         assert budget == 25.0
+
+
+def _make_event(ts: datetime, cost: float, model: str = "sonnet", session: str = "s1", skill: str = None) -> dict:
+    return {
+        "ts": ts,
+        "cost_usd": cost,
+        "model": model,
+        "session_id": session,
+        "skill_name": skill,
+        "input_tokens": 1000,
+        "output_tokens": 500,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+    }
+
+
+class TestBuildWindow:
+    def _now(self):
+        return datetime(2026, 4, 28, 12, 0, 0, tzinfo=timezone.utc)
+
+    def _cutoff(self, days=7):
+        return self._now() - timedelta(days=days)
+
+    def test_no_events_returns_empty_window(self):
+        now = self._now()
+        result = build_window([], self._cutoff(), 7, 25.0, now)
+        assert result["spend_usd"] == 0.0
+        assert result["session_rollups"]["session_count"] == 0
+
+    def test_events_outside_window_excluded(self):
+        now = self._now()
+        old_event = _make_event(now - timedelta(days=10), 1.0)
+        result = build_window([old_event], self._cutoff(days=7), 7, 25.0, now)
+        assert result["spend_usd"] == 0.0
+
+    def test_spend_sums_in_window(self):
+        now = self._now()
+        events = [
+            _make_event(now - timedelta(days=1), 0.05),
+            _make_event(now - timedelta(days=2), 0.10),
+        ]
+        result = build_window(events, self._cutoff(), 7, 25.0, now)
+        assert abs(result["spend_usd"] - 0.15) < 1e-6
+
+    def test_per_model_aggregation(self):
+        now = self._now()
+        events = [
+            _make_event(now - timedelta(days=1), 0.10, model="opus"),
+            _make_event(now - timedelta(days=1), 0.05, model="sonnet"),
+        ]
+        result = build_window(events, self._cutoff(), 7, 25.0, now)
+        models = {m["model_id"] for m in result["per_model"]}
+        assert "opus" in models
+        assert "sonnet" in models
+
+    def test_per_model_sorted_by_cost_desc(self):
+        now = self._now()
+        events = [
+            _make_event(now - timedelta(days=1), 0.01, model="cheap"),
+            _make_event(now - timedelta(days=1), 0.50, model="expensive"),
+        ]
+        result = build_window(events, self._cutoff(), 7, 25.0, now)
+        assert result["per_model"][0]["model_id"] == "expensive"
+
+    def test_session_rollup_count(self):
+        now = self._now()
+        events = [
+            _make_event(now - timedelta(days=1), 0.05, session="s1"),
+            _make_event(now - timedelta(days=1), 0.10, session="s2"),
+            _make_event(now - timedelta(days=1), 0.02, session="s1"),
+        ]
+        result = build_window(events, self._cutoff(), 7, 25.0, now)
+        assert result["session_rollups"]["session_count"] == 2
+
+    def test_most_expensive_session(self):
+        now = self._now()
+        events = [
+            _make_event(now - timedelta(days=1), 0.05, session="cheap"),
+            _make_event(now - timedelta(days=1), 0.50, session="expensive"),
+        ]
+        result = build_window(events, self._cutoff(), 7, 25.0, now)
+        assert result["session_rollups"]["most_expensive"]["session_id"] == "expensive"
+
+    def test_skill_none_becomes_uncategorized(self):
+        now = self._now()
+        events = [_make_event(now - timedelta(days=1), 0.05, skill=None)]
+        result = build_window(events, self._cutoff(), 7, 25.0, now)
+        skill_names = {s["skill_name"] for s in result["per_skill"]}
+        assert "uncategorized" in skill_names
+
+    def test_share_pct_sums_to_100_single_model(self):
+        now = self._now()
+        events = [_make_event(now - timedelta(days=1), 0.10, model="opus")]
+        result = build_window(events, self._cutoff(), 7, 25.0, now)
+        total_pct = sum(m["share_pct"] for m in result["per_model"])
+        assert total_pct == 100
