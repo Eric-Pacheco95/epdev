@@ -1,0 +1,14 @@
+# External source monitoring — Jarvis overnight agent
+# Metric: grep -c "last_checked" sources.yaml
+# Each entry checked and timestamped per overnight run
+
+sources:
+
+  - slug: anthropic-sdk-python
+    type: pypi
+    url: https://pypi.org/project/anthropic/
+    description: Anthropic Python SDK — core Claude API client
+    last_checked: "2026-04-28"
+    last_version: "0.97.0"
+    status: current
+    notes: "Stable release. Supports Python 3.9+. No breaking changes flagged."
