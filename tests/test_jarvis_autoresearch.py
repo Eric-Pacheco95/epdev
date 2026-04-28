@@ -12,6 +12,8 @@ from tools.scripts.jarvis_autoresearch import (
     parse_metrics, extract_section, read_recent_files,
     write_autonomous_signal, read_prior_proposals,
     SIGNAL_THRESHOLD_CONTRADICTIONS, SIGNAL_THRESHOLD_COVERAGE,
+    _safe_telos_proposal, _grep_anchor,
+    _SAFE_TELOS_FILES, _UNSAFE_CHANGE_VERBS,
 )
 
 
@@ -221,3 +223,75 @@ class TestReadPriorProposals:
             result = read_prior_proposals(days=14)
         assert len(result[0]["content"]) <= 1600
         assert "truncated" in result[0]["content"]
+
+
+# ---------------------------------------------------------------------------
+# _safe_telos_proposal
+# ---------------------------------------------------------------------------
+
+class TestSafeTelosProposal:
+    def _valid_file(self):
+        return next(iter(_SAFE_TELOS_FILES))
+
+    def test_known_file_safe_change(self):
+        assert _safe_telos_proposal({"file": self._valid_file(), "change": "Append new insight"}) is True
+
+    def test_unknown_file_rejected(self):
+        assert _safe_telos_proposal({"file": "unknown.md", "change": "Append text"}) is False
+
+    def test_delete_verb_blocked(self):
+        assert _safe_telos_proposal({"file": self._valid_file(), "change": "delete this section"}) is False
+
+    def test_remove_file_verb_blocked(self):
+        assert _safe_telos_proposal({"file": self._valid_file(), "change": "remove file entry"}) is False
+
+    def test_create_new_file_blocked(self):
+        assert _safe_telos_proposal({"file": self._valid_file(), "change": "create new file for tracking"}) is False
+
+    def test_rename_file_blocked(self):
+        assert _safe_telos_proposal({"file": self._valid_file(), "change": "rename file to new name"}) is False
+
+    def test_empty_file_rejected(self):
+        assert _safe_telos_proposal({"file": "", "change": "Append text"}) is False
+
+    def test_missing_file_key_rejected(self):
+        assert _safe_telos_proposal({"change": "Append text"}) is False
+
+
+# ---------------------------------------------------------------------------
+# _grep_anchor
+# ---------------------------------------------------------------------------
+
+class TestGrepAnchor:
+    def test_with_phrase_returns_phrase(self):
+        result = _grep_anchor('replace old value with "new target phrase"')
+        assert result is not None
+        assert "new target phrase" in result
+
+    def test_to_phrase_returns_phrase(self):
+        result = _grep_anchor('update section to "updated content here"')
+        assert result is not None
+        assert "updated content" in result
+
+    def test_iso_date_extracted(self):
+        result = _grep_anchor("append 2026-04-28 entry to log")
+        assert result == "2026-04-28"
+
+    def test_last_date_used_for_append(self):
+        result = _grep_anchor("replace 2026-01-01 entry with 2026-04-28 value")
+        assert result == "2026-04-28"
+
+    def test_quoted_phrase_fallback(self):
+        result = _grep_anchor('"a long enough phrase here for testing"')
+        assert result is not None
+
+    def test_empty_string_returns_none(self):
+        assert _grep_anchor("") is None
+
+    def test_short_words_only_returns_none(self):
+        assert _grep_anchor("a b c d") is None
+
+    def test_three_long_words_returns_words(self):
+        result = _grep_anchor("apply append update telos strategy")
+        assert result is not None
+        assert len(result) > 0
