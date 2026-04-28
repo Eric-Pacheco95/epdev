@@ -281,17 +281,13 @@ After writing: print "Prediction tracked: data/predictions/[filename]"
 
 ## Geopolitics (--geopolitics) — Predictive History framework
 
-Pillars: (1) Civilizational Cycles (Thucydides Trap: 12/16 → conflict); (2) Actor Modeling (wants, leverage, commitment problems); (3) Financial Drivers (reserve currency, trade, industrial capacity); (4) Historical Analogue (2-3 parallels + 2 critical differences).
+Pillars: Civilizational Cycles (Thucydides Trap: 12/16 → conflict); Actor Modeling (wants/leverage/commitment); Financial Drivers (reserve currency/trade/industrial capacity); Historical Analogue (2-3 parallels + 2 critical differences).
 
-Named Heuristics:
-- **Asymmetry**: Social cohesion beats material superiority for weaker party
-- **Escalation**: Control > dominance; pace and limits matter more than firepower
-- **Proximity**: Domestic rivalries often drive foreign policy more than external threats
-- **Eschatological Convergence**: End-times narratives shape decisions when leaders exploit them
+Heuristics: **Asymmetry** (cohesion > material); **Escalation** (control > dominance; pace > firepower); **Proximity** (domestic rivalries drive foreign policy); **Eschatological Convergence** (end-times narratives shape decisions).
 
 ## Market (--market) — Macro Cycle framework
 
-Pillars: (1) Dalio Big Cycle — short-term (~5-8yr) early/mid/late-euphoria/crisis; long-term (~75-100yr); five forces: debt, internal order, external order, nature, technology; (2) Sentiment — euphoria/optimism/uncertainty/fear/panic; VIX: low=complacency, spike=fear; (3) Macro Regime — rates, dollar, liquidity (QE/QT, credit spreads), fiscal; (4) Historical Cycle — identify analogue; key structural differences.
+Pillars: Dalio Big Cycle (5-8yr short-term: early/mid/late-euphoria/crisis; 75-100yr long-term; forces: debt/order/nature/technology); Sentiment (euphoria→panic; VIX: low=complacency, spike=fear); Macro Regime (rates/dollar/liquidity/fiscal); Historical Cycle (analogue + key structural differences).
 
 # SECURITY RULES
 
