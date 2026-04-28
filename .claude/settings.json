@@ -126,6 +126,14 @@
         "hooks": [
           {
             "type": "command",
+            "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/update_status.py"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "C:/Users/ericp/Github/epdev/tools/scripts/run_hook.bat tools/scripts/hook_events.py"
           }
         ]
