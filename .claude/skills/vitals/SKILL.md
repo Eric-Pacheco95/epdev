@@ -65,11 +65,6 @@ true
 
 ## Phase 2: Terminal Dashboard
 
-6.5. Scan for unimplemented PRDs:  filtered to . Store as  (strip  prefix). PRDs with all  excluded.
-
-6.6. Scan for unaddressed failures: memory/learning/failures/2026-04-20_reschedule-ps1-silent-failure.md
-memory/learning/failures/2026-04-21_commit-precheck-cp1252-decode-error.md. Store as  (filenames only; RCA done, fix pending).
-
 7. Interpret collected data; format terminal dashboard (see TERMINAL FORMAT)
 8. For threshold crossings: explain what each means
 9. Generate "Top 3 Today" -- 3 highest-value actions grounded in collector data: overnight findings needing review/merge, TELOS contradictions, open tasklist validations, stale/unhealthy scheduled tasks
