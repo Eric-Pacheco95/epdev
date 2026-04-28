@@ -10,6 +10,10 @@
 
 - **When changing sentinel structures (PROTECTED_DIR_PREFIXES, COLLECTOR_TYPES, _OPTIONAL_DEFAULTS, any registry/enum set), grep for test assertions on the old values in the same change.** Stale assertions are invisible until a carry-forward or CI run surfaces them.
 
+## Vertical-Slice TDD
+
+- **Inside `/implement-prd`, write tests as vertical slices: one RED → one GREEN → repeat. No horizontal slicing (writing all tests up-front, then all code).** Why: mattpocock/skills tdd pattern; horizontal slicing reproduces the build-velocity-skips-verify failure mode documented in `memory/feedback_think_before_build.md` — tests authored in a batch get rationalized to pass a batch of code rather than driving each behavior. How to apply: scope to `/implement-prd` BUILD-phase paths; throwaway scripts and scratch spikes are exempt.
+
 ## Loaded by
 
 - `.claude/skills/quality-gate/SKILL.md` — test deterministic setup gate
