@@ -312,7 +312,7 @@ Proposals acted on: {n}/{total} ({rate}%)
 
 # SKILL CHAIN
 
-- **Replaces:** morning_feed.py (9am scheduled task -- now on-demand via /vitals)
+- **Replaces:** morning_feed.py
 - **Composes:** vitals_collector.py (subprocess), slack_notify.py (import)
 - **Escalate to:** /delegation if health is CRITICAL
 
