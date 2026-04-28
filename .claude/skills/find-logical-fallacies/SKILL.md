@@ -73,6 +73,7 @@ INPUT:
 - Every FALLACY FINDINGS item has matching RECOMMENDED FIX | Verify: Cross-reference numbers
 - FALLACY FINDINGS has at most 12 items | Verify: Count numbered items in FALLACY FINDINGS section
 - No missing sections or FALLACY FINDINGS >12 after fixes | Verify: Re-scan
+- RECOMMENDED FIXES are actionable replacements for the flawed reasoning (not generic "avoid X") | Verify: Each RECOMMENDED FIX contains a specific alternative argument or reframe
 
 # LEARN
 
