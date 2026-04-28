@@ -7,7 +7,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.scripts.jarvis_autoresearch import parse_metrics, extract_section, read_recent_files
+from unittest.mock import patch
+from tools.scripts.jarvis_autoresearch import (
+    parse_metrics, extract_section, read_recent_files,
+    write_autonomous_signal, read_prior_proposals,
+    SIGNAL_THRESHOLD_CONTRADICTIONS, SIGNAL_THRESHOLD_COVERAGE,
+)
 
 
 SAMPLE_RESPONSE = """\
@@ -114,3 +119,105 @@ class TestReadRecentFiles:
             (tmp_path / f"file{i}.md").write_text("content", encoding="utf-8")
         result = read_recent_files(tmp_path, days=7, max_files=3)
         assert len(result) == 3
+
+
+# ---------------------------------------------------------------------------
+# write_autonomous_signal
+# ---------------------------------------------------------------------------
+
+class TestWriteAutonomousSignal:
+    def test_no_signal_when_below_thresholds(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        with patch.object(jar, "SIGNALS_DIR", tmp_path):
+            result = write_autonomous_signal(
+                {"contradiction_count": 0, "coverage_score": 100},
+                tmp_path / "run-test",
+            )
+        assert result is False
+        assert list(tmp_path.glob("*.md")) == []
+
+    def test_signal_written_when_contradictions_high(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        with patch.object(jar, "SIGNALS_DIR", tmp_path):
+            result = write_autonomous_signal(
+                {"contradiction_count": SIGNAL_THRESHOLD_CONTRADICTIONS, "coverage_score": 100},
+                tmp_path / "run-test",
+            )
+        assert result is True
+        signals = list(tmp_path.glob("*.md"))
+        assert len(signals) == 1
+
+    def test_signal_written_when_coverage_low(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        with patch.object(jar, "SIGNALS_DIR", tmp_path):
+            result = write_autonomous_signal(
+                {"contradiction_count": 0, "coverage_score": SIGNAL_THRESHOLD_COVERAGE - 1},
+                tmp_path / "run-test",
+            )
+        assert result is True
+
+    def test_signal_content_mentions_contradictions(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        with patch.object(jar, "SIGNALS_DIR", tmp_path):
+            write_autonomous_signal(
+                {"contradiction_count": 5, "coverage_score": 100},
+                tmp_path / "run-test",
+            )
+        signal_file = list(tmp_path.glob("*.md"))[0]
+        assert "contradiction" in signal_file.read_text(encoding="utf-8").lower()
+
+    def test_dedup_increments_counter(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        from datetime import datetime
+        today = datetime.now().strftime("%Y-%m-%d")
+        # pre-create the first signal file so dedup fires
+        (tmp_path / f"{today}_telos-introspection-findings.md").write_text("existing")
+        with patch.object(jar, "SIGNALS_DIR", tmp_path):
+            write_autonomous_signal(
+                {"contradiction_count": SIGNAL_THRESHOLD_CONTRADICTIONS, "coverage_score": 100},
+                tmp_path / "run-test",
+            )
+        files = list(tmp_path.glob("*.md"))
+        assert len(files) == 2
+
+
+# ---------------------------------------------------------------------------
+# read_prior_proposals
+# ---------------------------------------------------------------------------
+
+class TestReadPriorProposals:
+    def test_missing_output_base_returns_empty(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        with patch.object(jar, "OUTPUT_BASE", tmp_path / "missing"):
+            result = read_prior_proposals(days=14)
+        assert result == []
+
+    def test_reads_proposals_from_run_dirs(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        run_dir = tmp_path / "run-001"
+        run_dir.mkdir()
+        (run_dir / "proposals.md").write_text("proposal content", encoding="utf-8")
+        with patch.object(jar, "OUTPUT_BASE", tmp_path):
+            result = read_prior_proposals(days=14)
+        assert len(result) == 1
+        assert result[0]["content"] == "proposal content"
+
+    def test_respects_max_runs_limit(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        for i in range(5):
+            d = tmp_path / f"run-{i:03d}"
+            d.mkdir()
+            (d / "proposals.md").write_text(f"proposal {i}", encoding="utf-8")
+        with patch.object(jar, "OUTPUT_BASE", tmp_path):
+            result = read_prior_proposals(days=14, max_runs=3)
+        assert len(result) <= 3
+
+    def test_truncates_long_proposals(self, tmp_path):
+        import tools.scripts.jarvis_autoresearch as jar
+        run_dir = tmp_path / "run-001"
+        run_dir.mkdir()
+        (run_dir / "proposals.md").write_text("x" * 2000, encoding="utf-8")
+        with patch.object(jar, "OUTPUT_BASE", tmp_path):
+            result = read_prior_proposals(days=14)
+        assert len(result[0]["content"]) <= 1600
+        assert "truncated" in result[0]["content"]
