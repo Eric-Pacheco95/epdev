@@ -114,17 +114,18 @@ Write to `memory/learning/failures/{date}_{slug}.md`:
 
 # VERIFY
 
-- Failure log entry has all 6 fields (Context, Error, Root Cause, Fix Applied, Verification, Prevention) | Verify: Read entry in `memory/learning/failures/`
-- Fix verified to pass | Verify: confirmation output shows error gone
-- Fix did not expand into refactor/scope creep | Verify: only failing component modified
+- Failure log entry has all 6 fields (Context, Error, Root Cause, Fix Applied, Verification, Prevention) | Verify: `grep -c 'Root Cause\|Fix Applied\|Prevention' memory/learning/failures/{slug}.md` -- expect >= 3
+- Fix verified to pass | Verify: re-run the original failing command/test and confirm exit code 0
+- Fix did not expand into refactor/scope creep | Verify: `git diff --stat HEAD~1` -- only the failing component's file(s) should appear
 - Steering rule proposed: surfaced to Eric for approval | Verify: approval request in output
+- Defensive test suite passes post-fix | Verify: `python tests/defensive/run_all.py` exits 0
 
 # LEARN
 
 - Track most common failure types — after 5+ self-heals, top type becomes a pre-build check
 - Same component fails 3+: structural debt; needs /review-code + refactor
 - Root cause consistently unclear: self-heal diagnostic needs improvement; log signal
-- After successful self-heal: run full defensive test suitee to confirm no regression: `python tests/defensive/run_all.py`
+- After successful self-heal: run full defensive test suite to confirm no regression: `python tests/defensive/run_all.py`
 
 # INPUT
 

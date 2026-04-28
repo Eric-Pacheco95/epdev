@@ -55,6 +55,8 @@ false
 - No input: print DISCOVERY as usage block, STOP
 - Edit request without image path or prior session: ask which image to edit, STOP
 - Prompt contains text-rendering demands (specific words in image): warn about text limitations, proceed
+- Invalid --ratio value (not 1:1, 16:9, 9:16, 4:3, 3:4): print valid ratios and STOP
+- Prompt < 5 words and no image context: ask Eric to describe the image more specifically before proceeding
 
 ## Step 1: Classify the request
 
@@ -167,3 +169,4 @@ For multi-image work (keynote decks, brand assets, series):
 - If Eric frequently asks for edits after generation, note the original prompt gap and improve the enhancement step
 - If flash model consistently requires refinement to reach acceptable quality, raise the bar for when flash is appropriate
 - If a content type (logos, diagrams, portraits) consistently underperforms, note the weakness and suggest alternatives (/visualize for diagrams)
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_create-image-{slug}.md when a novel prompt structure, style combination, or enhancement technique produces notably better results -- rating 7+ for reusable techniques worth adding to STEPS

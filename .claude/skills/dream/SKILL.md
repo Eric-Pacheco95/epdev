@@ -39,8 +39,10 @@ true
 # STEPS
 
 ## Step 0: INPUT VALIDATION
+- If any flag other than --dry-run is provided: print `Usage: /dream [--dry-run]` and STOP
 - --dry-run: run in preview mode -- report what would change, make no writes
 - No other arguments needed -- scope is fixed (auto-memory files)
+- If Ollama is not running, Step 1 will fail with an embedding error; surface the ollama-not-running recovery steps from CONTRACT immediately
 
 ## Step 1: EXECUTE
 Run the dream worker:

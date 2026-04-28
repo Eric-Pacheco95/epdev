@@ -47,6 +47,8 @@ false
 
 - No input: print DISCOVERY block, STOP
 - Invalid `<type>` (not brain/workflow/project/investigate/system/auto): print valid types, STOP
+- --no-html present alongside bare /visualize (no input): invalid combination, print usage and STOP
+- If input is a file path: confirm the file exists before proceeding (`ls <path>`); if missing, STOP with `File not found: <path>`
 
 ## Step 1: UNDERSTAND INPUT
 

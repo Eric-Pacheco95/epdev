@@ -120,3 +120,44 @@ def test_main_missing_lineage_signal(tmp_path):
          patch.object(vlr, "STATE_PATH", state_f):
         result = vlr.main()
     assert result == 1
+
+
+def test_main_count_violation_triggers_failure(tmp_path):
+    sig_dir = tmp_path / "signals"
+    sig_dir.mkdir()
+    (sig_dir / "sig1.md").write_text("x", encoding="utf-8")
+
+    lineage = tmp_path / "lineage.jsonl"
+    lineage.write_text("", encoding="utf-8")  # no lineage refs
+
+    state_f = tmp_path / "state.json"
+    # Set high-water at 100 — current count is 1, far below tolerance
+    state_f.write_text(json.dumps({"high_water_count": 100}), encoding="utf-8")
+
+    with patch.object(vlr, "SIGNALS_DIR", sig_dir), \
+         patch.object(vlr, "LINEAGE_PATH", lineage), \
+         patch.object(vlr, "STATE_PATH", state_f):
+        result = vlr.main()
+    assert result == 1
+
+
+def test_main_high_water_updated_on_new_max(tmp_path):
+    sig_dir = tmp_path / "signals"
+    sig_dir.mkdir()
+    for i in range(5):
+        (sig_dir / f"sig{i}.md").write_text("x", encoding="utf-8")
+
+    lineage = tmp_path / "lineage.jsonl"
+    lineage.write_text("", encoding="utf-8")
+
+    state_f = tmp_path / "state.json"
+    state_f.write_text(json.dumps({"high_water_count": 2}), encoding="utf-8")
+
+    with patch.object(vlr, "SIGNALS_DIR", sig_dir), \
+         patch.object(vlr, "LINEAGE_PATH", lineage), \
+         patch.object(vlr, "STATE_PATH", state_f):
+        result = vlr.main()
+
+    assert result == 0
+    saved = json.loads(state_f.read_text(encoding="utf-8"))
+    assert saved["high_water_count"] == 5

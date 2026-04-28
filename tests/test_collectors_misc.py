@@ -3,9 +3,10 @@
 import json
 import os
 import tempfile
+from datetime import timezone
 from pathlib import Path
 from tools.scripts.collectors.core import (
-    _dir_size_mb, reset_query_cache, _query_events_cache,
+    _dir_size_mb, _parse_datetime_utc, reset_query_cache, _query_events_cache,
     COLLECTOR_TYPES, collect_hook_output_size, collect_json_field,
 )
 
@@ -120,3 +121,34 @@ class TestCollectJsonField:
             result = collect_json_field({"name": "m", "path": str(p), "field": "x"}, Path(d))
         assert result["value"] is None
         assert "json parse error" in result["detail"]
+
+
+class TestParseDatetimeUtc:
+    def test_date_only_returns_end_of_day_utc(self):
+        dt = _parse_datetime_utc("2026-04-07")
+        assert dt.tzinfo == timezone.utc
+        assert dt.hour == 23
+        assert dt.minute == 59
+        assert dt.second == 59
+        assert dt.year == 2026 and dt.month == 4 and dt.day == 7
+
+    def test_iso_with_z_suffix(self):
+        dt = _parse_datetime_utc("2026-01-15T12:30:00Z")
+        assert dt.tzinfo == timezone.utc
+        assert dt.hour == 12
+        assert dt.minute == 30
+
+    def test_naive_iso_assumed_utc(self):
+        dt = _parse_datetime_utc("2026-03-20T08:00:00")
+        assert dt.tzinfo == timezone.utc
+        assert dt.hour == 8
+
+    def test_iso_with_offset_converted_to_utc(self):
+        # +05:00 means 6am local = 1am UTC
+        dt = _parse_datetime_utc("2026-01-01T06:00:00+05:00")
+        assert dt.tzinfo == timezone.utc
+        assert dt.hour == 1
+
+    def test_date_only_year_boundary(self):
+        dt = _parse_datetime_utc("2025-12-31")
+        assert dt.year == 2025 and dt.month == 12 and dt.day == 31

@@ -44,6 +44,8 @@ false
 - `--consolidate` flag: read all TELOS files, identify duplicates and cross-file overlaps, propose merge candidates; no writes until Eric confirms
 - If no input is provided (empty invocation with no context after `/telos-update`): print usage hint `'Usage: /telos-update <session notes, observations, or updates to record>'` and STOP
 - If input is < 10 words: ask Eric for more context before proceeding
+- If an unknown flag (not --consolidate) is provided: print valid flags and STOP
+- Never auto-write to TELOS files; all updates must be shown to Eric as proposals before any write
 
 ## Step 1: READ TELOS STATE
 
@@ -63,12 +65,7 @@ false
   - **MUSIC.md**: Practice sessions, musical insights, genre explorations
   - **BELIEFS.md**: Fundamental value shifts (RARE — flag these prominently)
   - **MISSION.md**: Core purpose changes (VERY RARE — flag these prominently)
-- For each proposed change, classify its update frequency:
-  - **Every session**: LEARNED.md, STATUS.md (auto-update, show summary)
-  - **Weekly**: PROJECTS.md, IDEAS.md (auto-update, show summary)
-  - **Monthly**: GOALS.md, CHALLENGES.md, STRATEGIES.md, MODELS.md, FRAMES.md (propose, require approval)
-  - **Quarterly/Rare**: BELIEFS.md, MISSION.md (propose prominently, require explicit approval)
-  - **Anytime (user-driven)**: WISDOM.md, WRONG.md, PREDICTIONS.md, HISTORY.md, NARRATIVES.md (only write when Eric explicitly shares)
+- Classify update frequency per TELOS FILE LOCATIONS table below; approval tier determines whether to auto-write or propose.
 - Present all proposed changes in a clear diff format before writing
 - After approval, write changes using the Edit tool (prefer surgical edits over full rewrites)
 - Log the update to `history/changes/` with rationale

@@ -7,11 +7,16 @@ from pathlib import Path
 import pytest
 import yaml
 
+import tools.scripts.prediction_event_generator as peg_mod
 from tools.scripts.prediction_event_generator import (
     compute_domain_gaps,
     extract_existing_events_context,
     parse_proposed_events,
     append_events_to_yaml,
+    load_state,
+    save_state,
+    load_calibration,
+    write_log,
     TARGET_PER_DOMAIN,
     VALID_DOMAINS,
 )
@@ -191,3 +196,80 @@ class TestExtractContext:
         ctx = extract_existing_events_context(events)
         assert "geo-1" in ctx
         assert "geopolitics" in ctx
+
+
+# ---------------------------------------------------------------------------
+# load_state / save_state
+# ---------------------------------------------------------------------------
+
+class TestLoadSaveState:
+    def test_missing_state_returns_empty(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(peg_mod, "STATE_FILE", tmp_path / "missing.json")
+        assert load_state() == {}
+
+    def test_corrupt_state_returns_empty(self, tmp_path, monkeypatch):
+        f = tmp_path / "state.json"
+        f.write_text("not json", encoding="utf-8")
+        monkeypatch.setattr(peg_mod, "STATE_FILE", f)
+        assert load_state() == {}
+
+    def test_roundtrip(self, tmp_path, monkeypatch):
+        f = tmp_path / "state.json"
+        monkeypatch.setattr(peg_mod, "STATE_FILE", f)
+        save_state({"run_count": 5})
+        assert load_state()["run_count"] == 5
+
+    def test_save_creates_parent_dirs(self, tmp_path, monkeypatch):
+        f = tmp_path / "deep" / "nested" / "state.json"
+        monkeypatch.setattr(peg_mod, "STATE_FILE", f)
+        save_state({"x": 1})
+        assert f.exists()
+
+
+# ---------------------------------------------------------------------------
+# load_calibration
+# ---------------------------------------------------------------------------
+
+class TestLoadCalibration:
+    def test_missing_returns_empty(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(peg_mod, "CALIBRATION_FILE", tmp_path / "missing.json")
+        assert load_calibration() == {}
+
+    def test_corrupt_returns_empty(self, tmp_path, monkeypatch):
+        f = tmp_path / "cal.json"
+        f.write_text("BROKEN{{", encoding="utf-8")
+        monkeypatch.setattr(peg_mod, "CALIBRATION_FILE", f)
+        assert load_calibration() == {}
+
+    def test_valid_json_returned(self, tmp_path, monkeypatch):
+        f = tmp_path / "cal.json"
+        f.write_text('{"domains": {"market": {"adjustment": -0.05}}}', encoding="utf-8")
+        monkeypatch.setattr(peg_mod, "CALIBRATION_FILE", f)
+        result = load_calibration()
+        assert result["domains"]["market"]["adjustment"] == -0.05
+
+
+# ---------------------------------------------------------------------------
+# write_log
+# ---------------------------------------------------------------------------
+
+class TestWriteLog:
+    def test_creates_log_file(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(peg_mod, "LOGS_DIR", tmp_path)
+        write_log("test message")
+        log_files = list(tmp_path.glob("*.log"))
+        assert len(log_files) == 1
+
+    def test_message_in_log(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(peg_mod, "LOGS_DIR", tmp_path)
+        write_log("hello from test")
+        content = next(tmp_path.glob("*.log")).read_text(encoding="utf-8")
+        assert "hello from test" in content
+
+    def test_appends_multiple_messages(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(peg_mod, "LOGS_DIR", tmp_path)
+        write_log("first")
+        write_log("second")
+        content = next(tmp_path.glob("*.log")).read_text(encoding="utf-8")
+        assert "first" in content
+        assert "second" in content

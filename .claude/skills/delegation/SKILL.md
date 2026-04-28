@@ -56,15 +56,7 @@ false
 - **Closed-set file phrasing (mutation-scoped delegation)**: include (1) allowlist — "Modify ONLY: <path1>, <path2>; nothing else regardless"; (2) stop-and-report — "list adjacent issues in return; do not fix inline"; (3) gitignore gate — "run `git check-ignore` on all paths before commit; exclude or escalate; no `git add -f`."   - **Research task**: Needs external information gathering → route to `/research`
   - **Manual task**: Requires Eric's judgment, creativity, or personal input → flag for Eric with context
   - **New capability**: No skill exists → suggest `/create-pattern` with a description of the needed skill
-- For each task, assess:
-  - **Urgency**: Now / Soon / Backlog
-  - **Complexity**: Simple (1 skill) / Medium (pipeline) / Complex (multi-session)
-  - **Autonomy**: Can Jarvis handle alone, or does Eric need to be involved?
-- Route the task with a clear recommendation: which skill to invoke, what input to provide, whether to run now or queue
-- After routing, consult the SKILL CHAIN MAP below and tell the user what skill should follow after this one completes
-- If multiple tasks arrive, prioritize them and suggest an execution order with the full chain for each
-- If a completed skill output is provided (e.g., "I just finished /research"), identify the next skill in the chain and invoke it
-- Track delegated tasks in `orchestration/tasklist.md` if they span sessions
+- Per task: assess urgency (Now/Soon/Backlog), complexity (Simple/pipeline/multi-session), autonomy (Jarvis vs Eric). Route with recommendation (skill + input + timing). Surface next step from SKILL CHAIN MAP. Track multi-session tasks in `orchestration/tasklist.md`.
 
 # SKILL CHAIN MAP
 

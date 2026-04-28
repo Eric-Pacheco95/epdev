@@ -7,8 +7,12 @@ from pathlib import Path
 
 import pytest
 
+import tools.scripts.prediction_debrief as pd_mod
 from tools.scripts.prediction_debrief import (
     generate_draft,
+    parse_frontmatter,
+    load_state,
+    save_state,
     DEBRIEF_EVERY,
 )
 
@@ -99,3 +103,63 @@ def test_draft_includes_resolution_note():
 
 def test_debrief_every_constant():
     assert DEBRIEF_EVERY == 5
+
+
+# ---------------------------------------------------------------------------
+# parse_frontmatter
+# ---------------------------------------------------------------------------
+
+class TestParseFrontmatter:
+    def test_valid_frontmatter_parsed(self, tmp_path):
+        p = tmp_path / "pred.md"
+        p.write_text("---\nquestion: Will X?\nstatus: resolved\n---\nbody text\n", encoding="utf-8")
+        result = parse_frontmatter(p)
+        assert result is not None
+        assert result["question"] == "Will X?"
+        assert result["_body"] == "body text"
+
+    def test_missing_file_returns_none(self, tmp_path):
+        assert parse_frontmatter(tmp_path / "missing.md") is None
+
+    def test_no_frontmatter_delimiter_returns_none(self, tmp_path):
+        p = tmp_path / "pred.md"
+        p.write_text("# Just a heading\nsome content\n", encoding="utf-8")
+        assert parse_frontmatter(p) is None
+
+    def test_incomplete_frontmatter_returns_none(self, tmp_path):
+        p = tmp_path / "pred.md"
+        p.write_text("---\nquestion: Will X?\n", encoding="utf-8")
+        assert parse_frontmatter(p) is None
+
+    def test_path_field_injected(self, tmp_path):
+        p = tmp_path / "pred.md"
+        p.write_text("---\nk: v\n---\nbody\n", encoding="utf-8")
+        result = parse_frontmatter(p)
+        assert result["_path"] == p
+
+
+# ---------------------------------------------------------------------------
+# load_state / save_state
+# ---------------------------------------------------------------------------
+
+class TestLoadSaveState:
+    def test_load_state_missing_returns_defaults(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(pd_mod, "STATE_FILE", tmp_path / "missing.json")
+        state = load_state()
+        assert state["last_debrief_at_count"] == 0
+        assert state["debriefs_written"] == 0
+
+    def test_load_state_corrupt_returns_defaults(self, tmp_path, monkeypatch):
+        f = tmp_path / "state.json"
+        f.write_text("not json", encoding="utf-8")
+        monkeypatch.setattr(pd_mod, "STATE_FILE", f)
+        state = load_state()
+        assert state["last_debrief_at_count"] == 0
+
+    def test_save_load_roundtrip(self, tmp_path, monkeypatch):
+        f = tmp_path / "state.json"
+        monkeypatch.setattr(pd_mod, "STATE_FILE", f)
+        save_state({"last_debrief_at_count": 15, "debriefs_written": 3})
+        result = load_state()
+        assert result["last_debrief_at_count"] == 15
+        assert result["debriefs_written"] == 3

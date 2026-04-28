@@ -7,10 +7,13 @@ from pathlib import Path
 
 import pytest
 
+import tools.scripts.prediction_calibration as pc_mod
 from tools.scripts.prediction_calibration import (
     compute_adjustments,
     compute_domain_stats,
     parse_frontmatter,
+    write_calibration_json,
+    write_narrative,
     _extract_confidence,
     ADJUSTMENT_BOUNDS,
 )
@@ -222,3 +225,68 @@ def test_extract_confidence_missing_returns_none():
 
 def test_extract_confidence_invalid_string_returns_none():
     assert _extract_confidence({"primary_confidence": "high"}) is None
+
+
+# ---------------------------------------------------------------------------
+# write_calibration_json
+# ---------------------------------------------------------------------------
+
+def _merged_sample():
+    return {
+        "market": {
+            "adjustment": -0.05, "n_resolved": 15, "n_forward": 10, "n_backtest": 5,
+            "accuracy_forward": 0.6, "accuracy_backtest": 0.7,
+            "overconfidence_delta": 0.05, "clamped": False,
+        }
+    }
+
+
+def test_write_calibration_json_creates_file(tmp_path, monkeypatch):
+    f = tmp_path / "calibration.json"
+    monkeypatch.setattr(pc_mod, "CALIBRATION_FILE", f)
+    write_calibration_json(_merged_sample(), version=3)
+    assert f.exists()
+
+
+def test_write_calibration_json_has_version(tmp_path, monkeypatch):
+    f = tmp_path / "calibration.json"
+    monkeypatch.setattr(pc_mod, "CALIBRATION_FILE", f)
+    write_calibration_json(_merged_sample(), version=7)
+    data = json.loads(f.read_text(encoding="utf-8"))
+    assert data["version"] == 7
+
+
+def test_write_calibration_json_domain_keys(tmp_path, monkeypatch):
+    f = tmp_path / "calibration.json"
+    monkeypatch.setattr(pc_mod, "CALIBRATION_FILE", f)
+    write_calibration_json(_merged_sample(), version=1)
+    data = json.loads(f.read_text(encoding="utf-8"))
+    assert "market" in data["domains"]
+    assert "adjustment" in data["domains"]["market"]
+
+
+# ---------------------------------------------------------------------------
+# write_narrative
+# ---------------------------------------------------------------------------
+
+def test_write_narrative_creates_file(tmp_path, monkeypatch):
+    f = tmp_path / "narrative.md"
+    monkeypatch.setattr(pc_mod, "NARRATIVE_FILE", f)
+    write_narrative(_merged_sample(), version=2)
+    assert f.exists()
+
+
+def test_write_narrative_contains_version_header(tmp_path, monkeypatch):
+    f = tmp_path / "narrative.md"
+    monkeypatch.setattr(pc_mod, "NARRATIVE_FILE", f)
+    write_narrative(_merged_sample(), version=4)
+    content = f.read_text(encoding="utf-8")
+    assert "v4" in content
+
+
+def test_write_narrative_contains_domain_section(tmp_path, monkeypatch):
+    f = tmp_path / "narrative.md"
+    monkeypatch.setattr(pc_mod, "NARRATIVE_FILE", f)
+    write_narrative(_merged_sample(), version=1)
+    content = f.read_text(encoding="utf-8")
+    assert "Market" in content

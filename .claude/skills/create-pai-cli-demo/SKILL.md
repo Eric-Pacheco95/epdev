@@ -168,20 +168,11 @@ Extend grep pattern for any project-specific brand names that should not appear.
 `zoomin` → incoming ThreePanelScene **must** have `snapFromFull={true}`.
 The Win+Left snap effect: xfade zooms into outgoing terminal → new scene starts full-width → compresses left → right panel fills the gap. Without `snapFromFull`, the terminal appears already at 52% (slideshow, not animation).
 
-# UPGRADE PATH (Phase 6-7: create-demo-video generalization)
+# UPGRADE PATH (Phase 6-7: /create-demo-video)
 
-This skill handles CLI-terminal/PAI demos. Future `create-demo-video` generalization requires:
+Generalization blockers: (1) new Remotion component types (PriceChartScene, SlackNotificationScene, AppScreenshotScene, BrowserScene); (2) inventory step → routing step; (3) new XFADE_RULES entries; (4) new storyboard templates (product-tour, data-story, incident-review); (5) YAML scene contracts (requires/ensures per scene) enabling per-scene agent parallelism with `model="claude-sonnet-4-6"`.
 
-1. **New component types**: PriceChartScene, SlackNotificationScene, AppScreenshotScene, BrowserScene — each needs a Remotion component built before the skill can scaffold it
-2. **Component inventory step becomes a routing step**: skill inspects requested demo type and routes to the right component set
-3. **New XFADE_RULES entries**: expand lookup table for new component type pairs
-4. **New storyboard templates**: beyond algorithm-loop (e.g., `product-tour`, `data-story`, `incident-review`)
-5. **YAML scene config**: scenes defined as YAML contracts (requires/ensures per scene) rather than inline TSX — enables non-developer editing and per-scene agent parallelism; see OpenProse analysis note below
-6. **Per-scene agent parallelization**: once scenes are YAML-specified, spawn one agent per scene in parallel (each writes its own TSX stub) rather than sequential generation — meaningful speedup for 8-10 scene demos. Spawn with `model="claude-sonnet-4-6"` per `memory/knowledge/harness/subagent_model_routing.md` (adversarial review downgrade).
-
-**OpenProse design note (2026-04-16)**: `github.com/openprose/prose` validated the YAML-contract-per-scene direction. OpenProse treats long-running AI sessions as Turing-complete programs with declared input/output contracts; the same model applies here — each scene is a contract (brand_config + scene_intent → valid TSX). **Do not adopt OpenProse as a dependency** — our dispatcher already handles orchestration; pull the concept only. The real blocker for `/create-demo-video` remains new Remotion component types (item 1 above), not orchestration architecture.
-
-When ready to build Phase 6-7 generalization: create `/create-demo-video` as a superskill that routes to `/create-pai-cli-demo` for CLI demos and to new project-specific skills for other demo types.
+Real blocker is item 1 (new components), not orchestration. When ready: `/create-demo-video` superskill routes to this skill for CLI demos.
 
 # VERIFY
 
@@ -198,6 +189,7 @@ When ready to build Phase 6-7 generalization: create `/create-demo-video` as a s
 - If scene timing requires > 2 adjustment cycles, note the scene type — timing heuristics need calibration for that component
 - If brand audit catches hits after content build, note that the content build phase did not enforce brand constants — tighten the brand lint step
 - If Eric's scene arc diverges significantly from the algorithm-loop template, capture the narrative shape as a candidate for a new storyboard template
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_pai-demo-{slug}.md when a demo reveals a new component combination that resonates, or when component library gaps affect 2+ scenes; rating 7+ for library gap signals that become Phase 6-7 build candidates
 
 # INPUT
 

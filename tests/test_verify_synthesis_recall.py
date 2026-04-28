@@ -9,7 +9,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.scripts.verify_synthesis_recall import parse_synthesis, is_recent
+import tools.scripts.verify_synthesis_recall as vsr
+from tools.scripts.verify_synthesis_recall import (
+    parse_synthesis, is_recent, most_recent_synthesis, resolve_signal,
+)
 
 
 def _write_synthesis(tmp_path: Path, content: str) -> Path:
@@ -76,3 +79,60 @@ class TestIsRecent:
 
     def test_missing_file_is_not_recent(self, tmp_path):
         assert is_recent(tmp_path / "missing.md") is False
+
+    def test_old_file_is_not_recent(self, tmp_path):
+        import os, time
+        p = tmp_path / "old.md"
+        p.write_text("x")
+        old_time = time.time() - (30 * 86400)  # 30 days ago
+        os.utime(p, (old_time, old_time))
+        assert is_recent(p) is False
+
+
+class TestMostRecentSynthesis:
+    def test_missing_dir_returns_none(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(vsr, "SYNTH_DIR", tmp_path / "nosuchdir")
+        assert most_recent_synthesis() is None
+
+    def test_empty_dir_returns_none(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(vsr, "SYNTH_DIR", tmp_path)
+        assert most_recent_synthesis() is None
+
+    def test_returns_single_md_file(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(vsr, "SYNTH_DIR", tmp_path)
+        p = tmp_path / "synth.md"
+        p.write_text("x")
+        assert most_recent_synthesis() == p
+
+    def test_returns_most_recent_of_multiple(self, tmp_path, monkeypatch):
+        import os, time
+        monkeypatch.setattr(vsr, "SYNTH_DIR", tmp_path)
+        older = tmp_path / "older.md"
+        newer = tmp_path / "newer.md"
+        older.write_text("a")
+        newer.write_text("b")
+        os.utime(older, (time.time() - 100, time.time() - 100))
+        os.utime(newer, (time.time(), time.time()))
+        assert most_recent_synthesis() == newer
+
+    def test_ignores_non_md_files(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(vsr, "SYNTH_DIR", tmp_path)
+        (tmp_path / "synth.txt").write_text("x")
+        assert most_recent_synthesis() is None
+
+
+class TestResolveSignal:
+    def test_file_in_signals_dir_resolves(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(vsr, "SIGNALS_DIR", tmp_path)
+        monkeypatch.setattr(vsr, "PROCESSED_DIR", tmp_path / "processed")
+        monkeypatch.setattr(vsr, "ABSORBED_DIR", tmp_path / "absorbed")
+        monkeypatch.setattr(vsr, "ABSORBED_PROCESSED", tmp_path / "absorbed" / "processed")
+        (tmp_path / "sig1.md").write_text("x")
+        assert resolve_signal("sig1.md") is True
+
+    def test_missing_file_does_not_resolve(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(vsr, "SIGNALS_DIR", tmp_path)
+        monkeypatch.setattr(vsr, "PROCESSED_DIR", tmp_path / "processed")
+        monkeypatch.setattr(vsr, "ABSORBED_DIR", tmp_path / "absorbed")
+        monkeypatch.setattr(vsr, "ABSORBED_PROCESSED", tmp_path / "absorbed" / "processed")
+        assert resolve_signal("nosuchfile.md") is False

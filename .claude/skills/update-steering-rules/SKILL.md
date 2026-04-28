@@ -105,15 +105,9 @@ Present the proposed file to Eric for approval before creating it. After approva
 ## Mode: --audit — Health check + prune + consolidate
 
 **Step A0: Calibration rollup (pre-audit)**
-
-Before the health check, run:
-```
-python tools/scripts/calibration_rollup.py
-```
-Read `data/calibration_weekly.md`. If any metric is RED, surface it in the health-check output as an additional finding. This step is non-blocking — a red metric triggers a recommendation, not a STOP.
+Run `python tools/scripts/calibration_rollup.py`; read `data/calibration_weekly.md`. RED metrics surface as additional health-check findings (non-blocking; triggers recommendation, not STOP).
 
 **Step A: Health Check (deterministic)**
-Run these checks and report results before proposing any changes:
 
 1. **Size check (CLAUDE.md)**: `wc -c CLAUDE.md` — report bytes and pass/fail against 20KB (20480 bytes)
 2. **Rule count (CLAUDE.md)**: `grep -c '^- ' CLAUDE.md` — report count and pass/fail against 45-rule ceiling

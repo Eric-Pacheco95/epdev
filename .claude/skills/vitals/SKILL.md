@@ -65,22 +65,19 @@ true
 
 ## Phase 2: Terminal Dashboard
 
-6.5. Scan for unimplemented PRDs: run `grep -rl "\- \[ \]" memory/work/` and filter to paths matching `*/PRD.md`. These are PRDs with unchecked ISC items -- not yet fully /implement-prd'd. Store the list as `pending_prds` (file paths only, strip `memory/work/` prefix for display). PRDs where all ISC items are `[x]` are excluded.
+6.5. Scan for unimplemented PRDs:  filtered to . Store as  (strip  prefix). PRDs with all  excluded.
 
-6.6. Scan for unaddressed failure debt: run `grep -rl "Fix Applied: None" memory/learning/failures/` to find failure records with a diagnosed root cause but no fix applied. Store the list as `unaddressed_failures` (filenames only, strip directory). These are pre-diagnosed warm-up tasks -- the RCA is done, only the fix remains.
+6.6. Scan for unaddressed failures: memory/learning/failures/2026-04-20_reschedule-ps1-silent-failure.md
+memory/learning/failures/2026-04-21_commit-precheck-cp1252-decode-error.md. Store as  (filenames only; RCA done, fix pending).
 
-7. Interpret the collected data and format the compact terminal dashboard (see TERMINAL FORMAT)
-8. For threshold crossings: explain what each crossing means
-9. Generate "Top 3 Today" -- the 3 highest-value actions for today grounded in evidence from the collector data:
-   - Overnight findings that need review/merge
-   - TELOS contradictions that need action
-   - Open validations from tasklist
-   - Stale/unhealthy scheduled tasks
+7. Interpret collected data; format terminal dashboard (see TERMINAL FORMAT)
+8. For threshold crossings: explain what each means
+9. Generate "Top 3 Today" -- 3 highest-value actions grounded in collector data: overnight findings needing review/merge, TELOS contradictions, open tasklist validations, stale/unhealthy scheduled tasks
 10. Display the terminal dashboard immediately
 
 ## Phase 3: Slack Deep Dive
 
-7. After displaying terminal output, compose the full Slack report (see SLACK FORMAT) with ALL available sections: system health, overnight branch breakdown, TELOS introspection, external monitoring, cross-project findings, threshold crossings, autonomous value rate, unmerged branches, Top 3 actions.
+7. After displaying terminal output, compose the full Slack report (see SLACK FORMAT) with all sections defined in SLACK FORMAT.
 8. Post to #epdev Slack using:
    ```python
    import sys; sys.path.insert(0, str(__import__('pathlib').Path('.').resolve()))
@@ -92,16 +89,12 @@ true
 
 ## Phase 4: Morning Guide (interactive 5-step walkthrough)
 
-After the Slack post, display the morning guide header and walk Eric through each step. Present one step at a time -- tell Eric what to do, give him the exact command or decision, and wait. This is learn-by-doing, not a checklist to read.
-
-Display the guide header:
+After Slack post, display then walk interactively (one step at a time; command-first; wait for Eric before proceeding):
 ```
 Morning Brief -- Step-by-Step Guide
 ------------------------------------------------------------
 Target: 30-60 min | Extend only for critical findings
 ```
-
-Then present each step in sequence:
 
 **Step 1 -- OBSERVE (done)**
 Tell Eric: "Step 1 complete -- /vitals ran, dashboard displayed, Slack posted. System status: {HEALTHY|WARN|CRITICAL}."

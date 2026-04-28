@@ -177,6 +177,7 @@ Initialize a new project following the full ISC pipeline.
 - If the research brief is consistently longer than 2,000 words but PRD ISC only uses 20%, calibrate research depth for that project type
 - If quick mode is chosen, check 30 days later whether the project proceeded without issues -- calibrates when quick mode is a safe shortcut
 - Track project-to-implementation conversion rate -- if many /project-init runs never reach /implement-prd, diagnose whether PRD quality or scope is the bottleneck
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_project-init-{slug}.md when a project moves to /implement-prd within 7 days (high-momentum) or when red-team blocking findings cause pivots; rating 8+ for novel project types, 5-6 for standard builds
 
 # SKILL CHAIN
 

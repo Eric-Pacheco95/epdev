@@ -1,13 +1,19 @@
 """Pytest tests for tools/scripts/jarvis_heartbeat.py — _evaluate_severity and diff_snapshots."""
 
+import json
 import sys
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.scripts.jarvis_heartbeat import _evaluate_severity, diff_snapshots
+from tools.scripts.jarvis_heartbeat import (
+    _evaluate_severity, diff_snapshots,
+    load_previous, save_snapshot,
+    _load_cooldown_state, _save_cooldown_state, _is_cooled_down,
+)
 
 
 class TestEvaluateSeverity:
@@ -86,3 +92,66 @@ class TestDiffSnapshots:
         ]}
         changes = diff_snapshots(current, previous, cfg)
         assert len(changes) == 2
+
+
+# ---------------------------------------------------------------------------
+# load_previous / save_snapshot
+# ---------------------------------------------------------------------------
+
+class TestLoadPrevious:
+    def test_missing_returns_none(self, tmp_path):
+        assert load_previous(tmp_path / "missing.json") is None
+
+    def test_corrupt_returns_none(self, tmp_path):
+        f = tmp_path / "snap.json"
+        f.write_text("not json", encoding="utf-8")
+        assert load_previous(f) is None
+
+    def test_valid_json_returned(self, tmp_path):
+        f = tmp_path / "snap.json"
+        f.write_text(json.dumps({"metrics": {}}), encoding="utf-8")
+        result = load_previous(f)
+        assert result == {"metrics": {}}
+
+
+class TestSaveSnapshot:
+    def test_writes_latest(self, tmp_path):
+        latest = tmp_path / "latest.json"
+        history = tmp_path / "history.jsonl"
+        save_snapshot({"ts": "now"}, latest, history)
+        assert latest.exists()
+
+    def test_appends_to_history(self, tmp_path):
+        latest = tmp_path / "latest.json"
+        history = tmp_path / "history.jsonl"
+        save_snapshot({"ts": "t1"}, latest, history)
+        save_snapshot({"ts": "t2"}, latest, history)
+        lines = [l for l in history.read_text().splitlines() if l.strip()]
+        assert len(lines) == 2
+
+
+# ---------------------------------------------------------------------------
+# _load_cooldown_state / _save_cooldown_state / _is_cooled_down
+# ---------------------------------------------------------------------------
+
+class TestCooldownState:
+    def test_load_missing_returns_empty(self, tmp_path):
+        assert _load_cooldown_state(tmp_path) == {}
+
+    def test_roundtrip(self, tmp_path):
+        _save_cooldown_state(tmp_path, {"signal_count": "2026-04-27T10:00:00Z"})
+        state = _load_cooldown_state(tmp_path)
+        assert state["signal_count"] == "2026-04-27T10:00:00Z"
+
+    def test_cooled_down_when_no_entry(self, tmp_path):
+        assert _is_cooled_down("missing_metric", {}, 60) is True
+
+    def test_not_cooled_down_when_recent(self):
+        recent = datetime.now(timezone.utc) - timedelta(minutes=5)
+        ts = recent.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert _is_cooled_down("metric", {"metric": ts}, cooldown_minutes=60) is False
+
+    def test_cooled_down_when_old(self):
+        old = datetime.now(timezone.utc) - timedelta(minutes=120)
+        ts = old.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert _is_cooled_down("metric", {"metric": ts}, cooldown_minutes=60) is True

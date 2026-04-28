@@ -281,9 +281,9 @@ After writing: print "Prediction tracked: data/predictions/[filename]"
 
 ## Geopolitics (--geopolitics) — Predictive History framework
 
-Four pillars: **(1) Civilizational Cycles** — elite overproduction, fiscal strain, rising/declining dynamics (Thucydides Trap: 12/16 → conflict). **(2) Actor Modeling** — self-interest not ideology; map wants, leverage, commitment problems. **(3) Financial Drivers** — reserve currency, trade routes, industrial capacity, balance sheets. **(4) Historical Analogue** — state explicitly; 2-3 parallels + 2 critical differences.
+Pillars: (1) Civilizational Cycles (Thucydides Trap: 12/16 → conflict); (2) Actor Modeling (wants, leverage, commitment problems); (3) Financial Drivers (reserve currency, trade, industrial capacity); (4) Historical Analogue (2-3 parallels + 2 critical differences).
 
-Named Heuristics (apply when relevant):
+Named Heuristics:
 - **Asymmetry**: Social cohesion beats material superiority for weaker party
 - **Escalation**: Control > dominance; pace and limits matter more than firepower
 - **Proximity**: Domestic rivalries often drive foreign policy more than external threats
@@ -291,7 +291,7 @@ Named Heuristics (apply when relevant):
 
 ## Market (--market) — Macro Cycle framework
 
-Four pillars: **(1) Dalio Big Cycle** — short-term (~5-8yr) early/mid/late-euphoria/crisis; long-term (~75-100yr). Five forces: debt, internal order, external order, nature, technology. **(2) Sentiment** — euphoria/optimism/uncertainty/fear/panic; extremes contrarian; VIX: low=complacency, spike=fear. **(3) Macro Regime** — rates, dollar, liquidity (QE/QT, credit spreads), fiscal. **(4) Historical Cycle** — identify analogue; key structural differences.
+Pillars: (1) Dalio Big Cycle — short-term (~5-8yr) early/mid/late-euphoria/crisis; long-term (~75-100yr); five forces: debt, internal order, external order, nature, technology; (2) Sentiment — euphoria/optimism/uncertainty/fear/panic; VIX: low=complacency, spike=fear; (3) Macro Regime — rates, dollar, liquidity (QE/QT, credit spreads), fiscal; (4) Historical Cycle — identify analogue; key structural differences.
 
 # SECURITY RULES
 

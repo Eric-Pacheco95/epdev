@@ -1,6 +1,9 @@
-"""Tests for branch_lifecycle.format_report."""
+"""Tests for branch_lifecycle.format_report and _load_backlog_index."""
 
-from tools.scripts.branch_lifecycle import format_report
+import json
+from pathlib import Path
+import tools.scripts.branch_lifecycle as blc
+from tools.scripts.branch_lifecycle import format_report, _load_backlog_index
 
 
 def _make_branch(name, age_days, commit_count, diff_summary, is_stale=False, is_merged=False):
@@ -64,3 +67,47 @@ def test_format_report_multiple_stale_sorted_by_age():
     idx_oldest = result.index("jarvis/oldest")
     idx_newer = result.index("jarvis/newer")
     assert idx_oldest < idx_newer  # oldest appears first (sorted descending by age)
+
+
+# ── _load_backlog_index ──────────────────────────────────────────────
+
+class TestLoadBacklogIndex:
+    def test_missing_file_returns_empty(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(blc, "BACKLOG_FILE", tmp_path / "missing.jsonl")
+        assert _load_backlog_index() == {}
+
+    def test_empty_file_returns_empty(self, tmp_path, monkeypatch):
+        f = tmp_path / "backlog.jsonl"
+        f.write_text("", encoding="utf-8")
+        monkeypatch.setattr(blc, "BACKLOG_FILE", f)
+        assert _load_backlog_index() == {}
+
+    def test_task_with_id_maps_auto_branch(self, tmp_path, monkeypatch):
+        f = tmp_path / "backlog.jsonl"
+        f.write_text(json.dumps({"id": "abc123", "status": "pending"}) + "\n", encoding="utf-8")
+        monkeypatch.setattr(blc, "BACKLOG_FILE", f)
+        idx = _load_backlog_index()
+        assert "jarvis/auto-abc123" in idx
+
+    def test_task_without_id_skipped(self, tmp_path, monkeypatch):
+        f = tmp_path / "backlog.jsonl"
+        f.write_text(json.dumps({"status": "pending"}) + "\n", encoding="utf-8")
+        monkeypatch.setattr(blc, "BACKLOG_FILE", f)
+        idx = _load_backlog_index()
+        assert len(idx) == 0
+
+    def test_task_with_branch_field_also_indexed(self, tmp_path, monkeypatch):
+        f = tmp_path / "backlog.jsonl"
+        task = {"id": "xyz", "branch": "jarvis/overnight-2026-04-07", "status": "done"}
+        f.write_text(json.dumps(task) + "\n", encoding="utf-8")
+        monkeypatch.setattr(blc, "BACKLOG_FILE", f)
+        idx = _load_backlog_index()
+        assert "jarvis/overnight-2026-04-07" in idx
+
+    def test_malformed_json_skipped(self, tmp_path, monkeypatch):
+        f = tmp_path / "backlog.jsonl"
+        f.write_text('not json\n{"id": "ok1"}\n', encoding="utf-8")
+        monkeypatch.setattr(blc, "BACKLOG_FILE", f)
+        idx = _load_backlog_index()
+        assert "jarvis/auto-ok1" in idx
+        assert len(idx) == 1

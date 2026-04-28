@@ -7,7 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.scripts.jarvis_autoresearch import parse_metrics, extract_section
+from tools.scripts.jarvis_autoresearch import parse_metrics, extract_section, read_recent_files
 
 
 SAMPLE_RESPONSE = """\
@@ -80,3 +80,37 @@ class TestExtractSection:
     def test_empty_input(self):
         result = extract_section("", "ANYTHING")
         assert result == ""
+
+
+# ---------------------------------------------------------------------------
+# read_recent_files
+# ---------------------------------------------------------------------------
+
+class TestReadRecentFiles:
+    def test_missing_dir_returns_empty(self, tmp_path):
+        result = read_recent_files(tmp_path / "missing", days=7)
+        assert result == []
+
+    def test_returns_recent_md_files(self, tmp_path):
+        (tmp_path / "recent.md").write_text("content", encoding="utf-8")
+        result = read_recent_files(tmp_path, days=7)
+        assert len(result) == 1
+        assert result[0]["name"] == "recent.md"
+
+    def test_ignores_non_md_files(self, tmp_path):
+        (tmp_path / "data.json").write_text("{}", encoding="utf-8")
+        (tmp_path / "note.md").write_text("hi", encoding="utf-8")
+        result = read_recent_files(tmp_path, days=7)
+        assert len(result) == 1
+
+    def test_truncates_long_content(self, tmp_path):
+        (tmp_path / "big.md").write_text("x" * 2000, encoding="utf-8")
+        result = read_recent_files(tmp_path, days=7)
+        assert len(result[0]["content"]) < 2000
+        assert "truncated" in result[0]["content"]
+
+    def test_respects_max_files_limit(self, tmp_path):
+        for i in range(5):
+            (tmp_path / f"file{i}.md").write_text("content", encoding="utf-8")
+        result = read_recent_files(tmp_path, days=7, max_files=3)
+        assert len(result) == 3

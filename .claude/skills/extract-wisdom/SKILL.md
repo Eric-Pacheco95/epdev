@@ -123,6 +123,7 @@ true
 - If WISDOM AND INSIGHTS is consistently sparse for a content type, note it as a low-wisdom source category
 - MENTAL MODELS extracted from content are high-value -- if a model appears in 3+ extractions, consider promoting it to TELOS MODELS.md via /telos-update
 - If NEXT STEPS consistently recommend the same action (e.g., always 'read more on X'), that action is recurrent enough for a `backlog` task — add to tasklist directly rather than repeating as a recommendation
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_wisdom-{slug}.md when >= 5 KEY POINTS extracted or >= 2 MENTAL MODELS identified; rating 7+ if a mental model is new and adoption-worthy, 5-6 for strong KEY POINTS alone
 
 # INPUT
 

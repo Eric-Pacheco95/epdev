@@ -111,29 +111,29 @@ Create the target repo structure:
 {target-repo}/
 ├── CLAUDE.md                  # Adapted root context (no personal refs, no learning, no TELOS)
 ├── .claude/
-│   ├── settings.json          # Clean permissions (read, write, bash basics)
-│   └── skills/                # Extracted skill definitions
+│   ├── settings.json          # Clean permissions
+│   └── skills/
 ├── security/
-│   └── constitutional-rules.md  # Adapted security rules (strip self-healing, subagent scoping)
-├── templates/                 # Reusable artifact formats (Claude loads before generating)
-│   ├── requirements.md        # Requirements document
-│   ├── adr.md                 # Architecture Decision Record
-│   ├── meeting-notes.md       # Meeting notes
-│   └── status-update.md       # Status update / sprint report
-├── context/                   # Session context — Claude actively populates
-│   ├── glossary.md            # Terms, acronyms, system names (Claude appends new terms)
-│   ├── stakeholders/          # Per-project stakeholder maps
-│   └── sprint-log/            # Lightweight delivery history per project
-├── knowledge/                 # Domain reference — Claude reads when generating artifacts
+│   └── constitutional-rules.md  # Layers 1-4 only (strip self-healing, subagent scoping)
+├── templates/                 # Claude loads before generating artifacts
+│   ├── requirements.md
+│   ├── adr.md
+│   ├── meeting-notes.md
+│   └── status-update.md
+├── context/                   # Claude actively populates
+│   ├── glossary.md            # Terms, acronyms, system names
+│   ├── stakeholders/
+│   └── sprint-log/
+├── knowledge/                 # Claude reads when generating artifacts
 │   ├── regulatory/            # Regulatory summaries (OSFI, PIPEDA, etc.)
 │   └── standards/             # Story format, DoR/DoD, review checklists
-├── docs/                      # PRDs, specs, workflow outputs
-│   ├── projects/              # One subdirectory per project
-│   └── absorbed/              # Content absorbed via /absorb
+├── docs/
+│   ├── projects/
+│   └── absorbed/
 ├── history/
-│   ├── decisions/             # Decision log with ADR template
-│   └── lessons-learned/       # Sprint/milestone retrospectives
-└── README.md                  # Quick start, skill table, pipelines, directory structure
+│   ├── decisions/
+│   └── lessons-learned/
+└── README.md
 ```
 
 ### Active Context Population rules (add to CLAUDE.md):
@@ -142,9 +142,9 @@ Glossary auto-append → `context/glossary.md`; load `templates/` before artifac
 
 ### CLAUDE.md: Remove personal identity, TELOS, learning-capture, autonomous steering rules, personal MCP rules, cross-project references. Update skill count + context routing. Keep: Algorithm, ISC Quality Gate, security rules, workflow discipline, platform rules.
 
-### constitutional-rules.md: Keep Layers 1-4 (input validation, secrets, execution, audit). Strip Layer 5 (subagent scoping) unless autonomous agents included. Strip self-healing rules. Keep prompt injection defense. Verify no personal data in examples.
+### constitutional-rules.md: Keep Layers 1-4 (input validation, secrets, execution, audit). Strip Layer 5 unless autonomous agents included. Strip self-healing. Keep prompt injection defense. Verify no personal data in examples.
 
-### settings.json: Include only available tools. Default safe set: Read, Glob, Grep, WebFetch, WebSearch, Bash(git, python, npm, node, ls, mkdir, powershell). No MCP server configs.
+### settings.json: Default safe set: Read, Glob, Grep, WebFetch, WebSearch, Bash(git, python, npm, node, ls, mkdir, powershell). No MCP server configs.
 
 ### README.md: Quick start, skill table with stage+description, pipeline examples, directory structure, "No Learning, No Autonomous Systems" section, license.
 
@@ -235,5 +235,5 @@ INPUT:
 
 - Signal: `{YYYY-MM-DD}_extract-harness-{slug}.md` when >20% of skills blocked by Jarvis-specificity. Rating: 7-8 for architectural reusability insights, 5-6 for minor-adaptation extractions, skip for clean runs.
 - If --enterprise or --personal produced harness improvements: capture in history/decisions/.
-- If --enterprise extraction produced zero Jarvis-specific removals, log it: that corpus is a candidate for a clean-extraction reference standard and the skill gap taxonomy for that domain
-- Track harness extraction success by source skill age — skills >6 months without update tend to have Jarvis-specific patterns baked deeper; flag them for a `/dream` consolidation pass before extraction
+- If --enterprise extraction found zero Jarvis-specific removals: log as clean-extraction reference standard candidate.
+- Skills >6 months without update tend to have Jarvis-specific patterns baked in; flag for `/dream` pass before extraction.
