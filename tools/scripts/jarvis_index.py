@@ -27,7 +27,7 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _SCRIPT_DIR.parents[1]
 _DB_PATH = _REPO_ROOT / "data" / "jarvis_index.db"
 
-_EXPECTED_SCHEMA_VERSION = 1
+_EXPECTED_SCHEMA_VERSION = 2
 
 _CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
 _SIGNALS_DIR = _REPO_ROOT / "memory" / "learning" / "signals"
@@ -116,7 +116,8 @@ def _init_db(conn: sqlite3.Connection) -> None:
             started_at TEXT,
             completed_at TEXT,
             duration_seconds REAL,
-            status TEXT NOT NULL DEFAULT 'unknown',
+            status TEXT NOT NULL DEFAULT 'unknown'
+                CHECK (status IN ('success', 'failure', 'unknown')),
             exit_code INTEGER,
             artifact_count INTEGER DEFAULT 0,
             log_path TEXT,
@@ -159,10 +160,10 @@ def _init_db(conn: sqlite3.Connection) -> None:
         );
     """)
 
-    # Seed schema version if empty
+    # Seed schema version if empty (fresh DB)
     row = conn.execute("SELECT version FROM schema_version ORDER BY rowid DESC LIMIT 1").fetchone()
     if row is None:
-        conn.execute("INSERT INTO schema_version (version) VALUES (1)")
+        conn.execute("INSERT INTO schema_version (version) VALUES (2)")
 
     conn.commit()
 
@@ -183,11 +184,60 @@ def _check_schema_version(conn: sqlite3.Connection) -> None:
         )
 
 
+def _migrate_v1_to_v2(conn: sqlite3.Connection) -> None:
+    """Recreate producer_runs with CHECK constraint on status (v1 → v2).
+
+    Uses executescript with explicit BEGIN/COMMIT so DDL is atomic under
+    SQLite's own transaction semantics, bypassing Python sqlite3's implicit
+    DDL auto-commit behaviour.
+    """
+    conn.executescript("""
+        BEGIN;
+        DROP TABLE IF EXISTS producer_runs_v2;
+        CREATE TABLE producer_runs_v2 (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            producer TEXT NOT NULL,
+            run_date TEXT NOT NULL,
+            started_at TEXT,
+            completed_at TEXT,
+            duration_seconds REAL,
+            status TEXT NOT NULL DEFAULT 'unknown'
+                CHECK (status IN ('success', 'failure', 'unknown')),
+            exit_code INTEGER,
+            artifact_count INTEGER DEFAULT 0,
+            log_path TEXT,
+            UNIQUE(producer, run_date, started_at)
+        );
+        INSERT INTO producer_runs_v2 SELECT * FROM producer_runs;
+        DROP TABLE producer_runs;
+        ALTER TABLE producer_runs_v2 RENAME TO producer_runs;
+        CREATE INDEX IF NOT EXISTS idx_producer_runs_producer ON producer_runs(producer);
+        CREATE INDEX IF NOT EXISTS idx_producer_runs_date ON producer_runs(run_date);
+        CREATE INDEX IF NOT EXISTS idx_producer_runs_status ON producer_runs(status);
+        INSERT INTO schema_version (version) VALUES (2);
+        COMMIT;
+    """)
+
+
+def _migrate_db(conn: sqlite3.Connection) -> None:
+    """Apply pending schema migrations in version order."""
+    try:
+        row = conn.execute(
+            "SELECT version FROM schema_version ORDER BY rowid DESC LIMIT 1"
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return  # Fresh DB — _init_db will seed version 2
+    if row is None or row[0] >= 2:
+        return
+    _migrate_v1_to_v2(conn)
+
+
 def _get_conn() -> sqlite3.Connection:
     _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(_DB_PATH))
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
+    _migrate_db(conn)
     _check_schema_version(conn)
     _init_db(conn)
     return conn

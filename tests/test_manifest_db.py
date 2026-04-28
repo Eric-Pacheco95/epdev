@@ -56,13 +56,17 @@ def _make_test_db(path: Path) -> None:
     """Create a minimal jarvis_index.db with correct schema for testing."""
     conn = sqlite3.connect(str(path))
     conn.execute("CREATE TABLE schema_version (version INTEGER)")
-    conn.execute("INSERT INTO schema_version VALUES (1)")
+    conn.execute("INSERT INTO schema_version VALUES (2)")
     conn.execute("""CREATE TABLE producer_runs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        producer TEXT, run_date TEXT, started_at TEXT, completed_at TEXT,
-        duration_seconds REAL, status TEXT, exit_code INTEGER,
-        artifact_count INTEGER, log_path TEXT,
-        UNIQUE(producer, started_at)
+        producer TEXT NOT NULL, run_date TEXT NOT NULL,
+        started_at TEXT, completed_at TEXT,
+        duration_seconds REAL,
+        status TEXT NOT NULL DEFAULT 'unknown'
+            CHECK (status IN ('success', 'failure', 'unknown')),
+        exit_code INTEGER,
+        artifact_count INTEGER DEFAULT 0, log_path TEXT,
+        UNIQUE(producer, run_date, started_at)
     )""")
     conn.execute("""CREATE TABLE session_costs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -200,24 +204,26 @@ def test_write_producer_run_unknown_status_falls_back(tmp_path):
     assert row[0] == "unknown"
 
 
-def test_query_producer_health_recognizes_failed_alias(tmp_path):
-    """Defense in depth — even if a future direct-SQL writer skips
-    write_producer_run() and inserts the 'failed' alias, the reader still
-    classifies it as a failure."""
+def test_invalid_status_raises_integrity_error(tmp_path):
+    """CHECK constraint on producer_runs.status blocks non-canonical values
+    at the DB layer — no bypass via direct SQL is possible."""
+    import pytest
     db = tmp_path / "jarvis_index.db"
     _make_test_db(db)
     conn = sqlite3.connect(str(db))
-    conn.execute(
-        "INSERT INTO producer_runs (producer, run_date, started_at, status) "
-        "VALUES (?, ?, ?, ?)",
-        ("legacy_writer", "2026-01-01", "2026-01-01T00:00:00Z", "failed"),
-    )
-    conn.commit()
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            "INSERT INTO producer_runs (producer, run_date, started_at, status) "
+            "VALUES (?, ?, ?, ?)",
+            ("writer", "2026-01-01", "2026-01-01T00:00:00Z", "garbage"),
+        )
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            "INSERT INTO producer_runs (producer, run_date, started_at, status) "
+            "VALUES (?, ?, ?, ?)",
+            ("writer", "2026-01-01", "2026-01-01T01:00:00Z", "failed"),
+        )
     conn.close()
-    with mock.patch.object(mdb, "_DB_PATH", db):
-        result = mdb.query_producer_health(max_age_hours=99999)
-    assert any(r["producer"] == "legacy_writer" and r["issue"] == "failed"
-               for r in result)
 
 
 def test_query_producer_health_per_producer_cadence_override(tmp_path):

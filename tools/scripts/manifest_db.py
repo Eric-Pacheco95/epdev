@@ -13,7 +13,7 @@ from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _DB_PATH = _REPO_ROOT / "data" / "jarvis_index.db"
-_EXPECTED_SCHEMA_VERSION = 1
+_EXPECTED_SCHEMA_VERSION = 2
 
 # Per-producer staleness thresholds (hours). Producers not listed fall back to
 # the caller-supplied max_age_hours default (typically 26h = daily + buffer).
