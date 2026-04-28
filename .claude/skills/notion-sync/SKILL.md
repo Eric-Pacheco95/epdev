@@ -212,7 +212,7 @@ Append to `history/changes/notion_sync.md` (create if it doesn't exist):
 - TELOS updates queued (not auto-applied) | Verify: 'queued' in output, not 'applied'
 - No Notion writes in inbox/pull mode | Verify: output shows 'pushed: none' for inbox/pull
 - In push mode: local file exists and was read before push | Verify: file path appears in output before 'pushed'
-- Signal files created for rated items (if any) | Verify: `ls memory/learning/signals/ | grep 2026-04-27` -- non-empty if items were rated >= 6
+- Signal files created for rated items (if any) | Verify: `ls memory/learning/signals/ | grep {YYYY-MM-DD}` -- non-empty if items were rated >= 6
 
 # LEARN
 

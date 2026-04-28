@@ -188,7 +188,7 @@ Present a scaffold sentence per ISC item (what was built and why, not what file 
 
 # SKILL CHAIN
 
-- **Composes:** `/review-code` (non-optional VERIFY gate), `/quality-gate` (non-optional phase-completion gate), `/commit` (mid-build checkpoints + final commit prompt), `/self-heal` (if tests fail), `/design-verify` (optional VERIFY step — only when PRD has `--design` flag AND `reference.png` is confirmed present in PRD directory)
+- **Composes:** `/review-code`, `/quality-gate`, `/commit`, `/self-heal` (if tests fail), `/design-verify` (optional — only with `--design` flag + `reference.png` in PRD dir)
 - **Escalate to:** `/delegation` if scope expands mid-build or new dependencies are discovered
 
 # VERIFY
