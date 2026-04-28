@@ -59,3 +59,18 @@ sources:
     status: stale
     finding_priority: MEDIUM
     notes: "Last PyPI update: 2024-08-12 (~20 months ago). SDK may be abandoned in favor of direct REST API. Moralis CU overage incident 2026-04-19; cap resets ~2026-05-03. Review SDK dependency before crypto-bot reactivation."
+
+  - slug: anthropic-model-releases
+    type: web_changelog
+    url: https://www.anthropic.com/news
+    description: Anthropic Claude model announcements and release notes
+    last_checked: "2026-04-28"
+    status: new_release
+    finding_priority: HIGH
+    notes: |
+      Two significant releases in April 2026:
+      1. Claude Opus 4.7 (2026-04-16): Most capable GA model. 1M context, stronger coding/vision/multi-step.
+         $5/M input, $25/M output. Outperforms Opus 4.6 on agentic coding benchmarks.
+      2. Claude Mythos Preview (2026-04-07): Not publicly released — too dangerous. Preview shared with
+         11 orgs for cybersecurity research. Can autonomously exploit zero-day vulnerabilities.
+      Action: Update model routing in harness to reference claude-opus-4-7 for Tier 4+ tasks.
