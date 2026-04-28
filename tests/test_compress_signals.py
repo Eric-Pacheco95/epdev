@@ -2,15 +2,24 @@
 
 import json
 import os
+import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+import tools.scripts.compress_signals as cs
 from tools.scripts.compress_signals import (
     load_gzip_days,
     find_compressible,
     compress_file,
     parse_signal_frontmatter,
     _sanitize_ascii,
+    load_synthesized_signals,
+    get_last_synthesis_timestamp,
 )
 
 
@@ -162,3 +171,135 @@ def test_find_compressible_only_md_extension(tmp_path):
     results = find_compressible(tmp_path, max_age_days=180)
     assert txt not in results
     assert _sanitize_ascii("a \u2014 b") == "a -- b"
+
+
+# ---------------------------------------------------------------------------
+# load_synthesized_signals
+# ---------------------------------------------------------------------------
+
+class TestLoadSynthesizedSignals:
+    def test_missing_file_returns_empty(self, tmp_path):
+        with patch.object(cs, "LINEAGE_FILE", tmp_path / "nonexistent.jsonl"):
+            result = load_synthesized_signals()
+        assert result == set()
+
+    def test_new_schema_signals_array(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            json.dumps({"signals": ["memory/signals/foo.md", "memory/signals/bar.md"]}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = load_synthesized_signals()
+        assert "foo.md" in result
+        assert "bar.md" in result
+
+    def test_old_schema_signal_filename(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            json.dumps({"signal_filename": "memory/learning/signals/processed/baz.md"}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = load_synthesized_signals()
+        assert "baz.md" in result
+
+    def test_bare_filenames_no_path_prefix(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            json.dumps({"signals": ["deep/nested/path/signal.md"]}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = load_synthesized_signals()
+        assert "signal.md" in result
+        assert "deep/nested/path/signal.md" not in result
+
+    def test_bad_json_lines_skipped(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            "not json\n" + json.dumps({"signals": ["a.md"]}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = load_synthesized_signals()
+        assert "a.md" in result
+        assert len(result) == 1
+
+    def test_blank_lines_skipped(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            "\n\n" + json.dumps({"signals": ["c.md"]}) + "\n\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = load_synthesized_signals()
+        assert result == {"c.md"}
+
+
+# ---------------------------------------------------------------------------
+# get_last_synthesis_timestamp
+# ---------------------------------------------------------------------------
+
+class TestGetLastSynthesisTimestamp:
+    def test_missing_file_returns_none(self, tmp_path):
+        with patch.object(cs, "LINEAGE_FILE", tmp_path / "nonexistent.jsonl"):
+            result = get_last_synthesis_timestamp()
+        assert result is None
+
+    def test_iso_timestamp_parsed(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            json.dumps({"timestamp": "2026-04-01T12:00:00Z"}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = get_last_synthesis_timestamp()
+        assert result is not None
+        assert result.year == 2026
+        assert result.month == 4
+
+    def test_date_only_format_parsed(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            json.dumps({"date": "2026-03-15"}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = get_last_synthesis_timestamp()
+        assert result is not None
+        assert result.day == 15
+
+    def test_returns_most_recent_of_multiple(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            json.dumps({"timestamp": "2026-01-01T00:00:00Z"}) + "\n" +
+            json.dumps({"timestamp": "2026-04-28T10:00:00Z"}) + "\n" +
+            json.dumps({"timestamp": "2026-02-15T06:00:00Z"}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = get_last_synthesis_timestamp()
+        assert result is not None
+        assert result.month == 4
+        assert result.day == 28
+
+    def test_bad_json_lines_skipped(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            "bad\n" + json.dumps({"timestamp": "2026-04-10T00:00:00Z"}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = get_last_synthesis_timestamp()
+        assert result is not None
+
+    def test_no_timestamp_key_skipped(self, tmp_path):
+        f = tmp_path / "lineage.jsonl"
+        f.write_text(
+            json.dumps({"signals": ["a.md"]}) + "\n",
+            encoding="utf-8",
+        )
+        with patch.object(cs, "LINEAGE_FILE", f):
+            result = get_last_synthesis_timestamp()
+        assert result is None
