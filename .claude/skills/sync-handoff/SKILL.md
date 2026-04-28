@@ -86,6 +86,8 @@ Show the script output verbatim. For each item flagged DONE/LIKELY-DONE, name th
 
 - Stale-handoff pattern fires this skill: when invoked, log how many efforts were DONE — repeated high-DONE counts signal `/draft-handoff` is being called *before* the work it summarizes lands; consider hooking `/sync-handoff` into session-start.
 - If KEYWORD-HIT count is consistently high but verdict is PENDING, the handoff schema is too vague — push back via `/draft-handoff` LEARN to require explicit file paths in each Effort body.
+- Track verdict distribution across sessions — DONE:PENDING ratio below 0.5 across 5+ invocations signals the 48h lookback window needs extending; above 0.9 signals overly-broad keyword matching.
+- If `--self-test` fails repeatedly, the sync_handoff.py script has drifted from the handoff schema; flag for `/self-heal` with the mismatch diff.
 
 # INPUT
 
