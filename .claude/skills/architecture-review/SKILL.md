@@ -117,7 +117,7 @@ Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 aft
 ## Step 3.5: INCIDENT FIX CLASSIFICATION [--incident only]
 
 - For each proposed fix element, classify as one of: **root-cause** (removes the mechanism producing the failure), **safety-net** (catches failures the mechanism will still produce), or **observability** (makes the failure visible but does not fix or catch it).
-- Apply the **sequencing rule**: safety-net ships AFTER root-cause has been observed in production for a validation window (default 7 days). Never ship safety-net in parallel with root-cause — the safety-net masks whether the root-cause fix worked.
+- **Sequencing rule**: safety-net ships AFTER root-cause observed in production for a validation window (default 7 days). Never ship safety-net in parallel — it masks whether the root-cause fix worked.
 - Observability ships in parallel with root-cause (needed to measure whether root-cause worked).
 - Emit the INCIDENT FIX CLASSIFICATION output section (see OUTPUT INSTRUCTIONS).
 

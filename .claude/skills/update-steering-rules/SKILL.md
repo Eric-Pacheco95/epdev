@@ -100,7 +100,7 @@ Template (follow `orchestration/steering/trade-development.md` as the pattern):
 - [list skills or configs that inject this file]
 ```
 
-Present the proposed file to Eric for approval before creating it. After approval, add a `DOMAIN_CONTEXT_ROUTING` entry in `tools/scripts/jarvis_dispatcher.py` for the domain keywords.
+Present to Eric before creating. After approval, add `DOMAIN_CONTEXT_ROUTING` entry in `tools/scripts/jarvis_dispatcher.py`.
 
 ## Mode: --audit — Health check + prune + consolidate
 
