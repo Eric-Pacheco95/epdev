@@ -99,7 +99,7 @@ Collect live-system evidence before review agents run so they reason against pri
 
 ## Step 2.5: CANARY CROSS-READ [passive only — never feeds synthesis]
 
-After all 3 outputs exist, spawn a background cross-read agent: "Read all three outputs from `memory/work/_arch-review-{timestamp}/`. For each agent, answer: given the OTHER two agents' findings, would this agent's conclusion change? Append one JSONL per agent to `data/arch_review_canary.jsonl`: `{"date": "YYYY-MM-DD", "review_slug": "{slug}", "topic": "...", "canary_agent": "...", "original_stance": "...", "cross_read_delta": "...", "would_change_conclusion": true/false}`. Set `would_change_conclusion: true` only for material recommendation changes — not nuance."
+After all 3 outputs exist, spawn a background cross-read agent: "Read all agent outputs in `memory/work/_arch-review-{timestamp}/`. For each, would the conclusion change given the OTHER two findings? Append JSONL to `data/arch_review_canary.jsonl`: `{"date": "YYYY-MM-DD", "review_slug": "{slug}", "topic": "", "canary_agent": "", "original_stance": "", "cross_read_delta": "", "would_change_conclusion": bool}`. `would_change_conclusion: true` only for material changes — not nuance."
 
 Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 after 10 = validated; one JSON per line, no header.
 
