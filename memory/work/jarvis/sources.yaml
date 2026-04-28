@@ -84,3 +84,13 @@ sources:
     status: upgrade_available
     finding_priority: MEDIUM
     notes: "nomic-embed-text-v2-moe now available on Ollama — multilingual MoE, SoTA multilingual retrieval, ~300M params, ~100 languages, 190K+ pulls. Current install is v1.5 (English-only). Upgrade worthwhile if multilingual content enters the pipeline; otherwise v1.5 sufficient. Note: similarity threshold recalibration required above 0.80 for sparse corpora (memory ref: nomic-embed-text-similarity-floor)."
+
+  - slug: autogen-microsoft
+    type: pypi
+    url: https://pypi.org/project/autogen-core/
+    description: Microsoft AutoGen multi-agent framework (research comparison target)
+    last_checked: "2026-04-28"
+    last_version: "0.7.5"
+    status: deprecated
+    finding_priority: MEDIUM
+    notes: "AutoGen is now in MAINTENANCE MODE — no new features. Microsoft recommends Microsoft Agent Framework as enterprise-ready successor. autogen-core 0.7.5 / autogen-agentchat 0.7.5 are final feature releases. Update ai-agent-frameworks research topic to reflect this shift; remove AutoGen from comparison targets in favor of Microsoft Agent Framework."
