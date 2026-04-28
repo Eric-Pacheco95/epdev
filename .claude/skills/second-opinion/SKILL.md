@@ -84,8 +84,7 @@ INPUT:
 # LEARN
 
 - No auto-signal — prompt-generation utility, not an audit.
-- If Eric returns with the external reviewer's findings, route to `/learning-capture` with rating based on finding severity
-- If external reviewer consistently finds gap types Jarvis missed: log as blind-spot signal via /learning-capture.
+- External reviewer findings → `/learning-capture` (rate by severity); consistent Jarvis blind-spots → blind-spot signal.
 
 ---
 
