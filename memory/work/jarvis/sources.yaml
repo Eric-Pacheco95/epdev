@@ -39,3 +39,13 @@ sources:
     last_version: "1.1.10"
     status: current
     notes: "Trusted by Klarna and Replit for stateful multi-agent workflows. Research topic ai-agent-frameworks covers this."
+
+  - slug: tavily-python
+    type: pypi
+    url: https://pypi.org/project/tavily-python/
+    description: Tavily search/extract SDK — used by Jarvis research producer
+    last_checked: "2026-04-28"
+    last_version: "0.7.24"
+    status: new_release
+    finding_priority: HIGH
+    notes: "0.7.24 uploaded 2026-04-27 (yesterday). Recent release — verify compatibility with research_producer.py before next deploy."
