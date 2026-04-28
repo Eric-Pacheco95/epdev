@@ -15,13 +15,13 @@
 | 5B | COMPLETE | Dispatcher + worker, worktree lib, Task Scheduler wiring, 3-task validation |
 | 5C | COMPLETE (one deferred) | Unified pipeline, task gate, backlog_append(), routines engine, session capture, Dispatcher Tier 2; ISC template library deferred |
 | 5D | IN PROGRESS | Branch lifecycle tracker + signal rate monitoring shipped; data-gated items pending |
-| 5E | BUILT — falsification in progress | 5E-2 VALIDATED; 5E-1 window 2026-04-21 |
+| 5E | COMPLETE | 5E-1 VALIDATED 2026-04-26 (54 runs, 11 complete-fail, 1 legitimate followon — no spurious triggers); 5E-2 VALIDATED 2026-04-15 |
 
 ## Active Projects
 
 | Project | Status | Health | Next Action |
 |---------|--------|--------|-------------|
-| epdev-jarvis | active | green | Phase 5D data-gated items; 5E-1 falsification 2026-04-21 |
+| epdev-jarvis | active | green | Phase 5D data-gated items; Phase 5E COMPLETE |
 | crypto-bot | active | yellow | Paper trading → production gate — `memory/work/crypto-bot/PRD_v4.md` |
 | jarvis-app | active | green | Sprints 1-4 COMPLETE (/dashboard 3-tab, Phase 4 gate closed). Sprint 5: design system — `memory/work/jarvis-app/PRD.md` |
 
