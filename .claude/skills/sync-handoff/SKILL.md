@@ -74,6 +74,8 @@ Show the script output verbatim. For each item flagged DONE/LIKELY-DONE, name th
 - Script ran and parsed at least one effort (or reported empty Pending Efforts) | Verify: `python tools/scripts/sync_handoff.py --self-test`
 - Handoff path resolved (default or explicit) | Verify: output line "Handoff: data/..."
 - Verdict assigned to every effort | Verify: each `### ` block in output has a `Verdict:` line
+- No files were modified during execution (read-only constraint) | Verify: `git diff --stat` shows no changes
+- Recommendation section present (all DONE / some DONE / all PENDING) | Verify: output contains "Handoff is" or "Pick up only"
 
 # CONSTRAINTS
 
