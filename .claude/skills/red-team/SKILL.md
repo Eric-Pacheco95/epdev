@@ -34,6 +34,7 @@ THINK
 ## Output Contract
 - Input: plan, product description, or file path
 - Output: adversarial analysis (SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE/ABUSE, DATA/TRUST RISKS, RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS)
+- Multi-candidate proposal mode: when input is a list of N adoption candidates, design alternatives, or scope decisions (≥2 distinct items), each RANKED FINDINGS item must carry an explicit VERDICT TIER from {HARD REJECT, SOFT REJECT, COLLAPSES TO ONE-LINER, ACCEPT-AS-SCOPED, ACCEPT}. Single-system attack mode (one artifact) skips verdict tiers.
 - Side effects: none (pure analysis, no file output)
 
 ## autonomous_safe
@@ -99,7 +100,13 @@ true
 - MISUSE AND ABUSE CASES: bullets of adversarial/gaming behaviors
 - DATA AND TRUST RISKS: bullets; "(not applicable)" if none
 - STRIDE ANALYSIS: subsections for Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege
-- RANKED FINDINGS: numbered high-to-low; each item: severity + 1-line rationale
+- RANKED FINDINGS: numbered high-to-low; each item: severity + 1-line rationale. Multi-candidate proposal mode: append a VERDICT TIER per item using the set below; single-system mode omits the tier. Empty-section rule (per scope-inflation guardrail): do not pad findings to fill structure — fewer high-quality findings beat exhaustive low-signal ones.
+- VERDICT TIERS (multi-candidate mode only):
+  - **HARD REJECT** — pattern is structurally wrong; no salvage; cite the failure mode that breaks it
+  - **SOFT REJECT** — wrong as proposed but salvageable in a smaller form (note the salvage path)
+  - **COLLAPSES TO ONE-LINER** — core idea is right but doesn't need a new artifact; specify the exact one-line steering edit, frontmatter field, or SKILL.md flag that captures it
+  - **ACCEPT-AS-SCOPED** — adopt with explicit scope constraints (state the constraint)
+  - **ACCEPT** — adopt as proposed
 - MITIGATIONS: bullets mapped to numbered findings
 - OPEN QUESTIONS: what the red team still needs to know
 - Describe defenses and risks abstractly — no illegal instructions, no moralizing.
@@ -114,6 +121,7 @@ INPUT:
 - All required output sections present (SUMMARY, THREAT MODEL, FAILURE MODES, MISUSE AND ABUSE CASES, DATA AND TRUST RISKS, RANKED FINDINGS, MITIGATIONS, OPEN QUESTIONS; plus STRIDE sections if --stride was used) | Verify: Read output, scan for each heading
 - Every item in RANKED FINDINGS has a corresponding MITIGATIONS entry (or explicit 'no mitigation' note) | Verify: Cross-reference RANKED FINDINGS item IDs against MITIGATIONS
 - Severity ratings in RANKED FINDINGS span at least two distinct levels (uniform ratings = insufficient discrimination) | Verify: Count distinct severity values in RANKED FINDINGS
+- Multi-candidate proposal mode only: every RANKED FINDINGS item carries a verdict tier from the allowed set | Verify: Each numbered item ends with one of {HARD REJECT, SOFT REJECT, COLLAPSES TO ONE-LINER, ACCEPT-AS-SCOPED, ACCEPT}
 - No required sections missing after any generation pass | Verify: Re-scan output headings after generation
 
 # LEARN
