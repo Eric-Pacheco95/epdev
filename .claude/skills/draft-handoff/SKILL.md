@@ -129,6 +129,7 @@ Write the file with this structure:
 - File contains required sections | Verify: `grep -l "## Done This Session" data/session_handoff_$(date +%Y-%m-%d)*.md && grep -l "## Pending Efforts" data/session_handoff_$(date +%Y-%m-%d)*.md`
 - Every pending effort has kickoff prompt | Verify: Read handoff file and confirm `**Kickoff prompt:**` block exists for each effort under `## Pending Efforts`
 - No pending effort missing `**State:**` field | Verify: Read handoff file and confirm each effort section contains `**State:**` line
+- Handoff filename uses today's date (not a stale rewrite) | Verify: Compare `data/session_handoff_*.md` filename timestamp vs `date +%Y-%m-%d`
 
 # CONSTRAINTS
 
