@@ -85,6 +85,9 @@ INPUT:
 
 - No auto-signal — prompt-generation utility, not an audit.
 - External reviewer findings → `/learning-capture` (rate by severity); consistent Jarvis blind-spots → blind-spot signal.
+- If the external reviewer’s top findings are never addressed (not in commits 30+ days after), the review cadence is too frequent — drop to quarterly and tag results as research-only.
+- Track harness reuse rate: if H1–H8 harnesses built in one run are never reused, the --dynamic prompt over-invests in scaffolding; consider recommending --static for that reviewer context.
+- If the same reviewer (Codex/GPT/etc.) consistently misses the same blind-spot class (e.g., Windows paths), update the `## Ground rules` section to call it out explicitly.
 
 ---
 
