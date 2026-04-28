@@ -94,3 +94,12 @@ sources:
     status: deprecated
     finding_priority: MEDIUM
     notes: "AutoGen is now in MAINTENANCE MODE — no new features. Microsoft recommends Microsoft Agent Framework as enterprise-ready successor. autogen-core 0.7.5 / autogen-agentchat 0.7.5 are final feature releases. Update ai-agent-frameworks research topic to reflect this shift; remove AutoGen from comparison targets in favor of Microsoft Agent Framework."
+
+  - slug: crewai
+    type: pypi
+    url: https://pypi.org/project/crewai/
+    description: Multi-agent orchestration framework (research comparison target)
+    last_checked: "2026-04-28"
+    last_version: "1.14.3"
+    status: current
+    notes: "1.14.3 released 2025-03-17. Active development. Covered under ai-agent-frameworks research topic."
