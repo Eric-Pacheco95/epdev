@@ -8,11 +8,17 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import json
+from datetime import datetime, timezone, timedelta
+
 from tools.scripts.vitals_collector import (
     compute_trend_averages,
     _task_scheduler_result_label,
     _summarize_overnight_log,
     _local_hour_from_utc_iso,
+    _parse_ts,
+    load_memory_ticks,
+    build_memory_summary,
 )
 
 
@@ -147,3 +153,92 @@ class TestLocalHourFromUtcIso:
 
     def test_invalid_iso_returns_none(self):
         assert _local_hour_from_utc_iso("not-a-date") is None
+
+
+class TestParseTs:
+    def test_valid_z_timestamp(self):
+        result = _parse_ts("2026-04-28T12:00:00Z")
+        assert result is not None
+        assert result.year == 2026
+        assert result.hour == 12
+
+    def test_valid_offset_timestamp(self):
+        result = _parse_ts("2026-04-28T12:00:00+00:00")
+        assert result is not None
+
+    def test_invalid_returns_none(self):
+        assert _parse_ts("not-a-date") is None
+
+    def test_empty_returns_none(self):
+        assert _parse_ts("") is None
+
+
+class TestLoadMemoryTicks:
+    def _now(self):
+        return datetime(2026, 4, 28, 12, 0, 0, tzinfo=timezone.utc)
+
+    def test_missing_file_returns_empty(self, tmp_path):
+        result = load_memory_ticks(tmp_path / "missing.jsonl", 24, self._now())
+        assert result == []
+
+    def test_within_window_included(self, tmp_path):
+        f = tmp_path / "ticks.jsonl"
+        tick_ts = (self._now() - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        f.write_text(json.dumps({"ts": tick_ts, "commit_bytes_sum": 1000}) + "\n", encoding="utf-8")
+        result = load_memory_ticks(f, 24, self._now())
+        assert len(result) == 1
+
+    def test_outside_window_excluded(self, tmp_path):
+        f = tmp_path / "ticks.jsonl"
+        tick_ts = (self._now() - timedelta(hours=48)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        f.write_text(json.dumps({"ts": tick_ts, "commit_bytes_sum": 1000}) + "\n", encoding="utf-8")
+        result = load_memory_ticks(f, 24, self._now())
+        assert result == []
+
+    def test_bad_json_lines_skipped(self, tmp_path):
+        f = tmp_path / "ticks.jsonl"
+        tick_ts = (self._now() - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        f.write_text(
+            "not json\n" + json.dumps({"ts": tick_ts, "commit_bytes_sum": 500}) + "\n",
+            encoding="utf-8",
+        )
+        result = load_memory_ticks(f, 24, self._now())
+        assert len(result) == 1
+
+
+class TestBuildMemorySummary:
+    def _tick(self, commit_bytes, top5=None):
+        return {
+            "ts": "2026-04-28T10:00:00Z",
+            "commit_bytes_sum": commit_bytes,
+            "top5_procs": top5 or [],
+        }
+
+    def test_empty_ticks_returns_no_data(self):
+        result = build_memory_summary([], 32 * (1024 ** 3))
+        assert result["status"] == "NO_DATA"
+        assert result["peak_commit_bytes"] == 0
+
+    def test_healthy_status_at_low_ratio(self):
+        pagefile = 32 * (1024 ** 3)
+        ticks = [self._tick(1 * (1024 ** 3))]  # 1/32 = ~3% ratio
+        result = build_memory_summary(ticks, pagefile)
+        assert result["status"] == "HEALTHY"
+
+    def test_peak_bytes_captured(self):
+        pagefile = 32 * (1024 ** 3)
+        ticks = [self._tick(2 * (1024 ** 3)), self._tick(5 * (1024 ** 3))]
+        result = build_memory_summary(ticks, pagefile)
+        assert result["peak_commit_bytes"] == 5 * (1024 ** 3)
+
+    def test_top1_consumer_extracted(self):
+        pagefile = 32 * (1024 ** 3)
+        ticks = [self._tick(1 * (1024 ** 3), top5=[{"name": "claude.exe", "paged_mb": 500}])]
+        result = build_memory_summary(ticks, pagefile)
+        assert result["top1_consumer_at_peak"] == "claude.exe"
+
+    def test_tick_count_reported(self):
+        pagefile = 32 * (1024 ** 3)
+        ticks = [self._tick(1 * (1024 ** 3))] * 5
+        result = build_memory_summary(ticks, pagefile)
+        assert result["tick_count"] == 5
