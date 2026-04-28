@@ -77,6 +77,7 @@ INPUT:
 - No outside facts or sources introduced that are not in the input (hallucination check) | Verify: Review — trace every cited stat/source back to input text
 - Every claim in CLAIM INVENTORY has a corresponding entry in EVIDENCE MAP and SUPPORT ASSESSMENT | Verify: Cross-reference CLAIM INVENTORY claim IDs against other sections
 - No VERDICT issued without a SUPPORT ASSESSMENT rating (prevents unsupported conclusion) | Verify: Read VERDICT and confirm it cites SUPPORT ASSESSMENT ratings
+- VERDICT uses one of the four defined levels (UNSUPPORTED / PARTIALLY SUPPORTED / WELL SUPPORTED / STRONGLY SUPPORTED) | Verify: grep VERDICT line for exact tier label
 
 # LEARN
 
