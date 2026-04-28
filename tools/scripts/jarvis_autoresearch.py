@@ -858,29 +858,184 @@ def post_slack_summary(metrics: dict, run_dir: Path) -> bool:
 
 # -- Backlog intake ----------------------------------------------------------
 
+# TELOS files safe for autonomous dispatcher apply (doc-append only, no code).
+# Higher-sensitivity files (MISSION.md, BELIEFS.md, GOALS.md) require
+# interactive approval and are intentionally excluded.
+_SAFE_TELOS_FILES = frozenset({
+    "LEARNED.md", "MODELS.md", "PROJECTS.md", "MUSIC.md",
+    "STATUS.md", "CHALLENGES.md", "STRATEGIES.md", "WISDOM.md",
+})
+
+# Change verbs that indicate destructive operations — block autonomous apply.
+_UNSAFE_CHANGE_VERBS = ("delete", "remove file", "create new file", "rename file", "move file")
+
+
+def _parse_proposals(run_dir: Path) -> list[dict]:
+    """Parse proposals.md into a list of {file, change, priority} dicts.
+
+    Uses a simple line-prefix state machine — robust to multi-line fields.
+    Returns empty list on any parse failure.
+    """
+    proposals_path = run_dir / "proposals.md"
+    if not proposals_path.is_file():
+        return []
+    try:
+        lines = proposals_path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+
+    results: list[dict] = []
+    current: dict | None = None
+    active_field: str | None = None
+
+    for line in lines:
+        if line.startswith("- File:"):
+            if current and current.get("file") and current.get("change"):
+                results.append(current)
+            current = {"file": line[7:].strip(), "change": "", "priority": "MEDIUM"}
+            active_field = None
+        elif current is None:
+            continue
+        elif line.startswith("- Change:"):
+            current["change"] = line[9:].strip()
+            active_field = "change"
+        elif line.startswith("- Evidence:"):
+            active_field = None
+        elif line.startswith("- Priority:"):
+            current["priority"] = line[11:].strip().upper()
+            active_field = None
+        elif line.startswith("- "):
+            active_field = None
+        elif active_field == "change" and line.strip():
+            current["change"] = (current["change"] + " " + line.strip()).strip()
+
+    if current and current.get("file") and current.get("change"):
+        results.append(current)
+    return results
+
+
+def _safe_telos_proposal(proposal: dict) -> bool:
+    """Return True if proposal is a safe doc-append to a known TELOS file."""
+    filename = proposal.get("file", "").strip()
+    if filename not in _SAFE_TELOS_FILES:
+        return False
+    change_lower = proposal.get("change", "").lower()
+    return not any(kw in change_lower for kw in _UNSAFE_CHANGE_VERBS)
+
+
+def _grep_anchor(change_text: str) -> str | None:
+    """Extract a post-change anchor phrase for ISC grep from Change text.
+
+    For replace operations, anchors to the NEW state (after 'with "...' or
+    'to "...'). For appends, anchors to the last ISO date or a quoted phrase
+    so the ISC reflects the target state after the change.
+    """
+    # "replace X with Y" / "update X to Y" — anchor to the new content
+    for pattern in (r'\bwith\s+"([^"]{5,50})"', r'\bto\s+"([^"]{5,50})"'):
+        m = re.search(pattern, change_text, re.IGNORECASE)
+        if m:
+            return m.group(1).strip()[:50]
+    # Last ISO date (appends embed new date; replaces have old date first)
+    dates = re.findall(r"\d{4}-\d{2}-\d{2}", change_text)
+    if dates:
+        return dates[-1]
+    # Last quoted phrase 10-60 chars
+    quotes = re.findall(r'"([^"]{10,60})"', change_text)
+    if quotes:
+        return quotes[-1][:50]
+    # First 3 content words (>3 chars)
+    words = [w.strip(".,;:()\"'--") for w in change_text.split() if len(w.strip(".,;:()\"'--")) > 3]
+    return " ".join(words[:3]) if len(words) >= 3 else None
+
+
+def _inject_proposal_tasks(proposals: list[dict], run_dir: Path, run_date: str) -> int:
+    """Inject one pending + autonomous_safe task per safe TELOS doc proposal.
+
+    Returns count of newly injected tasks (0 if all deduped or none safe).
+    """
+    from tools.scripts.lib.backlog import backlog_append
+
+    injected = 0
+    proposals_rel = str((run_dir / "proposals.md").relative_to(REPO_ROOT)).replace("\\", "/")
+    priority_map = {"HIGH": 2, "MEDIUM": 3, "LOW": 4}
+
+    for proposal in proposals:
+        if not _safe_telos_proposal(proposal):
+            continue
+
+        filename = proposal["file"].strip()
+        telos_path = "memory/work/telos/%s" % filename
+        change_head = proposal["change"][:80].strip()
+        anchor = _grep_anchor(proposal["change"])
+
+        if anchor:
+            # grep -q exits 0 on match (executable classify) — prd_verb 'grep:'
+            # format is not accepted by backlog validator's executable check.
+            safe_anchor = anchor.replace('"', "").replace("'", "").replace("\\", "")[:50]
+            isc = [
+                "%s contains proposal content | Verify: grep -q %s %s"
+                % (filename, safe_anchor, telos_path)
+            ]
+        else:
+            isc = [
+                "%s file present | Verify: test -f %s" % (filename, telos_path)
+            ]
+
+        task = {
+            "description": "Apply TELOS proposal: %s → %s" % (change_head, filename),
+            "tier": 1,
+            "autonomous_safe": True,
+            "status": "pending",
+            "priority": priority_map.get(proposal.get("priority", "MEDIUM"), 3),
+            "isc": isc,
+            "expected_outputs": [telos_path],
+            "context_files": [proposals_rel],
+            "source": "autoresearch",
+            "routine_id": "autoresearch:proposal:%s:%s" % (
+                run_date, filename.lower().replace(".md", "")
+            ),
+            "skills": [],
+            "notes": "Auto-classified safe TELOS doc-write. Run: %s." % run_date,
+        }
+        try:
+            result = backlog_append(task)
+            if result is not None:
+                injected += 1
+        except Exception as exc:
+            print("  WARNING: proposal task injection failed (%s): %s" % (filename, exc),
+                  file=sys.stderr)
+
+    return injected
+
+
 def _inject_autoresearch_backlog(metrics: dict, run_dir: Path) -> None:
-    """Inject a pending_review backlog row when this run produced proposals.
+    """Inject backlog tasks when this run produced proposals.
+
+    Always injects one aggregate pending_review task (human review gate).
+    Also injects individual autonomous_safe=True tasks for each proposal that
+    targets a known TELOS doc file — these can be dispatched without human
+    approval.
 
     Respects S14 steering rule: triggers on proposal_count, not raw
     contradiction_count. Dedups per-day via routine_id. Never raises.
     """
     try:
-        proposals = metrics.get("proposal_count", 0)
-        if proposals < 1:
+        proposal_count = metrics.get("proposal_count", 0)
+        if proposal_count < 1:
             return
 
-        # Lazy import to avoid top-level import cost if this path is never hit
         from tools.scripts.lib.backlog import backlog_append
 
         today = datetime.now().strftime("%Y-%m-%d")
         contradictions = metrics.get("contradiction_count", 0)
         coverage = metrics.get("coverage_score", 100)
 
+        # Aggregate review task (pending_review — human gate for non-safe proposals)
         task = {
             "description": (
                 "[autoresearch] %d actionable proposal(s) -- "
                 "contradictions=%d, coverage=%.0f%% (%s)"
-                % (proposals, contradictions, coverage, today)
+                % (proposal_count, contradictions, coverage, today)
             ),
             "tier": 0,
             "autonomous_safe": False,
@@ -900,6 +1055,13 @@ def _inject_autoresearch_backlog(metrics: dict, run_dir: Path) -> None:
             ),
         }
         backlog_append(task)
+
+        # Per-proposal tasks for safe TELOS doc targets
+        parsed = _parse_proposals(run_dir)
+        safe_count = _inject_proposal_tasks(parsed, run_dir, today)
+        if safe_count:
+            print("  Backlog: injected %d safe proposal task(s)" % safe_count)
+
     except Exception as exc:
         # Never block the main autoresearch run on a backlog injection failure
         print("  WARNING: backlog injection failed: %s" % exc, file=sys.stderr)
