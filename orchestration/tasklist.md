@@ -1,7 +1,13 @@
 # Task Console
 
 > Unified view of all active work across the epdev system.
-> Last updated: 2026-04-22 (substrate seam + Phase 7 entry proof scoped from arch-review; pruned history note unchanged)
+> Last updated: 2026-04-28 (added Open Incidents section per arch-review-2026-04-28-snapshot)
+
+## Open Incidents
+
+> Canonical home for open operational incidents (API caps, offline systems, blocked sessions). One-line entries: `OPENED YYYY-MM-DD — short description (resolution criterion)`. Move to a `RESOLVED YYYY-MM-DD` line when closed; archive entries >30d resolved.
+
+- OPENED 2026-04-19 — **crypto-bot paper trading offline.** Moralis 2M CU overage; downscope shipped, vitals tracker live. Resolution: Moralis cap reset (~2026-05-03). Do not propose restart before then. Source: MEMORY.md `project_crypto_bot_reactivation_blocked.md`.
 
 ## Completion Summary
 
