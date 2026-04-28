@@ -157,7 +157,7 @@ Check session context for evidence resolving each blocker before asking Eric. As
 - SUCCESS METRICS: bullets; "(to be defined)" when missing
 - OUT OF SCOPE: bullets; if everything in scope: "(none stated)"
 - DEPENDENCIES AND INTEGRATIONS: bullets — teams, systems, APIs, data sources
-- RISKS AND ASSUMPTIONS: subsections for risks vs assumptions — **must appear BEFORE any IMPLEMENTATION PLAN or task-ready section** when both are present; gate-last output is bypassed by ADHD build velocity.
+- RISKS AND ASSUMPTIONS: subsections (risks/assumptions); **must precede any IMPLEMENTATION PLAN** — gate-last bypasses ADHD velocity.
 - OPEN QUESTIONS: bullets of decisions or info still needed
 - Do not invent revenue figures, legal commitments, or named customers not in input.
 - Do not add meta-commentary.
