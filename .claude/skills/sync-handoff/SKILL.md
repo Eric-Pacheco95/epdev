@@ -41,6 +41,13 @@ false
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- No input and no handoff files in `data/`: print DISCOVERY block, STOP
+- Explicit path given but file not found: "Handoff not found at {path}. Files in data/: {list}" STOP
+- Explicit path points to a file with no `## Pending Efforts` section: print CONTRACT `empty-pending` error, STOP
+- `--help` or unknown flags: print DISCOVERY block, STOP
+
 ## Step 1: RUN AUDIT
 
 Run `python tools/scripts/sync_handoff.py [path]`. The script:
