@@ -30,3 +30,12 @@ sources:
     last_version: "2026.3"
     status: current
     notes: "Calendar versioning (YYYY.MM). 2026.3 = March 2026 release. Crypto-bot /implement-prd pending; bot offline until ~2026-05-03 Moralis cap reset."
+
+  - slug: langgraph
+    type: pypi
+    url: https://pypi.org/project/langgraph/
+    description: LangChain graph-based agent orchestration framework
+    last_checked: "2026-04-28"
+    last_version: "1.1.10"
+    status: current
+    notes: "Trusted by Klarna and Replit for stateful multi-agent workflows. Research topic ai-agent-frameworks covers this."
