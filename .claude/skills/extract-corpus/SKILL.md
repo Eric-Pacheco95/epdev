@@ -146,6 +146,7 @@ Rules for subagents:
 - `corpus_extractor.py` stderr checked after yt-dlp; non-zero exit means incomplete slice | Verify: Check stderr output and exit code
 - Dedup scan performed before any **new** `memory/knowledge/<domain>/` directory is minted | Verify: Confirm `foundation-ml`-style splits meet the unanimous / dedup / dependency-chain rule
 - If a structured gate was written, the next session executes **only** the gate trigger logic before re-deriving taxonomy | Verify: Diff `queue.json` gate fields vs `evaluation.md`
+- Output knowledge files include required frontmatter (slug, domain, source) | Verify: `grep -l "domain:" memory/knowledge/**/*.md | head -5` returns non-empty list
 
 # LEARN
 
