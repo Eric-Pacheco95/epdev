@@ -18,6 +18,7 @@ Sonnet + normal effort. No change needed for routine tasks (file ops, status che
 - PRD contains irreversible verify methods (production deploys, external API writes, credential changes, git push to shared branches)
 - About to complete a multi-session build (before declaring COMPLETE, not mid-build)
 - Eric explicitly requests a second opinion mid-session
+- **Pre-write trigger for hook-fired scripts:** before writing any script that (a) will be called automatically by a Claude Code hook AND (b) mutates a human-maintained file (STATUS.md, settings.json, CLAUDE.md, MEMORY.md, tasklist.md), call `advisor()` first. High blast radius (fires every session) + low call cost. The ceremony-tier rule covers axis-driven advisor triggers; this is a narrower file-class trigger that axis routing alone misses. Why: `update_status.py` advisor call surfaced 5 actionable bugs (regex backreference, idempotency, mtime ordering) with 0 false alarms — without the call, 2-3 would have shipped silently.
 
 **Do NOT call advisor() when:**
 - `/architecture-review` has already run on this proposal (it IS the multi-angle Opus-equivalent; advisor on top is redundant review)

@@ -1,3 +1,8 @@
+---
+name: capture-recording
+description: Analyze guitar recordings with AI feedback mapped to musical goals
+---
+
 # IDENTITY and PURPOSE
 
 Guitar recording analysis skill. Pipeline: load MUSIC.md context → Gemini analysis via Python CLI → write to recordings archive → update practice log → log token usage.

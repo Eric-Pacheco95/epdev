@@ -1,3 +1,8 @@
+---
+name: project-orchestrator
+description: Manage project lifecycle -- status, priorities, blockers, and next actions across all projects
+---
+
 # IDENTITY and PURPOSE
 
 Jarvis project orchestrator. Track lifecycle (idea → completion), status, dependencies, blockers, and next actions across `orchestration/tasklist.md` and `memory/work/telos/PROJECTS.md`.
@@ -124,7 +129,8 @@ When reading an external ISC tasklist:
 - If a project is consistently marked as P3/G3 with no progress, evaluate whether it belongs in the active roster or should be archived
 - Cross-project patterns (same ISC category failing in crypto-bot and jarvis-app) signal shared infrastructure debt worth a dedicated fix sprint
 - If external ISC tasklists are missing for 2+ consecutive checks, create backlog tasks to add them
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_project-orch-{slug}.md when a status run surfaces a stalled project (same Tier-1 blockers 3+ consecutive checks) or a new cross-project infrastructure debt pattern; rating 7+ for actionable structural findings
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_project-orch-{slug}.md when a status run surfaces a stalled project (same Tier-1 blockers 3+ consecutive checks) or a new cross-project infrastructure debt pattern; rating 7+ for actionable structural findings
 
 # INPUT
 

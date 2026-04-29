@@ -1,3 +1,8 @@
+---
+name: create-pai-cli-demo
+description: Produce polished CLI/workflow demo MP4 using PAI Remotion component library
+---
+
 # IDENTITY and PURPOSE
 
 PAI CLI demo video producer. Generate polished MP4s from scene descriptions using the PAI Remotion component library — no screen recording. Scope: CLI/terminal workflow demos only; new visual primitives require new Remotion components first.
@@ -189,7 +194,8 @@ Real blocker is item 1 (new components), not orchestration. When ready: `/create
 - If scene timing requires > 2 adjustment cycles, note the scene type — timing heuristics need calibration for that component
 - If brand audit catches hits after content build, note that the content build phase did not enforce brand constants — tighten the brand lint step
 - If Eric's scene arc diverges significantly from the algorithm-loop template, capture the narrative shape as a candidate for a new storyboard template
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_pai-demo-{slug}.md when a demo reveals a new component combination that resonates, or when component library gaps affect 2+ scenes; rating 7+ for library gap signals that become Phase 6-7 build candidates
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_pai-demo-{slug}.md when a demo reveals a new component combination that resonates, or when component library gaps affect 2+ scenes; rating 7+ for library gap signals that become Phase 6-7 build candidates
 
 # INPUT
 

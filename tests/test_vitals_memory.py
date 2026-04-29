@@ -45,7 +45,7 @@ def _tick(ts: datetime, commit_bytes: int, top1_name: str = "python", top1_mb: f
 class TestBuildMemorySummary:
     def test_no_data_returns_zero_peak(self):
         mod = _load_mod()
-        out = mod.build_memory_summary([], pagefile_total_bytes=64 * 1024**3)
+        out = mod.build_memory_summary([], commit_limit_bytes=64 * 1024**3)
         assert out["status"] == "NO_DATA"
         assert out["tick_count"] == 0
         assert out["peak_commit_bytes"] == 0
@@ -59,7 +59,7 @@ class TestBuildMemorySummary:
             _tick(now - timedelta(minutes=20), 40 * 1024**3, top1_name="claude", top1_mb=2000),
             _tick(now - timedelta(minutes=10), 20 * 1024**3, top1_name="python", top1_mb=500),
         ]
-        out = mod.build_memory_summary(ticks, pagefile_total_bytes=64 * 1024**3)
+        out = mod.build_memory_summary(ticks, commit_limit_bytes=64 * 1024**3)
         assert out["peak_commit_bytes"] == 40 * 1024**3
         assert out["top1_consumer_at_peak"] == "claude"
         assert out["tick_count"] == 3
@@ -67,16 +67,16 @@ class TestBuildMemorySummary:
     def test_ratio_thresholds_set_status(self):
         mod = _load_mod()
         now = datetime.now(timezone.utc)
-        pagefile = 64 * 1024**3
+        limit = 64 * 1024**3
         # Healthy: 50% ratio
-        healthy = [_tick(now, int(pagefile * 0.5))]
-        assert mod.build_memory_summary(healthy, pagefile)["status"] == "HEALTHY"
+        healthy = [_tick(now, int(limit * 0.5))]
+        assert mod.build_memory_summary(healthy, limit)["status"] == "HEALTHY"
         # Warn: 75% ratio
-        warn = [_tick(now, int(pagefile * 0.75))]
-        assert mod.build_memory_summary(warn, pagefile)["status"] == "WARN"
+        warn = [_tick(now, int(limit * 0.75))]
+        assert mod.build_memory_summary(warn, limit)["status"] == "WARN"
         # Critical: 95% ratio
-        crit = [_tick(now, int(pagefile * 0.95))]
-        assert mod.build_memory_summary(crit, pagefile)["status"] == "CRITICAL"
+        crit = [_tick(now, int(limit * 0.95))]
+        assert mod.build_memory_summary(crit, limit)["status"] == "CRITICAL"
 
     def test_required_fields_present(self):
         mod = _load_mod()
@@ -85,8 +85,8 @@ class TestBuildMemorySummary:
         # FR-006: peak, ratio, top-1 consumer, tick completion rate
         for key in (
             "status", "peak_commit_bytes", "peak_commit_gb", "peak_ratio",
-            "top1_consumer_at_peak", "tick_completion_rate", "tick_count",
-            "expected_ticks", "pagefile_total_bytes",
+            "pagefile_pressure", "top1_consumer_at_peak", "tick_completion_rate",
+            "tick_count", "expected_ticks", "commit_limit_bytes",
             "warn_threshold_ratio", "critical_threshold_ratio",
         ):
             assert key in out, f"missing key: {key}"
@@ -101,7 +101,7 @@ class TestBuildMemoryDetail:
             _tick(base + timedelta(minutes=45), 20 * 1024**3),
             _tick(base + timedelta(hours=1, minutes=5), 30 * 1024**3),
         ]
-        out = mod.build_memory_detail(ticks, pagefile_total_bytes=64 * 1024**3)
+        out = mod.build_memory_detail(ticks, commit_limit_bytes=64 * 1024**3)
         hours = [b["hour"] for b in out["hourly_buckets"]]
         assert hours == ["2026-04-19T03:00Z", "2026-04-19T04:00Z"]
         hour3 = out["hourly_buckets"][0]
@@ -135,6 +135,40 @@ class TestBuildMemoryDetail:
         out = mod.build_memory_detail(ticks, pagefile)
         assert len(out["overcommit_crossings"]) == 1
         assert out["overcommit_crossings"][0]["ratio"] >= 1.0
+
+
+class TestPeakRatioDenominator:
+    def test_21gb_peak_against_44gb_commit_limit_is_not_critical(self):
+        """Denominator fix: 21 GB peak / 44 GB commit limit ≈ 0.48, not >1.0."""
+        mod = _load_mod()
+        now = datetime.now(timezone.utc)
+        peak = 21 * 1024**3
+        limit = 44 * 1024**3
+        out = mod.build_memory_summary([_tick(now, peak)], commit_limit_bytes=limit)
+        assert 0.47 < out["peak_ratio"] < 0.49, f"peak_ratio={out['peak_ratio']}"
+        assert out["status"] == "HEALTHY"
+
+    def test_pagefile_pressure_computed_from_pagefile_bytes(self):
+        """pagefile_pressure uses swap-only denominator, not commit limit."""
+        mod = _load_mod()
+        now = datetime.now(timezone.utc)
+        pf_total_bytes = int(12.5 * 1024**3)
+        pf_free_gb = 12.38
+        tick = {
+            "ts": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "commit_bytes_sum": int(21 * 1024**3),
+            "pagefile_free_gb": pf_free_gb,
+            "ram_free_gb": 6.28,
+            "top5_procs": [],
+        }
+        out = mod.build_memory_summary(
+            [tick],
+            commit_limit_bytes=int(44.5 * 1024**3),
+            pagefile_bytes=pf_total_bytes,
+        )
+        # 12.5 - 12.38 = 0.12 GB used → pressure ≈ 0.0096
+        assert out["pagefile_pressure"] < 0.02, f"pressure={out['pagefile_pressure']}"
+        assert out["status"] == "HEALTHY"
 
 
 class TestContextFileCounts:

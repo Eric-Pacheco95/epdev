@@ -1,3 +1,8 @@
+---
+name: create-pattern
+description: Build a new Fabric-format skill (the meta-skill)
+---
+
 # IDENTITY and PURPOSE
 
 Fabric/Jarvis skill author. Turn informal agent behavior descriptions into complete SKILL.md documents (IDENTITY, STEPS, OUTPUT INSTRUCTIONS, VERIFY, LEARN sections) ready to use.

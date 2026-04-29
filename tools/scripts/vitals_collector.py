@@ -24,7 +24,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_VERSION = "1.2.1"
+SCHEMA_VERSION = "1.3.0"
 
 # --- Data source paths ---
 HEARTBEAT_LATEST = REPO_ROOT / "memory" / "work" / "isce" / "heartbeat_latest.json"
@@ -1395,8 +1395,33 @@ def load_memory_ticks(path: Path, since_hours: int, now: datetime | None = None)
     return out
 
 
-def _pagefile_total_bytes() -> int:
-    """Return configured pagefile size in bytes, or 0 on failure."""
+def _commit_limit_bytes() -> int:
+    """Return Windows commit limit (RAM + pagefile) in bytes.
+
+    Uses Win32_OperatingSystem.TotalVirtualMemorySize (KB) — authoritative
+    on Windows. Falls back to psutil RAM+swap sum if WMI unavailable.
+    """
+    try:
+        import subprocess as _sp
+        r = _sp.run(
+            ["powershell", "-NonInteractive", "-NoProfile", "-Command",
+             "(Get-CimInstance Win32_OperatingSystem).TotalVirtualMemorySize"],
+            capture_output=True, text=True, timeout=5, check=True,
+        )
+        return int(r.stdout.strip()) * 1024
+    except Exception:
+        pass
+    try:
+        import psutil
+        vm = psutil.virtual_memory()
+        sw = psutil.swap_memory()
+        return int(vm.total) + int(sw.total)
+    except Exception:
+        return 0
+
+
+def _pagefile_bytes() -> int:
+    """Return raw pagefile size (swap only, not RAM) in bytes."""
     try:
         import psutil
         return int(psutil.swap_memory().total)
@@ -1406,10 +1431,14 @@ def _pagefile_total_bytes() -> int:
 
 def build_memory_summary(
     ticks: list[dict],
-    pagefile_total_bytes: int,
+    commit_limit_bytes: int,
+    pagefile_bytes: int = 0,
     window_hours: int = 24,
 ) -> dict:
     """FR-006 summary: peak commit + ratio + top-1 consumer at peak + completion rate.
+
+    commit_limit_bytes: RAM + pagefile (Windows commit limit); denominator for peak_ratio.
+    pagefile_bytes: raw pagefile size only; denominator for pagefile_pressure.
 
     Expected ticks in 24h window per PRD:
       night (22:00–08:00, 2-min cadence) = 10 * 30 = 300
@@ -1418,6 +1447,17 @@ def build_memory_summary(
     """
     expected_ticks_24h = 384
     expected = int(expected_ticks_24h * (window_hours / 24))
+
+    if pagefile_bytes:
+        pf_total_gb = pagefile_bytes / 1024 ** 3
+        peak_pf_used_gb = max(
+            (max(0.0, pf_total_gb - float(t.get("pagefile_free_gb") or pf_total_gb))
+             for t in ticks),
+            default=0.0,
+        )
+        pagefile_pressure = round(peak_pf_used_gb / pf_total_gb, 4) if pf_total_gb else 0.0
+    else:
+        pagefile_pressure = 0.0
 
     if not ticks:
         return {
@@ -1429,15 +1469,16 @@ def build_memory_summary(
             "peak_commit_bytes": 0,
             "peak_commit_gb": 0.0,
             "peak_ratio": 0.0,
+            "pagefile_pressure": pagefile_pressure,
             "top1_consumer_at_peak": None,
-            "pagefile_total_bytes": pagefile_total_bytes,
+            "commit_limit_bytes": commit_limit_bytes,
             "warn_threshold_ratio": MEMORY_WARN_RATIO,
             "critical_threshold_ratio": MEMORY_CRITICAL_RATIO,
         }
 
     peak_tick = max(ticks, key=lambda t: int(t.get("commit_bytes_sum") or 0))
     peak_bytes = int(peak_tick.get("commit_bytes_sum") or 0)
-    peak_ratio = (peak_bytes / pagefile_total_bytes) if pagefile_total_bytes else 0.0
+    peak_ratio = (peak_bytes / commit_limit_bytes) if commit_limit_bytes else 0.0
 
     top5 = peak_tick.get("top5_procs") or []
     top1_name = top5[0].get("name") if top5 and isinstance(top5[0], dict) else None
@@ -1460,8 +1501,9 @@ def build_memory_summary(
         "peak_commit_bytes": peak_bytes,
         "peak_commit_gb": round(peak_bytes / (1024 ** 3), 2),
         "peak_ratio": round(peak_ratio, 4),
+        "pagefile_pressure": pagefile_pressure,
         "top1_consumer_at_peak": top1_name,
-        "pagefile_total_bytes": pagefile_total_bytes,
+        "commit_limit_bytes": commit_limit_bytes,
         "warn_threshold_ratio": MEMORY_WARN_RATIO,
         "critical_threshold_ratio": MEMORY_CRITICAL_RATIO,
     }
@@ -1469,13 +1511,14 @@ def build_memory_summary(
 
 def build_memory_detail(
     ticks: list[dict],
-    pagefile_total_bytes: int,
+    commit_limit_bytes: int,
+    pagefile_bytes: int = 0,
     window_hours: int = 24,
 ) -> dict:
     """FR-007 detail: hourly buckets (max/avg) + top-5 consumer histogram + over-commit crossings."""
     from collections import defaultdict
 
-    summary = build_memory_summary(ticks, pagefile_total_bytes, window_hours)
+    summary = build_memory_summary(ticks, commit_limit_bytes, pagefile_bytes, window_hours)
 
     buckets: dict[str, list[int]] = defaultdict(list)
     histogram: dict[str, dict[str, float]] = {}
@@ -1487,12 +1530,12 @@ def build_memory_detail(
         if ts is not None:
             bucket = ts.strftime("%Y-%m-%dT%H:00Z")
             buckets[bucket].append(commit)
-        if pagefile_total_bytes and commit > pagefile_total_bytes:
+        if commit_limit_bytes and commit > commit_limit_bytes:
             overcommits.append({
                 "ts": t.get("ts"),
                 "commit_gb": round(commit / (1024 ** 3), 2),
-                "pagefile_gb": round(pagefile_total_bytes / (1024 ** 3), 2),
-                "ratio": round(commit / pagefile_total_bytes, 4),
+                "commit_limit_gb": round(commit_limit_bytes / (1024 ** 3), 2),
+                "ratio": round(commit / commit_limit_bytes, 4),
             })
         for proc in t.get("top5_procs") or []:
             if not isinstance(proc, dict):
@@ -1576,7 +1619,12 @@ def load_context_file_counts(
 def collect_memory_summary() -> dict:
     """Wrapper for main() default path — window = 24h."""
     ticks = load_memory_ticks(MEMORY_TIMESERIES, since_hours=24)
-    return build_memory_summary(ticks, _pagefile_total_bytes(), window_hours=24)
+    return build_memory_summary(
+        ticks,
+        commit_limit_bytes=_commit_limit_bytes(),
+        pagefile_bytes=_pagefile_bytes(),
+        window_hours=24,
+    )
 
 
 def main() -> None:
@@ -1602,7 +1650,12 @@ def main() -> None:
     # FR-007 detailed memory panel — fast path
     if args.memory:
         ticks = load_memory_ticks(MEMORY_TIMESERIES, since_hours=24)
-        detail = build_memory_detail(ticks, _pagefile_total_bytes(), window_hours=24)
+        detail = build_memory_detail(
+            ticks,
+            commit_limit_bytes=_commit_limit_bytes(),
+            pagefile_bytes=_pagefile_bytes(),
+            window_hours=24,
+        )
         indent = 2 if args.pretty else None
         print(json.dumps(detail, indent=indent, ensure_ascii=True))
         sys.exit(0)

@@ -14,9 +14,11 @@ echo [%date% %time%] Index update starting >> "%LOG_FILE%"
 
 cd /d "%REPO_ROOT%"
 "%PYTHON%" tools\scripts\jarvis_index.py update >> "%LOG_FILE%" 2>&1
+set "RC=%ERRORLEVEL%"
 
-if %ERRORLEVEL% EQU 0 (
+if %RC% EQU 0 (
     echo [%date% %time%] Index update completed successfully >> "%LOG_FILE%"
 ) else (
-    echo [%date% %time%] Index update FAILED with exit code %ERRORLEVEL% >> "%LOG_FILE%"
+    echo [%date% %time%] Index update FAILED with exit code %RC% >> "%LOG_FILE%"
 )
+exit /b %RC%

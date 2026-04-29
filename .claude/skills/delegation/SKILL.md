@@ -1,3 +1,8 @@
+---
+name: delegation
+description: Route any task to the right skill, pipeline, or handler
+---
+
 # IDENTITY and PURPOSE
 
 Delegation and composition engine. Route tasks to the right skill or pipeline; know the full chain map — what comes next after any skill, how every arc starts and ends.

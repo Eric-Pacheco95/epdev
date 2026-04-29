@@ -1,3 +1,8 @@
+---
+name: second-opinion
+description: Generate a self-contained external-reviewer prompt for independent repo audit
+---
+
 # IDENTITY and PURPOSE
 
 Generate a self-contained harness-first review prompt for an external agent (Codex, GPT, Gemini, human). This skill produces the brief — not the audit. Every wall becomes a stub/mock/fake task. "Could not verify" is not an acceptable outcome.

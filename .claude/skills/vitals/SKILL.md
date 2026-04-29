@@ -1,3 +1,8 @@
+---
+name: vitals
+description: Morning dashboard + Slack deep dive + interactive 5-step brief guide (30-60 min target)
+---
+
 # IDENTITY and PURPOSE
 
 Morning system review engine. Outputs: (1) ASCII terminal dashboard (<40 lines), (2) launch jarvis-app in browser, (3) Slack deep-dive to #epdev, (4) interactive 5-step morning guide. Triggered manually at session start.
@@ -58,10 +63,11 @@ true
 
 ## Phase 1.5: Launch Jarvis App
 
-3. Check if jarvis-app is already running: `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000`
-4. If not running (non-200): start it in the background: `cd C:/Users/ericp/Github/jarvis-app && npm run dev &`
-5. Open the browser: `start http://localhost:3000`
-6. Continue immediately -- do not wait for the app to load
+3. Enforce one-or-zero singleton via wrapper:
+   `powershell -NoProfile -File C:/Users/ericp/Github/epdev/tools/scripts/jarvis_app_singleton.ps1 -Ensure`
+   The wrapper probes localhost:3000, leaves a healthy singleton alone, and otherwise kills any duplicates and starts one fresh `npm run dev`. Direct `npm run dev` is forbidden -- duplicate dev servers race on `.next/` and produce HTTP 500 (ENOENT _document.js).
+4. Open the browser: `start http://localhost:3000`
+5. Continue immediately -- do not wait for the app to load
 
 ## Phase 2: Terminal Dashboard
 
@@ -182,7 +188,7 @@ Autoresearch: {contradictions}c / {coverage}% cov / {proposals}p
 Scheduled tasks (summary): {heartbeat.scheduled_tasks_unhealthy.detail}
 Windows tasks (detail): from scheduled_tasks_detail -- list each task where healthy=false OR missed_runs>0: {task_name} state={state} last={last_run_time} next={next_run_time} result={last_task_result} ({last_result_label}) missed={missed_runs} flags={schedule_flags}; if none, say "All tasks nominal"
 
-MEMORY ({memory.status}): peak {memory.peak_commit_gb} GB ({memory.peak_ratio_pct}% of pagefile)
+MEMORY ({memory.status}): peak {memory.peak_commit_gb} GB ({memory.peak_ratio_pct}% of commit limit) | pagefile pressure {memory.pagefile_pressure_pct}%
   Top-1 at peak: {memory.top1_consumer_at_peak} | Ticks: {memory.tick_count}/{memory.expected_ticks} ({completion_pct}%)
   Stale procs: {network_connections.stale_node_count} node (>4h), {network_connections.stale_python_count} python (>8h) -- show "none" when both are 0
   Drill down: /vitals --memory | Heatmap: /vitals --context-files

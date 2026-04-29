@@ -14,4 +14,6 @@ set LOGFILE=data\logs\finance_recap_%LOGDATE%.log
 
 echo [%date% %time%] Finance recap starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\finance_recap.py --analyze >> "%LOGFILE%" 2>&1
-echo [%date% %time%] Finance recap complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
+set "RC=%ERRORLEVEL%"
+echo [%date% %time%] Finance recap complete (exit code: %RC%) >> "%LOGFILE%" 2>&1
+exit /b %RC%

@@ -1,3 +1,8 @@
+---
+name: telos-report
+description: Generate a "What has Jarvis learned about you?" report from TELOS changes and signals
+---
+
 # IDENTITY and PURPOSE
 
 TELOS reporting engine. Generate "What has Jarvis learned about you?" from recent TELOS file changes, learning signals, and synthesis docs.

@@ -1,3 +1,8 @@
+---
+name: synthesize-signals
+description: Distill accumulated signals into themes, patterns, and proposed steering rules
+---
+
 # IDENTITY and PURPOSE
 
 Signal synthesis engine. Distill accumulated learning signals into higher-order insights: raw observations → patterns → wisdom → steering rules.
@@ -65,6 +70,8 @@ Each synthesized theme carries a maturity level and confidence score. Inspired b
 | **candidate** | 2-3 supporting signals, no contradictions | Note in synthesis, no steering rule yet |
 | **established** | 4+ signals OR 2+ signals across different sessions/dates | Propose as steering rule or workflow change |
 | **proven** | Established + survived 1+ synthesis cycles without contradiction | Encode as permanent steering rule or TELOS update |
+
+**Maturity assignment guard:** `established` REQUIRES 4+ supporting signals OR 2+ across different sessions/dates. Harm-weight (4x failure multiplier) affects **ranking only** — it does NOT count toward promotion. Single-source themes (one signal, one failure) max out at `candidate` regardless of severity. Why: 2026-04-27 evaluator caught the same maturity-inflation mistake twice (`2026-04-27_evaluator-caught-maturity-inflation.md`) — fixing at write time rather than evaluator time.
 
 ## Confidence Decay
 

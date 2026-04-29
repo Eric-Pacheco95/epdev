@@ -1,3 +1,8 @@
+---
+name: update-steering-rules
+description: Analyze failures, synthesis, and feedback to propose new or updated CLAUDE.md steering rules
+---
+
 # IDENTITY and PURPOSE
 
 Steering rules engine. Analyze failures, synthesis docs, and session feedback to propose new/updated AI Steering Rules in CLAUDE.md. Repeated failures = missing rules; validated approaches = rules to formalize.
@@ -117,6 +122,10 @@ Run `python tools/scripts/calibration_rollup.py`; read `data/calibration_weekly.
 6. **Cross-file consistency**: Read ALL sub-steering files in Context Routing table. Check for: rules duplicated between CLAUDE.md and sub-files; misrouted rules. Files: `security/constitutional-rules.md`, `orchestration/steering/autonomous-rules.md`, `platform-specific.md`, `research-patterns.md`, `cross-project.md`, `trade-development.md`, `isc-governance.md`, `ceremony-tier.md`, `incident-triage.md`, `model-effort-routing.md`, `producer-artifacts.md`, `frontend-ui.md`, `testing-governance.md`
 7. **Staleness scan**: completed phases, one-time incident workarounds, magic numbers belonging in config
 8. **Spinoff trigger (NEW)**: For each file checked above (CLAUDE.md and every sub-file), if any single H2/H3 section contains ≥10 rules AND the rules cluster into ≥2 distinct themes (≥3 rules each, identifiable by leading bold phrase or shared keyword), propose a new sub-steering file. Heuristic for cluster detection: group rules by first-noun-phrase or shared bold lead-in; if 2+ groups have ≥3 rules each, flag as spinoff candidate. Propose under Step B as a new SUB-FILE creation with rule list to migrate and a Context Routing entry for CLAUDE.md.
+9. **Skill description hygiene (NEW)**: For every `.claude/skills/*/SKILL.md`:
+   - **Missing/stub**: confirm `description:` frontmatter is present and non-empty. The string `IDENTITY and PURPOSE` as a description value (the legacy fallback rendered when frontmatter is absent) counts as missing — flag for transcription via `python tools/scripts/skill_frontmatter_transcribe.py --dry-run`.
+   - **Sanitization**: re-run the description through `INJECTION_PATTERNS` and the 200-char length cap defined in `tools/scripts/skill_frontmatter_transcribe.py`. Any match is a hard flag — descriptions land in the cold-session system-reminder and bypass PreToolUse/PostToolUse hooks, so the data-layer is the only sanitization point.
+   - **Drift**: for each SKILL.md modified in the last 30 days (`git log --since=30.days --name-only -- '.claude/skills/*/SKILL.md'`), check whether the same commit touched the `description:` frontmatter line (`git log -L '/^description:/,+1:<path>' --since=30.days`). Body-changed-without-description = STALE; flag for rewrite. Source: 2026-04-28 /architecture-review on skill-list pollution — red-team severity-Low maintenance-drift finding made into a recurring audit item.
 
 Present health check results as a table before proceeding.
 
@@ -128,6 +137,7 @@ For each issue found, propose one of:
 - **SPLIT**: Compound rule should be separated into distinct concerns
 - **UPDATE**: Rule text is outdated but the concern is still valid — rewrite
 - **SPINOFF**: Section in CLAUDE.md or oversized sub-file should become a new sub-steering file (triggered by Step A check 3 or 8). Follow "Proposing new sub-steering files" template; include the rules to migrate and the Context Routing entry to add
+- **TRANSCRIBE**: SKILL.md is missing `description:` frontmatter (triggered by Step A check 9 missing/stub). Run `python tools/scripts/skill_frontmatter_transcribe.py --dry-run` then `--apply`; do not hand-author when `## One-liner` already exists. Sanitization-flagged or drift-flagged descriptions are REWRITE, not TRANSCRIBE — manual authoring with security review.
 
 Present all proposals in a numbered list with evidence. Wait for Eric's approval before making any changes.
 

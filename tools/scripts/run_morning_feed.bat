@@ -15,4 +15,6 @@ set LOGFILE=data\logs\morning_feed_%LOGDATE%.log
 
 echo [%date% %time%] Morning feed starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\self_diagnose_wrapper.py -- "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\morning_feed.py >> "%LOGFILE%" 2>&1
-echo [%date% %time%] Morning feed complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
+set "RC=%ERRORLEVEL%"
+echo [%date% %time%] Morning feed complete (exit code: %RC%) >> "%LOGFILE%" 2>&1
+exit /b %RC%

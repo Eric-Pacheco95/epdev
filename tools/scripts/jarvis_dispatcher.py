@@ -123,6 +123,8 @@ from tools.scripts.lib.isc_common import (
 
 STEERING_ALWAYS_INJECT = [
     "orchestration/steering/autonomous-rules.md",
+    "orchestration/steering/producer-signal-design.md",
+    "orchestration/steering/process-lock-safety.md",
 ]
 
 DOMAIN_CONTEXT_ROUTING: dict = {
