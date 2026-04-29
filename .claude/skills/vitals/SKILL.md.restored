@@ -40,7 +40,7 @@ true
 
 # DEBUGGING RECIPES
 
-**Near-zero health scores (0.00-0.05):** Check `rglob` scope in `vitals_collector.py` first — parent-dir scans dilute precision (scope bug > data bug).
+**Near-zero health metric scores (0.00 to 0.05):** Before diagnosing data quality or scoring logic, first verify the scan scope — check the `rglob` path and target directory in `vitals_collector.py`. Parent-directory scans silently include irrelevant files and dilute precision; a 0.00 score is more often a scope bug than a data bug.
 
 # STEPS
 
@@ -67,6 +67,11 @@ true
 5. Continue immediately -- do not wait for the app to load
 
 ## Phase 2: Terminal Dashboard
+
+6.5. Scan for unimplemented PRDs:  filtered to . Store as  (strip  prefix). PRDs with all  excluded.
+
+6.6. Scan for unaddressed failures: memory/learning/failures/2026-04-20_reschedule-ps1-silent-failure.md
+memory/learning/failures/2026-04-21_commit-precheck-cp1252-decode-error.md. Store as  (filenames only; RCA done, fix pending).
 
 7. Interpret collected data; format terminal dashboard (see TERMINAL FORMAT)
 8. For threshold crossings: explain what each means
@@ -151,10 +156,10 @@ Brief complete. Session focus: {Eric's stated intent}
 
 ## FALLBACK (if collector script fails)
 
-On error/empty output/non-zero exit:
-1. Report: "vitals_collector.py failed: {error}"
-2. Offer LLM fallback; if confirmed, read each data source individually
-3. Recommend investigating the failing step
+If the collector script returns an error, empty output, or non-zero exit code:
+1. Report the failure explicitly: "vitals_collector.py failed: {error details}"
+2. Offer: "Run full LLM-based vitals collection instead?"
+3. If Eric confirms, fall back to reading each data source individually
 4. After fallback, recommend investigating the failing collector step
 
 # TERMINAL FORMAT
@@ -315,7 +320,7 @@ Proposals acted on: {n}/{total} ({rate}%)
 
 # SKILL CHAIN
 
-- **Replaces:** morning_feed.py
+- **Replaces:** morning_feed.py (9am scheduled task -- now on-demand via /vitals)
 - **Composes:** vitals_collector.py (subprocess), slack_notify.py (import)
 - **Escalate to:** /delegation if health is CRITICAL
 

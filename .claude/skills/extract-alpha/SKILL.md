@@ -10,7 +10,7 @@ You are an expert at finding Alpha in content: genuinely novel, surprising, or n
 # DISCOVERY
 
 ## One-liner
-Extract the highest-signal, most novel ideas from any content
+Surface the highest-signal, most novel ideas from any content — ranked by surprise value and actionability.
 
 ## Stage
 OBSERVE

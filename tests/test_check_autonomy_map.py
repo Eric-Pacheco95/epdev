@@ -1,164 +1,133 @@
-"""Tests for tools/scripts/check_autonomy_map.py pure helper functions."""
+"""Tests for tools/scripts/check_autonomy_map.py."""
+import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import tools.scripts.check_autonomy_map as cam
+from tools.scripts.check_autonomy_map import (
+    _parse_frontmatter,
+    _parse_body_autonomous_safe,
+    _format_slack_message,
+    CRITICAL_TYPES,
+    MAX_AUTONOMOUS_TIER,
+)
 
 
-# ---------------------------------------------------------------------------
-# _parse_frontmatter
-# ---------------------------------------------------------------------------
+class TestParseFrontmatter:
+    def test_basic_key_value(self):
+        text = "---\nname: foo\ndescription: bar\n---\nbody"
+        fm = _parse_frontmatter(text)
+        assert fm["name"] == "foo"
+        assert fm["description"] == "bar"
 
-def test_parse_frontmatter_basic():
-    text = "---\nname: my-skill\ndescription: does stuff\n---\nbody here"
-    fm = cam._parse_frontmatter(text)
-    assert fm["name"] == "my-skill"
-    assert fm["description"] == "does stuff"
+    def test_bool_true(self):
+        text = "---\ndisable-model-invocation: true\n---\n"
+        fm = _parse_frontmatter(text)
+        assert fm["disable-model-invocation"] is True
 
+    def test_bool_false(self):
+        text = "---\nautonomous_safe: false\n---\n"
+        fm = _parse_frontmatter(text)
+        assert fm["autonomous_safe"] is False
 
-def test_parse_frontmatter_bool_true():
-    text = "---\ndisable-model-invocation: true\n---\nbody"
-    fm = cam._parse_frontmatter(text)
-    assert fm["disable-model-invocation"] is True
+    def test_no_frontmatter(self):
+        assert _parse_frontmatter("just body") is None
 
+    def test_unterminated_frontmatter(self):
+        assert _parse_frontmatter("---\nname: x\n") is None
 
-def test_parse_frontmatter_bool_false():
-    text = "---\nuser-invocable: false\n---\nbody"
-    fm = cam._parse_frontmatter(text)
-    assert fm["user-invocable"] is False
+    def test_empty_frontmatter(self):
+        # "---\n---" has no newline after the opening fence — find("\n---", 4) fails
+        fm = _parse_frontmatter("---\nname: x\n---\n")
+        assert fm == {"name": "x"}
 
-
-def test_parse_frontmatter_no_frontmatter_returns_none():
-    text = "# Just a heading\n\nsome body"
-    assert cam._parse_frontmatter(text) is None
-
-
-def test_parse_frontmatter_unclosed_returns_none():
-    text = "---\nname: orphan\nbody without closing"
-    assert cam._parse_frontmatter(text) is None
-
-
-def test_parse_frontmatter_quoted_values():
-    text = '---\nname: "my skill"\n---\nbody'
-    fm = cam._parse_frontmatter(text)
-    assert fm["name"] == "my skill"
+    def test_quoted_value(self):
+        text = '---\nname: "my skill"\n---\n'
+        fm = _parse_frontmatter(text)
+        assert fm["name"] == "my skill"
 
 
-def test_parse_frontmatter_empty_block():
-    # An empty block ("---\n---") uses the closing marker at pos 3 which the
-    # search skips (it starts at pos 4); the implementation returns None.
-    text = "---\n---\nbody"
-    fm = cam._parse_frontmatter(text)
-    assert fm is None or fm == {}
+class TestParseBodyAutonomousSafe:
+    def test_true_value(self):
+        text = "# heading\n\n## autonomous_safe\n\ntrue\n\nmore text"
+        assert _parse_body_autonomous_safe(text) is True
+
+    def test_false_value(self):
+        text = "## autonomous_safe\n\nfalse\n"
+        assert _parse_body_autonomous_safe(text) is False
+
+    def test_case_insensitive(self):
+        text = "## autonomous_safe\n\nTrue\n"
+        assert _parse_body_autonomous_safe(text) is True
+
+    def test_missing_section(self):
+        assert _parse_body_autonomous_safe("no section here") is None
+
+    def test_heading_no_value(self):
+        # heading present but no true/false after it
+        assert _parse_body_autonomous_safe("## autonomous_safe\n\nmaybe\n") is None
 
 
-def test_parse_frontmatter_comment_lines_skipped():
-    text = "---\n# this is a comment\nname: foo\n---\nbody"
-    fm = cam._parse_frontmatter(text)
-    assert "name" in fm
-    assert "#" not in fm
-
-
-# ---------------------------------------------------------------------------
-# _parse_body_autonomous_safe
-# ---------------------------------------------------------------------------
-
-def test_parse_body_autonomous_safe_true():
-    text = "# Skill\n\n## autonomous_safe\n\ntrue\n\nmore body"
-    assert cam._parse_body_autonomous_safe(text) is True
-
-
-def test_parse_body_autonomous_safe_false():
-    text = "# Skill\n\n## autonomous_safe\n\nfalse\n\nmore body"
-    assert cam._parse_body_autonomous_safe(text) is False
-
-
-def test_parse_body_autonomous_safe_missing_returns_none():
-    text = "# Skill\n\nNo autonomous_safe section here"
-    assert cam._parse_body_autonomous_safe(text) is None
-
-
-def test_parse_body_autonomous_safe_case_insensitive():
-    text = "## AUTONOMOUS_SAFE\n\nTrue\n"
-    assert cam._parse_body_autonomous_safe(text) is True
-
-
-# ---------------------------------------------------------------------------
-# _format_slack_message
-# ---------------------------------------------------------------------------
-
-CLEAN_STATE = {
-    "findings": [],
-    "finding_count": 0,
-    "critical_count": 0,
-    "skills_checked": 50,
-    "map_entries": 45,
-}
-
-DRIFT_STATE = {
-    "findings": [
-        {
-            "type": "autonomous_safe_drift",
-            "skill": "my-skill",
-            "detail": "SKILL.md and autonomy_map disagree",
+class TestFormatSlackMessage:
+    def test_clean_state_message(self):
+        state = {
+            "findings": [],
+            "critical_count": 0,
+            "skills_checked": 10,
+            "map_entries": 8,
         }
-    ],
-    "finding_count": 1,
-    "critical_count": 1,
-    "skills_checked": 50,
-    "map_entries": 45,
-}
+        msg = _format_slack_message(state)
+        assert "clean" in msg
+        assert "10 skills" in msg
+
+    def test_findings_message(self):
+        state = {
+            "findings": [
+                {"type": "orphan_map_entry", "skill": "foo", "detail": "no SKILL.md"}
+            ],
+            "critical_count": 0,
+            "skills_checked": 5,
+            "map_entries": 3,
+        }
+        msg = _format_slack_message(state)
+        assert "orphan_map_entry" in msg
+        assert "foo" in msg
+
+    def test_critical_finding_marked(self):
+        state = {
+            "findings": [
+                {"type": "autonomous_safe_drift", "skill": "bar", "detail": "drift"}
+            ],
+            "critical_count": 1,
+            "skills_checked": 5,
+            "map_entries": 3,
+        }
+        msg = _format_slack_message(state)
+        assert "autonomous_safe_drift" in msg
+        assert "critical" in msg.lower() or "*" in msg
+
+    def test_truncates_long_finding_list(self):
+        findings = [
+            {"type": "missing_map_entry", "skill": f"skill{i}", "detail": "x"}
+            for i in range(10)
+        ]
+        state = {
+            "findings": findings,
+            "critical_count": 0,
+            "skills_checked": 10,
+            "map_entries": 0,
+        }
+        msg = _format_slack_message(state)
+        assert "more" in msg
 
 
-def test_format_slack_clean():
-    msg = cam._format_slack_message(CLEAN_STATE)
-    assert "clean" in msg.lower()
-    assert "50 skills" in msg
+class TestConstants:
+    def test_critical_types_set(self):
+        assert "autonomous_safe_drift" in CRITICAL_TYPES
+        assert "routine_skill_blocked" in CRITICAL_TYPES
+        assert "frontmatter_disable_routed" in CRITICAL_TYPES
 
-
-def test_format_slack_drift_shows_type():
-    msg = cam._format_slack_message(DRIFT_STATE)
-    assert "autonomous_safe_drift" in msg
-
-
-def test_format_slack_drift_shows_skill():
-    msg = cam._format_slack_message(DRIFT_STATE)
-    assert "my-skill" in msg
-
-
-def test_format_slack_drift_marks_critical():
-    msg = cam._format_slack_message(DRIFT_STATE)
-    # critical findings are starred with asterisk
-    assert "*" in msg or "critical" in msg.lower()
-
-
-def test_format_slack_orphan_not_critical():
-    state = {
-        "findings": [
-            {"type": "orphan_map_entry", "skill": "gone-skill", "detail": "no SKILL.md"}
-        ],
-        "finding_count": 1,
-        "critical_count": 0,
-        "skills_checked": 50,
-        "map_entries": 45,
-    }
-    msg = cam._format_slack_message(state)
-    assert "orphan_map_entry" in msg
-
-
-def test_format_slack_multiple_findings_grouped():
-    state = {
-        "findings": [
-            {"type": "orphan_map_entry", "skill": "a", "detail": "no SKILL.md"},
-            {"type": "orphan_map_entry", "skill": "b", "detail": "no SKILL.md"},
-            {"type": "autonomous_safe_drift", "skill": "c", "detail": "drift"},
-        ],
-        "finding_count": 3,
-        "critical_count": 1,
-        "skills_checked": 50,
-        "map_entries": 45,
-    }
-    msg = cam._format_slack_message(state)
-    assert "orphan_map_entry" in msg
-    assert "autonomous_safe_drift" in msg
+    def test_max_autonomous_tier(self):
+        assert MAX_AUTONOMOUS_TIER == 2

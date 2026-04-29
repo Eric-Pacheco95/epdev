@@ -4,9 +4,6 @@ Jarvis discovery hub. Dynamic workflow-aware help: skills grouped by TheAlgorith
 
 # DISCOVERY
 
-## One-liner
-Print skills grouped by workflow stage, with search and contextual suggestions
-
 ## Stage
 ORCHESTRATE
 
@@ -56,8 +53,7 @@ true
 ## Step 1: FULL OVERVIEW (Level 0)
 
 1. Scan `.claude/skills/*/SKILL.md` to get the list of installed skills
-2. For skills that have a `# DISCOVERY` section, read the `## One-liner` and `## Stage` fields
-3. For skills without a DISCOVERY section, derive stage from the CLAUDE.md Skill Registry or the formatted output in step 4.
+2. For each skill, read `description:` from frontmatter and `## Stage` from DISCOVERY if present.
 
 4. Print skills grouped under stage headers using this format:
 
@@ -197,7 +193,7 @@ true
 
 1. Search the input term against:
    - Skill names (e.g. "review" matches /review-code)
-   - One-liners from DISCOVERY sections
+   - description: frontmatter (one-liner)
    - Parameter names and values
    - Examples
 2. Print all matching skills with their one-liner and stage
@@ -241,7 +237,7 @@ Print suggestions under a `SUGGESTED FOR THIS SESSION:` header. Only print if at
 - If contextual suggestions are frequently rejected or ignored, recalibrate the trigger thresholds
 - If a new skill is added and Eric is unaware of it after 3+ sessions, evaluate adding it to the contextual suggestions rotation
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_jarvis-help-{slug}.md when Eric queries for a skill that doesn't exist but should (intent gap) or when contextual suggestions surface a skill Eric hadn't considered and it became immediately useful (serendipity win)
+- Signal {YYYY-MM-DD}_jarvis-help-{slug}.md: unmatched skill query (intent gap) or contextual suggestion that became immediately useful (serendipity win).
 
 # INPUT
 

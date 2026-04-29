@@ -9,9 +9,6 @@ Jarvis project orchestrator. Track lifecycle (idea → completion), status, depe
 
 # DISCOVERY
 
-## One-liner
-Manage project lifecycle -- status, priorities, blockers, and next actions across all projects
-
 ## Stage
 PLAN
 
@@ -130,7 +127,7 @@ When reading an external ISC tasklist:
 - Cross-project patterns (same ISC category failing in crypto-bot and jarvis-app) signal shared infrastructure debt worth a dedicated fix sprint
 - If external ISC tasklists are missing for 2+ consecutive checks, create backlog tasks to add them
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_project-orch-{slug}.md when a status run surfaces a stalled project (same Tier-1 blockers 3+ consecutive checks) or a new cross-project infrastructure debt pattern; rating 7+ for actionable structural findings
+- Signal {YYYY-MM-DD}_project-orch-{slug}.md: stalled project (same Tier-1 blockers 3+ checks) or new cross-project debt pattern; rating 7+/actionable-structural.
 
 # INPUT
 

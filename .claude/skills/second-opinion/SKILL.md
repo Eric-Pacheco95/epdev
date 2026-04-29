@@ -9,9 +9,6 @@ Generate a self-contained harness-first review prompt for an external agent (Cod
 
 # DISCOVERY
 
-## One-liner
-Generate a self-contained external-reviewer prompt for independent repo audit
-
 ## Stage
 PLAN
 
@@ -104,9 +101,9 @@ You are doing an independent deep audit of "{REPO_HINT}" (target: `{TARGET}`). S
 
 ## Prime directive
 
-**There are no walls. Every blocker becomes a harness task.** If a script needs a secret, stub it. If it needs the `claude` CLI, write a fake `claude` shim on PATH that returns fixtures. If it needs an MCP server, spawn a stdio mock. If it needs Windows, monkey-patch the stdlib. If it needs a directory that isn't in the repo, fabricate the directory from schema inferred by reading the writer. If a dep is missing from `requirements.txt`, install it from the import statements. If something can't be executed directly, simulate it. "Could not verify" is not an acceptable outcome — every finding must have runtime evidence or a documented reason the harness itself is the problem.
+**There are no walls. Every blocker → harness task.** Secret needed → stub it. `claude` CLI → fake shim on PATH with fixtures. MCP server → stdio mock. Windows → monkey-patch stdlib. Missing dir → fabricate from schema. Missing dep → install from imports. Cannot execute directly → simulate. "Could not verify" is not acceptable — every finding needs runtime evidence or documented harness failure.
 
-Budget up to 45 minutes per blocker on harness construction before you downgrade a check to static-only. Log every harness you build in the final report so it can be reused.
+Budget 45 min per blocker before downgrading to static-only. Log every harness built — they are reusable.
 
 ## Execution authorization
 

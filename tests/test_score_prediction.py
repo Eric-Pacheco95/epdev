@@ -44,3 +44,29 @@ class TestScorePrediction:
     def test_primary_confidence_preserved(self):
         result = score_prediction("evt-07", {"primary_confidence": 0.73})
         assert result["primary_confidence"] == 0.73
+
+    def test_alignment_score_is_numeric(self):
+        result = score_prediction("evt-08", {"primary_confidence": 0.5})
+        assert isinstance(result["alignment_score"], (int, float))
+
+    def test_score_method_is_string(self):
+        result = score_prediction("evt-09", {"primary_confidence": 0.5})
+        assert isinstance(result["score_method"], str)
+        assert result["score_method"]
+
+    def test_leakage_flag_empty_when_not_suspect(self):
+        result = score_prediction("evt-10", {"primary_confidence": 0.3})
+        assert result["leakage_flag"] == ""
+
+    def test_leakage_flag_nonempty_when_suspect(self):
+        result = score_prediction("evt-11", {"primary_confidence": 0.9})
+        assert result["leakage_flag"] != ""
+
+    def test_suspect_leakage_false_by_default(self):
+        result = score_prediction("evt-12", {"primary_confidence": 0.4})
+        assert result["suspect_leakage"] is False
+
+    def test_explicit_false_leakage_flag_does_not_override_confidence(self):
+        result = score_prediction("evt-13", {"primary_confidence": 0.9, "suspect_leakage": False})
+        # confidence > 0.85 -> suspect regardless of explicit False
+        assert result["suspect_leakage"] is True

@@ -10,7 +10,7 @@ PAI CLI demo video producer. Generate polished MP4s from scene descriptions usin
 # DISCOVERY
 
 ## One-liner
-Produce polished CLI/workflow demo MP4 using PAI Remotion component library
+Produce a polished MP4 demo of any CLI workflow using the PAI Remotion component library.
 
 ## Stage
 BUILD
@@ -195,7 +195,7 @@ Real blocker is item 1 (new components), not orchestration. When ready: `/create
 - If brand audit catches hits after content build, note that the content build phase did not enforce brand constants — tighten the brand lint step
 - If Eric's scene arc diverges significantly from the algorithm-loop template, capture the narrative shape as a candidate for a new storyboard template
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_pai-demo-{slug}.md when a demo reveals a new component combination that resonates, or when component library gaps affect 2+ scenes; rating 7+ for library gap signals that become Phase 6-7 build candidates
+- Signal {YYYY-MM-DD}_pai-demo-{slug}.md: new resonant component combo or library gaps affecting 2+ scenes; rating 7+ for Phase 6-7 build candidates.
 
 # INPUT
 

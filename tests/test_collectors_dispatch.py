@@ -3,7 +3,7 @@
 import tempfile
 import os
 from pathlib import Path
-from collectors.core import run_collector, collect_dir_count, collect_file_count
+from collectors.core import run_collector, collect_dir_count, collect_file_count, collect_file_count_velocity
 
 
 def test_run_collector_unknown_type():
@@ -46,3 +46,50 @@ def test_file_count_missing_dir():
     cfg = {"name": "test", "path": "/nonexistent/dir", "type": "file_count"}
     result = collect_file_count(cfg, Path("/"))
     assert result["value"] is None
+
+
+def test_dir_count_empty_dir():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        cfg = {"name": "subdir_count", "path": tmpdir, "type": "dir_count"}
+        result = collect_dir_count(cfg, Path("/"))
+    assert result["value"] == 0
+
+
+def test_dir_count_missing_dir():
+    cfg = {"name": "subdir_count", "path": "/nonexistent/path", "type": "dir_count"}
+    result = collect_dir_count(cfg, Path("/"))
+    assert result["value"] is None
+
+
+def test_run_collector_file_count_dispatch():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        Path(tmpdir, "x.md").write_text("a")
+        cfg = {"name": "md_count", "path": tmpdir, "ext": ".md", "type": "file_count"}
+        result = run_collector(cfg, Path("/"))
+    assert result["value"] == 1
+
+
+def test_file_count_velocity_recent_files():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        for name in ["a.md", "b.md"]:
+            Path(tmpdir, name).write_text("x")
+        cfg = {"name": "velocity", "path": tmpdir, "ext": ".md",
+               "window_days": 7, "type": "file_count_velocity"}
+        result = collect_file_count_velocity(cfg, Path("/"))
+    assert result["value"] is not None
+    assert result["unit"] == "per_day"
+
+
+def test_file_count_velocity_missing_dir():
+    cfg = {"name": "velocity", "path": "/nonexistent/dir", "ext": ".md",
+           "window_days": 7, "type": "file_count_velocity"}
+    result = collect_file_count_velocity(cfg, Path("/"))
+    assert result["value"] is None
+
+
+def test_file_count_velocity_empty_dir():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        cfg = {"name": "velocity", "path": tmpdir, "ext": ".md",
+               "window_days": 7, "type": "file_count_velocity"}
+        result = collect_file_count_velocity(cfg, Path("/"))
+    assert result["value"] == 0.0

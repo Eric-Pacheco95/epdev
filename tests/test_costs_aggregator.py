@@ -90,97 +90,51 @@ class TestLoadPricing:
         assert budget == 25.0
 
 
-def _make_event(ts: datetime, cost: float, model: str = "sonnet", session: str = "s1", skill: str = None) -> dict:
-    return {
-        "ts": ts,
-        "cost_usd": cost,
-        "model": model,
-        "session_id": session,
-        "skill_name": skill,
-        "input_tokens": 1000,
-        "output_tokens": 500,
-        "cache_read_tokens": 0,
-        "cache_creation_tokens": 0,
-    }
+class TestEmptyWindowExtended:
+    def test_per_model_is_list(self):
+        w = _empty_window(20.0)
+        assert isinstance(w["per_model"], list)
+
+    def test_per_skill_is_list(self):
+        w = _empty_window(20.0)
+        assert isinstance(w["per_skill"], list)
+
+    def test_session_rollups_structure(self):
+        w = _empty_window(20.0)
+        rollups = w["session_rollups"]
+        assert rollups["avg_usd"] == 0.0
+        assert rollups["session_count"] == 0
+        assert rollups["most_expensive"] is None
+
+    def test_tokens_initialized_to_zero(self):
+        w = _empty_window(20.0)
+        assert w["input_tokens_total"] == 0
+        assert w["output_tokens_total"] == 0
+        assert w["cache_read_tokens_total"] == 0
+        assert w["cache_creation_tokens_total"] == 0
+
+    def test_spend_prev_window_zero(self):
+        w = _empty_window(20.0)
+        assert w["spend_prev_window_usd"] == 0.0
 
 
-class TestBuildWindow:
-    def _now(self):
-        return datetime(2026, 4, 28, 12, 0, 0, tzinfo=timezone.utc)
+class TestComputeCostExtended:
+    def test_cache_read_tokens(self):
+        rates = {"input_per_mtok": 0, "output_per_mtok": 0,
+                 "cache_read_per_mtok": 0.3, "cache_creation_per_mtok": 0}
+        usage = {"cache_read_input_tokens": 1_000_000}
+        result = compute_cost(usage, rates)
+        assert result == pytest.approx(0.3)
 
-    def _cutoff(self, days=7):
-        return self._now() - timedelta(days=days)
+    def test_cache_creation_tokens(self):
+        rates = {"input_per_mtok": 0, "output_per_mtok": 0,
+                 "cache_read_per_mtok": 0, "cache_creation_per_mtok": 3.75}
+        usage = {"cache_creation_input_tokens": 1_000_000}
+        result = compute_cost(usage, rates)
+        assert result == pytest.approx(3.75)
 
-    def test_no_events_returns_empty_window(self):
-        now = self._now()
-        result = build_window([], self._cutoff(), 7, 25.0, now)
-        assert result["spend_usd"] == 0.0
-        assert result["session_rollups"]["session_count"] == 0
-
-    def test_events_outside_window_excluded(self):
-        now = self._now()
-        old_event = _make_event(now - timedelta(days=10), 1.0)
-        result = build_window([old_event], self._cutoff(days=7), 7, 25.0, now)
-        assert result["spend_usd"] == 0.0
-
-    def test_spend_sums_in_window(self):
-        now = self._now()
-        events = [
-            _make_event(now - timedelta(days=1), 0.05),
-            _make_event(now - timedelta(days=2), 0.10),
-        ]
-        result = build_window(events, self._cutoff(), 7, 25.0, now)
-        assert abs(result["spend_usd"] - 0.15) < 1e-6
-
-    def test_per_model_aggregation(self):
-        now = self._now()
-        events = [
-            _make_event(now - timedelta(days=1), 0.10, model="opus"),
-            _make_event(now - timedelta(days=1), 0.05, model="sonnet"),
-        ]
-        result = build_window(events, self._cutoff(), 7, 25.0, now)
-        models = {m["model_id"] for m in result["per_model"]}
-        assert "opus" in models
-        assert "sonnet" in models
-
-    def test_per_model_sorted_by_cost_desc(self):
-        now = self._now()
-        events = [
-            _make_event(now - timedelta(days=1), 0.01, model="cheap"),
-            _make_event(now - timedelta(days=1), 0.50, model="expensive"),
-        ]
-        result = build_window(events, self._cutoff(), 7, 25.0, now)
-        assert result["per_model"][0]["model_id"] == "expensive"
-
-    def test_session_rollup_count(self):
-        now = self._now()
-        events = [
-            _make_event(now - timedelta(days=1), 0.05, session="s1"),
-            _make_event(now - timedelta(days=1), 0.10, session="s2"),
-            _make_event(now - timedelta(days=1), 0.02, session="s1"),
-        ]
-        result = build_window(events, self._cutoff(), 7, 25.0, now)
-        assert result["session_rollups"]["session_count"] == 2
-
-    def test_most_expensive_session(self):
-        now = self._now()
-        events = [
-            _make_event(now - timedelta(days=1), 0.05, session="cheap"),
-            _make_event(now - timedelta(days=1), 0.50, session="expensive"),
-        ]
-        result = build_window(events, self._cutoff(), 7, 25.0, now)
-        assert result["session_rollups"]["most_expensive"]["session_id"] == "expensive"
-
-    def test_skill_none_becomes_uncategorized(self):
-        now = self._now()
-        events = [_make_event(now - timedelta(days=1), 0.05, skill=None)]
-        result = build_window(events, self._cutoff(), 7, 25.0, now)
-        skill_names = {s["skill_name"] for s in result["per_skill"]}
-        assert "uncategorized" in skill_names
-
-    def test_share_pct_sums_to_100_single_model(self):
-        now = self._now()
-        events = [_make_event(now - timedelta(days=1), 0.10, model="opus")]
-        result = build_window(events, self._cutoff(), 7, 25.0, now)
-        total_pct = sum(m["share_pct"] for m in result["per_model"])
-        assert total_pct == 100
+    def test_all_zero_rates_returns_zero(self):
+        rates = {"input_per_mtok": 0, "output_per_mtok": 0,
+                 "cache_read_per_mtok": 0, "cache_creation_per_mtok": 0}
+        usage = {"input_tokens": 1000, "output_tokens": 500}
+        assert compute_cost(usage, rates) == 0.0

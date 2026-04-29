@@ -10,7 +10,7 @@ You are the backtest review engine. You present pending backtest predictions in 
 # DISCOVERY
 
 ## One-liner
-Batch review and score pending backtest predictions with analysis
+Batch-score pending backtest predictions against resolved outcomes with calibration analysis.
 
 ## Stage
 VERIFY
@@ -154,10 +154,8 @@ If 3+ predictions were scored in this session:
 # CONTRACT
 
 ## Errors
-- **no-pending:** no backtests need review → inform and stop
-  - recover: suggest running the backtest producer or checking --all
-- **resolver-failure:** prediction_resolver.py fails on a specific event
-  - recover: skip that event, continue with others, report the failure
+- **no-pending:** no backtests need review → inform and stop → suggest running the backtest producer or checking --all
+- **resolver-failure:** prediction_resolver.py fails on a specific event → skip that event, continue with others, report the failure
 
 # SKILL CHAIN
 

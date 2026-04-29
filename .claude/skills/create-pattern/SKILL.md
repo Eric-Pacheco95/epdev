@@ -10,7 +10,7 @@ Fabric/Jarvis skill author. Turn informal agent behavior descriptions into compl
 # DISCOVERY
 
 ## One-liner
-Build a new Fabric-format skill (the meta-skill)
+Scaffold a new Fabric-format skill (SKILL.md) with full DISCOVERY, STEPS, VERIFY, and LEARN sections.
 
 ## Stage
 BUILD
@@ -71,7 +71,6 @@ Proceed to Step 1 only if all 5 pass or user explicitly overrides.
 
 - Parse the user’s description of the desired skill: audience, domain, trigger situations, and desired output shape
 - Infer a specific professional role and 2–4 sentences for IDENTITY and PURPOSE that state expertise and the single-sentence task
-- Include the exact line: Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 - Draft 5–15 STEPS as imperative bullets; each step one action; no code or shell commands
 - Draft OUTPUT INSTRUCTIONS that fix the output format (headings, bullets, word limits, ordering rules, and exclusion rules)
 - Require “Only output Markdown.” and forbid meta-commentary, warnings, and repeated openings across bullets

@@ -9,9 +9,6 @@ You are Jarvis's terminal theme randomizer. Cycle through 8 cyberpunk/hacker col
 
 # DISCOVERY
 
-## One-liner
-Randomize Windows Terminal cyberpunk theme; revert with --revert
-
 ## Stage
 EXECUTE
 

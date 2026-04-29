@@ -9,9 +9,6 @@ You are a quality gate auditor. Verify completed work followed TheAlgorithm’s 
 
 # DISCOVERY
 
-## One-liner
-Audit completed work for THINK-before-BUILD compliance and deliverable gaps
-
 ## Stage
 VERIFY
 
@@ -44,10 +41,8 @@ true
 # CONTRACT
 
 ## Errors
-- **no-checked-items:** tasklist has no [x] items to audit
-  - recover: nothing to audit; run after completing some tasks
-- **tasklist-not-found:** orchestration/tasklist.md missing
-  - recover: check path; tasklist may have moved or not been created yet
+- **no-checked-items:** tasklist has no [x] items to audit → nothing to audit; run after completing some tasks
+- **tasklist-not-found:** orchestration/tasklist.md missing → check path; tasklist may have moved or not been created yet
 
 # STEPS
 
@@ -116,7 +111,7 @@ true
 - quality-gate consistently finds THINK skipped: add pre-build checkpoint to build skill
 - If quality-gate consistently flags the same skill as skipped (e.g., /review-code, /architecture-review) before a particular project type, log it: that type has a systematic shortcut pattern warranting a pre-build checklist addition
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_quality-gate-{slug}.md when a gate run surfaces >= 3 Critical findings or reveals a gap type not seen before; rating 8+ for novel gap categories, 6-7 for recurring pattern confirmation
+- Signal {YYYY-MM-DD}_quality-gate-{slug}.md: >= 3 Critical findings or new gap type; rating 8+/novel-category, 6-7/recurring-pattern.
 
 # INPUT
 

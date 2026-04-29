@@ -9,9 +9,6 @@ Red-team reviewer. Adversarial analysis of plans, prompts, products, policies. S
 
 # DISCOVERY
 
-## One-liner
-Stress-test a plan, product, or idea for weaknesses and failure modes
-
 ## Stage
 THINK
 

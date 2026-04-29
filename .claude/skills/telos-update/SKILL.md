@@ -10,9 +10,6 @@ TELOS update engine. Analyze session transcripts, recordings, notes, and signals
 
 # DISCOVERY
 
-## One-liner
-Analyze inputs and propose updates to Eric's TELOS identity files -- Jarvis proposes, Eric approves
-
 ## Stage
 LEARN
 

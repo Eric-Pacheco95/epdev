@@ -137,9 +137,6 @@ Wisdom extraction service. Find the most valuable ideas, insights, quotes, habit
 
 # DISCOVERY
 
-## One-liner
-Extract ideas, insights, quotes, habits, and references from any content
-
 ## Stage
 LEARN
 
@@ -228,10 +225,8 @@ true
 # CONTRACT
 
 ## Errors
-- **empty-input:** no content provided or content is too short to extract from
-  - recover: provide at least 200 words of content; for URLs, use /research to fetch first
-- **no-substance:** content is fluff with no extractable ideas
-  - recover: output will contain "(none found in input)" in empty sections; consider /analyze-claims instead for fact-checking thin content
+- **empty-input:** no content provided or content is too short to extract from → provide at least 200 words of content; for URLs, use /research to fetch first
+- **no-substance:** content is fluff with no extractable ideas → output will contain "(none found in input)" in empty sections; consider /analyze-claims instead for fact-checking thin content
 
 # SKILL CHAIN
 
@@ -252,7 +247,7 @@ true
 - MENTAL MODELS extracted from content are high-value -- if a model appears in 3+ extractions, consider promoting it to TELOS MODELS.md via /telos-update
 - If NEXT STEPS consistently recommend the same action (e.g., always 'read more on X'), that action is recurrent enough for a `backlog` task — add to tasklist directly rather than repeating as a recommendation
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_wisdom-{slug}.md when >= 5 KEY POINTS extracted or >= 2 MENTAL MODELS identified; rating 7+ if a mental model is new and adoption-worthy, 5-6 for strong KEY POINTS alone
+- Signal {YYYY-MM-DD}_wisdom-{slug}.md: >= 5 KEY POINTS or >= 2 MENTAL MODELS; rating 7+/new-adoptable-model, 5-6/strong-key-points.
 
 # INPUT
 

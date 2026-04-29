@@ -10,7 +10,7 @@ You are Jarvis’s session task capture tool. Persist ideas from chat into the u
 # DISCOVERY
 
 ## One-liner
-Capture task ideas from chat into the unified backlog with zero friction
+Capture any task idea into the unified backlog with a single command — no formatting required.
 
 ## Stage
 ORCHESTRATE
@@ -115,6 +115,6 @@ INPUT:
 # LEARN
 
 - Do not write signals for routine backlog captures
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_backlog-pattern.md only when 3+ tasks of the same type or project accumulate in a single session without being dispatched -- this signals a potential bottleneck or decision avoidance pattern
+- Signal {YYYY-MM-DD}_backlog-pattern.md: 3+ same-type tasks accumulate in session without dispatch — bottleneck or decision-avoidance pattern.
 - Rating: 6-7 for bottleneck patterns worth addressing; skip for normal backlog growth
 - Track how long P1 items sit before dispatch — items waiting >14 days without a blocker comment signal decision avoidance, not just scheduling; surface to Eric at next `/vitals` check

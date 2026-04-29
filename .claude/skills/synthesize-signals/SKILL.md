@@ -9,9 +9,6 @@ Signal synthesis engine. Distill accumulated learning signals into higher-order 
 
 # DISCOVERY
 
-## One-liner
-Distill accumulated signals into themes, patterns, and proposed steering rules
-
 ## Stage
 LEARN
 
@@ -55,7 +52,7 @@ true
 - Findings may warrant: steering rule (`/update-steering-rules` routing tree); TELOS update; skill change; failure prevention. Per rule: record target file, rule text, evidence signals, why it matters
 - **Confidence decay**: unrevalidated >90d → downgrade one level; below candidate → archived
 - Write synthesis doc to `memory/learning/synthesis/`
-- Spawn fresh evaluator subagent (no shared context) with synthesis doc only. Model: `claude-sonnet-4-6`. Output must be `VERDICT: ACCEPT` or `VERDICT: REVISE + [one-sentence delta]`. If REVISE: targeted edit (not full rewrite); accept result. Max 1 pass; substantial delta → new dated file. Evaluator reads synthesis doc only.
+- Spawn fresh `claude-sonnet-4-6` subagent with synthesis doc only; expect `VERDICT: ACCEPT` or `VERDICT: REVISE + [delta]`; if REVISE: targeted edit, accept. Max 1 pass; substantial delta → new dated file.
 - Record lineage: `python tools/scripts/compress_signals.py --lineage "YYYY-MM-DD_synthesis"`
 - Mirror to SQLite: `python tools/scripts/sync_lineage.py` (idempotent; JSONL is source of truth if this fails)
 
@@ -71,7 +68,7 @@ Each synthesized theme carries a maturity level and confidence score. Inspired b
 | **established** | 4+ signals OR 2+ signals across different sessions/dates | Propose as steering rule or workflow change |
 | **proven** | Established + survived 1+ synthesis cycles without contradiction | Encode as permanent steering rule or TELOS update |
 
-**Maturity assignment guard:** `established` REQUIRES 4+ supporting signals OR 2+ across different sessions/dates. Harm-weight (4x failure multiplier) affects **ranking only** — it does NOT count toward promotion. Single-source themes (one signal, one failure) max out at `candidate` regardless of severity. Why: 2026-04-27 evaluator caught the same maturity-inflation mistake twice (`2026-04-27_evaluator-caught-maturity-inflation.md`) — fixing at write time rather than evaluator time.
+**Maturity assignment guard:** `established` requires 4+ signals OR 2+ across sessions. Harm-weight is **ranking only** — not promotion credit. Single-source themes max at `candidate` regardless of severity.
 
 ## Confidence Decay
 

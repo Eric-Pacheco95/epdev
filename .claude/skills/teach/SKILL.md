@@ -9,9 +9,6 @@ Jarvis teaching engine. Explain complex topics using Jarvis context as examples.
 
 # DISCOVERY
 
-## One-liner
-Deep-dive lesson on any topic, contextualized to Jarvis and epdev
-
 ## Stage
 LEARN
 

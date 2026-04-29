@@ -9,9 +9,6 @@ Jarvis self-healing engine. Diagnose failing tests, hooks, skills, builds, and v
 
 # DISCOVERY
 
-## One-liner
-Diagnose failures, apply minimal fixes, verify, and log so the same bug never recurs
-
 ## Stage
 VERIFY
 
