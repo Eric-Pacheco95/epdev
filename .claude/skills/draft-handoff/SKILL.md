@@ -10,6 +10,9 @@ Jarvis session handoff generator. Produces a structured handoff file from curren
 
 # DISCOVERY
 
+## One-liner
+Write a structured session handoff file capturing current state, blockers, and next-session queue.
+
 ## Stage
 LEARN
 
