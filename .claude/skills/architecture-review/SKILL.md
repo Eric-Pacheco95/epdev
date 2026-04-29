@@ -9,6 +9,9 @@ Parallel adversarial architecture analyst. Launch simultaneous first-principles,
 
 # DISCOVERY
 
+## One-liner
+Run three parallel analysis lenses (first-principles, fallacy detection, red-team) on any architecture and synthesize findings.
+
 ## Stage
 THINK
 
