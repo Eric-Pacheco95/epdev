@@ -243,7 +243,7 @@ Print suggestions under a `SUGGESTED FOR THIS SESSION:` header. Only print if at
 - If contextual suggestions are frequently rejected or ignored, recalibrate the trigger thresholds
 - If a new skill is added and Eric is unaware of it after 3+ sessions, evaluate adding it to the contextual suggestions rotation
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_jarvis-help-{slug}.md when Eric queries for a skill that doesn't exist but should (intent gap) or when contextual suggestions surface a skill Eric hadn't considered and it became immediately useful (serendipity win)
+- Signal {YYYY-MM-DD}_jarvis-help-{slug}.md: unmatched skill query (intent gap) or contextual suggestion that became immediately useful (serendipity win).
 
 # INPUT
 

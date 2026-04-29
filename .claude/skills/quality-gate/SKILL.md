@@ -111,7 +111,7 @@ true
 - quality-gate consistently finds THINK skipped: add pre-build checkpoint to build skill
 - If quality-gate consistently flags the same skill as skipped (e.g., /review-code, /architecture-review) before a particular project type, log it: that type has a systematic shortcut pattern warranting a pre-build checklist addition
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_quality-gate-{slug}.md when a gate run surfaces >= 3 Critical findings or reveals a gap type not seen before; rating 8+ for novel gap categories, 6-7 for recurring pattern confirmation
+- Signal {YYYY-MM-DD}_quality-gate-{slug}.md: >= 3 Critical findings or new gap type; rating 8+/novel-category, 6-7/recurring-pattern.
 
 # INPUT
 

@@ -163,7 +163,7 @@ false
 - Tokens file never found automatically -> propose `.design-verify-config.json` at project root
 - Unused 6 months -> archive
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_design-verify-{slug}.md when a run surfaces >= 5 HIGH findings or reveals a Tailwind drift pattern not previously documented; rating 7+ for novel drift categories, 5-6 for confirmation of known patterns
+- Signal {YYYY-MM-DD}_design-verify-{slug}.md: >= 5 HIGH findings or undocumented Tailwind drift; rating 7+/novel-category, 5-6/known-pattern.
 
 # INPUT
 

@@ -78,7 +78,7 @@ INPUT:
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_fallacies-{slug}.md when >= 3 distinct fallacy types are found or a high-stakes document (policy, research, investment thesis) contains >= 2 High-severity logical flaws
+- Signal {YYYY-MM-DD}_fallacies-{slug}.md: >= 3 distinct fallacy types or >= 2 High-severity flaws in a high-stakes doc.
 - Rating: 7+ if the fallacies fundamentally undermine the argument; 4-6 for routine style/support issues; only write signal when the analysis changes how Eric should act on the source material
 - Track which fallacy types appear most frequently across documents Eric brings - if one type (e.g., appeal-to-authority) appears in >30% of analyses, add it as a pre-scan heuristic in STEPS
 - If same source is re-analyzed and fallacy count drops significantly: note that framing/context changed, not logic improved -- flag for signal

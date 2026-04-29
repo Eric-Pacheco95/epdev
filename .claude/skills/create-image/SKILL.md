@@ -171,4 +171,4 @@ For multi-image work (keynote decks, brand assets, series):
 - If Eric frequently asks for edits after generation, note the original prompt gap and improve the enhancement step
 - If flash model consistently requires refinement to reach acceptable quality, raise the bar for when flash is appropriate
 - If a content type (logos, diagrams, portraits) consistently underperforms, note the weakness and suggest alternatives (/visualize for diagrams)
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_create-image-{slug}.md when a novel prompt structure, style combination, or enhancement technique produces notably better results -- rating 7+ for reusable techniques worth adding to STEPS
+- Signal {YYYY-MM-DD}_create-image-{slug}.md: novel prompt structure/style combo with notably better results; rating 7+ for reusable techniques.

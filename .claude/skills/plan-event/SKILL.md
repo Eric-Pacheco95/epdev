@@ -245,7 +245,7 @@ Maps: [link]
 - If Slack send is used 3+ times, evaluate wiring it as an automatic offer without prompting
 - Track which plan types are used most — if day trip dominates, add a GTA-specific quick-list of pre-vetted destinations to Phase 2
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_plan-event-{slug}.md when Eric strongly approves a plan (no major changes) or when preferences shift significantly (rating 7+ for preference-shift signals that should update eric-preferences.md in cooking/events domain)
+- Signal {YYYY-MM-DD}_plan-event-{slug}.md: strong plan approval or significant preference shift; rating 7+ for shifts updating eric-preferences.md.
 
 # INPUT
 
