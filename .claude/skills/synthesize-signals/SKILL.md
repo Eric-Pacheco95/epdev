@@ -66,6 +66,8 @@ Each synthesized theme carries a maturity level and confidence score. Inspired b
 | **established** | 4+ signals OR 2+ signals across different sessions/dates | Propose as steering rule or workflow change |
 | **proven** | Established + survived 1+ synthesis cycles without contradiction | Encode as permanent steering rule or TELOS update |
 
+**Maturity assignment guard:** `established` REQUIRES 4+ supporting signals OR 2+ across different sessions/dates. Harm-weight (4x failure multiplier) affects **ranking only** — it does NOT count toward promotion. Single-source themes (one signal, one failure) max out at `candidate` regardless of severity. Why: 2026-04-27 evaluator caught the same maturity-inflation mistake twice (`2026-04-27_evaluator-caught-maturity-inflation.md`) — fixing at write time rather than evaluator time.
+
 ## Confidence Decay
 
 90-day half-life: proven → established → candidate → archived if no revalidating signal.
