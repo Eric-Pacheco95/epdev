@@ -12,6 +12,9 @@ Your job is to surface real visual gaps — not manufacture authoritative fixes.
 
 # DISCOVERY
 
+## One-liner
+Compare a built UI against its design spec via screenshot diff and design token audit, returning a fidelity report.
+
 ## Stage
 VERIFY
 
