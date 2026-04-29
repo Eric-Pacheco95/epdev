@@ -85,7 +85,7 @@ false
 
 Trigger: a domain has accumulated 2+ rules with no existing sub-steering file.
 
-Template (follow `orchestration/steering/trade-development.md` as the pattern):
+Template (`orchestration/steering/trade-development.md` as reference):
 ```markdown
 # [Domain Name] — Steering Rules
 
@@ -134,7 +134,7 @@ For each issue found, propose one of:
 - **SPLIT**: Compound rule should be separated into distinct concerns
 - **UPDATE**: Rule text is outdated but the concern is still valid — rewrite
 - **SPINOFF**: Section in CLAUDE.md or oversized sub-file should become a new sub-steering file (triggered by Step A check 3 or 8). Follow "Proposing new sub-steering files" template; include the rules to migrate and the Context Routing entry to add
-- **TRANSCRIBE**: SKILL.md is missing `description:` frontmatter (triggered by Step A check 9 missing/stub). Run `python tools/scripts/skill_frontmatter_transcribe.py --dry-run` then `--apply`; do not hand-author when `## One-liner` already exists. Sanitization-flagged or drift-flagged descriptions are REWRITE, not TRANSCRIBE — manual authoring with security review.
+- **TRANSCRIBE**: SKILL.md is missing `description:` frontmatter (triggered by Step A check 9 missing/stub). Run `python tools/scripts/skill_frontmatter_transcribe.py --dry-run` then `--apply` Sanitization-flagged or drift-flagged descriptions are REWRITE, not TRANSCRIBE — manual authoring with security review.
 
 Present all proposals in a numbered list with evidence. Wait for Eric's approval before making any changes.
 
