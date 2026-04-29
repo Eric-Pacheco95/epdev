@@ -40,7 +40,7 @@ true
 
 # DEBUGGING RECIPES
 
-**Near-zero health metric scores (0.00 to 0.05):** Before diagnosing data quality or scoring logic, first verify the scan scope — check the `rglob` path and target directory in `vitals_collector.py`. Parent-directory scans silently include irrelevant files and dilute precision; a 0.00 score is more often a scope bug than a data bug.
+**Near-zero health scores (0.00-0.05):** Check `rglob` scope in `vitals_collector.py` first — parent-dir scans dilute precision (scope bug > data bug).
 
 # STEPS
 
@@ -156,10 +156,10 @@ Brief complete. Session focus: {Eric's stated intent}
 
 ## FALLBACK (if collector script fails)
 
-If the collector script returns an error, empty output, or non-zero exit code:
-1. Report the failure explicitly: "vitals_collector.py failed: {error details}"
-2. Offer: "Run full LLM-based vitals collection instead?"
-3. If Eric confirms, fall back to reading each data source individually
+On error/empty output/non-zero exit:
+1. Report: "vitals_collector.py failed: {error}"
+2. Offer LLM fallback; if confirmed, read each data source individually
+3. Recommend investigating the failing step
 4. After fallback, recommend investigating the failing collector step
 
 # TERMINAL FORMAT
