@@ -111,3 +111,64 @@ class TestExtractAutonomousGuards:
         assert "name" in guards[0]
         assert "desc" in guards[0]
         assert guards[0]["desc"]
+
+
+# ── additional edge cases ────────────────────────────────────────────
+
+class TestExtractGuardFunctionsEdge:
+    def test_returns_lineno_for_each_guard(self):
+        src = f"def _blocked_thing():{NL}    pass{NL}"
+        result = _extract_guard_functions(src)
+        assert "lineno" in result[0]
+
+    def test_guard_with_args(self):
+        src = f"def _check_secrets(tool_input, is_write):{NL}    pass{NL}"
+        result = _extract_guard_functions(src)
+        assert any(g["name"] == "_check_secrets" for g in result)
+
+    def test_only_blocked_and_check_prefix(self):
+        src = (
+            f"def _blocked_foo():{NL}    pass{NL}"
+            f"def _check_bar():{NL}    pass{NL}"
+            f"def _other_fn():{NL}    pass{NL}"
+        )
+        result = _extract_guard_functions(src)
+        names = {g["name"] for g in result}
+        assert names == {"_blocked_foo", "_check_bar"}
+
+
+class TestExtractConstantsEdge:
+    def test_multiple_constants_found(self):
+        src = (
+            "INJECTION_SUBSTRINGS = (\n    \"abc\",\n)\n"
+            "FORK_BOMB_RE = re.compile(r\"pattern\")\n"
+        )
+        result = _extract_constants(src)
+        names = {c["name"] for c in result}
+        assert "INJECTION_SUBSTRINGS" in names
+        assert "FORK_BOMB_RE" in names
+
+    def test_values_list_present(self):
+        src = "INJECTION_SUBSTRINGS = (\n    \"token1\",\n    \"token2\",\n)\n"
+        result = _extract_constants(src)
+        vals = next(c for c in result if c["name"] == "INJECTION_SUBSTRINGS")
+        assert isinstance(vals["values"], list)
+        assert len(vals["values"]) >= 1
+
+
+class TestExtractProtectedPathPatternsEdge:
+    def test_multiple_patterns_extracted(self):
+        src = (
+            "def _protected_path(cmd, tool_input):\n"
+            "    if re.search(r\"telos/\", cmd):\n"
+            "        return True\n"
+            "    if re.search(r\"\\.env$\", cmd):\n"
+            "        return True\n"
+        )
+        patterns = _extract_protected_path_patterns(src)
+        assert len(patterns) >= 2
+
+    def test_no_patterns_in_body_returns_empty(self):
+        src = "def _protected_path(cmd):\n    return False\n\ndef other():\n    pass\n"
+        patterns = _extract_protected_path_patterns(src)
+        assert patterns == []
