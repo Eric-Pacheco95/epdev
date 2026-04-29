@@ -26,4 +26,6 @@ echo %date% %time% > "data\dispatcher_heartbeat.txt"
 
 echo [%date% %time%] Dispatcher starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\self_diagnose_wrapper.py -- "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\jarvis_dispatcher.py >> "%LOGFILE%" 2>&1
-echo [%date% %time%] Dispatcher complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
+set "RC=%ERRORLEVEL%"
+echo [%date% %time%] Dispatcher complete (exit code: %RC%) >> "%LOGFILE%" 2>&1
+exit /b %RC%

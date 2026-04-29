@@ -17,4 +17,6 @@ if %ERRORLEVEL% EQU 3 exit /b 0
 
 echo [%date% %time%] Research producer starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\research_producer.py >> "%LOGFILE%" 2>&1
-echo [%date% %time%] Research producer complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
+set "RC=%ERRORLEVEL%"
+echo [%date% %time%] Research producer complete (exit code: %RC%) >> "%LOGFILE%" 2>&1
+exit /b %RC%

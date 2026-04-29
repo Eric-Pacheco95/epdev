@@ -15,4 +15,6 @@ set LOGFILE=data\logs\paradigm_health_%LOGDATE%.log
 
 echo [%date% %time%] Paradigm health check starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\paradigm_health.py >> "%LOGFILE%" 2>&1
-echo [%date% %time%] Paradigm health check complete (exit code: %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
+set "RC=%ERRORLEVEL%"
+echo [%date% %time%] Paradigm health check complete (exit code: %RC%) >> "%LOGFILE%" 2>&1
+exit /b %RC%

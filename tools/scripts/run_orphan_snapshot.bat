@@ -13,4 +13,6 @@ set LOGFILE=data\logs\orphan_snapshot_%LOGDATE%.log
 
 echo [%date% %time%] Orphan snapshot starting >> "%LOGFILE%" 2>&1
 "C:\Users\ericp\AppData\Local\Programs\Python\Python312\python.exe" tools\scripts\snapshot_orphan_python.py >> "%LOGFILE%" 2>&1
-echo [%date% %time%] Orphan snapshot complete (exit %ERRORLEVEL%) >> "%LOGFILE%" 2>&1
+set "RC=%ERRORLEVEL%"
+echo [%date% %time%] Orphan snapshot complete (exit %RC%) >> "%LOGFILE%" 2>&1
+exit /b %RC%
