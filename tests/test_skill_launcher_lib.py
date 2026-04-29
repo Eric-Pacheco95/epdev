@@ -1,15 +1,18 @@
 """Tests for tools/scripts/lib/skill_launcher_lib.py pure functions."""
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools.scripts.lib.skill_launcher_lib import (
     parse_tokens_from_stream_json,
     estimate_cost_usd,
     write_park_gate,
     write_run_log,
+    build_prompt,
 )
 
 _DEFAULT_MODEL = "claude-sonnet-4-6"
@@ -101,6 +104,58 @@ class TestWriteParkGate:
         sub = tmp_path / "park" / "gates"
         write_park_gate(sub, "ghi789", "autoresearch", "topic", "success", "cmd", "ts", 0, 0.0)
         assert sub.is_dir()
+
+
+class TestBuildPrompt:
+    def test_contains_skill_command_tag(self, monkeypatch, tmp_path):
+        import tools.scripts.lib.skill_launcher_lib as mod
+        monkeypatch.setattr(mod, "_SKILLS_DIR", tmp_path)
+        result = build_prompt("autoresearch", "some topic", 1.5)
+        assert "<command-name>/autoresearch</command-name>" in result
+
+    def test_contains_cost_cap(self, monkeypatch, tmp_path):
+        import tools.scripts.lib.skill_launcher_lib as mod
+        monkeypatch.setattr(mod, "_SKILLS_DIR", tmp_path)
+        result = build_prompt("research", "topic", 2.0)
+        assert "$2.0 USD" in result
+
+    def test_contains_input_section(self, monkeypatch, tmp_path):
+        import tools.scripts.lib.skill_launcher_lib as mod
+        monkeypatch.setattr(mod, "_SKILLS_DIR", tmp_path)
+        result = build_prompt("research", "my topic here", 1.0)
+        assert "INPUT:" in result
+        assert "my topic here" in result
+
+    def test_contains_autonomous_rules(self, monkeypatch, tmp_path):
+        import tools.scripts.lib.skill_launcher_lib as mod
+        monkeypatch.setattr(mod, "_SKILLS_DIR", tmp_path)
+        result = build_prompt("research", "topic", 1.0)
+        assert "AUTONOMOUS EXECUTION RULES" in result
+        assert "NEVER ask Eric" in result
+
+    def test_includes_skill_definition_when_file_exists(self, monkeypatch, tmp_path):
+        import tools.scripts.lib.skill_launcher_lib as mod
+        monkeypatch.setattr(mod, "_SKILLS_DIR", tmp_path)
+        skill_dir = tmp_path / "research"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text("# Research skill content\n", encoding="utf-8")
+        result = build_prompt("research", "topic", 1.0)
+        assert "Research skill content" in result
+
+    def test_truncated_to_90000_chars(self, monkeypatch, tmp_path):
+        import tools.scripts.lib.skill_launcher_lib as mod
+        monkeypatch.setattr(mod, "_SKILLS_DIR", tmp_path)
+        skill_dir = tmp_path / "big"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text("x" * 100000, encoding="utf-8")
+        result = build_prompt("big", "topic", 1.0)
+        assert len(result) <= 90000
+
+    def test_no_skill_file_graceful(self, monkeypatch, tmp_path):
+        import tools.scripts.lib.skill_launcher_lib as mod
+        monkeypatch.setattr(mod, "_SKILLS_DIR", tmp_path)
+        result = build_prompt("nonexistent_skill", "topic", 1.0)
+        assert "SKILL DEFINITION:" in result
 
 
 class TestWriteRunLog:
