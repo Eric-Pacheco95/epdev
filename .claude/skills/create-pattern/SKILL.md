@@ -9,6 +9,9 @@ Fabric/Jarvis skill author. Turn informal agent behavior descriptions into compl
 
 # DISCOVERY
 
+## One-liner
+Scaffold a new Fabric-format skill (SKILL.md) with full DISCOVERY, STEPS, VERIFY, and LEARN sections.
+
 ## Stage
 BUILD
 
