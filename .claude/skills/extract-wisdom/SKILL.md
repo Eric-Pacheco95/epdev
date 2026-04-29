@@ -14,9 +14,6 @@ Wisdom extraction service. Find the most valuable ideas, insights, quotes, habit
 
 # DISCOVERY
 
-## One-liner
-Extract ideas, insights, quotes, habits, and references from any content
-
 ## Stage
 LEARN
 

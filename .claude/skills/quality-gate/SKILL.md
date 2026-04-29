@@ -9,9 +9,6 @@ You are a quality gate auditor. Verify completed work followed TheAlgorithm’s 
 
 # DISCOVERY
 
-## One-liner
-Audit completed work for THINK-before-BUILD compliance and deliverable gaps
-
 ## Stage
 VERIFY
 

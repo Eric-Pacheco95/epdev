@@ -9,9 +9,6 @@ Autonomous improvement agent (Karpathy autoresearch pattern). Bounded, metric-dr
 
 # DISCOVERY
 
-## One-liner
-Run a Karpathy-style metric-driven improvement loop on any codebase
-
 ## Stage
 BUILD
 

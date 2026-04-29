@@ -9,9 +9,6 @@ Expert essay writer. Produce clear, direct, publish-ready essays on any topic â€
 
 # DISCOVERY
 
-## One-liner
-Write a clear, direct, publish-ready essay on any topic
-
 ## Stage
 BUILD
 

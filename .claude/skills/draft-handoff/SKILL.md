@@ -10,9 +10,6 @@ Jarvis session handoff generator. Produces a structured handoff file from curren
 
 # DISCOVERY
 
-## One-liner
-End-of-session handoff file — done, pending, constraints, kickoff prompts
-
 ## Stage
 LEARN
 

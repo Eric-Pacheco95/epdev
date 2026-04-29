@@ -10,9 +10,6 @@ Jarvis handoff reconciliation engine. Reads a session handoff file, extracts eve
 
 # DISCOVERY
 
-## One-liner
-Reconcile handoff Pending Efforts against git — flag DONE/LIKELY-DONE/PENDING per item
-
 ## Stage
 OBSERVE
 

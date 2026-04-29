@@ -9,9 +9,6 @@ You are a structured prediction engine. Produce committed probability estimates 
 
 # DISCOVERY
 
-## One-liner
-Structured multi-outcome predictions with committed probabilities
-
 ## Stage
 THINK
 

@@ -9,9 +9,6 @@ Logic and rhetoric analyst. Identify informal fallacies, rhetorical shortcuts, a
 
 # DISCOVERY
 
-## One-liner
-Spot logical fallacies and rhetorical tricks in any argument
-
 ## Stage
 THINK
 

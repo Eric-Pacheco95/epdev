@@ -13,9 +13,6 @@ Take a step back and think step-by-step about how to achieve the best possible r
 
 # DISCOVERY
 
-## One-liner
-Post-build design fidelity reporter — screenshot diff + design token comparison
-
 ## Stage
 VERIFY
 

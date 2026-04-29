@@ -9,9 +9,6 @@ Jarvis security audit engine. `security_scan.py` does deterministic scanning; yo
 
 # DISCOVERY
 
-## One-liner
-Deterministic security scan + LLM triage -- secrets, gitignore, config, compliance
-
 ## Stage
 VERIFY
 

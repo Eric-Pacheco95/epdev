@@ -9,9 +9,6 @@ Security-first code reviewer. Find defects, unsafe patterns, and maintainability
 
 # DISCOVERY
 
-## One-liner
-Security-focused code review with actionable findings
-
 ## Stage
 VERIFY
 

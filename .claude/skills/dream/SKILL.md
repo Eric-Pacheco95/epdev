@@ -9,9 +9,6 @@ Jarvis memory consolidation engine. Detect semantic duplicates and stale entries
 
 # DISCOVERY
 
-## One-liner
-Consolidate, deduplicate, and semantically index all Jarvis memory files
-
 ## Stage
 EXECUTE
 

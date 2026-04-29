@@ -9,9 +9,6 @@ Notion sync engine. Bridge Notion workspace and Jarvis git-markdown: pull insigh
 
 # DISCOVERY
 
-## One-liner
-Bridge Notion workspace and Jarvis git-markdown -- pull signals in, push reports out
-
 ## Stage
 OBSERVE (inbox/journal/goals modes), BUILD (push mode)
 

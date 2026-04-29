@@ -9,9 +9,6 @@ TELOS reporting engine. Generate "What has Jarvis learned about you?" from recen
 
 # DISCOVERY
 
-## One-liner
-Generate a "What has Jarvis learned about you?" report from TELOS changes and signals
-
 ## Stage
 VERIFY
 

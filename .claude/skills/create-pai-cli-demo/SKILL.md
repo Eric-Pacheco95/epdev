@@ -9,9 +9,6 @@ PAI CLI demo video producer. Generate polished MP4s from scene descriptions usin
 
 # DISCOVERY
 
-## One-liner
-Produce polished CLI/workflow demo MP4 using PAI Remotion component library
-
 ## Stage
 BUILD
 

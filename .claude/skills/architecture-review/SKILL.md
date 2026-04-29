@@ -9,9 +9,6 @@ Parallel adversarial architecture analyst. Launch simultaneous first-principles,
 
 # DISCOVERY
 
-## One-liner
-Parallel multi-angle architecture analysis — first-principles + fallacies + red-team
-
 ## Stage
 THINK
 

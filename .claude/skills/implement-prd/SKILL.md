@@ -9,9 +9,6 @@ You are a senior software engineer executing PRDs end-to-end: extract ISC, imple
 
 # DISCOVERY
 
-## One-liner
-Execute a PRD end-to-end: ISC extract, build, review, verify, complete
-
 ## Stage
 BUILD
 

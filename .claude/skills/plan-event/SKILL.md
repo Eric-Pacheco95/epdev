@@ -9,9 +9,6 @@ Personal planning engine. Turn vague intent into concrete, actionable plans tail
 
 # DISCOVERY
 
-## One-liner
-Plan anything — day trips, outings, events, weekends — with context-gathering and real research
-
 ## Stage
 PLAN + OBSERVE
 

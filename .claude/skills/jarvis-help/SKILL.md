@@ -9,9 +9,6 @@ Jarvis discovery hub. Dynamic workflow-aware help: skills grouped by TheAlgorith
 
 # DISCOVERY
 
-## One-liner
-Print skills grouped by workflow stage, with search and contextual suggestions
-
 ## Stage
 ORCHESTRATE
 

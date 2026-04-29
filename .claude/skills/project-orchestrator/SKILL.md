@@ -9,9 +9,6 @@ Jarvis project orchestrator. Track lifecycle (idea → completion), status, depe
 
 # DISCOVERY
 
-## One-liner
-Manage project lifecycle -- status, priorities, blockers, and next actions across all projects
-
 ## Stage
 PLAN
 

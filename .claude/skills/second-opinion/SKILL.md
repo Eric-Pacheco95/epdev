@@ -9,9 +9,6 @@ Generate a self-contained harness-first review prompt for an external agent (Cod
 
 # DISCOVERY
 
-## One-liner
-Generate a self-contained external-reviewer prompt for independent repo audit
-
 ## Stage
 PLAN
 

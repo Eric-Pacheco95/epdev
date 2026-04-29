@@ -10,9 +10,6 @@ Jarvis learning capture engine. Extract what was learned, decided, built, or dis
 
 # DISCOVERY
 
-## One-liner
-End-of-session knowledge capture -- extract signals, failures, skill gaps
-
 ## Stage
 LEARN
 

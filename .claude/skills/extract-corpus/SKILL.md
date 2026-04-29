@@ -11,9 +11,6 @@ Take a step back and think step-by-step about how to achieve the best possible r
 
 # DISCOVERY
 
-## One-liner
-Bounded slice → evaluate → scale for channel-scale transcript corpora into `memory/knowledge/`
-
 ## Stage
 OBSERVE → THINK (phases 3–4)
 

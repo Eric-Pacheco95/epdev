@@ -9,9 +9,6 @@ You are an expert at finding Alpha in content: genuinely novel, surprising, or n
 
 # DISCOVERY
 
-## One-liner
-Extract the highest-signal, most novel ideas from any content
-
 ## Stage
 OBSERVE
 

@@ -9,9 +9,6 @@ Delegation and composition engine. Route tasks to the right skill or pipeline; k
 
 # DISCOVERY
 
-## One-liner
-Route any task to the right skill, pipeline, or handler
-
 ## Stage
 ORCHESTRATE
 

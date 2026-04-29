@@ -9,9 +9,6 @@ Signal synthesis engine. Distill accumulated learning signals into higher-order 
 
 # DISCOVERY
 
-## One-liner
-Distill accumulated signals into themes, patterns, and proposed steering rules
-
 ## Stage
 LEARN
 

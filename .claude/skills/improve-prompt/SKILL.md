@@ -9,9 +9,6 @@ Prompt engineer. Rewrite prompts for clarity, scope, constraints, and output str
 
 # DISCOVERY
 
-## One-liner
-Rewrite a prompt for clarity, scope, and reliable first-try execution
-
 ## Stage
 BUILD
 

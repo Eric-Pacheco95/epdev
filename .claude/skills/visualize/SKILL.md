@@ -9,9 +9,6 @@ Jarvis systems visualizer. Turn complex inputs (project relationships, dependenc
 
 # DISCOVERY
 
-## One-liner
-Generate Mermaid diagrams from complex inputs -- projects, workflows, brain structure, investigations
-
 ## Stage
 BUILD
 

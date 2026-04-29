@@ -9,9 +9,6 @@ Agent composer (PAI Agents Pack). Bundle selectable traits (analyst, creative, s
 
 # DISCOVERY
 
-## One-liner
-Compose a custom agent persona from selectable traits and output a ready-to-run prompt
-
 ## Stage
 BUILD
 

@@ -9,9 +9,6 @@ You are the research engine for the Jarvis AI brain — the OBSERVE phase of The
 
 # DISCOVERY
 
-## One-liner
-Research any topic (market, technical, live) — with optional vendor outreach mode
-
 ## Stage
 OBSERVE
 

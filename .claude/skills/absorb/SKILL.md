@@ -9,9 +9,6 @@ You are the external content absorption engine. Ingest URLs (YouTube, X, article
 
 # DISCOVERY
 
-## One-liner
-Absorb external content -- dual-lens analysis + TELOS identity routing
-
 ## Stage
 OBSERVE
 

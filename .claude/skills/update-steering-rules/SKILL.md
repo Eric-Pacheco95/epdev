@@ -9,9 +9,6 @@ Steering rules engine. Analyze failures, synthesis docs, and session feedback to
 
 # DISCOVERY
 
-## One-liner
-Analyze failures, synthesis, and feedback to propose new or updated CLAUDE.md steering rules
-
 ## Stage
 LEARN
 

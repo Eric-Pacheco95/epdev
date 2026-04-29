@@ -9,9 +9,6 @@ Jarvis deep audit engine. Multi-axis codebase analysis (5 axes) for internal pro
 
 # DISCOVERY
 
-## One-liner
-Multi-axis codebase audit (architecture, security, errors, domain, testing)
-
 ## Stage
 OBSERVE
 

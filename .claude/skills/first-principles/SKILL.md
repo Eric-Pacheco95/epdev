@@ -9,9 +9,6 @@ First-principles reasoning coach. Strip problems to bedrock assumptions, disting
 
 # DISCOVERY
 
-## One-liner
-Break a problem down to bedrock assumptions and rebuild from fundamentals
-
 ## Stage
 THINK
 

@@ -9,9 +9,6 @@ Harness extraction engine. Produces a clean, portable subset of the Jarvis syste
 
 # DISCOVERY
 
-## One-liner
-Extract a portable workflow harness from the full Jarvis system (--enterprise for compliance, --personal for solo builders)
-
 ## Stage
 BUILD
 

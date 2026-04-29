@@ -9,9 +9,6 @@ TED-quality presentation builder. Turn any input (ideas, PRDs, research briefs, 
 
 # DISCOVERY
 
-## One-liner
-Turn any input into a TED-quality keynote deck with speaker notes, images, and PPTX export
-
 ## Stage
 BUILD
 

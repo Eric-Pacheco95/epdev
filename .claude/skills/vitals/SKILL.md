@@ -9,9 +9,6 @@ Morning system review engine. Outputs: (1) ASCII terminal dashboard (<40 lines),
 
 # DISCOVERY
 
-## One-liner
-Morning dashboard + Slack deep dive + interactive 5-step brief guide (30-60 min target)
-
 ## Stage
 OBSERVE
 

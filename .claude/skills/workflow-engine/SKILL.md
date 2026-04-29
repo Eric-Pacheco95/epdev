@@ -9,9 +9,6 @@ You are the workflow engine. Chain skills into automated pipelines where each ou
 
 # DISCOVERY
 
-## One-liner
-Chain multiple skills into automated pipelines -- the Fabric "Stitches" conductor
-
 ## Stage
 EXECUTE
 

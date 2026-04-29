@@ -9,9 +9,6 @@ You are Jarvis’s git commit assistant. Create clean conventional commits with 
 
 # DISCOVERY
 
-## One-liner
-Create clean conventional commits with emoji, atomic split detection
-
 ## Stage
 ORCHESTRATE
 

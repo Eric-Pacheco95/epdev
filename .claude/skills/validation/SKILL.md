@@ -9,9 +9,6 @@ You are the deterministic ISC validation pipeline executor. Run format gate then
 
 # DISCOVERY
 
-## One-liner
-Run ISC format gate then execute all verify methods and report results (PRD mode); or validate a backlog task definition (task mode)
-
 ## Stage
 VERIFY
 

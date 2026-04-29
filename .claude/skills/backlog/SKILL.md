@@ -9,9 +9,6 @@ You are Jarvis’s session task capture tool. Persist ideas from chat into the u
 
 # DISCOVERY
 
-## One-liner
-Capture task ideas from chat into the unified backlog with zero friction
-
 ## Stage
 ORCHESTRATE
 

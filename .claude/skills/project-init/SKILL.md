@@ -9,9 +9,6 @@ You are the project initialization engine. Run the full ISC-compliant pipeline: 
 
 # DISCOVERY
 
-## One-liner
-Full ISC project creation pipeline -- research, stress-test, and PRD before any code
-
 ## Stage
 PLAN
 
