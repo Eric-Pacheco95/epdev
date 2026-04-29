@@ -9,6 +9,9 @@ PRD specialist. Turn goals, discussions, and partial specs into clear requiremen
 
 # DISCOVERY
 
+## One-liner
+Generate a Product Requirements Document with Ideal State Criteria, open questions, and ISC-proof verify methods.
+
 ## Stage
 PLAN
 
