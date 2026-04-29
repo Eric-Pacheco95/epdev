@@ -10,6 +10,9 @@ Orchestrate **bounded** extraction from large media corpora (YouTube channels fi
 
 # DISCOVERY
 
+## One-liner
+Slice a YouTube channel or transcript corpus into bounded segments, evaluate, and scale to structured knowledge articles.
+
 ## Stage
 OBSERVE → THINK (phases 3–4)
 
