@@ -174,6 +174,7 @@ If no rules are warranted: "(none proposed)"
 - At least 3 signals processed | Verify: signal count in synthesis header
 - Consumed signals in `data/signal_lineage.jsonl` | Verify: lineage file has synthesis run entry
 - Required sections present (themes, insights, implications) | Verify: Read synthesis file headers
+- No theme is supported by fewer than 2 signals (single-signal themes are observations, not patterns) | Verify: Each theme entry in synthesis has signal_count >=2 or cites at least 2 source signals
 
 # LEARN
 

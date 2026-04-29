@@ -85,12 +85,15 @@ INPUT:
 - All template placeholders ({REVIEWER}, {TARGET}, {DATE}, {REPO_HINT}) are substituted | Verify: `grep '{' <output-file>` returns zero hits inside the prompt body
 - Output file is NOT written inside a gitignored path (unless explicitly requested) | Verify: `git check-ignore <--out path>` returns no match
 - Mode section matches flag: dynamic → contains 'Phase 3 — Dynamic' and H1-H8 playbook; static → does NOT contain those strings | Verify: `grep 'Phase 3' <output>` for dynamic; absence for static
+- Output file opens with reviewer identification line (not blank/empty header) | Verify: `head -3 <output>` begins with "You are doing"
 
 # LEARN
 
 - No auto-signal — prompt-generation utility, not an audit.
-- If Eric returns with the external reviewer's findings, route to `/learning-capture` with rating based on finding severity
-- If external reviewer consistently finds gap types Jarvis missed: log as blind-spot signal via /learning-capture.
+- External reviewer findings → `/learning-capture` (rate by severity); consistent Jarvis blind-spots → blind-spot signal.
+- If the external reviewer’s top findings are never addressed (not in commits 30+ days after), the review cadence is too frequent — drop to quarterly and tag results as research-only.
+- Track harness reuse rate: if H1–H8 harnesses built in one run are never reused, the --dynamic prompt over-invests in scaffolding; consider recommending --static for that reviewer context.
+- If the same reviewer (Codex/GPT/etc.) consistently misses the same blind-spot class (e.g., Windows paths), update the `## Ground rules` section to call it out explicitly.
 
 ---
 

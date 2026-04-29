@@ -74,10 +74,11 @@ INPUT:
 
 # VERIFY
 
-- All four sections present (OVERVIEW through RECOMMENDED FIXES) | Verify: Scan headings
-- Every FALLACY FINDINGS item has matching RECOMMENDED FIX | Verify: Cross-reference numbers
-- FALLACY FINDINGS has at most 12 items | Verify: Count numbered items in FALLACY FINDINGS section
-- No missing sections or FALLACY FINDINGS >12 after fixes | Verify: Re-scan
+- All four sections present (OVERVIEW through RECOMMENDED FIXES) | Verify: `grep -E "## (OVERVIEW|FALLACY FINDINGS|CONTEXT AND IMPACT|RECOMMENDED FIXES)" <output>` returns 4 matches
+- Every FALLACY FINDINGS item has matching RECOMMENDED FIX | Verify: `grep -c "^[0-9]\+\." <FALLACY_section>` equals `grep -c "^[0-9]\+\." <FIXES_section>` (item counts match)
+- FALLACY FINDINGS has at most 12 items | Verify: `grep -c "^[0-9]\+\." <FALLACY_section>` ≤ 12
+- No missing sections or FALLACY FINDINGS >12 after fixes | Verify: Re-run section header grep — all 4 must be present after any revision
+- RECOMMENDED FIXES are actionable replacements for the flawed reasoning (not generic "avoid X") | Verify: Each fix begins with an alternative claim or reframed argument, not just "avoid" or "do not use"
 
 # LEARN
 

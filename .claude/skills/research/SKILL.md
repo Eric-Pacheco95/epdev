@@ -81,7 +81,7 @@ true
 
 1. **Semantic search**: `python tools/scripts/embedding_service.py search "<topic>" --top-k 5`. Surface hits >= 0.70 by tier. Load top 1-2 hits >= 0.75. Tell Eric: "Semantic search found N related files: [name @ score]". Skip silently if Ollama unavailable.
 
-   **Vector-wins logging (Phase 6A.1 Signal 2)**: when Eric confirms loading a hit with score >= 0.80, run immediately before proceeding: `python tools/scripts/log_vector_win.py "<topic>" "<hit_path>" <score>` (source_tier defaults to "eric").
+   **Vector-wins logging**: when Eric confirms a hit at score >= 0.80, run: `python tools/scripts/log_vector_win.py "<topic>" "<hit_path>" <score>` (source_tier defaults to "eric").
 
 2. **Knowledge index**: Read `memory/knowledge/index.md`. Domain mapping: crypto/trading/DeFi/BTC/ETH → `crypto`; security/vulnerability → `security`; AI/LLM/orchestration → `ai-infra`.
 

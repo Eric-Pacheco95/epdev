@@ -132,3 +132,36 @@ class TestFinancialBlurb:
         monkeypatch.setattr(mb, "SNAPSHOT", snap)
         result = mb._financial_blurb()
         assert "could not parse" in result or "parse" in result.lower() or "snapshot" in result.lower()
+
+
+class TestProposalPending:
+    def test_returns_zero_when_no_proposals_file(self, tmp_path, monkeypatch):
+        from unittest.mock import patch as _patch
+        with _patch("tools.scripts.lib.task_proposals.count_by_status", return_value={}):
+            result = mb._proposal_pending()
+        assert result == 0
+
+    def test_returns_pending_count(self, tmp_path, monkeypatch):
+        from unittest.mock import patch as _patch
+        with _patch("tools.scripts.lib.task_proposals.count_by_status", return_value={"pending": 3, "approved": 1}):
+            result = mb._proposal_pending()
+        assert result == 3
+
+    def test_returns_zero_when_no_pending_key(self):
+        from unittest.mock import patch as _patch
+        with _patch("tools.scripts.lib.task_proposals.count_by_status", return_value={"approved": 2}):
+            result = mb._proposal_pending()
+        assert result == 0
+
+    def test_import_error_returns_zero(self, monkeypatch):
+        import builtins
+        real_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == "tools.scripts.lib.task_proposals":
+                raise ImportError("not found")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", mock_import)
+        result = mb._proposal_pending()
+        assert result == 0

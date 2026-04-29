@@ -41,6 +41,13 @@ false
 
 # STEPS
 
+## Step 0: INPUT VALIDATION
+
+- No input and no handoff files in `data/`: print DISCOVERY block, STOP
+- Explicit path given but file not found: "Handoff not found at {path}. Files in data/: {list}" STOP
+- Explicit path points to a file with no `## Pending Efforts` section: print CONTRACT `empty-pending` error, STOP
+- `--help` or unknown flags: print DISCOVERY block, STOP
+
 ## Step 1: RUN AUDIT
 
 Run `python tools/scripts/sync_handoff.py [path]`. The script:
@@ -67,6 +74,8 @@ Show the script output verbatim. For each item flagged DONE/LIKELY-DONE, name th
 - Script ran and parsed at least one effort (or reported empty Pending Efforts) | Verify: `python tools/scripts/sync_handoff.py --self-test`
 - Handoff path resolved (default or explicit) | Verify: output line "Handoff: data/..."
 - Verdict assigned to every effort | Verify: each `### ` block in output has a `Verdict:` line
+- No files were modified during execution (read-only constraint) | Verify: `git diff --stat` shows no changes
+- Recommendation section present (all DONE / some DONE / all PENDING) | Verify: output contains "Handoff is" or "Pick up only"
 
 # CONSTRAINTS
 
@@ -79,6 +88,8 @@ Show the script output verbatim. For each item flagged DONE/LIKELY-DONE, name th
 
 - Stale-handoff pattern fires this skill: when invoked, log how many efforts were DONE — repeated high-DONE counts signal `/draft-handoff` is being called *before* the work it summarizes lands; consider hooking `/sync-handoff` into session-start.
 - If KEYWORD-HIT count is consistently high but verdict is PENDING, the handoff schema is too vague — push back via `/draft-handoff` LEARN to require explicit file paths in each Effort body.
+- Track verdict distribution across sessions — DONE:PENDING ratio below 0.5 across 5+ invocations signals the 48h lookback window needs extending; above 0.9 signals overly-broad keyword matching.
+- If `--self-test` fails repeatedly, the sync_handoff.py script has drifted from the handoff schema; flag for `/self-heal` with the mismatch diff.
 
 # INPUT
 

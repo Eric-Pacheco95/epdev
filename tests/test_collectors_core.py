@@ -1,7 +1,15 @@
 """Tests for collectors.core -- _resolve_path, _result, and pure collector logic."""
 
+import sys
 import pytest
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+if str(REPO_ROOT / "tools" / "scripts") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "tools" / "scripts"))
+
 from collectors.core import _resolve_path, _result
 
 

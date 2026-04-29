@@ -126,3 +126,57 @@ def test_backlog_append_validation_error():
             assert False, "Should have raised ValueError"
         except ValueError as e:
             assert "validation failed" in str(e).lower()
+
+
+# ── validate_task edge cases ─────────────────────────────────────────
+
+def test_validate_id_with_invalid_chars():
+    t = _minimal_task(id="id with space/slash")
+    errors = validate_task(t)
+    assert any("id" in e for e in errors)
+
+
+def test_validate_id_empty_string():
+    t = _minimal_task(id="")
+    errors = validate_task(t)
+    assert any("id" in e for e in errors)
+
+
+def test_validate_autonomous_safe_non_boolean():
+    errors = validate_task(_minimal_task(autonomous_safe="yes"))
+    assert any("autonomous_safe" in e for e in errors)
+
+
+def test_validate_isc_non_list():
+    errors = validate_task(_minimal_task(isc="should-be-a-list"))
+    assert any("isc" in e for e in errors)
+
+
+def test_validate_isc_no_executable_verify():
+    errors = validate_task(_minimal_task(isc=["Criterion | Verify: Review"]))
+    assert any("executable" in e for e in errors)
+
+
+def test_validate_generation_too_high():
+    errors = validate_task(_minimal_task(generation=3))
+    assert any("generation" in e for e in errors)
+
+
+def test_validate_generation_negative():
+    errors = validate_task(_minimal_task(generation=-1))
+    assert any("generation" in e for e in errors)
+
+
+def test_validate_generation_valid_zero():
+    errors = validate_task(_minimal_task(generation=0))
+    assert not any("generation" in e for e in errors)
+
+
+def test_validate_created_non_string():
+    errors = validate_task(_minimal_task(created=12345))
+    assert any("created" in e for e in errors)
+
+
+def test_validate_priority_non_integer():
+    errors = validate_task(_minimal_task(priority="high"))
+    assert any("priority" in e for e in errors)

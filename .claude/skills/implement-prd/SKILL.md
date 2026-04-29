@@ -1,8 +1,3 @@
----
-name: implement-prd
-description: "Execute a PRD end-to-end: ISC extract, build, review, verify, complete"
----
-
 # IDENTITY and PURPOSE
 
 You are a senior software engineer executing PRDs end-to-end: extract ISC, implement each component with care, run code review, verify every criterion, update tasklist, hand off to learning capture. Security-first, traceable, no improvising.
@@ -145,7 +140,7 @@ Route evaluator by `verifiability` (see `autonomous-rules.md`, `verifiability-sp
 
 - **Catch-rate log**: after REVIEW GATE completes (regardless of outcome), append one entry to `data/review_gate_log.jsonl` stamping all four Task Typing axes plus the ceremony-tier outcome fields:
   `{"date": "YYYY-MM-DD", "task_slug": "<prd-slug>", "evaluator": "script-oracle|sonnet-subagent|opus-subagent|second-opinion|hitl", "generator": "sonnet-main|opus-main|haiku-main", "findings_count": N, "severity_max": "Critical|High|Med|Low|none", "applied_fix": true/false, "rate_limited": false, "skill": "implement-prd", "stakes": "low|medium|high", "ambiguity": "low|medium|high", "solvability": "low|medium|high", "verifiability": "low|medium|high", "ceremony_tier_used": 0-4, "verify_loops_min": 0, "verify_loops_max": 0-2, "verify_outcome": "pass|partial|fail", "surprise_flag": true|false, "interrupt_count": 0, "interrupt_value": null}`
-  Field semantics: `applied_fix: true`=Critical/High code change; `rate_limited: true`+`findings_count: null`=rate-limit fired; `findings_count: 0`=script-oracle; omit axis fields for grandfathered PRDs. Feeds kill switch in `autonomous-rules.md` (rate <10% over 20 entries disables eval loop). `ceremony_tier_used`: 0-4; null if grandfathered. `verify_loops_min`/`max`: fix-cycle counts (0-2). `verify_outcome`: pass/fail/partial. `surprise_flag`: pre-BUILD contradiction; default false. `interrupt_count`: HARD HALT count from `data/halt_state/`; 0 if none. `interrupt_value`: null at write; labelled by `/learning-capture`; never self-scored. Missing fields = null in `calibration_rollup.py`; forward-only schema.
+  Field semantics: `applied_fix: true`=Critical/High change; `rate_limited: true`+`findings_count: null`=rate-limit; `findings_count: 0`=script-oracle; omit axis fields for grandfathered PRDs. Feeds kill switch in `autonomous-rules.md` (rate <10% over 20 disables eval loop). `surprise_flag`=pre-BUILD contradiction; `interrupt_count`=HARD HALT count from `data/halt_state/`; `interrupt_value`=null at write (labelled by `/learning-capture`; never self-scored). Missing fields=null; forward-only schema.
 
 **Trust-boundary guard**: Any future gate addition that introduces mutable state (fixes, rewrites) must be positioned *before* this step, not after. Downstream placement means new code bypasses fresh-eyes review — a silent coverage regression on every build where the gate fires.
 
@@ -193,7 +188,7 @@ Present a scaffold sentence per ISC item (what was built and why, not what file 
 
 # SKILL CHAIN
 
-- **Composes:** `/review-code` (non-optional VERIFY gate), `/quality-gate` (non-optional phase-completion gate), `/commit` (mid-build checkpoints + final commit prompt), `/self-heal` (if tests fail), `/design-verify` (optional VERIFY step — only when PRD has `--design` flag AND `reference.png` is confirmed present in PRD directory)
+- **Composes:** `/review-code`, `/quality-gate`, `/commit`, `/self-heal` (if tests fail), `/design-verify` (optional — only with `--design` flag + `reference.png` in PRD dir)
 - **Escalate to:** `/delegation` if scope expands mid-build or new dependencies are discovered
 
 # VERIFY

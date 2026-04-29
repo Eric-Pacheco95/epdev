@@ -155,7 +155,7 @@ Glossary auto-append → `context/glossary.md`; load `templates/` before artifac
 
 ## Step 3.5: ENTERPRISE (only if --enterprise flag)
 
-Gap analysis for regulated/team environments. Evaluate: (1) **Workflow gaps** — repetitive tasks with no skill (meeting → actions, email → requirements, regulatory update → impact analysis); (2) **Knowledge gaps** — missing `knowledge/` domain reference; (3) **Template gaps** — artifacts with no template; (4) **LLM compliance** — CLAUDE.md data send/don't-send, audit trail, disclaimers, model logging; (5) **Strategic assessment** — internal adoption vs. external revenue play.
+Gap analysis for regulated/team environments: **Workflow gaps** (tasks without skills: meeting→actions, email→requirements, regulatory→impact); **Knowledge gaps** (missing `knowledge/` domain); **Template gaps** (no-template artifacts); **LLM compliance** (data send/don't-send, audit trail, disclaimers, model logging); **Strategic assessment** (internal adoption vs. external revenue).
 
 Output: numbered list with effort (S/M/L) and priority. Do NOT build — present proposal, add approved to `docs/backlog.md`.
 
@@ -201,7 +201,7 @@ If creating new repo:
 2. Create initial commit with all extracted files
 3. Ask user: "Push to GitHub? If yes, provide repo name and visibility (public/private)."
 4. If pushing: create repo with `gh repo create`, push, report URL
-5. **Push-status check**: run `git log --oneline origin/main..HEAD` — if output is empty, push succeeded; if commits remain, surface them and block 'done' declaration until confirmed pushed. Why: 10 agile skills sat locally invisible to collaborators.
+5. **Push-status check**: run `git log --oneline origin/main..HEAD` — if empty, push succeeded; if commits remain, surface and block 'done' until confirmed pushed.
 
 If --update:
 1. **Skill diff**: Compare source `.claude/skills/` against target — report: new skills to add, existing skills with source changes, skills in target but not in source (manual additions — preserve)

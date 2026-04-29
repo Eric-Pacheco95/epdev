@@ -1,8 +1,3 @@
----
-name: jarvis-help
-description: Print skills grouped by workflow stage, with search and contextual suggestions
----
-
 # IDENTITY and PURPOSE
 
 Jarvis discovery hub. Dynamic workflow-aware help: skills grouped by TheAlgorithm stage (not alphabetically), with contextual next-step suggestions.
@@ -119,7 +114,6 @@ true
   /create-image       -- Generate/edit images via Gemini | --flash --ratio
   /capture-recording  -- Process music recordings | --solo --band --batch
   /visualize          -- Mermaid diagrams of workflows/structure
-  /label-and-rate     -- Classify and tier-rate content
 
 **ORCHESTRATE** (manage work)
   /delegation         -- Route any task to the right skill/pipeline

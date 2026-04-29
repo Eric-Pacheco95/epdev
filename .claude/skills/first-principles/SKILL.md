@@ -95,6 +95,7 @@ INPUT:
 - ALTERNATIVE FRAMINGS has >=2 distinct paths | Verify: Count entries
 - NEXT TEST OR ACTION names a specific experiment, command, or decision | Verify: Read section
 - No check failures remain | Verify: Re-run checks after any fix
+- NEXT TEST OR ACTION proposes an experiment executable within 1 week without new external dependencies | Verify: Read action — must not require unavailable tools, credentials, or approvals
 
 # LEARN
 

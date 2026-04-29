@@ -104,7 +104,7 @@ Collect live-system evidence before review agents run so they reason against pri
 
 ## Step 2.5: CANARY CROSS-READ [passive only — never feeds synthesis]
 
-After all 3 outputs exist, spawn a background cross-read agent: "Read all three outputs from `memory/work/_arch-review-{timestamp}/`. For each agent, answer: given the OTHER two agents' findings, would this agent's conclusion change? Append one JSONL per agent to `data/arch_review_canary.jsonl`: `{"date": "YYYY-MM-DD", "review_slug": "{slug}", "topic": "...", "canary_agent": "...", "original_stance": "...", "cross_read_delta": "...", "would_change_conclusion": true/false}`. Set `would_change_conclusion: true` only for material recommendation changes — not nuance."
+After all 3 outputs exist, spawn a background cross-read agent: "Read all agent outputs in `memory/work/_arch-review-{timestamp}/`. For each, would the conclusion change given the OTHER two findings? Append JSONL to `data/arch_review_canary.jsonl`: `{"date": "YYYY-MM-DD", "review_slug": "{slug}", "topic": "", "canary_agent": "", "original_stance": "", "cross_read_delta": "", "would_change_conclusion": bool}`. `would_change_conclusion: true` only for material changes — not nuance."
 
 Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 after 10 = validated; one JSON per line, no header.
 
@@ -122,7 +122,7 @@ Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 aft
 ## Step 3.5: INCIDENT FIX CLASSIFICATION [--incident only]
 
 - For each proposed fix element, classify as one of: **root-cause** (removes the mechanism producing the failure), **safety-net** (catches failures the mechanism will still produce), or **observability** (makes the failure visible but does not fix or catch it).
-- Apply the **sequencing rule**: safety-net ships AFTER root-cause has been observed in production for a validation window (default 7 days). Never ship safety-net in parallel with root-cause — the safety-net masks whether the root-cause fix worked.
+- **Sequencing rule**: safety-net ships AFTER root-cause observed in production for a validation window (default 7 days). Never ship safety-net in parallel — it masks whether the root-cause fix worked.
 - Observability ships in parallel with root-cause (needed to measure whether root-cause worked).
 - Emit the INCIDENT FIX CLASSIFICATION output section (see OUTPUT INSTRUCTIONS).
 
@@ -162,8 +162,7 @@ Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 aft
 
 # SKILL CHAIN
 
-- **Composes:** `/first-principles` + `/find-logical-fallacies` + `/red-team` (launches these as parallel agents)
-- **Replaces:** Manual sequential invocation of thinking skills on architecture decisions
+- **Composes:** `/first-principles` + `/find-logical-fallacies` + `/red-team`
 - **Escalate to:** `/delegation` if the review reveals the proposal needs fundamental redesign before any of these skills apply
 
 INPUT:

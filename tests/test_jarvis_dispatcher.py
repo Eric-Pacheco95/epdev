@@ -7,6 +7,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from datetime import date, timedelta
+
 from tools.scripts.jarvis_dispatcher import (
     _safe_filename_component,
     _is_secret_path,
@@ -19,6 +21,9 @@ from tools.scripts.jarvis_dispatcher import (
     _validate_profile_content,
     _validate_routine_schema,
     _eval_routine_condition,
+    sweep_pending_review,
+    PENDING_REVIEW_ALERT_DAYS,
+    PENDING_REVIEW_EXPIRE_DAYS,
 )
 
 
@@ -316,3 +321,55 @@ class TestEvalRoutineCondition:
 
     def test_file_count_min_no_glob_returns_true(self):
         assert _eval_routine_condition({"type": "file_count_min", "glob": "", "min": 1}) is True
+
+
+class TestSweepPendingReview:
+    def _task(self, created_days_ago, status="pending_review"):
+        created = (date.today() - timedelta(days=created_days_ago)).isoformat()
+        return {"id": "t1", "status": status, "created": created, "description": "Test"}
+
+    def test_empty_backlog_returns_empty(self):
+        alerts, expired = sweep_pending_review([])
+        assert alerts == []
+        assert expired == []
+
+    def test_non_pending_review_ignored(self):
+        task = self._task(10, status="pending")
+        alerts, expired = sweep_pending_review([task])
+        assert alerts == []
+        assert expired == []
+
+    def test_young_task_not_alerted(self):
+        task = self._task(1)
+        alerts, expired = sweep_pending_review([task])
+        assert alerts == []
+        assert expired == []
+
+    def test_alert_threshold_reached(self):
+        task = self._task(PENDING_REVIEW_ALERT_DAYS)
+        alerts, expired = sweep_pending_review([task])
+        assert len(alerts) == 1
+        assert expired == []
+
+    def test_expire_threshold_reached(self):
+        task = self._task(PENDING_REVIEW_EXPIRE_DAYS)
+        alerts, expired = sweep_pending_review([task])
+        assert len(expired) == 1
+
+    def test_missing_created_field_skipped(self):
+        task = {"id": "t1", "status": "pending_review", "description": "x"}
+        alerts, expired = sweep_pending_review([task])
+        assert alerts == []
+        assert expired == []
+
+    def test_invalid_created_date_skipped(self):
+        task = {"id": "t1", "status": "pending_review", "created": "not-a-date"}
+        alerts, expired = sweep_pending_review([task])
+        assert alerts == []
+        assert expired == []
+
+    def test_explicit_today_parameter(self):
+        task = self._task(PENDING_REVIEW_EXPIRE_DAYS)
+        today = date.today()
+        alerts, expired = sweep_pending_review([task], today=today)
+        assert len(expired) == 1
