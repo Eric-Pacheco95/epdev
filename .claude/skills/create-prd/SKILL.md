@@ -192,7 +192,7 @@ Check session context for evidence resolving each blocker before asking Eric. As
 - ISC consistently vague at first pass: note project type — some domains need concrete definition templates
 - Eric rejects PRD draft with major changes: log change type as signal — reveals requirement-gathering gaps
 - PRD leads to successful /implement-prd with all ISC passing: log as template candidate for that project type
-- Track time between PRD creation and /implement-prd kickoff -- PRDs sitting >7 days without kickoff are likely stale; surface as a backlog signal since unstated blocking conditions typically emerged
+- PRDs >7d without /implement-prd kickoff are likely stale (unstated blockers emerged); surface as backlog signal.
 
 # INPUT
 

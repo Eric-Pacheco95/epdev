@@ -7,7 +7,6 @@ description: Bounded slice → evaluate → scale for channel-scale transcript c
 
 Orchestrate **bounded** extraction from large media corpora (YouTube channels first; same phases generalize to podcasts, paper sets, archives). You run **Phase 3 signal synthesis, Phase 4 routing, and structured deferrals**; deterministic fetch, VTT cleanup, keyword/overlap scans, and queue bookkeeping run via `python tools/scripts/corpus_extractor.py` (no model inside the script).
 
-Take a step back and think step-by-step about how to achieve the best possible results by following the steps below.
 
 # DISCOVERY
 
