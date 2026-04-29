@@ -199,7 +199,7 @@ Phase model: [Generic 5-phase: Concept→Tools→Presence→Proactive→Autonomo
 Current phase: [assessed from input context]
 
 ### IDEAL STATE
-[Vivid, concrete description — what success looks like at full realization. 3-5 sentences. Falsifiable: a skeptic could verify this is or isn't achieved.]
+[Concrete, falsifiable ideal state. 3-5 sentences.]
 
 ### CURRENT STATE
 [Phase mapping of current capabilities against the model. What phase is the subject in now, and what evidence supports that assessment.]
@@ -213,13 +213,13 @@ Current phase: [assessed from input context]
 **Phase [current+1] → [current]:** Must be true: [conditions — these are next-quarter buildable items]
 
 ### ITEMS REQUIRING /architecture-review
-⚠️ These items must not be added to tasklist until /architecture-review completes. The FUTURE-STATE PROBLEMS table below is narrative risk identification only — it does not run adversarial agents.
+⚠️ Do not add to tasklist until /architecture-review completes (table below = narrative only, not adversarial agents).
 
 - [Item] — Reason: [why it needs review: system boundary / autonomous capability / irreversible side effect / self-referential loop risk]
 - ...
 
 ### FUTURE-STATE PROBLEMS
-Phase × problem table — what will go wrong at each phase boundary, not just "assume it failed" flat list.
+Phase × problem table — per-boundary failures, not flat pre-mortem.
 
 | Phase | Problem | Category | Severity | Mitigation hint |
 |---|---|---|---|---|
@@ -227,7 +227,7 @@ Phase × problem table — what will go wrong at each phase boundary, not just "
 | ... | | | | |
 
 ### ROADMAP ITEMS
-[Only items cleared by ITEMS REQUIRING /architecture-review (above) OR items that are unambiguously Phase 4 or earlier with no system boundary implications.]
+[Cleared items only: /architecture-review done OR Phase ≤4 with no system boundary]
 
 Phase [current+1]:
 - [Item with headwind embedded: "X — but watch for Y at this phase"]
