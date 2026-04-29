@@ -103,9 +103,7 @@ INPUT:
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_autoresearch-{slug}.md when a run produces >= 10% metric improvement
-- Include: dimension, baseline, final, kept/discarded ratio, and any recurring failure patterns (what kinds of changes got reverted)
-- Rating: 7-8 for runs that surface a systemic gap; 5-6 for steady incremental improvement; do not write signal for runs where metric did not move
+- Signal {YYYY-MM-DD}_autoresearch-{slug}.md: >= 10% metric improvement; include dimension, baseline, final, kept/discarded ratio, recurring reverts; rating 7-8/systemic-gap, 5-6/incremental.
 - **Metric-ceiling detection**: if baseline == total files in scope, Phase 1 is complete; report this explicitly and document recommended metric_command for Phase 2 in the report rather than running 5 doomed iterations
 - When metric is at ceiling and Phase 2 is in scope, keep quality improvements even without metric gain -- document the ceiling situation and recommend updating DATA[metric_command] in the report
 - If all kept=0 due to ceiling: flag as PHASE_COMPLETE in report summary line, not as a failed run

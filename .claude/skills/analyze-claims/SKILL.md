@@ -82,7 +82,6 @@ INPUT:
 
 # LEARN
 
-- If the analysis revealed >= 3 unsupported or weakly-supported claims, note the content source and claim pattern in a signal: memory/learning/signals/{YYYY-MM-DD}_analyze-claims-{slug}.md
-- Rating guideline: 7+ if novel fallacy pattern or systematic deception detected; 4-6 for routine analysis; only write signal when something surprising or pattern-breaking was found
+- Signal {YYYY-MM-DD}_analyze-claims-{slug}.md: >= 3 unsupported/weak claims; rating 7+/novel-fallacy-or-deception, 4-6/routine; skip if nothing surprising.
 - If INTERNAL CONSISTENCY catches contradictions missed in SUPPORT ASSESSMENT, flag it: indicates claim decomposition in CLAIM INVENTORY was too coarse; note source type for calibration
 - Track claim-failure rate by author or outlet — 3+ weakly-supported claims from the same source across analyses flags it as low-credibility; add a source-reliability note to the next signal for that outlet

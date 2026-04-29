@@ -99,7 +99,5 @@ If Eric wants to revert a merge:
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_dream-consolidation.md when the run produces >= 3 merges
-- Include: which files were merged, similarity scores, whether the corpus is healthy or showing noise at threshold
-- Rating: 6-7 for routine consolidation; 8+ if a critical pattern was surfaced that should become a steering rule; do not write signal for clean (no-change) runs
+- Signal {YYYY-MM-DD}_dream-consolidation.md: >= 3 merges; include files merged, similarity scores, corpus health; rating 6-7/routine, 8+/steering-rule-pattern.
 - If threshold tuning keeps nudging down (≤0.75) to get merges, the corpus has low signal density — more diverse content ingestion is needed before the next consolidation run

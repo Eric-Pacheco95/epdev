@@ -94,7 +94,6 @@ INPUT:
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_first-principles-{slug}.md when the analysis reveals a core assumption that was previously treated as a hard constraint (constraint-vs-convention collapse)
-- Rating: 8+ if the assumption flip changes the entire solution direction; 5-7 for useful reframing; only write signal when CONSTRAINTS VS CONVENTIONS or CORE ASSUMPTIONS yields a genuinely surprising finding
+- Signal {YYYY-MM-DD}_first-principles-{slug}.md: core assumption treated as hard constraint (constraint-vs-convention collapse); rating 8+/solution-direction-flip, 5-7/useful-reframing.
 - If ALTERNATIVE FRAMINGS consistently cluster around the same axis (e.g., build vs. buy, short vs. long-term), note the pattern: signals a framing bias in how problems are initially posed, not just in the solutions considered
 - If Eric acts on first-principles output and the outcome differs from predicted, log it in history/decisions/ with actual vs. expected — these mismatches calibrate the CONSTRAINTS VS. CONVENTIONS heuristics over time

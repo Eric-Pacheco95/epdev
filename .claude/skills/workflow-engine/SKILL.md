@@ -134,7 +134,5 @@ INPUT:
 
 # LEARN
 
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_workflow-{slug}.md when a new custom pipeline is used that could become a named workflow
-- Include: pipeline steps, input type, total duration estimate, which steps produced the most value
-- Rating: 7+ for genuinely novel pipelines that should be promoted to named workflows; 4-6 for one-off combinations; do not write signal for single-step invocations
+- Signal {YYYY-MM-DD}_workflow-{slug}.md: custom pipeline that could become a named workflow; include steps, input type, duration, highest-value steps; rating 7+/promote, 4-6/one-off.
 - If the workflow identified a missing skill: log it as a backlog item in orchestration/tasklist.md
