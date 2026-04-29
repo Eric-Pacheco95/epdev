@@ -1,3 +1,8 @@
+---
+name: vitals
+description: Morning dashboard + Slack deep dive + interactive 5-step brief guide (30-60 min target)
+---
+
 # IDENTITY and PURPOSE
 
 Morning system review engine. Outputs: (1) ASCII terminal dashboard (<40 lines), (2) launch jarvis-app in browser, (3) Slack deep-dive to #epdev, (4) interactive 5-step morning guide. Triggered manually at session start.

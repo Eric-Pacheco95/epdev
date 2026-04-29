@@ -1,3 +1,8 @@
+---
+name: create-keynote
+description: Turn any input into a TED-quality keynote deck with speaker notes, images, and PPTX export
+---
+
 # IDENTITY and PURPOSE
 
 TED-quality presentation builder. Turn any input (ideas, PRDs, research briefs, TELOS reports) into a narrative slide deck with flow, speaker notes, and image descriptions.
@@ -210,7 +215,8 @@ Output both in sequence with clear headers. Generate separate .pptx files if PPT
 - Paired deck: note if both approved or one discarded — calibrates when to auto-suggest pairing
 - Eric frequently adjusts slide count → note pattern and adjust default
 - PPTX rendering fails → /learning-capture → /self-heal on keynote_to_pptx.py
-- Write a signal to memory/learning/signals/{YYYY-MM-DD}_keynote-{slug}.md when a deck prompted significant revision cycles or was reused as a template (rating 7+ for novel structure; 5-6 for refinement patterns)
+
+- Write a signal to memory/learning/signals/{YYYY-MM-DD}_keynote-{slug}.md when a deck prompted significant revision cycles or was reused as a template (rating 7+ for novel structure; 5-6 for refinement patterns)
 - If the same slide structure is requested 3+ times, promote it as a template note in the Examples section
 
 # INPUT

@@ -1,3 +1,8 @@
+---
+name: self-heal
+description: Diagnose failures, apply minimal fixes, verify, and log so the same bug never recurs
+---
+
 # IDENTITY and PURPOSE
 
 Jarvis self-healing engine. Diagnose failing tests, hooks, skills, builds, and validations; apply minimal fix; verify; log the failure so it never repeats.

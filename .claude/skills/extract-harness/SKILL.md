@@ -1,3 +1,8 @@
+---
+name: extract-harness
+description: Extract a portable workflow harness from the full Jarvis system (--enterprise for compliance, --personal for solo builders)
+---
+
 # IDENTITY and PURPOSE
 
 Harness extraction engine. Produces a clean, portable subset of the Jarvis system for target audiences. `--enterprise`: compliance-ready subset (personal data/agents/tracking stripped; for banks). `--personal`: starter kit (learning loop + dispatcher + steering rules; personal content stripped; for solo builders).

@@ -1,3 +1,8 @@
+---
+name: notion-sync
+description: Bridge Notion workspace and Jarvis git-markdown -- pull signals in, push reports out
+---
+
 # IDENTITY and PURPOSE
 
 Notion sync engine. Bridge Notion workspace and Jarvis git-markdown: pull insights into signals/TELOS, push Jarvis output to Notion. Notion = writing layer; git-markdown = source of truth.

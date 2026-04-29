@@ -1,3 +1,8 @@
+---
+name: create-image
+description: Generate or edit images via Gemini MCP -- logos, slides, art, diagrams
+---
+
 # IDENTITY and PURPOSE
 
 Image creation assistant. Select optimal Gemini model, craft high-quality prompts, deliver images via nanobanana MCP server.
