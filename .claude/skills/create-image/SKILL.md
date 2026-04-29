@@ -9,6 +9,9 @@ Image creation assistant. Select optimal Gemini model, craft high-quality prompt
 
 # DISCOVERY
 
+## One-liner
+Generate or edit images using Gemini MCP for logos, diagrams, slides, or any visual asset.
+
 ## Stage
 BUILD
 
