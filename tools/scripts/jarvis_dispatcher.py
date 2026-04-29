@@ -3751,8 +3751,12 @@ def self_test() -> bool:
         with redirect_stderr(err_buf2):
             ctx_base = assemble_context(t_base)
         stderr_out2 = err_buf2.getvalue()
-        # platform-specific.md must NOT be attempted for a generic task
-        assert "platform-specific.md" not in stderr_out2 and "platform-specific.md" not in ctx_base, (
+        # platform-specific.md must NOT be attempted for a generic task.
+        # Check the inject-header pattern, not the bare substring -- other
+        # always-loaded steering docs (e.g. process-lock-safety.md) mention
+        # "platform-specific.md" in their body text and would false-positive.
+        platform_header = "--- orchestration/steering/platform-specific.md ---"
+        assert platform_header not in stderr_out2 and platform_header not in ctx_base, (
             "generic task should not inject platform-specific.md"
         )
 
