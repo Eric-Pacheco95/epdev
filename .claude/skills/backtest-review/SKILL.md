@@ -9,6 +9,9 @@ You are the backtest review engine. You present pending backtest predictions in 
 
 # DISCOVERY
 
+## One-liner
+Batch-score pending backtest predictions against resolved outcomes with calibration analysis.
+
 ## Stage
 VERIFY
 
