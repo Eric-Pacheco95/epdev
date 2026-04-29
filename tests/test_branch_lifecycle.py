@@ -111,3 +111,42 @@ class TestLoadBacklogIndex:
         idx = _load_backlog_index()
         assert "jarvis/auto-ok1" in idx
         assert len(idx) == 1
+
+
+# ── format_report additional edge cases ─────────────────────────────
+
+def test_format_report_branch_with_task_id():
+    branch = _make_branch("jarvis/stale-x", 10, 2, "1 file", is_stale=True)
+    branch["task_id"] = "task-42"
+    branch["task_status"] = "done"
+    result = format_report([branch])
+    assert "task=task-42" in result
+    assert "status=done" in result
+
+
+def test_format_report_branch_with_error_excluded_from_active():
+    branches = [
+        _make_branch("jarvis/error-branch", 2, 0, "N/A"),
+    ]
+    branches[0]["error"] = "git error"
+    result = format_report(branches)
+    # error branch should not appear in ACTIVE
+    assert "ACTIVE" not in result
+
+
+def test_format_report_contains_header():
+    branch = _make_branch("jarvis/test", 1, 1, "x")
+    result = format_report([branch])
+    assert "Branch Lifecycle Report" in result
+
+
+def test_format_report_active_shows_commits():
+    branch = _make_branch("jarvis/work", 2, 7, "5 files changed")
+    result = format_report([branch])
+    assert "7 commits" in result
+
+
+def test_format_report_merged_shows_age():
+    branch = _make_branch("jarvis/done-branch", 25, 3, "y", is_merged=True)
+    result = format_report([branch])
+    assert "25d old" in result
