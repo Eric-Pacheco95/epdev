@@ -620,44 +620,48 @@ def collect_manifest_autonomous_signal_rate(cfg: dict, root_dir: Path, _prev: di
 # ── signal_volume ──────────────────────────────────────────────────
 
 def collect_signal_volume(cfg: dict, root_dir: Path, _prev: dict = None) -> dict:
-    """Read signal counts from manifest DB (signals table)."""
-    name = cfg.get("name", "signal_volume")
-    db_path = root_dir / "data" / "jarvis_index.db"
+    """Read signal counts from filesystem warehouse via compress_signals --stats.
 
-    if not db_path.exists():
-        return _result(name, None, "count", "manifest DB not found")
+    The legacy implementation queried jarvis_index.db's signals table, which
+    has accreted session telemetry + ghost rows from a pre-warehouse era and
+    no longer reflects on-disk signal counts (see
+    history/decisions/2026-04-29-arch-review-learning-loop.md).
+    """
+    name = cfg.get("name", "signal_volume")
+    script = root_dir / "tools" / "scripts" / "compress_signals.py"
+
+    if not script.exists():
+        return _result(name, None, "count", "compress_signals.py not found")
 
     try:
-        import sqlite3
-        conn = sqlite3.connect(str(db_path), timeout=5)
-        conn.execute("PRAGMA journal_mode=WAL")
-
-        # Total signals (not soft-deleted)
-        total = conn.execute(
-            "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL"
-        ).fetchone()[0]
-
-        # By processed status
-        processed = conn.execute(
-            "SELECT COUNT(*) FROM signals WHERE deleted_at IS NULL AND processed = 1"
-        ).fetchone()[0]
-        unprocessed = total - processed
-
-        # By source (top sources)
-        source_rows = conn.execute(
-            "SELECT source, COUNT(*) as cnt FROM signals "
-            "WHERE deleted_at IS NULL GROUP BY source ORDER BY cnt DESC LIMIT 5"
-        ).fetchall()
-        conn.close()
-
-        source_parts = ["%s=%d" % (s or "unknown", c) for s, c in source_rows]
-        detail = "total=%d processed=%d unprocessed=%d sources=[%s]" % (
-            total, processed, unprocessed, ", ".join(source_parts)
+        proc = subprocess.run(
+            [sys.executable, str(script), "--stats", "--json"],
+            cwd=str(root_dir),
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
-        return _result(name, total, "count", detail)
-
+        if proc.returncode != 0:
+            return _result(name, None, "count",
+                           "compress_signals exit %d: %s" % (proc.returncode, (proc.stderr or "").strip()[:200]))
+        stats = json.loads(proc.stdout.strip())
+    except subprocess.TimeoutExpired:
+        return _result(name, None, "count", "compress_signals timeout")
+    except json.JSONDecodeError as exc:
+        return _result(name, None, "count", "compress_signals json error: %s" % exc)
     except Exception as exc:
         return _result(name, None, "count", "signal_volume error: %s" % exc)
+
+    total = int(stats.get("total_all_time", 0))
+    unprocessed = int(stats.get("total_combined_unprocessed", 0))
+    processed = int(stats.get("processed", 0))
+    velocity = stats.get("velocity_per_day", 0)
+    recent_7d = int(stats.get("recent_7d", 0))
+
+    detail = "total=%d processed=%d unprocessed=%d velocity=%.1f/day recent_7d=%d" % (
+        total, processed, unprocessed, float(velocity), recent_7d
+    )
+    return _result(name, total, "count", detail)
 
 
 # ── producer_health ──────────────────────────────────────────────────

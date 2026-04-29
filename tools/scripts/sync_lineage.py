@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Sync signal_lineage.jsonl -> SQLite lineage table.
+"""DEPRECATED: sync signal_lineage.jsonl -> SQLite lineage table.
 
-Reads all rows from the JSONL source of truth and inserts any missing
-into the manifest DB. Safe to run repeatedly (INSERT OR IGNORE).
+Effectively a no-op since the warehouse migration: the per-line JSONL row
+shape this script expects (signal_filename / synthesis_filename / date)
+no longer matches what /synthesize-signals writes (signals: [] arrays).
+Kept as a tombstone — see history/decisions/2026-04-29-arch-review-learning-loop.md.
 
-Called by /synthesize-signals after appending new lineage rows,
-or standalone as a backfill tool.
+Do not call from new code; the lineage table in jarvis_index.db is dead
+data (70 rows vs 961 actual lineage records on disk). Authoritative
+lineage lives in data/signal_lineage.jsonl.
 
-Usage:
+Usage (legacy):
   python tools/scripts/sync_lineage.py          # sync all
   python tools/scripts/sync_lineage.py --dry-run # show what would sync
 """

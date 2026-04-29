@@ -180,8 +180,9 @@
     {
       "name": "signal_volume",
       "type": "signal_volume",
-      "thresholds": { "warn_above": 500, "crit_above": 1000 },
-      "isc_ref": "PRD-P4E:ISC-S4 retention layer prevents unbounded growth"
+      "thresholds": { "warn_above": 2000, "crit_above": 5000 },
+      "isc_ref": "PRD-P4E:ISC-S4 retention layer prevents unbounded growth",
+      "_note": "2026-04-29: source switched from jarvis_index.db to compress_signals --stats; thresholds recalibrated for filesystem warehouse (was 500/1000 against dead DB rows)"
     },
     {
       "name": "backlog_pending_count",
