@@ -102,10 +102,8 @@ true
 # CONTRACT
 
 ## Errors
-- **empty-input:** no content provided or content is too short to extract from
-  - recover: provide at least 200 words of content; for URLs, use /research to fetch first
-- **no-substance:** content is fluff with no extractable ideas
-  - recover: output will contain "(none found in input)" in empty sections; consider /analyze-claims instead for fact-checking thin content
+- **empty-input:** no content provided or content is too short to extract from → provide at least 200 words of content; for URLs, use /research to fetch first
+- **no-substance:** content is fluff with no extractable ideas → output will contain "(none found in input)" in empty sections; consider /analyze-claims instead for fact-checking thin content
 
 # SKILL CHAIN
 

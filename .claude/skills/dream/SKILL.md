@@ -79,12 +79,9 @@ If Eric wants to revert a merge:
 # CONTRACT
 
 ## Errors
-- **ollama-not-running**: embedding_service cannot reach Ollama
-  - recover: start Ollama (`ollama serve`), then re-run /dream
-- **lock-held**: another dream run is in progress
-  - recover: wait for it to complete; if lock is stale (>2h), delete data/dream.lock manually
-- **chromadb-missing**: embedding_service import fails
-  - recover: `pip install chromadb`, then re-run
+- **ollama-not-running**: embedding_service cannot reach Ollama → start Ollama (`ollama serve`), then re-run /dream
+- **lock-held**: another dream run is in progress → wait for it to complete; if lock is stale (>2h), delete data/dream.lock manually
+- **chromadb-missing**: embedding_service import fails → `pip install chromadb`, then re-run
 
 # SKILL CHAIN
 

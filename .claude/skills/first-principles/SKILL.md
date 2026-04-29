@@ -74,8 +74,7 @@ true
 # CONTRACT
 
 ## Errors
-- **input-too-vague:** single word or no decomposable problem
-  - recover: provide a specific problem, decision, or question with enough context to identify assumptions
+- **input-too-vague:** single word or no decomposable problem → provide a specific problem, decision, or question with enough context to identify assumptions
 
 # SKILL CHAIN
 

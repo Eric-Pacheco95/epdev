@@ -41,10 +41,8 @@ true
 # CONTRACT
 
 ## Errors
-- **no-checked-items:** tasklist has no [x] items to audit
-  - recover: nothing to audit; run after completing some tasks
-- **tasklist-not-found:** orchestration/tasklist.md missing
-  - recover: check path; tasklist may have moved or not been created yet
+- **no-checked-items:** tasklist has no [x] items to audit → nothing to audit; run after completing some tasks
+- **tasklist-not-found:** orchestration/tasklist.md missing → check path; tasklist may have moved or not been created yet
 
 # STEPS
 

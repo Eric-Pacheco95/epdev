@@ -150,12 +150,9 @@ Rules: synthesis uses ORIGINAL outputs only; 3+ true = revisit adoption; 0-1 aft
 # CONTRACT
 
 ## Errors
-- **trivial-decision:** proposal doesn't warrant full review
-  - recover: skill will say so and suggest a simpler approach
-- **agent-timeout:** one or more parallel agents fail to return
-  - recover: synthesize from available results; note which analysis is missing
-- **scope-too-broad:** proposal covers multiple independent decisions
-  - recover: ask Eric to split into separate reviews; each decision gets its own /architecture-review
+- **trivial-decision:** proposal doesn't warrant full review → skill will say so and suggest a simpler approach
+- **agent-timeout:** one or more parallel agents fail to return → synthesize from available results; note which analysis is missing
+- **scope-too-broad:** proposal covers multiple independent decisions → ask Eric to split into separate reviews; each decision gets its own /architecture-review
 
 # SKILL CHAIN
 
