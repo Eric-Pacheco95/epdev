@@ -76,6 +76,8 @@ bun.lock
 tmp/
 *.tmp
 *.bak
+*.orig
+*.restored
 
 # Backlog sidecar lock file (created by lib/backlog._exclusive_file_lock)
 orchestration/task_backlog.jsonl.lock
