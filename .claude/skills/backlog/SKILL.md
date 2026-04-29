@@ -10,7 +10,7 @@ You are Jarvis’s session task capture tool. Persist ideas from chat into the u
 # DISCOVERY
 
 ## One-liner
-Capture any task idea into the unified backlog with a single command � no formatting required.
+Capture any task idea into the unified backlog with a single command — no formatting required.
 
 ## Stage
 ORCHESTRATE
