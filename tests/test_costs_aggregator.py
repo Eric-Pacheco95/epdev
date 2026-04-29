@@ -87,3 +87,53 @@ class TestLoadPricing:
         p.write_text(_json.dumps({"claude": {"models": {}}}))
         _, budget = load_pricing(p)
         assert budget == 25.0
+
+
+class TestEmptyWindowExtended:
+    def test_per_model_is_list(self):
+        w = _empty_window(20.0)
+        assert isinstance(w["per_model"], list)
+
+    def test_per_skill_is_list(self):
+        w = _empty_window(20.0)
+        assert isinstance(w["per_skill"], list)
+
+    def test_session_rollups_structure(self):
+        w = _empty_window(20.0)
+        rollups = w["session_rollups"]
+        assert rollups["avg_usd"] == 0.0
+        assert rollups["session_count"] == 0
+        assert rollups["most_expensive"] is None
+
+    def test_tokens_initialized_to_zero(self):
+        w = _empty_window(20.0)
+        assert w["input_tokens_total"] == 0
+        assert w["output_tokens_total"] == 0
+        assert w["cache_read_tokens_total"] == 0
+        assert w["cache_creation_tokens_total"] == 0
+
+    def test_spend_prev_window_zero(self):
+        w = _empty_window(20.0)
+        assert w["spend_prev_window_usd"] == 0.0
+
+
+class TestComputeCostExtended:
+    def test_cache_read_tokens(self):
+        rates = {"input_per_mtok": 0, "output_per_mtok": 0,
+                 "cache_read_per_mtok": 0.3, "cache_creation_per_mtok": 0}
+        usage = {"cache_read_input_tokens": 1_000_000}
+        result = compute_cost(usage, rates)
+        assert result == pytest.approx(0.3)
+
+    def test_cache_creation_tokens(self):
+        rates = {"input_per_mtok": 0, "output_per_mtok": 0,
+                 "cache_read_per_mtok": 0, "cache_creation_per_mtok": 3.75}
+        usage = {"cache_creation_input_tokens": 1_000_000}
+        result = compute_cost(usage, rates)
+        assert result == pytest.approx(3.75)
+
+    def test_all_zero_rates_returns_zero(self):
+        rates = {"input_per_mtok": 0, "output_per_mtok": 0,
+                 "cache_read_per_mtok": 0, "cache_creation_per_mtok": 0}
+        usage = {"input_tokens": 1000, "output_tokens": 500}
+        assert compute_cost(usage, rates) == 0.0
