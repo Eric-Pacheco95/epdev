@@ -9,6 +9,9 @@ Guitar recording analysis skill. Pipeline: load MUSIC.md context → Gemini anal
 
 # DISCOVERY
 
+## One-liner
+Analyze a guitar recording against your musical goals and return structured AI feedback with specific improvement actions.
+
 ## Stage
 BUILD
 
