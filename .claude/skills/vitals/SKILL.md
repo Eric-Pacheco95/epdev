@@ -58,10 +58,11 @@ true
 
 ## Phase 1.5: Launch Jarvis App
 
-3. Check if jarvis-app is already running: `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000`
-4. If not running (non-200): start it in the background: `cd C:/Users/ericp/Github/jarvis-app && npm run dev &`
-5. Open the browser: `start http://localhost:3000`
-6. Continue immediately -- do not wait for the app to load
+3. Enforce one-or-zero singleton via wrapper:
+   `powershell -NoProfile -File C:/Users/ericp/Github/epdev/tools/scripts/jarvis_app_singleton.ps1 -Ensure`
+   The wrapper probes localhost:3000, leaves a healthy singleton alone, and otherwise kills any duplicates and starts one fresh `npm run dev`. Direct `npm run dev` is forbidden -- duplicate dev servers race on `.next/` and produce HTTP 500 (ENOENT _document.js).
+4. Open the browser: `start http://localhost:3000`
+5. Continue immediately -- do not wait for the app to load
 
 ## Phase 2: Terminal Dashboard
 
