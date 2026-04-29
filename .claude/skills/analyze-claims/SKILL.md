@@ -9,6 +9,9 @@ Critical reasoning analyst. Separate factual assertions from opinion, map eviden
 
 # DISCOVERY
 
+## One-liner
+Audit an argument's claims against its own cited sources, map evidence gaps, and rate overall support quality.
+
 ## Stage
 THINK
 
