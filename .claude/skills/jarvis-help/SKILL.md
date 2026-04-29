@@ -58,8 +58,7 @@ true
 ## Step 1: FULL OVERVIEW (Level 0)
 
 1. Scan `.claude/skills/*/SKILL.md` to get the list of installed skills
-2. For skills that have a `# DISCOVERY` section, read the `## One-liner` and `## Stage` fields
-3. For skills without a DISCOVERY section, derive stage from the CLAUDE.md Skill Registry or the formatted output in step 4.
+2. For each skill, read `description:` from frontmatter and `## Stage` from DISCOVERY if present.
 
 4. Print skills grouped under stage headers using this format:
 
@@ -200,7 +199,7 @@ true
 
 1. Search the input term against:
    - Skill names (e.g. "review" matches /review-code)
-   - One-liners from DISCOVERY sections
+   - description: frontmatter (one-liner)
    - Parameter names and values
    - Examples
 2. Print all matching skills with their one-liner and stage
